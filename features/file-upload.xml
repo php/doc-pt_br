@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.53 Maintainer: fernandoc Status: ready -->
+<!-- EN-Revision: 1.55 Maintainer: fernandoc Status: ready -->
  <chapter id="features.file-upload">
   <title>Gerenciar o upload de arquivos</title>
   <sect1 id="features.file-upload.post-method">
@@ -35,7 +35,7 @@
      <programlisting role="html">
 <![CDATA[
 <form enctype="multipart/form-data" action="_URL_" method="post">
-<input type="hidden" name="MAX_FILE_SIZE" value="1000">
+<input type="hidden" name="MAX_FILE_SIZE" value="30000">
 Send this file: <input name="userfile" type="file">
 <input type="submit" value="Enviar Arquivo">
 </form>
@@ -155,21 +155,27 @@ Send this file: <input name="userfile" type="file">
     <example>
      <title>Validando o upload de arquivos</title>
      <para>
-      Os seguintes exemplos são para versões do PHP 4 maiores do que
-      4.0.2. Veja as funções <function>is_uploaded_file</function> e
-      <function>move_uploaded_file</function>.
+      Veja também as funções <function>is_uploaded_file</function>
+      e <function>move_uploaded_file</function> para maiores informações. O
+      seguinte exemplo irá processar o envio de um arquivo que vem de um formulário.
      </para>
      <programlisting role="php">
 <![CDATA[
-<?php 
-// No PHP anterior a 4.1.0, $HTTP_POST_FILES  deve ser usado ao invés de $_FILES.
-if (is_uploaded_file($_FILES['userfile']['tmp_name'])) {
-    copy($_FILES['userfile']['tmp_name'], "/lugar/para/colocar/arquivo");
+<?php
+// Nas versões anteriores a 4.1.0, $HTTP_POST_FILES deve ser usado ao invés de $_FILES.
+// Nas versões anteriores a 4.0.3, use copy() e is_uploaded_file() ao invés move_uploaded_file
+
+$uploaddir = '/var/www/uploads/';
+
+print "<pre>";
+if (move_uploaded_file($_FILES['userfile']['tmp_name'], $uploaddir . $_FILES['userfile']['name'])) {
+    print "O arquivo é valido e foi carregado com sucesso. Aqui esta alguma informação:\n";
+    print_r($_FILES);
 } else {
-    echo "Possível ataque de upload de arquivo. Nome: " . $_FILES['userfile']['name'];
+    print "Possivel ataque de upload! Aqui esta alguma informação:\n";
+    print_r($_FILES);
 }
-/* ...ou... */
-move_uploaded_file($_FILES['userfile']['tmp_name'], "/lugar/para/colocar/arquivo");
+
 ?>
 ]]>
      </programlisting>
