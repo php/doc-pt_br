@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: 1.1 Maintainer: ae Status: ready -->
+
+  <refentry id="function.stream-register-wrapper">
+   <refnamediv>
+    <refname>stream_register_wrapper</refname>
+    <refpurpose>Registra um wrapper URL implementado como uma classe PHP</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+    <methodsynopsis>
+     <type>boolean</type><methodname>stream_register_wrapper</methodname>
+     <methodparam><type>string</type><parameter>protocol</parameter></methodparam>
+     <methodparam><type>string</type><parameter>classname</parameter></methodparam>
+    </methodsynopsis>
+    <para>
+     <function>stream_register_wrapper</function> permite a você implementar
+     seu próprio manipulador de protocolo stream para utilização com todas as outras
+     funções filesystem (como <function>fopen</function>,
+     <function>fread</function>, etc.).
+    </para>
+    <para>
+     Para implementar um wrapper, você precisa definir uma classe com um certo número de
+     funções, como mostrado abaixo. Quando alguém usar fopen na sua stream,
+     o PHP irá criar uma instância de <parameter>classname</parameter> e
+     então chamará os métodos daquela instância. Você precisa implementar os métodos
+     exatamente como descrito abaixo. Mudando qualquer detalhe poderá causar um comportamento
+     indefinido.
+    </para>
+    <para>
+     <function>stream_register_wrapper</function> retornará &false; se o
+     <parameter>protocol</parameter> já possuir um manipulador registrado.
+    </para>
+
+    <methodsynopsis>
+     <type>boolean</type><methodname>stream_open</methodname>
+     <methodparam><type>string</type><parameter>path</parameter></methodparam>
+     <methodparam><type>string</type><parameter>mode</parameter></methodparam>
+     <methodparam><type>int</type><parameter>options</parameter></methodparam>
+     <methodparam><type>string</type><parameter>opened_path</parameter></methodparam>
+    </methodsynopsis>
+    <para>
+     Este método é chamado imediatamente depois que seu objeto stream é
+     criado. <parameter>path</parameter> especifica a URL que foi
+     passada para <function>fopen</function> e que objeto é
+     esperado no retorno. Você pode usar <function>parse_url</function>
+     para fazer isso a parte.
+    </para>
+    <para>
+     <parameter>mode</parameter> é o modo de abertura do arquivo,
+     como detalhado em <function>fopen</function>. Você é responsável
+     em checar se o <parameter>mode</parameter> é válido para o
+     <parameter>path</parameter> requisitado.
+    </para>
+    <para>
+     <parameter>options</parameter> mantém flags adicionais informados
+     pela API stream. Ela pode manter um ou mais dos seguintes
+     valores juntos.
+     <informaltable>
+      <tgroup cols="2">
+       <thead>
+        <row>
+         <entry>Flag</entry>
+         <entry>Descrição</entry>
+        </row>
+       </thead>
+       <tbody>
+        <row>
+         <entry>STREAM_USE_PATH</entry>
+         <entry>Se <parameter>path</parameter> é relativo, procura
+          pelo recurso utilizando o include_path.
+         </entry>
+        </row>
+        <row>
+         <entry>STREAM_REPORT_ERRORS</entry>
+         <entry>Se esta flag estiver definida, você é responsável pelo lançamento
+          de erros utilizando <function>trigger_error</function> durante
+          a abertura do stream. Se essa flag não estiver definida, você
+          não precisará lançar nenhum erro.
+         </entry>
+        </row>
+       </tbody>
+      </tgroup>
+     </informaltable>
+    </para>
+    <para>
+     Se o <parameter>path</parameter> for aberto com sucesso,
+     e STREAM_USE_PATH estiver definido em <parameter>options</parameter>,
+     você precisa informar <parameter>opened_path</parameter> com o caminho
+     completo para o recurso/arquivo que está sendo aberto.
+    </para>
+    <para>
+     Se o recurso requisitado for aberto com sucesso, você poderá
+     retornar &true;. Caso contrário, você precisa retornar &false;
+    </para>
+
+    <methodsynopsis>
+     <type>void</type><methodname>stream_close</methodname>
+     <methodparam><type>void</type><parameter></parameter></methodparam>
+    </methodsynopsis>
+    <para>
+     O método é chamado quando o stream é fechado, utilizando
+     <function>fclose</function>. Você deve liberar quaisquer recursos
+     que estiverem travados ou alocados pelo stream.
+    </para>
+
+    <methodsynopsis>
+     <type>string</type><methodname>stream_read</methodname>
+     <methodparam><type>int</type><parameter>count</parameter></methodparam>
+    </methodsynopsis>
+    <para>
+     Este método é chamado em resposta a chamadas às funções <function>fread</function>
+     e <function>fgets</function> . Você
+     precisa retornar o máximo de <parameter>count</parameter> bytes de dados
+     da posição atual de leitura/escrita como uma string.
+     Se tiver menos que <parameter>count</parameter>
+     bytes disponíveis, retorne tanto o quanto estiver disponível. Se não
+     haver mais nenhum dado disponível, retorne &false; ou uma
+     string vazia.
+     Você precisa atualizar a posição de leitura/escrita do stream
+     com o número de bytes que forem lidos com sucesso.
+    </para>
+
+    <methodsynopsis>
+     <type>int</type><methodname>stream_write</methodname>
+     <methodparam><type>string</type><parameter>data</parameter></methodparam>
+    </methodsynopsis>
+    <para>
+     Este método é chamado em exposta a chamada a <function>fwrite</function>
+     no stream. Você precisa armazenar <parameter>data</parameter>
+     no sistema de armazenamento utilizado pelo seu stream. Se não haver
+     espaço suficiente, tente armazenar o quanto possível.
+     Você precisa retornar o número de bytes que forem armazenados com sucesso
+     em seu stream, ou zero se nada foi armazenado.
+     Você também precisa atualizar a posição de leitura/escrita do stream
+     com o número de bytes que forem escritos com sucesso.
+    </para>
+
+    <methodsynopsis>
+     <type>boolean</type><methodname>stream_eof</methodname>
+     <methodparam><type>void</type><parameter></parameter></methodparam>
+    </methodsynopsis>
+    <para>
+     Este método é chamado em resposta a chamadas <function>feof</function>
+     no stream. Você deve retornar &true; se a posição de leitura/escrita
+     estiver no fim do stream e se não haver mais nenhum dado disponível
+     para leitura, ou &false; no caso contrário.
+    </para>
+
+    <methodsynopsis>
+     <type>int</type><methodname>stream_tell</methodname>
+     <methodparam><type>void</type><parameter></parameter></methodparam>
+    </methodsynopsis>
+    <para>
+     Este método é chamado em resposta a chamada <function>ftell</function>
+     no stream. Você precisa retornar a posição de leitura/escrita
+     do stream.
+    </para>
+
+    <methodsynopsis>
+     <type>boolean</type><methodname>stream_seek</methodname>
+     <methodparam><type>int</type><parameter>offset</parameter></methodparam>
+     <methodparam><type>int</type><parameter>whence</parameter></methodparam>
+    </methodsynopsis>
+    <para>
+     Este método é chamado em resposta a chamada de <function>fseek</function>
+     no stream. Você precisa atualizar a posição de leitura/escrita
+     do stream de acordo com o <parameter>offset</parameter> e
+     <parameter>whence</parameter>. Veja a documentação de <function>fseek</function>
+     para mais detalhes sobre como esses parâmetros.
+     Retorne &true; se a posição for atualizada, ou &false; em caso de falha.
+    </para>
+
+    <methodsynopsis>
+     <type>boolean</type><methodname>stream_flush</methodname>
+     <methodparam><type>void</type><parameter></parameter></methodparam>
+    </methodsynopsis>
+    <para>
+     Este método é chamado em resposta a chamada de <function>fflush</function>
+     no stream. Se você tem dados cacheados em seu stream
+     que não ainda armazenados de fato no destino, você deve
+     fazer isso agora.
+     Retorne &true; se os dados cacheados forem armazenados (ou
+     se não há dados a armazenar) ou &false; se os dados não
+     puderem ser armazenados.
+    </para>
+
+    <para>
+     O exemplo abaixo implementa o manipulador de protocolo var:// que
+     permite o acesso a leitura/escrita a variáveis do escopo global utilizando
+     as funções filesystem stream padrão como <function>fread</function>.
+     O protocolo var:// implementado abaixo recebe uma URL como
+     "var://foo" para ler/escrever dados para/de $GLOBALS["foo"].
+
+     <example>
+      <title>Um protocolo stream para leitura/escrita de variáveis globais</title>
+      <programlisting role="php">
+<![CDATA[
+class VariableStream {
+    var $position;
+    var $varname;
+
+    function stream_open($path, $mode, $options, &$opened_path)
+    {
+        $url = parse_url($path);
+        $this->varname = $url["host"];
+        $this->position = 0;
+
+        return true;
+    }
+
+    function stream_read($count)
+    {
+        $ret = substr($GLOBALS[$this->varname], $this->position, $count);
+        $this->position += strlen($ret);
+        return $ret;
+    }
+
+    function stream_write($data)
+    {
+        $left = substr($GLOBALS[$this->varname], 0, $this->position);
+        $right = substr($GLOBALS[$this->varname], $this->position + strlen($data));
+        $GLOBALS[$this->varname] = $left . $data . $right;
+        $this->position += strlen($data);
+        return strlen($data);
+    }
+
+    function stream_tell()
+    {
+        return $this->position;
+    }
+
+    function stream_eof()
+    {
+        return $this->position >= strlen($GLOBALS[$this->varname]);
+    }
+
+    function stream_seek($offset, $whence)
+    {
+        switch($whence) {
+            case SEEK_SET:
+                if ($offset < strlen($GLOBALS[$this->varname]) && $offset >= 0) {
+                     $this->position = $offset;
+                     return true;
+                } else {
+                     return false;
+                }
+                break;
+
+            case SEEK_CUR:
+                if ($offset >= 0) {
+                     $this->position += $offset;
+                     return true;
+                } else {
+                     return false;
+                }
+                break;
+                
+            case SEEK_END:
+                if (strlen($GLOBALS[$this->varname]) + $offset >= 0) {
+                     $this->position = strlen($GLOBALS[$this->varname]) + $offset;
+                     return true;
+                } else {
+                     return false;
+                }
+                break;
+                
+            default:
+                return false;
+        }
+    }
+}
+
+stream_register_wrapper("var", "VariableStream")
+    or die("Failed to register protocol");
+
+$myvar = "";
+    
+$fp = fopen("var://myvar", "r+");
+
+fwrite($fp, "line1\n");
+fwrite($fp, "line2\n");
+fwrite($fp, "line3\n");
+
+rewind($fp);
+while(!feof($fp)) {
+    echo fgets($fp)
+}
+fclose($fp);
+var_dump($myvar);
+
+]]>
+      </programlisting>
+     </example>
+    </para>
+  
+   </refsect1>
+  </refentry>
+
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"../../../../manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
