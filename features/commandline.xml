@@ -1,28 +1,73 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.11 Maintainer: ae Status: ready -->
+<!-- EN-Revision: 1.20 Maintainer: ae Status: ready -->
 <chapter id="features.commandline">
  <title>Utilizando o PHP na linha de comando</title>
  <!-- NEW DOCUMENTATION STARTS -->
  <para>
-  A partir versão 4.3, o <literal>PHP</literal> suporta um novo tipo
+  A partir versão 4.3.0, o <literal>PHP</literal> suporta um novo tipo
   <literal>SAPI</literal> (Server Application Programming Interface)
   chamado <literal>CLI</literal> que significa <emphasis>Command Line
   Interface</emphasis>. Como o próprio nome indica, essa <literal>SAPI</literal>
   tem foco no desenvolvimento de aplicações shell (ou no terminal/linha de comando) com
-  o <literal>PHP</literal>. As diferenças entre a
-  <literal>CLI SAPI</literal> e as outras <literal>SAPI</literal>s são
-  detalhadas neste capítulo.
+  o <literal>PHP</literal>. Há algumas diferenças entre a
+  a <literal>CLI SAPI</literal> e outras <literal>SAPI</literal>s que são
+  explicadas neste capítulo. Mas é errado dizer que
+  a versão <literal>CLI</literal> e <literal>CGI</literal> são SAPIs
+  diferentes pelo motivo que elas compartilham muitos comportamentos idênticos.
  </para>
  <para>
   A <literal>CLI SAPI</literal> foi liberada primeiramente com o
   <literal>PHP 4.2.0</literal>, mas ainda em estágio experimental, sendo necessário
   ativá-la explicitamente com a opção <literal>--enable-cli</literal> durante o
-  <literal>./configure</literal>. Desde o <literal>PHP 4.0.3</literal> a
-  <literal>CLI SAPI</literal> não mais é experimental e é
-  <emphasis role="strong">sempre</emphasis> compilada e instalada como o arquivo
-  <filename>php</filename> (chamado <filename>php.exe</filename> no Windows),
-  no formato binário executável.
+  <literal>./configure</literal>. Desde o <literal>PHP 4.3.0</literal> a
+  <literal>CLI SAPI</literal> não mais é experimental e a opção
+  <literal>--enable-cli</literal> está ligada por default. você pode usar a opção
+  <literal>--disable-cli</literal> para desativá-la.
  </para>
+ <para>
+  Desde o PHP 4.3.0, o nome, localização e existência dos executáveis CLI e CGI
+  podem mudar dependendo de como o PHP foi instalado no seu sistema. Por padrão,
+  quando executado o <literal>make</literal>, ambos CGI e CLI são compilados e
+  colocados em <literal>sapi/cgi/php</literal> e <literal>sapi/cli/php</literal>,
+  respectivamente, no seu diretório de fontes. Note que que ambas tem
+  o nome <literal>php</literal>. O que acontece durante o <literal>make
+  install</literal> depende dos parâmetros do
+  configure. Se o módulo SAPI é escolhido durante o configure, como o apxs, ou a opção
+  <literal>--disable-cgi</literal> é utilizada, a versão CLI é copiada para
+  <literal>{PREFIX}/bin/php</literal> durante o <literal>make install</literal>
+  em vez da versão CGI ser colocada aqui. Então, por exemplo, se você tiver <literal>--with--apxs
+  </literal> na sua linha de configuração, então a versão CLI é copiada para
+  <literal>{PREFIX}/bin/php</literal> durante o <literal>make
+  install</literal>. Se você quiser sobrescrever a instalação do executável CGI,
+  use <literal>make install-cli</literal> depois do <literal>make
+  install</literal>. Alternativamente, você pode especificar <literal>--disable-cgi
+  </literal> em seu configure.
+ </para>
+ <note>
+  <para>
+   Por serem ambos <literal>--enable-cli</literal> e <literal>
+   --enable-cgi</literal> ligados por padrão, ter um
+   <literal>--enable-cli</literal> em seu configure
+   não necessariamente significa que a versão CLI será copiada para <literal>
+   {PREFIX}/bin/php</literal> durante o <literal>make install</literal>.
+  </para>
+ </note>
+ <para>
+  Os pacotes para Windows distribuidos entre o PHP 4.2.0 e PHP 4.2.3 forneciam a versão CLI
+  com o nome <filename>php-cli.exe</filename>, na mesma pasta que a versão CGI 
+  <filename>php.exe</filename>. A partir do PHP 4.3.0, os pacotes Windows
+  distribuem a versão CLI como <filename>php.exe</filename> em uma pasta separada, chamada cli,
+  ou seja: <literal>cli/php.exe</literal>.
+ </para>
+ <note>
+  <title>Que versão de SAPI eu tenho?</title>
+  <para>
+   Na linha de comando, digitando <literal>php -v</literal>, ele lhe dirá
+   se o <literal>php</literal> é CGI ou CLI. Veja também a função
+   <function>php_sapi_name</function> e a constante <constant>
+   PHP_SAPI</constant>.
+  </para>
+ </note>
  <para>
   Diferenças importantes das <literal>CLI SAPI</literal> comparada com outras
   <literal>SAPI</literal>s:
@@ -38,15 +83,15 @@
      SAPI</literal>.
     </para>
     <para>
-      A versão CLI é definida silenciosa por padrão. Mas a chave <literal>-q</literal>
-      é mantida para compatibilidade, de forma que você possa utilizar scripts CGI antigos.
+     A versão CLI é definida silenciosa por padrão. Mas a chave <literal>-q</literal>
+     é mantida para compatibilidade, de forma que você possa utilizar scripts CGI antigos.
     </para>
     <para>
-      Ela não altera o diretório de execução para o do script.
-      (a chave <literal>-C</literal> também é mantida para compatibilidade).
+     Ela não altera o diretório de execução para o do script.
+     (a chave <literal>-C</literal> também é mantida para compatibilidade).
     </para>
     <para>
-      Mensagens de erro em texto simples (sem formatação HTML).
+     Mensagens de erro em texto simples (sem formatação HTML).
     </para>
    </listitem>
    <listitem>
@@ -89,7 +134,7 @@
          <entry>0 (unlimited)</entry>
          <entry>
           Devido as infinitas possibilidades da utilização do <literal>PHP</literal> em
-          ambientes shell, tempo máximo de execução foi configurado para
+          ambientes shell, o tempo máximo de execução foi configurado para
           ilimitado. Enquanto aplicações escritas para web são geralmente executadas
           em poucos segundos, aplicações no shell tendem a ter um tempo de execução
           mais longo.
@@ -99,11 +144,26 @@
          <entry><link linkend="ini.register-argc-argv">register_argc_argv</link></entry>
          <entry>&true;</entry>
          <entry>
-          As variáveis globais do <literal>PHP</literal> <literal>$argc</literal>
-          (número de argumentos passados para aplicação) e
-          <literal>$argv</literal> (array com os argumentos atuais) são sempre
-          presentes e preenchidos com os valores apropriados quando utilizando a 
-          <literal>CLI SAPI</literal>.
+         <para>
+          Como essa diretiva é &true; você sempre terá acesso as variáveis
+          <emphasis>argc</emphasis> (número de argumentos passados para a
+          aplicação) e <emphasis>argv</emphasis> (array dos argumentos
+          informados) na <literal>CLI SAPI</literal>.
+         </para>
+         <para>
+          A partir do PHP 4.3.0, as variáveis do <literal>PHP</literal> <varname>$argc</varname>
+          e <varname>$argv</varname> são registradas e preenchidas com os valores
+          apropriados quando utilizando a <literal>CLI SAPI</literal>. Antes dessa versão,
+          a criação dessas variáveis era controlada da mesma forma que as versões
+          <literal>CGI</literal> e <literal>MODULE</literal>
+          e precisava da diretiva PHP
+          <link linkend="ini.register-globals">register_globals</link> configurada
+          para <emphasis>on</emphasis>. Independentemente da versão ou da configuração
+          de register_globals, você sempre poderá acessar esses dados através de
+          <link linkend="reserved.variables.server">$_SERVER</link> ou
+          <varname>$HTTP_SERVER_VARS</varname>. Exemplo:
+          <varname>$_SERVER['argv']</varname>
+         </para>
          </entry>
         </row>
        </tbody>
@@ -141,7 +201,9 @@
          Um stream já aberto para o <literal>stdin</literal>. Isto economiza
          ter de abrí-lo com 
          <programlisting role="php">
+<![CDATA[
 $stdin = fopen('php://stdin', 'r');
+]]>
          </programlisting>
          </entry>
         </row>
@@ -151,7 +213,9 @@ $stdin = fopen('php://stdin', 'r');
          Um stream já aberto para o <literal>stdout</literal>. Isto economiza
          ter de abrí-lo com
          <programlisting role="php">
+<![CDATA[
 $stdout = fopen('php://stdout', 'w');
+]]>
          </programlisting>
          </entry>
         </row>
@@ -161,7 +225,9 @@ $stdout = fopen('php://stdout', 'w');
          Um stream já aberto para o <literal>stderr</literal>. Isto economiza
          ter de abrí-lo com
          <programlisting role="php">
+<![CDATA[
 $stderr = fopen('php://stderr', 'w');
+]]>
          </programlisting>
          </entry>
         </row>
@@ -174,7 +240,9 @@ $stderr = fopen('php://stderr', 'w');
      <literal>stderr</literal> você mesmo, mas simplesmente usar a constante em vez
      do recurso stream:
      <programlisting role="php">
+<![CDATA[
 php -r 'fwrite(STDERR, "stderr\n");'
+]]>
      </programlisting>
      Você não precissa fechar explicitamente esses streams. Isto é realizado automaticamente
      pelo <literal>PHP</literal>.
@@ -191,20 +259,20 @@ php -r 'fwrite(STDERR, "stderr\n");'
      <programlisting role="php">
 <![CDATA[
 <?php
-    /* Nossa aplicação de teste */
+    /* Nossa aplicação de teste chamada test.php */
     echo getcwd(), "\n";
 ?>
 ]]>
      </programlisting>
     </para>
     <para>
-     Quando utilizando a versão <literal>CGI</literal>, a saída é
+     Quando utilizando a versão <literal>CGI</literal>, a saída é:
      <screen>
 <![CDATA[
 $ pwd
 /tmp
 
-$ php-cgi -f outro_diretorio/test.php
+$ php -q outro_diretorio/test.php
 /tmp/outro_diretorio
 ]]>
      </screen>
@@ -281,8 +349,8 @@ php -f my_script.php
 ]]>
      </screen>
      De ambas maneiras (utilizando ou não a opção <literal>-f</literal>) o
-     arquivo informado <filename>my_script.php</filename> é executado. Você pode escolher qualquer arquivo para
-     executar, seus scripts <literal>PHP</literal> não precisam terminar com a
+     arquivo <filename>my_script.php</filename> é executado. Você pode escolher qualquer arquivo para
+     executar --- seus scripts <literal>PHP</literal> não precisam terminar com a
      extensão <filename>.php</filename>, podendo ter qualquer nome ou extensão
      que você deseje.
     </para>
@@ -349,7 +417,7 @@ $ alguma_aplicacao | algum_filtro | php | sort -u >final_output.txt
   Passando argumentos para seu script que comecem com um
   <literal>-</literal> causará problemas porque o <literal>PHP</literal>
   tentará manuseá-los. Para prevenir isso, utilize o separador de argumentos
-  <literal>--</literal>. Depois que os argumentos são interpretados pelo
+  <literal>--</literal>. Depois que esse separador é passado para o
   <literal>PHP</literal>, todos os argumentos restantes são repassados
   intocados para seu script.
  </para>
@@ -373,11 +441,11 @@ array(2) {
  <para>
   Entretanto, há ainda uma outra maneira de se utilizar o <literal>PHP</literal> no
   shell. Você pode escrever um script que na primeira linha tenha
-  <literal>#!/usr/bin/php</literal> e na seqüência tenha
+  <literal>#!/usr/bin/php</literal> e em seguida
   código <literal>PHP</literal> normal, incluindo as tags de
-  início e fim e os atributos de execução do arquivo.
-  Desta maneira ele pode ser executado como um script shell ou PERL
-  normalmente:
+  início e fim do <literal>PHP</literal>. Você também precisa configurar os atributos de
+  execução do arquivo (por exemplo, <literal>chmod +x test</literal>) de forma que seu script
+  seja executado normalmente como um script shell/Perl:
   <programlisting role="php">
 <![CDATA[
 #!/usr/bin/php
@@ -448,7 +516,7 @@ array(4) {
        <note>
         <para>
          Esta opção não funciona juntamente com a opção <literal>-r</literal>.
-         
+
         </para>
        </note>
       </entry>
@@ -471,8 +539,8 @@ array(4) {
         <screen>
 <![CDATA[
 $ php -v
-PHP 4.3.0-dev (cli), Copyright (c) 1997-2002 The PHP Group
-Zend Engine v1.2.1, Copyright (c) 1998-2002 Zend Technologies
+PHP 4.3.0 (cli), Copyright (c) 1997-2002 The PHP Group
+Zend Engine v1.3.0, Copyright (c) 1998-2002 Zend Technologies
 ]]>
         </screen>
        </para>
@@ -638,12 +706,12 @@ ctype
         linha de comando. As tags de início e fim do <literal>PHP</literal>
         (<literal>&lt;?php</literal> e <literal>?&gt;</literal>)
         <emphasis role="strong">não são</emphasis> necessárias e causarão erros
-        de interpretação.
+        de interpretação se informadas.
        </para>
        <note>
         <para>
          Cuidados deverão ser tomados utilizando dessa forma para
-         evitar que haja substituição de variáveis pelo 
+         evitar que haja substituição de variáveis pelo
          shell.
         </para>
         <para>
@@ -689,7 +757,13 @@ array(370) {
 
          Você vai rapidamente conseguir problemas quando tentar obter variáveis
          do ambiente dentro do código ou quando utilizar barras invertidas para escape. Esteja
-         avisado.
+         avisado. <!-- :-) -->
+        </para>
+       </note>
+       <note>
+        <para>
+         <literal>-r</literal> está disponível na SAPI <emphasis>CLI</emphasis>
+         SAPI mas não na SAPI <emphasis>CGI</emphasis>.
         </para>
        </note>
       </entry>
@@ -942,14 +1016,14 @@ Este é um script de linha de comando com um parâmetro.
  <example>
   <title>Arquivo batch para rodar um script em linha de comando (script.bat)</title>
   <programlisting role="winbat">
-@c:\php\php.exe script.php %1 %2 %3 %4
+@c:\php\cli\php.exe script.php %1 %2 %3 %4
   </programlisting>
  </example>
  <para>
   Assumindo que você nomeou o programa acima como
-  <filename>script.php</filename>, e você tem um
-  <filename>php.exe</filename> em
-  <filename>c:\php\php.exe</filename> este arquivo batch
+  <filename>script.php</filename>, e que tem sua versão
+  CLI <filename>php.exe</filename> em
+  <filename>c:\php\cli\php.exe</filename> este arquivo batch
   irá rodar com os seguintes parâmetros:
   <literal>script.bat exibaisso</literal> ou
   <literal>script.bat -h</literal>.
