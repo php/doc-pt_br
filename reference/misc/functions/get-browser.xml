@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.4 Maintainer: fernandoc Status: ready -->
+<!-- EN-Revision: 1.7 Maintainer: fernandoc Status: ready -->
 <!-- splitted from ./en/functions/misc.xml, last change in rev 1.2 -->
   <refentry id="function.get-browser">
    <refnamediv>
@@ -18,14 +18,14 @@
      <function>get_browser</function> tenta determinar as
      capacidades do browser do usuário. Isto é feito procurando a informação do browser no
      arquivo <filename>browscap.ini</filename>. Por padrão, o valor de
-     $HTTP_USER_AGENT é usado; em qualquer caso você pode alterar isto (ex., procurar
+     <varname>$HTTP_USER_AGENT</varname> é usado; em qualquer caso você pode alterar isto (ex., procurar
      informação de outro browser) passando o parâmetro opcional
      <parameter>user_agent</parameter> para a função <function>get_browser</function>.
     </simpara>
     <simpara>
-     A informação é retornada como um objeto, que contém vários
+     A informação é retornada como um <type>objeto</type>, que contém vários
      elementos com dados representando, por exemplo, os números de versão maior e menor, a string de ID, valores
-     &true;/false para coisas como frames, JavaScript, e cookies; e assim em diante.
+     &true;/&false; para coisas como frames, JavaScript, e cookies; e assim em diante.
     </simpara>
     <simpara>
      Enquanto <filename>browscap.ini</filename> contém informações sobre vários browser,
@@ -40,15 +40,11 @@
       <programlisting role="php">
 <![CDATA[
 <?php
-function list_array ($array) {
-    while (list ($key, $value) = each ($array)) {
-    $str .= "<b>$key:</b> $value<br />\n";
-    }
-    return $str;
-}
-echo "$HTTP_USER_AGENT<hr />\n";
+echo $_SERVER['HTTP_USER_AGENT'] . "<hr />\n";
 $browser = get_browser();
-echo list_array ((array) $browser);
+foreach ($browser as $name => $value) {
+    print "<b>$name</b> $value <br />\n";
+}
 ?>
 ]]>
       </programlisting>
@@ -62,7 +58,7 @@ echo list_array ((array) $browser);
 Mozilla/4.5 [en] (X11; U; Linux 2.2.9 i586)<hr />
 <b>browser_name_pattern:</b> Mozilla/4\.5.*<br />
 <b>parent:</b> Netscape 4.0<br />
-<b>platform:</b> Unknown<br />
+<b>platform:</b> Linux<br />
 <b>majorver:</b> 4<br />
 <b>minorver:</b> 5<br />
 <b>browser:</b> Netscape<br />
@@ -81,18 +77,34 @@ Mozilla/4.5 [en] (X11; U; Linux 2.2.9 i586)<hr />
 <b>msn:</b> <br />
 ]]>
     </programlisting>
-    <simpara>
-     In order for this to work, your <link
-     linkend="ini.browscap">browscap</link> configuration file
-     setting must point to the correct location of the
-     <filename>browscap.ini</filename> file.
+   <simpara>
+     Para que isto funcione, sua configuração do <link
+     linkend="ini.browscap">browscap</link> no
+     &php.ini; deve apontar para o local correto do arquivo
+     <filename>browscap.ini</filename> no seu sistema.
+     <filename>browscap.ini</filename> não vem com o PHP mas você deve 
+     encontrar uma versão atualizada <ulink url="&url.browscap.download;">
+     do arquivo browscap.ini</ulink>.  Por padrão,a diretiva
+     <link linkend="ini.browscap">browscap</link> esta comentada.
     </simpara>
-    <simpara>
-     For more information (including locations from which you may
-     obtain a <filename>browscap.ini</filename> file), check the PHP
-     FAQ at <ulink
-     url="&url.php.faq;">&url.php.faq;</ulink>.
-    </simpara>
+    <note>
+     <simpara>
+      Os  valores de <literal>cookies</literal> simplesmente indicam que
+      que o browser é capaz de receber cookies e não indica que o usuário
+      permite ao browser receber ou não cookies. O unico meio de testar
+      se os cookies são aceitos é criar um com <function>setcookie</function>,
+      recarregar, e conferir o valor.
+     </simpara>
+    </note>
+    <note>
+     <simpara>
+      Em versões anteriores ao PHP 4.0.6, você tem que passar o
+      user agent via o parâmetro opcional <parameter>user_agent</parameter>
+      se a diretiva do PHP <link linkend="ini.register-globals">
+      register_globals</link> esta em <literal>off</literal>. Neste caso,
+      você irá passar <varname>$HTTP_SERVER_VARS['HTTP_USER_AGENT']</varname>.
+     </simpara>
+    </note>
    </refsect1>
   </refentry>
 
