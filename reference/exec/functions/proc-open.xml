@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.5 Maintainer: fernandoc Status: ready -->
+<!-- EN-Revision: 1.9 Maintainer: fernandoc Status: ready -->
 <!-- splitted from ./en/functions/exec.xml, last change in rev 1.28 -->
   <refentry id='function.proc-open'>
    <refnamediv>
@@ -48,7 +48,7 @@ if (is_resource($process)) {
     fwrite($pipes[0], "<?php echo \"Hello World!\"; ?>");
     fclose($pipes[0]);
 
-    while(!feof($pipes[1])) {
+    while (!feof($pipes[1])) {
         echo fgets($pipes[1], 1024);
     }
     fclose($pipes[1]);
@@ -57,6 +57,36 @@ if (is_resource($process)) {
     $return_value = proc_close($process);
 
     echo "command returned $return_value\n";
+}
+?>
+]]>
+      </programlisting>
+     </informalexample>
+    </para>
+    <para>
+     O PHP 5RC2 introduz suporte pty para sistemas com Unix98 ptys. Isto permite ao
+     seu script interagir com aplicações que esperão estar conversando com um terminal.
+     Um pty funciona como um pipe, mas é bi-direcional, então não é
+     necessário especificar um modo de leitura/escrita. O exemplo abaixo mostra como usar um pty;
+     note que você não precisa ter todos os descritores conversando com um pty.
+     Note também que apenas um pty é criado, mesmo que o pty seja especificado 3
+     vezes. Em versões futuras do PHP, será possível fazer mais do que apenas
+     ler e escrever para o pty.
+    </para>
+    <para>
+     <informalexample>
+      <programlisting role="php">
+<![CDATA[
+<?php
+// Cria um pseudo terminal para o processo filho
+$descriptorspec = array(
+  0 => array("pty"),
+  1 => array("pty"),
+  2 => array("pty")
+);
+$process = proc_open("cvs -d:pserver:cvsread@cvs.php.net:/repository login", $descriptorspec, $pipes);
+if (is_resource($process)) {
+   // work with it here
 }
 ?>
 ]]>

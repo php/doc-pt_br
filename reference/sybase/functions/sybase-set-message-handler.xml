@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: 1.10 Maintainer: fernandoc Status: ready -->
+  <refentry id="function.sybase-set-message-handler">
+   <refnamediv>
+    <refname>sybase_set_message_handler</refname>
+    <refpurpose>Define um manipulador para quando uma mensagem do servidor é enviada</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis>
+      <type>bool</type><methodname>sybase_set_message_handler</methodname>
+      <methodparam><type>callback</type><parameter>handler</parameter></methodparam>
+      <methodparam choice="opt"><type>resource</type><parameter>connection</parameter></methodparam>
+     </methodsynopsis>
+    <para> 
+     <function>sybase_set_message_handler</function> define uma função do
+     usuário para manipular as funções do usuário geradas pelo servidor. Você deve o nome de
+     uma função global, ou usar uma matriz para especificar um objeto e o
+     nome de um metodo.
+    </para>
+    
+    &sybase.ct.only;
+
+    <para>
+     O manipulador espera cinco argumentos na seguinte ordem: número
+     da mensagem, severidde, estado, número da linha e descrição. Os quatro
+     primeiros são inteiros. O último é uma string. Se a função retornar &false;,
+     o PHP gera uma mensagem de rro comum.
+    </para>
+    <para>
+     &return.success;
+    </para>
+    <note>
+     <para>
+      O parâmetro <parameter>connection</parameter> foi adicionando no 
+      PHP 4.3.5.
+     </para>
+    </note>
+    <para>
+     <example>
+      <title>Exemplo de <function>sybase_set_message_handler</function></title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+    function msg_handler($msgnumber, $severity, $state, $line, $text) 
+    {
+        var_dump($msgnumber, $severity, $state, $line, $text);
+    }
+    
+    sybase_set_message_handler('msg_handler');
+?>
+]]>
+      </programlisting>
+     </example>
+     <example>
+      <title>Exemplo de <function>sybase_set_message_handler</function> usando uma classe</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+    class Sybase {
+        function handler($msgnumber, $severity, $state, $line, $text) 
+        {
+            var_dump($msgnumber, $severity, $state, $line, $text);
+        }
+    }
+    
+    $sybase= new Sybase();
+    sybase_set_message_handler(array($sybase, 'handler'));
+?>
+]]>
+      </programlisting>
+     </example>
+     <example>
+      <title>Exemplo de <function>sybase_set_message_handler</function> com mensagens não manipuladas</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+    // Return FALSE from this function to indicate you can't handle
+    // this. The error is printed out as a warning, the way you're used
+    // to it if there is no handler installed.
+    function msg_handler($msgnumber, $severity, $state, $line, $text) 
+    {
+        if (257 == $msgnumber) {
+            return false;
+        }
+        var_dump($msgnumber, $severity, $state, $line, $text);
+    }
+    
+    sybase_set_message_handler('msg_handler');
+?>
+]]>
+      </programlisting>
+     </example>
+    </para>
+   </refsect1>
+  </refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"../../../../manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
