@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.14 Maintainer: ernani Status: ready -->
+<!-- EN-Revision: 1.20 Maintainer: ernani Status: ready -->
   <sect1 id="install.apache">
    <title>Servidores-Apache</title>
    <para>
-    Esta seção contém notas e dicas específicas para instalações do PHP em
+    Esta seção contém notas, dicas e instruções específicas para instalações do PHP em
     Apache, tanto para versões <link linkend="install.apache.unix">Unix</link>
     quanto para <link linkend="install.apache.windows">Windows</link>.
+    Nós também temos <link linkend="install.apache2">instruções, dicas e notas para Apache 2
+    numa página separada</link>.
    </para>   
    <sect2 id="install.apache.unix">
     <title>Detalhes ao instalar o PHP com Apache no Unix</title>
@@ -33,37 +35,87 @@
 7.  make
 8.  make install
 9.  cd ../php-xxx
-10. ./configure --with-mysql --with-apxs=/www/bin/apxs
+10. Agora, configure o seu PHP.
+    Aqui é quando você entra na fase de customização do seu PHP,
+    com várias opções, tais como quais extensões serão habilitadas.
+    Execute o comando ./configure --help para uma lista das opções disponíveis.
+    Em nosso exemplo, nós faremos uma simples configuração (./configure) com Apache 1 e suporte ao MySQL.
+
+    Seu caminho ao binário apxs (Apache) pode variar de nosso exemplo abaixo:
+
+    ./configure --with-mysql --with-apxs=/www/bin/apxs
+
 11. make
 12. make install
 
   Se você decidir mudar as opções de seu configure depois da instalação
-  você precisará somente repetir os últimos tres passos. Você somente precisará
+  você precisará somente repetir os últimos 3 passos. Você somente precisará
   reiniciar o apache para o novo módulo funcionar. Não será necessário recompilar
   o Apache.
 
-13. cp php.ini-dist /usr/local/lib/php.ini
+13. Configurando seu arquivo php.ini:
+
+  cp php.ini-dist /usr/local/lib/php.ini
 
   Você pode editar o seu arquivo .ini para configurar as opções do PHP.  Se
   você preferir que este arquivo fique em outro lugar, use a opção
   --with-config-file-path=/caminho no passo 10.
 
-14. Edite o seu arquivo httpd.conf ou srm.conf e verifique que estas linas estejam presentes
-    e não estejam comentadas:
+  Se por acaso em vez de optar pelo php.ini-dist, optar pelo php.ini-recommended, esteja
+  certo de ler a lista de mudanças ocorridas, pois elas podem afetar o modo como o PHP se comportará.
+
+14. Edite o seu arquivo httpd.conf para carregar o módulo do PHP. O caminho no lado direito
+  do comando LoadModule deve apontar para para o caminho do módulo PHP do seu sistema.
   
-   AddType application/x-httpd-php .php
+  O comando (make install) acima já deve ter adicionado estas linhas, mas tenha certeza
+  de que as linhas abaixo foram adicionadas ao arquivo.
 
-   LoadModule php4_module        libexec/libphp4.so
- 
-  Você pode escolher qualquer extensão aqui. .php é simplesmente uma sugestão
-  que nós damos. Você também pode incluir .html, e .php3 pode ser adicionado para 
-  compatibilidade com versões antigas.
- 
-  O caminho no lado direito do comando LoadModule deve apontar para para o caminho
-  do módulo PHP do seu sistema. O comando acima está correto para os passos
-  mostrados acima.
+  Para PHP 4:
 
-15. Use seu procedimento normal para iniciar o servidor Apache. (Você deve
+  LoadModule php4_module        libexec/libphp4.so
+
+  Para PHP 5:
+
+  LoadModule php5_module        libexec/libphp5.so
+
+15. Em seguida, na seção AddModule do arquivo httpd.conf, adicione isto:
+
+  Para PHP 4:
+
+  AddModule mod_php4.c
+
+  Para PHP 5:
+
+  AddModule mod_php5.c
+
+16. Configure no Apache a interpretação de certas extensões de arquivo como PHP.
+
+      Por exemplo, vamos configurar o Apache que ele interprete as extensões .php
+    como PHP. Você pode ter qualquer extensão interpretada como PHP simplesmente adicionando
+    algumas outras extensões de arquivo, cada uma separada por um espaço.
+    Nós iremos adicionar a extensão .phtml apenas para demonstrar.
+
+    AddType application/x-httpd-php .php .phtml
+
+      Você pode escolher qualquer extensão aqui. A extensão .php é simplesmente uma sugestão
+    que nós damos. Você também pode incluir .html, e .php3 pode ser adicionado para 
+    compatibilidade com versões antigas.
+
+      É comum também configurar no Apache a extensão de arquivo .phps para mostrar os códigos
+    fonte formatados de maneira colorida, isto pode ser feito assim:
+
+    AddType application/x-httpd-php-source .phps
+ 
+    <note>
+    <simpara>
+    SUGESTÃO:
+
+    Coloque esta linha abaixo do comando AddModule descrito acima, isto facilita a sua remoção
+    posterior e organiza seu arquivo de configuração do Apache.
+    </simpara>
+    </note>
+
+17. Use seu procedimento normal para iniciar o servidor Apache. (Você deve
     parar e reiniciar o servidor, não somente fazer um reinício enviando
     um sinal HUP ou USR1.)
 ]]>
@@ -76,27 +128,32 @@
       usadas para reiniciar e o servidor, para instalações de versões de apache/unix.
       Você deve trocar <literal>/caminho/para/</literal> pelo
       caminho destas aplicações nos seus sistemas.
-      <informalexample>
-       <screen>
-<![CDATA[
-1. Inúmeras variações de sistemas Linux:
-/etc/rc.d/init.d/httpd restart
+     </para>
+     <para>
+       <example>
+       	<title>Exemplo de comandos para reinicialização do Servidor Apache</title>
+       	<programlisting role="shell">
+        <![CDATA[
+         1. Inúmeras variações de sistemas Linux:
+         /etc/rc.d/init.d/httpd restart
 
-2. Usando os scripts apachectl:
-/caminho/para/apachectl stop
-/caminho/para/apachectl start
+         2. Usando os scripts apachectl:
+         /caminho/para/apachectl stop
+         /caminho/para/apachectl start
 
-3. httpdctl and httpsdctl (Usando OpenSSL), igual ao apachectl:
-/caminho/para/httpsdctl stop
-/caminho/para/httpsdctl start
+         3. httpdctl and httpsdctl (Usando OpenSSL), igual ao apachectl:
+         /caminho/para/httpsdctl stop
+         /caminho/para/httpsdctl start
 
-4. Usando mod_ssl, ou outro servidor SSL, você pode querer iniciar ou
-reiniciar manualmente:
-/caminho/para/apachectl stop
-/caminho/para/apachectl startssl
-]]>
-       </screen>
-      </informalexample>
+         4. Usando mod_ssl, ou outro servidor SSL, você pode querer iniciar
+         ou reiniciar manualmente:
+         /caminho/para/apachectl stop
+         /caminho/para/apachectl startssl
+        ]]>
+        </programlisting>
+        </example>  
+        </para>  
+        <para>
       As localizações dos binários apachectl e http(s)dctl geralmente
       variam. Se o seu sistema tem os comandos <literal>locate</literal> ou
       <literal>whereis</literal> ou <literal>which</literal>,
@@ -116,7 +173,7 @@ reiniciar manualmente:
      <para>
       Isto irá criar uma biblioteca compartilhada <filename>libphp4.so</filename>
       que é carregada com o Apache usando uma linha LoadModule no
-      arquivo <filename>httpd.conf</filename> do Apache. O suporte ao PostgreSQL
+      arquivo &httpd.conf; do Apache. O suporte ao PostgreSQL
       está embutido dentro da biblioteca compartilhada <filename>libphp4.so</filename>.
      </para>
      <para>
@@ -185,7 +242,7 @@ reiniciar manualmente:
      </para>
     <note>
      <para>
-      O arquivo httpd.conf padrão do Apache atualmente já contém uma seção que se parece
+      O arquivo &httpd.conf; padrão do Apache atualmente já contém uma seção que se parece
       com isso:
       <informalexample>
        <programlisting>
@@ -201,7 +258,8 @@ Group "#-1"
     </note>  
     <note>
      <para>
-     Tenha certeza de especificar a versão instalada do apxs quando usar a opção --with-apxs=/caminho/para/apxs.
+     Tenha certeza de especificar a versão instalada do apxs quando usar a opção
+     <option role="configure">--with-apxs=/caminho/para/apxs</option>.
      Você NÂO deverá usar a versão do apxs que está nos fontes do apache e sim a que está atualmente
      instalada no seu sistema.
      </para>
@@ -215,12 +273,11 @@ Group "#-1"
      em Windows. Uma é usando o binário CGI (php.exe),     
      a outra é usando a bliblioteca compartilhada (DLL) como módulo para o Apache (SAPI). Nos dois casos
      você precisará parar o Servidor Apache, e editar seu arquivo
-     <filename>srm.conf</filename> ou <filename>httpd.conf</filename>
-     para configurar o Apache para funcionar com o PHP.
+     &httpd.conf; para configurar o Apache para funcionar com o PHP.
     </simpara>
     <simpara>
      Vale deixar claro aqui que agora o módulo SAPI tornou-se muito mais estável
-     no windows, nós recomendamos o seu uso em vez
+     no Windows, nós recomendamos o seu uso em vez
      do binário CGI, por ele ser mais transparente e seguro.
     </simpara>
     <simpara>
@@ -231,7 +288,7 @@ Group "#-1"
     </simpara>
   
     <para>
-     Se você descompactou o pacote do PHP para c:\php\ como descrito
+     Se você descompactou o pacote do PHP para <filename>c:\php\</filename> como descrito
      na seção <link linkend="install.windows.manual">Passos
      de Instalação Manual</link>, você precisará inserir
      estas linhas no seu arquivo de configuração do Apache para
@@ -260,9 +317,9 @@ Group "#-1"
       </listitem>
      </itemizedlist>
      Note que a segunda linha na lista acima pode ser encontrada
-     em versões atuais do arquivo <filename>httpd.conf</filename>,
-     mas elas estão comentadas. Lembre-se também de trocar o caminho
-     <filename>c:/php/</filename> pelo caminho atual do PHP instalado em seu sistema.
+     em versões atuais do arquivo &httpd.conf;, mas elas estão comentadas.
+     Lembre-se também de trocar o caminho <filename>c:/php/</filename> pelo
+     caminho atual do PHP instalado em seu sistema.
      </para>
 
     <warning>
@@ -277,23 +334,42 @@ Group "#-1"
     <para>
      Se você preferir usar o PHP como um módulo no Apache,
      esteja certo de mover o arquivo <filename>php4ts.dll</filename> para
-     o diretório windows/system (em Windows 9x/Me) ou winnt/system32
-     (para Windows NT/2000/XP), sobrescrevendo qualquer arquivo antigo.
+     o diretório <filename>windows/system</filename> (em Windows 9x/Me) ou 
+     <filename>winnt/system32</filename> (para Windows NT/2000/XP), 
+     sobrescrevendo qualquer arquivo antigo.
      Então você deverá adicionar as duas linhas a seguir em seu arquivo de configuração
-     do Apache:
+     do Apache (&httpd.conf;):
      <itemizedlist>
       <listitem>
        <simpara>
-        <literal>
-         LoadModule php4_module c:/php/sapi/php4apache.dll
-        </literal>
+          Abra o arquivo &httpd.conf; com seu editor de textos preferido e localize 
+          a diretriz <literal>LoadModule</literal> e adicione a seguinte linha
+          <emphasis>no final</emphasis> da lista para o PHP 4:
+          <literal>LoadModule php4_module "c:/php/sapi/php4apache.dll"</literal>
+          ou a seguinte linha para o PHP 5:
+          <literal>LoadModule php5_module "c:/php/sapi/php5apache.dll"</literal>
        </simpara>
       </listitem>
       <listitem>
        <simpara>
-        <literal>
-          AddType application/x-httpd-php .php .phtml
-        </literal>
+        Você pode descobrir que após ter instalado o Apache com o Windows installer
+        que é necessário definir a diretriz para <filename>mod_php4.c</filename>.
+        Isto é especialmente importante se a diretriz <literal>ClearModuleList</literal>
+        estiver definida, na qual você irá descobrir algumas linhas abaixo.
+        Você verá uma lista de entradas <literal>AddModule</literal>, adicione a seguinte
+        linha <emphasis>no final</emphasis> da lista:
+        <literal>AddModule mod_php4.c</literal> para PHP 4 e para PHP 5
+        mude para <literal>AddModule mod_php5.c</literal>
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+         Procure por uma frase igual a <literal>AddType</literal>, então
+         adcione a seguinte linha <emphasis>no final</emphasis> da lista:
+         <literal>AddType application/x-httpd-php .php .phtml</literal>
+         Você pode escolher qualquer extensão aqui. A extensão .php é simplesmente uma sugestão
+	 que nós damos. Você também pode incluir .html, e .php3 pode ser adicionado para 
+         compatibilidade com versões antigas.
        </simpara>
       </listitem>
      </itemizedlist>
@@ -302,33 +378,18 @@ Group "#-1"
     <simpara>
      Após mudar o arquivo de configuração,
      lembre-se de reiniciar o servidor, por exemplo,
-     <literal>NET STOP APACHE</literal> seguido por
-     <literal>NET START APACHE</literal>, se você roda o Apache
+     <command>NET STOP APACHE</command> seguido por
+     <command>NET START APACHE</command>, se você roda o Apache
      como um Serviço Windows, ou use os atalhos comuns no menu iniciar.
     </simpara>
-    
-    <note>
-     <simpara>
-      Você irá descobrir que após usar o windows installer para Apache
-      que você deverá definir a diretriz <literal>AddModule</literal>
-      para <filename>mod_php4.c</filename> no arquivo de configuração
-      (<filename>httpd.conf</filename>).
-      Isto pode ser feito adicionando <literal>AddModule mod_php4.c</literal>
-      para a lista <literal>AddModule</literal>, perto do começo
-      do arquivo de configuração. Isto é especialmente importante se a diretriz
-      <literal>ClearModuleList</literal> estiver definida.
-      Falhas ao configurar isto pode resultar em não definir o PHP como um
-      módulo para Apache.
-     </simpara>
-    </note>
-    
     <simpara>
      Existem duas maneiras para você poder usar a função de destaque de códigos fonte,
      contudo dependerá da maneira de sua instalação para esta função funcionar corretamente.
      Se você configurou o Apache para usar o PHP como um módulo SAPI, então
-     adicionando a seguinte linha ao seu arquivo de configuração você poderá usar
-     esta função: <literal>AddType application/x-httpd-php-source .phps
-     </literal>
+     adicionando a seguinte linha ao seu arquivo de configuração (&httpd.conf;) você poderá
+     usar esta função: <literal>AddType application/x-httpd-php-source .phps</literal>
+     abaixo da posição em que definiu a linha <literal>AddType application/x-httpd-php .php</literal>,
+     veja mais acima).
     </simpara>
     <simpara>
      Se você escolher configurar o Apache para usar o PHP como um binário CGI, você
