@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.90 Maintainer: ae Status: ready -->
+<!-- EN-Revision: 1.111 Maintainer: ae Status: ready -->
  <chapter id="language.types">
   <title>Tipos</title>
 
@@ -8,7 +8,6 @@
 
   <simpara>
    O PHP suporta os oitos tipos primitivos.
-   <!-- (all types are primitive in php) -->
   </simpara>
 
   <para>
@@ -18,25 +17,25 @@
 
     <listitem>
      <simpara>
-      <link linkend="language.types.boolean">booleano</link>
+      <type>boolean</type>
      </simpara>
     </listitem>
 
     <listitem>
      <simpara>
-      <link linkend="language.types.integer">inteiro</link>
+      <type>integer</type>
      </simpara>
     </listitem>
 
     <listitem>
      <simpara>
-      <link linkend="language.types.float">número com ponto flutuante (float)</link>
+      <type>float</type> (número de ponto flutuante, ou também '<type>double</type>')
      </simpara>
     </listitem>
 
     <listitem>
      <simpara>
-      <link linkend="language.types.string">string</link>
+      <type>string</type>
      </simpara>
     </listitem>
 
@@ -48,13 +47,13 @@
 
     <listitem>
      <simpara>
-      <link linkend="language.types.array">array</link>
+      <type>array</type>
      </simpara>
     </listitem>
 
     <listitem>
      <simpara>
-      <link linkend="language.types.object">objeto</link>
+      <type>object</type>
      </simpara>
     </listitem>
 
@@ -66,13 +65,13 @@
 
     <listitem>
      <simpara>
-      <link linkend="language.types.resource">resource</link>
+      <type>resource</type>
      </simpara>
     </listitem>
 
     <listitem>
      <simpara>
-      <link linkend="language.types.null">NULL</link>
+      <type>NULL</type>
      </simpara>
     </listitem>
 
@@ -103,9 +102,10 @@
     </listitem>
 
    </itemizedlist>
-
+   Você também pode encontrar algumas referências ao tipo "double". Considere o tipo
+   double como sendo o float, e os dois nomes existem por razões
+   históricas.
   </para>
-
 
   <simpara>
    O tipo da variável geralmente não é configurado pelo programador: isto
@@ -118,13 +118,38 @@
      linkend="language.expressions">expressão</link>, utilize
     <function>var_dump</function>.
    </simpara>
-   <simpara>
+   <para>
     Se você simplesmente quiser uma representação legível de seu tipo para
     debugagem, use <function>gettype</function>. Para verificar por certos tipos,
     <emphasis>não use</emphasis> <function>gettype</function>, mas sim as funções
-    <literal>is_<replaceable>type</replaceable></literal>.
-   </simpara>
-   <!-- TODO: example(s) would be maravilhoso -->
+    <literal>is_<replaceable>type</replaceable></literal>. Vejamos alguns
+    exemplos:
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+<?php
+$bool = TRUE;   // um booleano
+$str  = "foo";  // uma string
+$int  = 12;     // um inteiro
+
+echo gettype($bool); // imprime "boolean"
+echo gettype($str);  // imprime "string"
+
+// Se eh um inteiro, incrementa em quatro
+if (is_int($int)) {
+    $int += 4;
+}
+
+// Se $bool eh string, imprime
+// (e nao faz nada se nao for)
+if (is_string($bool)) {
+    echo "String: $bool";
+}
+?>
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
   </note>
   <simpara>
    Se você quiser forçar a conversão de uma variável para um certo tipo,
@@ -133,22 +158,19 @@
    usar a função <function>settype</function> nela.
   </simpara>
   <simpara>
-   Note que uma variável pode se comportar de maneiras diferentes em certas
+   Note que uma variável pode ser avaliada com valores diferentes em certas
    situações, dependendo de qual tipo ela é no momento. Para mais informações,
    veja a seção <link
    linkend="language.types.type-juggling">Manipulação de tipos</link>.
   </simpara>
-
-
-   </sect1>
+ </sect1>
 
    <sect1 id="language.types.boolean">
     <title>Booleanos</title>
 
     <simpara>
      Este é o tipo mais fácil. Um<type>booleano</type> expressa um
-     valor de verdade. Ele pode ser &true; ou
-     &false;.
+     valor de verdade. Ele pode ser &true; ou &false;.
     </simpara>
 
     <note>
@@ -162,11 +184,12 @@
      <para>
       Para especificar um literal booleano, use as palavras chave &true;
       ou &false;. Ambas são insensitivas ao caso.
-      <!-- technically they are just constants -->
       <informalexample>
        <programlisting role="php">
 <![CDATA[
+<?php
 $foo = True; // assimila o valor TRUE para $foo
+?>
 ]]>
        </programlisting>
       </informalexample>
@@ -180,20 +203,23 @@ $foo = True; // assimila o valor TRUE para $foo
       <informalexample>
        <programlisting role="php">
 <![CDATA[
-// == é um operador que retorna um booleano
+<?php
+// == eh um operador que testa
+// igualdade e retorna um booleano
 if ($action == "mostrar_versao") {
     echo "A versão é 1.23";
 }
 
-// isto não é necessário
+// isto não é necessário ...
 if ($exibir_separadores == TRUE) {
     echo "<hr>\n";
 }
 
-// porque você pode simplesmente escrever isso:
+// ... porque você pode simplesmente escrever isso:
 if ($exibir_separadores) {
     echo "<hr>\n";
 }
+?>
 ]]>
        </programlisting>
       </informalexample>
@@ -206,7 +232,7 @@ if ($exibir_separadores) {
        Para converter explicitamente um valor para <type>booleano</type>, utilize-se dos
        modificadores <literal>(bool)</literal> ou <literal>(boolean)</literal>.
        Entretanto, na maioria dos casos, você não precisa utilizar o modificador, desde que qualquer valor
-       será convertido automaticamente se um operador, função ou 
+       será convertido automaticamente se um operador, função ou
        estrutura de controle requerer um argumento <type>booleano</type>.
       </simpara>
       <simpara>
@@ -219,8 +245,8 @@ if ($exibir_separadores) {
 
        <itemizedlist>
         <listitem>
-         <simpara>o <link linkend="language.types.boolean">booleano</link>
-          &false;<!-- duh... --></simpara>
+         <simpara>o próprio <link linkend="language.types.boolean">booleano</link>
+          &false;</simpara>
         </listitem>
         <listitem>
          <simpara>o <link linkend="language.types.integer">inteiro</link
@@ -242,7 +268,7 @@ if ($exibir_separadores) {
         </listitem>
         <listitem>
          <simpara>um <link linkend="language.types.object">objeto</link>
-         sem elementos</simpara>
+         sem elementos membros</simpara>
         </listitem>
         <listitem>
          <simpara>o tipo especial <link linkend="language.types.null"
@@ -260,12 +286,23 @@ if ($exibir_separadores) {
          ou positivos)!
         </simpara>
        </warning>
-       <!-- TODO: add a few examples, for the people only looking at
-            the examples... -->
+       <informalexample>
+        <programlisting role="php">
+<![CDATA[
+<?php
+echo gettype((bool) "");        // bool(false)
+echo gettype((bool) 1);         // bool(true)
+echo gettype((bool) -2);        // bool(true)
+echo gettype((bool) "foo");     // bool(true)
+echo gettype((bool) 2.3e5);     // bool(true)
+echo gettype((bool) array(12)); // bool(true)
+echo gettype((bool) array());   // bool(false)
+?>
+]]>
+        </programlisting>
+       </informalexample>
       </para>
-
-    </sect2>
-
+     </sect2>
    </sect1>
 
    <sect1 id="language.types.integer">
@@ -278,8 +315,9 @@ if ($exibir_separadores) {
 
     <para>
      Veja também:
-     <link linkend="ref.gmp">Inteiros de tamanho arbitrário</link> e
-     <link linkend="language.types.float">Números de ponto flutuante</link>
+     <link linkend="ref.gmp">Inteiros de tamanho arbitrário / GMP</link>, 
+     <link linkend="language.types.float">Números de ponto flutuante</link> e 
+     <link linkend="ref.bc">Precisão arbitrária / BCMath</link>.
     </para>
 
     <sect2 id="language.types.integer.syntax">
@@ -296,31 +334,38 @@ if ($exibir_separadores) {
        <title>Literais inteiras</title>
        <programlisting role="php">
 <![CDATA[
+<?php
 $a = 1234; # número decimal
 $a = -123; # um número negativo
 $a = 0123; # número octal (equivalente a 83 em decimal)
 $a = 0x1A; # número hexadecimal (equivalente a 26 em decimal)
+?>
 ]]>
        </programlisting>
       </example>
-      <!--
+      Formalmente, as possíveis representação de inteiros são:
+      <informalexample>
+       <programlisting>
+<![CDATA[
+<?php
+decimal     : [1-9][0-9]*
+            | 0
 
-       decimal     : [1-9][0-9]*
-                   | 0
+hexadecimal : 0[xX][0-9a-fA-F]+
 
-       hexadecimal : 0[xX][0-9a-fA-F]+
+octal       : 0[0-7]+
 
-       octal       : 0[0-7]+
-
-       integer     : [+-]?decimal
-                   | [+-]?hexadecimal
-                   | [+-]?octal
-
-       -->
+integer     : [+-]?decimal
+            | [+-]?hexadecimal
+            | [+-]?octal
+?>
+]]>
+       </programlisting>
+      </informalexample>
       O tamanho de um inteiro é dependente de plataforma, sendo
       um numero aproximado a 2 bilhões o valor mais comum
       (número de 32 bits com sinal). O PHP não suporta inteiros
-      não sinalizados.
+      sem sinal.
      </para>
     </sect2>
 
@@ -336,6 +381,7 @@ $a = 0x1A; # número hexadecimal (equivalente a 26 em decimal)
       <informalexample>
        <programlisting role="php">
 <![CDATA[
+<?php
 $ numero_grande =  2147483647;
 var_dump($numero_grande);
 // saida: int(2147483647)
@@ -352,6 +398,7 @@ $milhao = 1000000;
 $numero_grande =  50000 * $milhao;
 var_dump($numero_grande);
 // saida: float(50000000000)
+?>
 ]]>
        </programlisting>
       </informalexample>
@@ -372,13 +419,17 @@ var_dump($numero_grande);
      <para>
       Não há operador de divisão inteira no PHP.
       <literal>1/2</literal> retorna o <type>ponto flutuante</type>
-      <literal>0.5</literal>. <!-- See ??? for more information. (with the
-      operators, or with type-jug) -->
+      <literal>0.5</literal>. Você pode moldar (cast) o valor para
+      inteiro para sempre truncar o número, ou você pode
+      usar a função <function>round</function>.
       <informalexample>
        <programlisting role="php">
 <![CDATA[
-var_dump( 25/7 );
-// saida: float(3.5714285714286)
+<?php
+var_dump(25/7);         // float(3.5714285714286)
+var_dump((int) (25/7)); // int(3)
+var_dump(round(25/7));  // float(4) 
+?>
 ]]>
        </programlisting>
       </informalexample>
@@ -394,6 +445,8 @@ var_dump( 25/7 );
        Entretanto, na maioria dos casos, você não precisa utilizar o modificador, desde que qualquer
        valor será automaticamente convertido se um operador, função ou
        estrutura de controle requerer um argumento <type>inteiro</type>.
+       Você também pode converter o valor de um inteiro com a função
+       <function>intval</function>.
       </simpara>
       <simpara>
        Veja também <link linkend="language.types.type-juggling">Manipulação de tipos</link>.
@@ -418,7 +471,6 @@ var_dump( 25/7 );
 
        <para>
         Se o número convertido estiver além dos limites de um inteiro
-        <!-- usually, or is it 'always'? -->
         (usualmente <literal>+/- 2.15e+9 = 2^31</literal>),
         o resultado é indefinido, mesmo porque o ponto flutuante
         não tem a mesma precisão para fornecer um resultado inteiro exato.
@@ -432,7 +484,9 @@ var_dump( 25/7 );
         <informalexample>
          <programlisting role="php">
 <![CDATA[
+<?php
 echo (int) ( (0.1+0.7) * 10 ); // imprime 7!
+?>
 ]]>
          </programlisting>
         </informalexample>
@@ -447,7 +501,7 @@ echo (int) ( (0.1+0.7) * 10 ); // imprime 7!
        <title>De strings</title>
        <simpara>
         Veja <link linkend="language.types.string.conversion">Conversão
-        de strings</link>
+        de strings para números</link>
        </simpara>
       </sect3>
 
@@ -465,16 +519,7 @@ echo (int) ( (0.1+0.7) * 10 ); // imprime 7!
          </simpara>
         </caution>
        </para>
-       <!--
-
-        IMO, it would more sense as (int) $arr returned the
-        number of elements in $arr. This won't break anything,
-        since this behaviour was never defined before, and
-        (bool)(int) $arr will still behave the same.
-
-        -->
       </sect3>
-
     </sect2>
   </sect1>
 
@@ -483,20 +528,30 @@ echo (int) ( (0.1+0.7) * 10 ); // imprime 7!
    <para>
     Números de ponto flutuante (AKA "floats", "doubles" ou "números reais") podem ser
     especificados utilizando qualquer uma das sintaxes seguintes:
-    <synopsis>
-$a = 1.234; $a = 1.2e3; $a = 7E-10;
-    </synopsis>
-    <!--
-
-LNUM	[0-9]+
-DNUM	([0-9]*[\.][0-9]+)|([0-9]+[\.][0-9]*)
-EXPONENT_DNUM	(({LNUM}|{DNUM})[eE][+-]?{LNUM})
-
-    -->
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+<?php
+$a = 1.234; 
+$b = 1.2e3; 
+$c = 7E-10;
+?>
+]]>
+     </programlisting>
+    </informalexample>
+    Formalmente:
+    <informalexample>
+     <programlisting role="php">
+LNUM          [0-9]+
+DNUM          ([0-9]*[\.]{LNUM}) | ({LNUM}[\.][0-9]*)
+EXPONENT_DNUM ( ({LNUM} | {DNUM}) [eE][+-]? {LNUM})
+     </programlisting>
+    </informalexample>
     O tamanho de um número de ponto flutuante é dependente de plataforma,
     sendo o máximo de ~1.8e308 com uma precisão de 14
     decimais digitais um valor comum (número de 64 bits no formato IEEE).
    </para>
+
    <warning id="warn.float-precision">
     <title>Precisão de números de ponto flutuante</title>
     <para>
@@ -523,6 +578,19 @@ EXPONENT_DNUM	(({LNUM}|{DNUM})[eE][+-]?{LNUM})
      ou as funções relacionadas ao <link linkend="ref.gmp">gmp</link>.
     </para>
    </warning>
+
+   <sect2 id="language.types.float.casting">
+    <title>Convertendo para float</title>
+
+    <para>
+     Para informações em como e quando strings são convertidas para floats,
+     veja a seção entitulada <link linkend="language.types.string.conversion">Conversão de
+     Strings para números</link>. Para valores de outros tipos, a conversão
+     é a mesma se o valor puder ser convertido para inteiro
+     e então para float. Veja a seção <link linkend="language.types.integer.casting">Convertendo
+     para inteiro</link> para mais informações.
+    </para>
+   </sect2>
   </sect1>
 
   <sect1 id="language.types.string">
@@ -531,10 +599,8 @@ EXPONENT_DNUM	(({LNUM}|{DNUM})[eE][+-]?{LNUM})
     Uma <type>string</type> é uma série de caracteres. No PHP,
     um caracter é o mesmo que um byte, ou seja, há exatamente
     256 caracteres diferentes possíveis. Isto implica que o PHP
-    não tem suporte nativo ao Unicode.
-    <!-- how about unicode? will we support that eventually? Are
-    there current any ways to work with unicode?
-    -->
+    não tem suporte nativo ao Unicode. Veja <function>utf8_encode</function>
+    e <function>utf8_decode</function> para suporte ao Unicode.
    </para>
    <note>
     <simpara>
@@ -593,24 +659,37 @@ EXPONENT_DNUM	(({LNUM}|{DNUM})[eE][+-]?{LNUM})
       </note>
       <note>
        <simpara>
-        Diferentemente das duas outras sintaxes, variáveis <emphasis>não serão</emphasis>
-        substituídas quando elas ocorrerem dentro de strings delimitadas por apóstrofes.
+        Diferentemente das duas outras sintaxes, <link
+        linkend="language.variables">variables</link> e sequüências de escape
+        para caracteres especiais <emphasis>não</emphasis> serão substituídas 
+        quando elas ocorrerem dentro de strings delimitadas por apóstrofes.
        </simpara>
       </note>
       <informalexample>
        <programlisting role="php">
 <![CDATA[
+<?php
 echo 'isto é uma string comum';
+
 echo 'Você pode incluir novas linhas em strings,
-dessa maneira';
-echo 'Arnold disse uma vez: "I\'ll be back"';
-// saida: ... "I'll be back"
+dessa maneira que estará
+tudo bem';
+
+// Imprime: Arnold disse uma vez: "I\'ll be back"
+echo 'Arnold once said: "I\'ll be back"';
+
+// Imprime: Você tem certeza em apagar C:\*.*?
 echo 'Você tem certeza em apagar C:\\*.*?';
-// saida: ... apagar C:\*.*?
+
+// Imprime: Você tem certeza em apagar C:\*.*?
 echo 'Você tem certeza em apagar C:\*.*?';
-// output: ... apagar C:\*.*?
-echo 'Estou tentando incluir uma nova linha \n neste ponto';
-// output: ... nova linha \n neste ponto
+
+// Imprime: Isto não será substituido: \n uma nova linha
+echo 'Isto não será substituido: \n uma nova linha';
+
+// Imprime: Variaveis $também não $expandem
+echo 'Variaveis $também não $expandem';
+?>
 ]]>
        </programlisting>
       </informalexample>
@@ -679,7 +758,7 @@ echo 'Estou tentando incluir uma nova linha \n neste ponto';
       contra barra será impressa também!
      </para>
      <para>
-      Mas o mais importante dado a respeito de strings delimitadas por aspas
+      Mas o mais importante recurso de strings delimitadas por aspas
       está no fato de que nome de variáveis serão substituídos.
       Veja <link linkend="language.types.string.parsing">interpretação de
       strings</link> para detalhes.
@@ -710,6 +789,17 @@ echo 'Estou tentando incluir uma nova linha \n neste ponto';
        O que significa que o identificador
        <emphasis>não pode ser endentado</emphasis>, e que
        não pode haver nenhum espaço ou tabulações antes ou depois do ponto e vírgula.
+       É também importante perceber que o primeiro caracter antes
+       do identificador de fechamento precisa ser um caracter de nova linha como esperada por
+       seu sistema operacional. Por exemplo, <literal>\r</literal> em sistemas
+       Macintosh.
+      </simpara>
+      <simpara>
+       Se essa regra for quebrada e o identificador de fechamento não estiver perfeito,
+       então ele não será considerado como identificador de fechamento e o PHP
+       irá continuar propurando por um. Se, neste caso, um identificador de fechamento
+       apropriado não for encontrado, então um erro de interpretação (parse) será lançado
+       na linha final do script.
       </simpara>
      </warning>
 
@@ -763,13 +853,13 @@ EOT;
        O suporte a heredoc foi acrescentado no PHP 4.
       </para>
      </note>
-
     </sect3>
+
     <sect3 id="language.types.string.parsing">
      <title>Interpretação de variáveis</title>
      <simpara>
       Quando uma string é especificada dentro de aspas ou
-      heredoc, variáveis são
+      heredoc, <link linkend="language.variables">variáveis</link> são
       interpretadas dentro delas.
      </simpara>
      <simpara>
@@ -779,14 +869,14 @@ EOT;
       <link linkend="language.types.string.parsing.complex">complexo</link>
       .
       A sintaxe simples é a mais comum e conveniente, provendo uma maneira de
-      interpretar uma variável, um valor de array ou uma propriedade de objeto.
+      interpretar uma variável, um valor de <type>array</type> ou uma propriedade de <type>
+      object</type>.      
      </simpara>
      <simpara>
-      A sintaxe completa foi introduzida no PHP 4,
-      <!-- XXX was it? and starting with what version exactly? -->
-      e pode ser reconhecida
+      A sintaxe completa foi introduzida no PHP 4, e pode ser reconhecida
       por chaves ({}) envolvendo a expressão.
      </simpara>
+
      <sect4 id="language.types.string.parsing.simple">
       <title>Sintaxe simples</title>
       <simpara>
@@ -798,42 +888,65 @@ EOT;
       <informalexample>
        <programlisting role="php">
 <![CDATA[
+<?php
 $cerveja = 'Heineken';
 echo "O sabor das '$cerveja's é otimo"; // funciona, "'" é um caracter inválido para nome de variáveis
 echo "Ele bebeu algumas $cervejas";     // não funciona, 's' é um caracter válido para nome de variáveis
 echo "Ele bebeu algumas ${cerveja}s";   // funciona
+echo "Ele bebeu algumas {$cerveja}s";   // funciona
+?>
 ]]>
        </programlisting>
       </informalexample>
       <simpara>
-       Similarmente, você também pode interpretar um índice de array ou
-       uma propriedade de objeto. Com índices de arrays, o colchete de fechamento
+       Similarmente, você também pode interpretar um índice de <type>array</type> ou
+       uma propriedade de <type>objeto</type>. Com índices de arrays, o colchete de fechamento
        (<literal>]</literal>) marca o final do índice. Para
        propriedades de objetos se aplicam as mesmas regras das variáveis comuns,
        embora não exista um truque para as propriedades de objetos como
        para as variáveis.
 
        <!-- XXX isn't &true; :(, this would be the trick
-       Also,
-       the same trick with curly-braces works if you
-       want to limit the greediness of parsers (aren't they
-       paying them enough or something?).
+       Also, the same trick with curly-braces works if you
+       want to limit the greediness of parsers.
        -->
 
       </simpara>
       <informalexample>
        <programlisting role="php">
 <![CDATA[
-$frutas = array( 'morangos' => 'vermelho' , 'banana' => 'amarelo' );
+<?php
+// Esses exemplos são específicos para utilização de arrays dentro de strings
+// Quando fora de strings, sempre delimite suas chaves de array strings
+// e nao use {colchetes} fora das strings tambem.
 
-// note que isto funciona diferentemente fora de delimitadores de string
-echo "Uma banana é $frutas[banana].";
+// Vamos ver todos os erros
+error_reporting(E_ALL);
 
+$fruits = array('morango' => 'vermelho', 'banana' => 'amarelo');
+
+// Funciona, mas note que funciona de maneira diferente fora dos delimitadores de strings
+echo "A banana é $fruits[banana].";
+
+// Funciona
+echo "A banana é {$fruits['banana']}.";
+
+// Funciona, mas o PHP procura por uma constante chamada 'banana' antes,
+// como descrito a seguir
+echo "A banana é {$fruits[banana]}.";
+
+// Nao funciona, use colchetes. Isto lanca um parse error.
+echo "A banana é $fruits['banana'].";
+
+// Funciona
+echo "A banana é " . $fruits['banana'] . ".";
+
+// Funciona
 echo "Este quadrado tem $square->width metros de lado.";
 
-// Não funciona. Para uma solução, veja a sintaxe complexa.
+// Nao funciona. Para uma solução, veja a sintaxe complexa.
 echo "Este quadrado tem $square->width00 centímetros de lado.";
-
+?>
 ]]>
 <!-- XXX this won't work:
 echo "This square is $square->{width}00 centimeters broad.";
@@ -847,6 +960,7 @@ echo "This square is $square->{width}00 centimeters broad.";
        Para qualquer coisa mais complexa, você precisa utilizar a sintaxe complexa.
       </simpara>
      </sect4>
+
      <sect4 id="language.types.string.parsing.complex">
       <title>Sintaxe complexa (chaves)</title>
       <simpara>
@@ -865,19 +979,42 @@ echo "This square is $square->{width}00 centimeters broad.";
      <informalexample>
       <programlisting role="php">
 <![CDATA[
-$maravilhoso = 'fantástico';
-echo "Isto é { $maravilhoso}"; // não funciona, imprime: Isto é { fantástico}
-echo "Isto é {$maravilhoso}";  // funciona, imprime: Isto é fantástico
+<?php
+// Vamos ver todos os erros
+error_reporting(E_ALL);
+
+$bom = 'fantastico';
+
+// Nao funciona, imprimindo: Isto é { fantastico}
+echo "Isto é { $bom}";
+
+// Funciona, imprimindo: Isto é fantástico
+echo "Isto é {$bom}";
+echo "Isto é ${bom}";
+
+// Funciona
 echo "Este quadrado tem {$square->width}00 centímetros de lado.";
-echo "E isto funciona: {$arr[4][3]}";
 
-// E isto está errado pela mesma razão
-// como $foo[bar] é incorreto fora de uma string.
-echo "Isto está errado: {$arr[foo][3]}";
+// Funciona
+echo "Isto funciona: {$arr[4][3]}";
 
-echo "Você deve fazer desta maneira: {$arr['foo'][3]}";
-echo "Você pode sempre escrever {$obj->values[3]->name}";
+// Isto está errado pela mesma razao que $foo[bar] eh errado
+// fora de uma string. Em outras palavras, isto ainda funciona MAS
+// porque o PHP primeiro procura pro uma constante nomeada foo, e ele
+// lancara um erro do tipo E_NOTICE (undefined constant).
+echo "Isto é errado: {$arr[foo][3]}";
+
+// Funciona. Quanto mexendo com arrays multi dimensionais, sempre use
+// colchetes em volta dos arrays quando detro de strings
+echo "Isto funciona: {$arr['foo'][3]}";
+
+// Funciona
+echo "Isto funciona: " . $arr['foo'][3];
+
+echo "Você pode escrever também {$obj->values[3]->name}";
+
 echo "Este é o valor da variável chamada $name: {${$name}}";
+?>
 ]]>
 <!-- maybe it's better to leave this out??
 // this works, but i disencourage its use, since this is NOT
@@ -899,41 +1036,25 @@ echo "I'd like to have another {${ strrev('reeb') }}, hips";
      </para>
      <note>
       <simpara>
-       Para manutenção de compatibilidade, você ainda pode utilizar colchetes.
-       Entretanto, esta sintaxe for marcada como em extinção desde o PHP 4.
+       Para manter a compatibilidade, você ainda pode usar colchetes de array
+       para o mesmo propósito. Entretanto, esse sintaxe é obsoleta desde
+       o PHP 4.
       </simpara>
      </note>
      <para>
       <example>
        <title>Alguns exemplos com strings</title>
        <programlisting role="php">
-<!-- TODO: either move these examples to a example section,
-as with arrays, or distribute them under the applicable
-sections. -->
 <![CDATA[
 <?php
-/* Assimilando uma string. */
-$str = "Isto é uma string";
-
-/* Anexando a ela. */
-$str = $str . " com uma pouco mais de texto";
-
-/* Outra maneira de acrescentar, incluindo uma nova linha. */
-$str .= " e um fim de linha no final (duh).\n";
-
-/* Esta string será mostrada assim '<p>Número: 9</p>' */
-$num = 9;
-$str = "<p>Número: $num</p>";
-
-/* Isto será apenas '<p>Número: $num</p>' */
-$num = 9;
-$str = '<p>Número: $num</p>';
-
-/* Pega o primeiro caracter de uma string */
+// Pega o primeiro caracter da string
 $str = 'Isto é um teste.';
 $first = $str{0};
 
-/* Pega o último caracter da string. */
+// Pega o terceiro caracter da string
+$third = $str{2};
+
+// Pega o último caracter da string
 $str = 'Isto ainda é um teste.';
 $last = $str{strlen($str)-1};
 ?>
@@ -946,7 +1067,7 @@ $last = $str{strlen($str)-1};
    </sect2><!-- end syntax -->
 
    <sect2 id="language.types.string.useful-funcs">
-    <title>Funções úteis</title><!-- and operators -->
+    <title>Funções e operadores úteis</title>
     <para>
      Strings podem ser concatenados utilizando o operador '.' (ponto). Note
      que o operador '+' (adição) não funciona para isso.
@@ -974,8 +1095,76 @@ $last = $str{strlen($str)-1};
      veja também as <link linkend="ref.ctype">funções de tipos de caracteres</link>.
     </simpara>
    </sect2>
+
+   <sect2 id="language.types.string.casting">
+    <title>Convertendo para strings</title>
+
+    <para>
+     Você pode converter um valor para string utilizando o molde <literal>(string)</literal>,
+     ou a função <function>strval</function>. Conversão para string
+     é automaticamente realizada no escopo de uma expressão para você onde uma
+     string é necessária. Isto acontece quando você usa as funções <function>echo</function>
+     ou <function>print</function>, ou quando você compara o valor de uma
+     variável com uma string. Lendo as seções do manual sobre <link
+     linkend="language.types">Tipos</link> e <link
+     linkend="language.types.type-juggling">Conversão de Tipos</link> tornará o
+     que se segue um pouco mais claro. Veja também <function>settype</function>.
+    </para>
+
+    <para>
+     O valor <type>boolean</type> &true; é convertido para a string <literal>"1"</literal>,
+     o valor &false; é representado como <literal>""</literal> (string vazia).
+     Desta forma, você pode converter livremente entre os tipos booleano e string.
+    </para>
+    <para>
+     Um <type>integer</type> ou número de ponto flutuante (<type>float</type>)
+     é convertido para a representação string do número em dígitos arábicos
+     (incluindo a parte expoente para números de ponto flutuante).
+    </para>
+    <para>
+     Arrays são sempre convertidos para a string <literal>"Array"</literal>,
+     então você não pode exportar o conteúdo de um <type>array</type> com
+     <function>echo</function> ou <function>print</function> para ver o que há dentro
+     dela. Para ver um elemento, você precisa fazer algo como <literal>
+     echo $arr['foo']</literal>. Veja abaixo dicas de como exportar/ver todo
+     seu conteúdo.
+    </para>
+    <para>
+     Objetos são sempre convertidos para a string <literal>"Object"</literal>.
+     Se você quiser imprimir os valores das variáveis membro de um
+     <type>object</type> por razão de debug, leia os parágrafos
+     abaixo. Se você quiser encontrar o nome da classe do qual o objeto
+     é uma instância, use <function>get_class</function>.
+    </para>
+    <para>
+     Recursos são sempre convertidos para strings na estrutura
+     <literal>"Resource id #1"</literal> onde <literal>1</literal> é
+     o número único do <type>resource</type> assimilado pelo PHP na execução.
+     Se você quiser obter o tipo do recurso, utilize
+     <function>get_resource_type</function>.
+    </para>
+    <para>
+     &null; é sempre convertido para uma string vazia.
+    </para>
+
+    <para>
+     Como você viu acima, imprimir arrays, objetos ou recursos não
+     fornece qualquer informação útil sobre os seus próprios valores. Veja as
+     funções <function>print_r</function> e <function>var_dump</function>
+     para melhores maneiras de imprimir valores para debug.
+    </para>
+
+    <para>
+     Você também pode converter valores PHP para strings para armazená-los permanentemente. Este
+     método é chamado serialização, e pode ser feito com a função
+     <function>serialize</function>. Você também pode serializar valores PHP para
+     estruturas XML , se você ativou o suporte a <link linkend="ref.wddx">WDDX</link>
+     na configuração do seu PHP.
+    </para>
+   </sect2>
+
    <sect2 id="language.types.string.conversion">
-    <title>Conversão de strings</title>
+    <title>Conversão de strings para números</title>
 
     <simpara>
      Quando uma string é avaliada como um valor numérico, o valor
@@ -998,14 +1187,16 @@ $last = $str{strlen($str)-1};
     <informalexample>
      <programlisting role="php">
 <![CDATA[
-$foo = 1 + "10.5";                // $foo é ponto flutuante (11.5)
-$foo = 1 + "-1.3e3";              // $foo é ponto flutuante (-1299)
-$foo = 1 + "bob-1.3e3";           // $foo é ponto inteiro (1)
-$foo = 1 + "bob3";                // $foo é ponto inteiro (1)
-$foo = 1 + "10 Small Pigs";       // $foo é ponto inteiro (11)
-$foo = 4 + "10.2 Little Piggies"; // $foo é ponto flutuante (14.2)
-$foo = "10.0 pigs " + 1;          // $foo é ponto flutuante (11)
-$foo = "10.0 pigs " + 1.0;        // $foo é ponto flutuante (11)
+<?php
+$foo = 1 + "10.5";                // $foo é float (11.5)
+$foo = 1 + "-1.3e3";              // $foo é float (-1299)
+$foo = 1 + "bob-1.3e3";           // $foo é integer (1)
+$foo = 1 + "bob3";                // $foo é integer (1)
+$foo = 1 + "10 Small Pigs";       // $foo é integer (11)
+$foo = 4 + "10.2 Little Piggies"; // $foo é float (14.2)
+$foo = "10.0 pigs " + 1;          // $foo é float (11)
+$foo = "10.0 pigs " + 1.0;        // $foo é float (11)
+?>
 ]]>
      </programlisting>
     </informalexample>
@@ -1020,10 +1211,18 @@ $foo = "10.0 pigs " + 1.0;        // $foo é ponto flutuante (11)
      <informalexample>
       <programlisting role="php">
 <![CDATA[
+<?php
 echo "\$foo==$foo; tipo " . gettype ($foo) . "<br />\n";
+?>
 ]]>
       </programlisting>
      </informalexample>
+    </para>
+    <para>
+     Não espere obter o código de um caracter por convertê-lo
+     para inteiro (como você teria em C, por exemplo). Use as funções
+     <function>ord</function> e <function>chr</function> para converter
+     entre código de caracteres e os próprios caracteres.
     </para>
 
    </sect2>
@@ -1038,8 +1237,7 @@ echo "\$foo==$foo; tipo " . gettype ($foo) . "<br />\n";
     Este tipo é otimizado de várias maneiras,
     então você pode usá-lo como um array real, ou uma lista (vetor),
     hashtable (que é uma implementação de mapa),
-    dicionário, <!-- is a map -->
-    coleção,
+    dicionário, coleção,
     pilha, fila e provavelmente mais. Como você pode ter outro
     array PHP como um valor, você pode facilmente simular
     árvores.
@@ -1049,8 +1247,6 @@ echo "\$foo==$foo; tipo " . gettype ($foo) . "<br />\n";
     mas você pode encontrar exemplos para cada uma dessas estruturas a seguir.
     Para mais informações sobre estruturas, refira-se a
     literatura externa sobre esses tópicos.
-    <!-- like goodrich&tamassia: datastructures and algorithmes.
-    Only, the subtitle is: in Java, and it's quite academic too -->
    </para>
 
    <sect2 id="language.types.array.syntax">
@@ -1066,16 +1262,55 @@ echo "\$foo==$foo; tipo " . gettype ($foo) . "<br />\n";
       .
      </para>
      <para>
-      Uma <varname>chave</varname> pode ser tanto um <type>inteiro</type>
-      ou uma <type>string</type>.
-      Se a chave é uma representação padrão de um
-      <type>inteiro</type>, ele será
-      interpretado assim (por exemplo, <literal>"8"</literal> será interpretado
-      como <literal>8</literal>, enquanto
-      <literal>"08"</literal> será interpretado como <literal>"08"</literal>).
+      <synopsis>
+array( <optional> <replaceable>chave</replaceable> =&gt; </optional> <replaceable>valor</replaceable>
+
+     , ...
+     )
+// <replaceable>chave</replaceable> pode ser tanto <type>string</type>
+   ou um <type>integer</type> não negativo
+// <replaceable>valor</replaceable> pode ser qualquer coisa
+      </synopsis>
      </para>
      <para>
-      O valor pode ser qualquer coisa.
+      <informalexample>
+       <programlisting role="php">
+<![CDATA[
+<?php
+$arr = array("foo" => "bar", 12 => true);
+
+echo $arr["foo"]; // bar
+echo $arr[12];    // 1
+?>
+]]>
+       </programlisting>
+      </informalexample>
+     </para>
+     <para>
+      A <varname>chave</varname> pode ser tanto um <type>inteiro</type>
+      ou uma <type>string</type>. Se a chave é uma representação padrão
+      de um <type>inteiro</type>, ele será interpretado assim (por exemplo,
+      <literal>"8"</literal> será interpretado como <literal>8</literal>,
+      enquanto <literal>"08"</literal> será interpretado como
+      <literal>"08"</literal>). Não há diferença entre arrais indexados e
+      associativos em PHP, apenas um tipo de array,
+      que pode ter índices inteiros ou string.
+     </para>
+     <para>
+      O valor pode ser qualquer tipo PHP:
+      <informalexample>
+       <programlisting role="php">
+<![CDATA[
+<?php
+$arr = array("somearray" => array(6 => 5, 13 => 9, "a" => 42));
+
+echo $arr["somearray"][6];    // 5
+echo $arr["somearray"][13];   // 9
+echo $arr["somearray"]["a"];  // 42
+?>
+]]>
+       </programlisting>
+      </informalexample>
      </para>
      <para>
       Se omitir a chave, o maior índice inteiro é obtido, e
@@ -1085,11 +1320,24 @@ echo "\$foo==$foo; tipo " . gettype ($foo) . "<br />\n";
       Se nenhum índice inteiro existir
       ainda, a chave será <literal>0</literal> (zero). Se você especifica uma chave
       que já possui um valor assimilada a ela, então o valor é sobrescrito.
+      <informalexample>
+       <programlisting role="php">
+<![CDATA[
+<?php
+// Esse array eh como ...
+array(5 => 43, 32, 56, "b" => 12);
+
+// ... este array
+array(5 => 43, 6 => 32, 7 => 56, "b" => 12);
+?>
+]]>
+       </programlisting>
+      </informalexample>
      </para>
      <para>
-      Utilizar <literal>true</literal> como chave será interpretado como
+      Utilizar &true; como chave será interpretado como
       <type>inteiro</type> <literal>1</literal> na chave. Utilizando
-      <literal>false</literal> como chave será avaliado como o <type>inteiro</type>
+      &false; como chave será avaliado como o <type>inteiro</type>
       <literal>0</literal>. Usar <literal>NULL</literal> como chave
       é interpretado como uma string vazia. Usar uma string vazia como chave irá
       criar (ou sobrescerver) uma chave com uma string vazia e seu valor, e isto
@@ -1099,31 +1347,17 @@ echo "\$foo==$foo; tipo " . gettype ($foo) . "<br />\n";
       Você não pode usar arrays ou objetos como chaves. Fazendo isso resultará em um
       alerta: <literal>Illegal offset type</literal>.
      </para>
-
-     <para>
-      <synopsis>
-array( <optional> <replaceable>chave</replaceable> =&gt; </optional> <replaceable
->valor</replaceable>
-     , ...
-     )
-// <replaceable>chave</replaceable> pode ser <type>string</type
-                        > ou <type>integer</type> não negativo
-// <replaceable>valor</replaceable> pode ser qualquer coisa
-      </synopsis>
-     </para>
     </sect3>
 
     <sect3 id="language.types.array.syntax.modifying">
      <title>Criando/modificando com a sintaxe de colchetes</title>
      <para>
       Você pode também modificar um array existente, explicitando assimilando
-      valores.
+      valores nele.
      </para>
      <para>
       Isto é feito apenas assimilando valores para o array enquanto especificando a
-      chave em colchetes. Você pode
-      omitir a chave,
-      colocando um par vazio
+      chave em colchetes. Você pode omitir a chave, colocando um par vazio
       de colchetes ("<literal>[]</literal>").
       <synopsis>
 $arr[<replaceable>chave</replaceable>] = <replaceable>valor</replaceable>;
@@ -1133,20 +1367,33 @@ $arr[] = <replaceable>valor</replaceable>;
 // <replaceable>valor</replaceable> pode ser qualquer coisa
       </synopsis>
       Se <varname>$arr</varname> não existir ainda, ele será criado.
-      Então isto é
-      um meio alternativo para especificar um array.
+      Então isto é um meio alternativo para especificar um array.
       Para mudar um certo valor, apenas assimile um novo valor
-      para nele.
-      Se você quiser remover um par chave/valor, você precisa
-      aplicar <function>unset</function> nele.
+      para um elemento especificado por sua chave. Se você quiser
+      remover um par chave/valor, você precisa aplicar <function>unset</function> nele.
+      <informalexample>
+       <programlisting role="php">
+<![CDATA[
+<?php
+$arr = array(5 => 1, 12 => 2);
 
+$arr[] = 56;    // Isto eh o mesmo que $arr[13] = 56;
+                // nesse ponto do script
+
+$arr["x"] = 42; // Isto acrescenta um novo elemento
+                // para o array com a chave "x"
+
+unset($arr[5]); // Isto remove um elemento do array
+
+unset($arr);    // E isto apaga todo o array
+?>
+]]>
+       </programlisting>
+      </informalexample>
      </para>
-
     </sect3>
-
-
    </sect2><!-- end syntax -->
-   
+
    <sect2 id="language.types.array.useful-funcs">
     <title>Funções úteis</title>
     <para>
@@ -1157,10 +1404,13 @@ $arr[] = <replaceable>valor</replaceable>;
     <note>
      <para>
       A função <function>unset</function> permite apagar chaves de um
-      array. Esteja avisado que o array NÃO vai ser reindexado.
+      array. Esteja avisado que o array NÃO vai ser reindexado. Se você somente
+      usa "índices inteiros comuns" (começando do zero, aumentando um a um),
+      você pode conseguir reindexar o aaray utilizando <function>array_values</function>.
       <informalexample>
        <programlisting role="php">
 <![CDATA[
+<?php
 $a = array( 1 => 'um', 2 => 'dois', 3 => 'três' );
 unset( $a[2] );
 /* irá produzir um array que pode ser definido como
@@ -1168,6 +1418,10 @@ unset( $a[2] );
    e NÃO
    $a = array( 1 => 'um', 2 => 'três');
 */
+
+$b = array_values($a);
+// Agora b eh o  array(1 => 'um', 2 =>'três')
+?>
 ]]>
       </programlisting>
      </informalexample>
@@ -1179,8 +1433,6 @@ unset( $a[2] );
      existe especificamente para lidar com arrays. Ele
      provém uma maneira fácil de percorrer qualquer array.
     </para>
-
-
    </sect2>
 
    <sect2 id="language.types.array.donts">
@@ -1195,9 +1447,11 @@ unset( $a[2] );
       <informalexample>
        <programlisting role="php">
 <![CDATA[
+<?php
 $foo[bar] = 'inimigo';
 echo $foo[bar];
 // etc
+?>
 ]]>
        </programlisting>
       </informalexample>
@@ -1205,7 +1459,66 @@ echo $foo[bar];
       neste código, que tem uma constante indefinida (bar) em vez de uma string ('bar' -
       repare nos delimitadores), e o PHP pode no futuro definir constantes que,
       infelizmente em seu código, podem ter o mesmo nome. Isto funciona, porque
-      constantes não definidas são convertidas em uma string com o mesmo nome.
+      constantes não definidas são convertidas em uma string com o mesmo nome
+      automaticamente, por razões de compatibilidade com scripts antigos.
+     </para>
+     <para>
+      Mais exemplo para demonstrar esse fato:
+      <informalexample>
+       <programlisting role="php">
+<![CDATA[
+<?php
+// Vamos ver todos os erros
+error_reporting(E_ALL);
+
+$arr = array('fruta' => 'maçã', 'legume' => 'cenoura');
+
+// Correto
+print $arr['fruta'];  // maçã
+print $arr['legume']; // cenoura
+
+// Errado. Isto funciona mas lança um erro PHP do
+// nível E_NOTICE porque é utilizada uma constante indefinida (fruta)
+// 
+// Repare: Quando utiliza-se a constrante indefinida fruta, o PHP assume 'fruta'
+print $arr[fruta];    // maçã
+
+// Agora vamos definir uma constante para demonstrar o que pode acontecer. Nós
+// vamos assimilar o valor 'legume' para a constante de nome fruta
+define('fruta','legume');
+
+// Observe a diferenca agora
+print $arr['fruit'];  // maçã
+print $arr[fruit];    // cenoura
+
+// O exemplo seguinte é normal dentro de uma string. Constantes não são
+// observadas dentro de strings e por isso nenhum E-NOTICE não é lançado aqui
+print "Olá $arr[fruta]";      // Olá maçã
+
+// Com uma exceção: chaves envolvendo arrays dentro de strings
+// ativam a checagem de constantes, como em
+print "Olá {$arr[fruta]}";    // Hello cenoura
+print "Olá {$arr['fruta']}";  // Hello maçã
+
+// E isso não funciona, resultando em um erro de interpretação do tipo:
+// Parse error: parse error, expecting T_STRING' or T_VARIABLE' or T_NUM_STRING'
+// Isso se aplica ao uso de autoglobais em strings
+print "Olá $arr['fruta']";
+print "Olá $_GET['foo']";
+
+// Nesse caso, use concatenacao
+print "Olá " . $arr['fruta']; // Olá maçã
+?>
+]]>
+       </programlisting>
+      </informalexample>
+     </para>
+     <para>
+      Quando você ativa <function>error_reporting</function> para mostrar erros de nível
+      <constant>E_NOTICE</constant> (como configurando-a
+      para <constant>E_ALL</constant>) você vê esses
+      erros. Por padrão, <link linkend="ini.error-reporting">
+      error_reporting</link> esté configurada para não mostrar esse nível de erro.
      </para>
      <para>
       Como explicado na seção <link linkend="language.types.array.syntax"
@@ -1215,21 +1528,25 @@ echo $foo[bar];
       <informalexample>
        <programlisting role="php">
 <![CDATA[
-echo $arr[ foo(true) ];
+<?php
+echo $arr[algumafuncao($bar)];
+?>
 ]]>
        </programlisting>
       </informalexample>
       Isto é um exemplo de utilização de um valor de retorno de função
       como um índice de array. O PHP conhece constantes,
-      como você deve ter visto
-      <literal>E_*</literal> antes.
+      como você deve ter visto algumas <literal>E_*</literal>
+      antes.
 
       <informalexample>
        <programlisting role="php">
 <![CDATA[
+<?php
 $error_descriptions[E_ERROR] = "Um erro fatal ocorreu";
 $error_descriptions[E_WARNING] = "O PHP emitiu um alarme";
 $error_descriptions[E_NOTICE] = "Apenas um aviso informal";
+?>
 ]]>
        </programlisting>
       </informalexample>
@@ -1239,16 +1556,19 @@ $error_descriptions[E_NOTICE] = "Apenas um aviso informal";
       <informalexample>
        <programlisting role="php">
 <![CDATA[
+<?php
 $error_descriptions[1] = "Um erro fatal ocorreu";
 $error_descriptions[2] = "O PHP emitiu um alarme";
 $error_descriptions[8] = "Apenas um aviso informal";
+?>
 ]]>
        </programlisting>
       </informalexample>
       porque <literal>E_ERROR</literal> é igual a <literal>1</literal>, e assim por diante.
      </para>
      <para>
-      Então, como é possível que <literal>$foo[bar]</literal> funcione?
+      Como nós mostramos nos exemplos anteriores,
+      <literal>$foo[bar]</literal> funciona mas está errado.
       Funciona porque <literal>bar</literal>, na sintaxe onde é utilizada
       é esperada como uma expressão constante. Entretanto, nesse caso não
       existe constante com o nome <literal>bar</literal>. O PHP, hoje,
@@ -1260,30 +1580,46 @@ $error_descriptions[8] = "Apenas um aviso informal";
       <title>Então, porque isso é tão mal?</title>
       <para>
        Se em algum ponto do futuro, o time do PHP quiser acrescentar outra
-       constante ou palavra chave, você terá problemas. Por exemplo,
+       constante ou palavra chave, ou você mesmo introduzir outra constante na
+       sua aplicação, você terá problemas. Por exemplo,
        se você já não pode utilizar as palavras <literal>empty</literal> e
-       <literal>default</literal> dessa maneira, desde que elas são 
+       <literal>default</literal> dessa maneira, desde que elas são
        <link linkend="reserved">palavras reservadas especiais</link>.
       </para>
       <note>
        <simpara>
-        Quando você liga <link linkend="function.error-reporting"
-        >error_reporting</link> em <literal>E_ALL</literal>,
-        você irá ver as notícias que o PHP gera quando um
-        <literal>índice</literal> é utilizado sem ser definido
-        (coloque a linha <literal>error_reporting(E_ALL);</literal>
-        em seu script).
-       </simpara>
-      </note>
-      <note>
-       <simpara>
-        Com <type>string</type>s delimitadas por aspas, uma outra sintaxe
-        é válida. Veja <link linkend="language.types.string.parsing"
-        >interpretação de variáveis em string</link> para mais detalhes.
+        Só para fixar, dentro de uma <type>string</type> delimitada por aspas, é
+        válido não englobar índices de arrays com apóstrofos, de forma que
+        <literal>"$foo[bar]"</literal> é válido. Veja os exemplos
+        anteriores para detalhes bem como na seção sobre
+        <link linkend="language.types.string.parsing">interpretação de variáveis
+        em strings</link>.
        </simpara>
       </note>
      </sect4>
     </sect3>
+   </sect2>
+
+   <sect2 id="language.types.array.casting">
+    <title>Convertendo para array</title>
+
+    <para>
+     Para qualquer dos tipos: <type>integer</type>, <type>float</type>,
+     <type>string</type>, <type>boolean</type> e <type>resource</type>,
+     se você converte um valor para um <type>array</type>, você obtêm um array
+     com um elemento (de índice 0) contendo o valor escalar
+     informado.
+    </para>
+
+    <para>
+     Se você converte um tipo <type>object</type> para um array, você obtêm
+     as propriedades (variáveis membro) do objeto com elementos do array.
+     As chaves serão o nome das variáveis membro.
+    </para>
+
+    <para>
+     If you convert a &null; value to an array, you get an empty array.
+    </para>
    </sect2>
 
    <sect2 id="language.types.array.examples">
@@ -1296,19 +1632,20 @@ $error_descriptions[8] = "Apenas um aviso informal";
       <informalexample>
        <programlisting role="php">
 <![CDATA[
+<?php
 // isto
-$a = array( 'color' => 'vermelha'
-          , 'taste' => 'doce'
-          , 'shape' => 'redonda'
-          , 'name'  => 'maçã'
-          ,            4        // a chave será 0
+$a = array( 'cor'   => 'vermelha',
+            'sabor' => 'doce',
+            'forma' => 'redonda',
+            'nome'  => 'maçã',
+                       4        // a chave será 0
           );
 
 // isto é equivalente a acima
-$a['cor'] = 'vermelha';
+$a['cor']   = 'vermelha';
 $a['sabor'] = 'doce';
-$a['formato'] = 'redonda';
-$a['nome'] = 'maçã';
+$a['forma'] = 'redonda';
+$a['nome']  = 'maçã';
 $a[]        = 4;        // a chave será 0
 
 $b[] = 'a';
@@ -1316,6 +1653,7 @@ $b[] = 'b';
 $b[] = 'c';
 // o mesmo de array( 0 => 'a' , 1 => 'b' , 2 => 'c' ),
 // ou simplesmente array('a', 'b', 'c')
+?>
 ]]>
        </programlisting>
       </informalexample>
@@ -1325,41 +1663,41 @@ $b[] = 'c';
      <title>Utilizando array()</title>
      <programlisting role="php">
 <![CDATA[
+<?php
 // Array como (propriedade-)mapa
-$map = array( 'versão'     => 4
-            , 'OS'         => 'Linux'
-            , 'lang'       => 'inglês'
-            , 'short_tags' => true
+$map = array( 'versao'     => 4,
+              'OS'         => 'Linux',
+              'lang'       => 'inglês',
+              'short_tags' => true
             );
-            
+
 // apenas chaves numéricas
-$array = array( 7
-              , 8
-              , 0
-              , 156
-              , -10
+$array = array( 7,
+                8,
+                0,
+                156,
+                -10
               );
 // que é o mesmo que array( 0 => 7, 1 => 8, ...)
 
-$switching = array(         10 // chave = 0
-                  , 5    =>  6
-                  , 3    =>  7
-                  , 'a'  =>  4
-                  ,         11 // chave = 6 (o índice máximo era 5)
-                  , '8'  =>  2 // chave = 8 (inteiro!)
-                  , '02' => 77 // chave = '02'
-                  , 0    => 12 // o valor 10 será sobrescrito por 12
+$switching = array(         10, // chave = 0
+                    5    =>  6,
+                    3    =>  7,
+                    'a'  =>  4,
+                            11, // chave = 6 (o índice máximo era 5)
+                    '8'  =>  2, // chave = 8 (inteiro!)
+                    '02' => 77, // chave = '02'
+                    0    => 12  // o valor 10 será sobrescrito por 12
                   );
 
 // array vazio
 $empty = array();
+?>
 ]]>
 <!-- TODO example of
-- mixed keys
 - overwriting keys
-- integer keys as string
 - using vars/functions as key/values
-- mixed skipping
+- warning about references
 -->
      </programlisting>
     </example>
@@ -1368,9 +1706,10 @@ $empty = array();
      <title>Coleção</title>
      <programlisting role="php">
 <![CDATA[
-$cores = array('vermelho','azul','verde','amarelo');
+<?php
+$cores = array('vermelho', 'azul', 'verde', 'amarelo');
 
-foreach ( $cores as $cor ) {
+foreach ($cores as $cor) {
     echo "Você gosta de $cor?\n";
 }
 
@@ -1380,6 +1719,7 @@ Você gosta de azul?
 Você gosta de verde?
 Você gosta de amarelo?
 */
+?>
 ]]>
      </programlisting>
     </example>
@@ -1390,7 +1730,7 @@ Você gosta de amarelo?
       <!--
        Should be made possible, if you write:
        foreach ( $cores as &$cor )
-      
+
        See bug#3074
       -->
      Superar essa limitação é possível da seguinte forma:
@@ -1398,6 +1738,7 @@ Você gosta de amarelo?
       <title>Coleção</title>
       <programlisting role="php">
 <![CDATA[
+<?php
 foreach ($cores as $key => $cor) {
     // não funciona:
     //$cor = strtoupper($cor);
@@ -1416,6 +1757,7 @@ Array
     [3] => AMARELO
 )
 */
+?>
 ]]>
       </programlisting>
      </example>
@@ -1426,6 +1768,7 @@ Array
       <title>Array baseado em 1</title>
       <programlisting role="php">
 <![CDATA[
+<?php
 $primeiroquarto  = array(1 => 'Janeiro', 'Fevereiro', 'Março');
 print_r($primeiroquarto);
 
@@ -1447,25 +1790,29 @@ Array
 <![CDATA[
 // preenchendo um array com todos os itens de um diretório
 $handle = opendir('.');
-while ($file = readdir($handle))
-{
+while ($file = readdir($handle)) {
     $files[] = $file;
 }
 closedir($handle);
+?>
 ]]>
      </programlisting>
     </example>
     <para>
      Arrays são ordenados. Você pode mudar sua ordem utilizando vários
-     funções de ordenação. Veja as <link linkend="ref.array">funções de arrays</link>
-     para mais informações.
+     funções de ordenação. Veja as <link linkend="ref.array">funções 
+     de arrays</link> para mais informações. Você pode contar
+     o número de itens de um array com a função
+     <function>count</function>.
     </para>
     <example>
      <title>Ordenando arrays</title>
      <programlisting role="php">
 <![CDATA[
+<?php
 sort($files);
 print_r($files);
+?>
 ]]>
      </programlisting>
     </example>
@@ -1478,228 +1825,56 @@ print_r($files);
      <title>Arrays recursivos e multidimensionais</title>
      <programlisting role="php">
 <![CDATA[
-$fruits = array ( "frutas"  => array ( "a" => "laranja"
-                                     , "b" => "banana"
-                                     , "c" => "maçã"
-                                     )
-                , "numeros" => array ( 1
-                                     , 2
-                                     , 3
-                                     , 4
-                                     , 5
-                                     , 6
-                                     )
-                , "buracos" => array (      "primeiro"
-                                     , 5 => "segundo"
-                                     ,      "terceiro"
-                                     )
+<?php
+$fruits = array ( "frutas"  => array ( "a" => "laranja",
+                                       "b" => "banana",
+                                       "c" => "maçã",
+                                     ),
+                  "numeros" => array ( 1,
+                                       2,
+                                       3,
+                                       4,
+                                       5,
+                                       6,
+                                     ),
+                  "buracos" => array (      "primeiro",
+                                       5 => "segundo",
+                                            "terceiro",
+                                     ),
                 );
+
+// Alguns exemplo de enderecos dos valores do array acima
+echo $fruits["buracos"][5];   // prints "segundo"
+echo $fruits["frutas"]["a"];  // prints "laranja"
+unset($fruits["buracos"][0]); // remove "primeiro"
+
+// Criando um novo array multidimensional
+$sucos["maca"]["verde"] = "bom";
+?>
 ]]>
-<!-- quite duplicate...
-$a = array(
-     "apple"  => array(
-          "color"  => "red",
-          "taste"  => "sweet",
-          "shape"  => "round"
-     ),
-     "orange"  => array(
-          "color"  => "orange",
-          "taste"  => "tart",
-          "shape"  => "round"
-     ),
-     "banana"  => array(
-          "color"  => "yellow",
-          "taste"  => "paste-y",
-          "shape"  => "banana-shaped"
-     )
-);
--->
      </programlisting>
     </example>
-
-   </sect2>
-
-   <!-- TODO
-   <sect2>
-    <title>Misc</title>
-
-   </sect2>
-
-   - example multi-dim with $arr[bla][bla] syntax
-   - converting to array
-   - warning about references
-   - note that assigning is copy (usually...)
-
-
-   -->
-
-<!-- there is no such thing as multi/singel dim arrays (at least in PHP4)
-   <sect2 id="language.types.array.single-dim">
-    <title>Single Dimension Arrays</title>
-
     <para>
-     PHP supports both scalar and associative arrays. In fact, there
-     is no difference between the two.  You can create an array using
-     the
-
-     <function>list</function>
-
-     Nope
-
-
-
-
-     or <function>array</function>
-     functions, or you can explicitly set each array element value.
+     Você precisa estar ciente que a atribuição sempre envolve
+     cópia de valor. Você precisa utilizar o operadore de referência para
+     copiar um array por referência.
      <informalexample>
       <programlisting role="php">
-$a[0] = "abc";
-$a[1] = "def";
-$b["foo"] = 13;
-      </programlisting>
-     </informalexample>
-    </para>
-    <para>
-     You can also create an array by simply adding values to the
-     array. When you assign a value to an array variable using empty
-     brackets, the value will be added onto the end of the array.
-     <informalexample>
-      <programlisting role="php">
-$a[] = "hello"; // $a[2] == "hello"
-$a[] = "world"; // $a[3] == "world"
-      </programlisting>
-     </informalexample>
-    </para>
-    <para>
-     Arrays may be sorted using the <function>asort</function>,
-     <function>arsort</function>, <function>ksort</function>,
-     <function>rsort</function>, <function>sort</function>,
-     <function>uasort</function>, <function>usort</function>, and
-     <function>uksort</function> functions depending on the type of
-     sort you want.
-    </para>
-    <para>
-     You can count the number of items in an array using the
-     <function>count</function> function.
-    </para>
-    <para>
-     You can traverse an array using <function>next</function> and
-     <function>prev</function> functions.  Another common way to
-     traverse an array is to use the <function>each</function>
-     function.
-    </para>
-   </sect2>
+<![CDATA[
+<?php
+$arr1 = array(2, 3);
+$arr2 = $arr1;
+$arr2[] = 4; // $arr2 eh modificado,
+             // $arr1 continua sendo apenas array(2,3)
 
-   <sect2 id="language.types.array.multi-dim">
-    <title>Multi-Dimensional Arrays</title>
-
-    <para>
-     Multi-dimensional arrays are actually pretty simple.  For each
-     dimension of the array, you add another [key] value to the end:
-     <informalexample>
-      <programlisting role="php">
-$a[1]      = $f;               # one dimensional examples
-$a["foo"]  = $f;
-
-$a[1][0]     = $f;             # two dimensional
-$a["foo"][2] = $f;             # (you can mix numeric and associative indices)
-$a[3]["bar"] = $f;             # (you can mix numeric and associative indices)
-
-$a["foo"][4]["bar"][0] = $f;   # four dimensional!
-      </programlisting>
-     </informalexample>
-    </para>
-    <para>
-     In PHP 3 it is not possible to reference multidimensional arrays
-     directly within strings. For instance, the following will not
-     have the desired result:
-     <informalexample>
-      <programlisting role="php">
-$a[3]['bar'] = 'Bob';
-echo "This won't work: $a[3][bar]";
-      </programlisting>
-     </informalexample>
-     In PHP 3, the above will output <computeroutput>This won't work:
-     Array[bar]</computeroutput>. The string concatenation operator,
-     however, can be used to overcome this:
-     <informalexample>
-      <programlisting role="php">
-$a[3]['bar'] = 'Bob';
-echo "This will work: " . $a[3]['bar'];
-      </programlisting>
-     </informalexample>
-    </para>
-    <para>
-     In PHP 4, however, the whole problem may be circumvented by
-     enclosing the array reference (inside the string) in curly
-     braces:
-     <informalexample>
-      <programlisting role="php">
-$a[3]['bar'] = 'Bob';
-echo "This will work: {$a[3][bar]}";
-      </programlisting>
-     </informalexample>
-    </para>
-    <para>
-     You can "fill up" multi-dimensional arrays in many ways, but the
-     trickiest one to understand is how to use the
-     <function>array</function> command for associative arrays.  These
-     two snippets of code fill up the one-dimensional array in the
-     same way:
-     <informalexample>
-      <programlisting role="php">
-# Example 1:
-
-$a["color"]	= "red";
-$a["taste"]	= "sweet";
-$a["shape"]	= "round";
-$a["name"]	= "apple";
-$a[3]		= 4;
-
-# Example 2:
-$a = array(
-     "color" => "red",
-     "taste" => "sweet",
-     "shape" => "round",
-     "name"  => "apple",
-     3       => 4
-);
-      </programlisting>
-     </informalexample>
-    </para>
-    <para>
-     The <function>array</function> function can be nested for
-     multi-dimensional arrays:
-     <informalexample>
-      <programlisting role="php">
-&lt;?php
-$a = array(
-     "apple"  => array(
-          "color"  => "red",
-          "taste"  => "sweet",
-          "shape"  => "round"
-     ),
-     "orange"  => array(
-          "color"  => "orange",
-          "taste"  => "tart",
-          "shape"  => "round"
-     ),
-     "banana"  => array(
-          "color"  => "yellow",
-          "taste"  => "paste-y",
-          "shape"  => "banana-shaped"
-     )
-);
-
-echo $a["apple"]["taste"];    # will output "sweet"
+$arr3 = &$arr1;
+$arr3[] = 4; // agora $arr1 e $arr3 sao os mesmos
 ?>
+]]>
       </programlisting>
      </informalexample>
     </para>
-
    </sect2>
-
-   -->
   </sect1>
 
   <sect1 id="language.types.object">
@@ -1735,8 +1910,31 @@ $bar->do_foo();
      Para uma explicação completa, consulte a seção <link
      linkend="language.oop">Classes e Objetos</link>.
     </simpara>
-
    </sect2>
+
+   <sect2 id="language.types.object.casting">
+    <title>Convertendo para objeto</title>
+
+    <para>
+     Se um objeto é convertido para objeto, ele não é modificado. Se um valor
+     de um outro tipo é convertido para objeto, uma nova instância da
+     <literal>stdClass</literal> é criada. Se o valor
+     é NULL, a nova instância estará vazia. Para qualquer outro valor, uma
+     variável menbro chamada <literal>scalar</literal> irá conter
+     valor.
+     <informalexample>
+      <programlisting role="php">
+<![CDATA[
+<?php
+$obj = (object) 'ciao';
+echo $obj-&gt;scalar;  // exibe 'ciao'
+?>
+]]>
+      </programlisting>
+     </informalexample>
+    </para>
+   </sect2>
+
   </sect1>
 
   <sect1 id="language.types.resource">
@@ -1749,7 +1947,6 @@ $bar->do_foo();
      Veja o <link linkend="resource">apêndice</link>
      para uma lista de todas essas
      funções e seus tipos correspondentes.
-
     </para>
 
     <note>
@@ -1757,6 +1954,16 @@ $bar->do_foo();
       O tipo resource foi incluído no PHP 4
      </simpara>
     </note>
+
+   <sect2 id="language.types.resource.casting">
+    <title>Convertendo para recurso</title>
+
+    <para>
+     Como os tipos resource sustentam manipuladores especiais para arquivos
+     abertos, conexões de bancos de dados, pinceis de desenho e coisas
+     assim, você não pode converter nenhum valor para o tipo resource.
+    </para>
+   </sect2>
 
     <sect2 id="language.types.resource.self-destruct">
      <title>Liberando recursos</title>
@@ -1823,11 +2030,14 @@ $bar->do_foo();
     <title>Sintaxe</title>
     <para>
      Há apenas um único valor do tipo &null;, e é
-     a palavra (insensitiva ao caso)
-     &null;.
+     a palavra (insensitiva ao caso) &null;.
      <informalexample>
       <programlisting role="php">
-$var = NULL;
+<![CDATA[
+<?php
+$var = NULL;       
+]]>
+?>
       </programlisting>
      </informalexample>
     </para>
@@ -1925,8 +2135,8 @@ call_user_function(array("foo", "bar")); // chamada do método estático da classe
 ]]>
       </programlisting>
      </example>
-    </para>  
-   
+    </para>
+
    </sect2>
   </sect1>
 
@@ -1937,9 +2147,9 @@ call_user_function(array("foo", "bar")); // chamada do método estático da classe
     O PHP não requer (ou suporta) a definição de tipo explicita na
     declaração de variáveis: o tipo de uma variável é determinado pelo
     contexto em que a variável é utilizada. Isto significa que, se você
-    assimila um valor string para a variável <parameter>var</parameter>,
-    <parameter>var</parameter> se torna uma string. Se você então assimila um
-    valor inteiro para <parameter>var</parameter>, ela se torna
+    assimila um valor string para a variável <parameter>$var</parameter>,
+    <parameter>$var</parameter> se torna uma string. Se você então assimila um
+    valor inteiro para <parameter>$var</parameter>, ela se torna
     um inteiro.
    </simpara>
    <para>
@@ -1952,15 +2162,17 @@ call_user_function(array("foo", "bar")); // chamada do método estático da classe
     esses operadores são avaliados.
     <informalexample>
      <programlisting role="php">
-$foo = "0";  // $foo é string (ASCII 48)
+<![CDATA[
+<?php
+$foo = "0";  // $foo eh string (ASCII 48)
+$foo += 2;   // $foo eh agora um interio (2)
+$foo = $foo + 1.3;  // $foo eh agora um float (3.3)
+$foo = 5 + "10 pequenos porcos";   // $foo eh inteiro (15)
+$foo = 5 + "10 minúsculos porcos"; // $foo eh inteiro (15)
+?>
+]]>
 <!-- bad example, no real operator (must be used with variable, modifies it too)
 $foo++;      // $foo is the string "1" (ASCII 49)
--->
-$foo += 2;   // $foo é agora um inteiro (2)
-$foo = $foo + 1.3;  // $foo é agora um float (3.3)
-$foo = 5 + "10 Little Piggies"; // $foo é inteiro (15)
-$foo = 5 + "10 Small Pigs";     // $foo é inteiro (15)
-<!--
 
 TODO: explain ++/- - behaviour with strings
 
@@ -1984,7 +2196,7 @@ examples:
    <simpara>
     Se os últimos dois exemplos lhe parecerem estranhos, veja <link
     linkend="language.types.string.conversion">Conversão de
-    strings</link>.
+    strings para números</link>.
    </simpara>
    <simpara>
     Se você deseja forçar uma variável para ser avaliada como um certo tipo,
@@ -2004,21 +2216,41 @@ examples:
     <para>
      <informalexample>
       <programlisting role="php">
+<![CDATA[
+<?php
 $a = "1";     // $a é uma string
 $a[0] = "f";  // E com relação aos índices da string? O que acontece?
+?>
+]]>
       </programlisting>
      </informalexample>
     </para>
     <para>
-     Desde que o PHP suporta indexação de strings através de offsets utilizando a
-     mesma sintaxe da indexação de arrays, o exemplo acima nos deixa um
-     problema: $a se tornou um array sendo o primeiro elemento
-     "f", ou será que "f" se tornou o primeiro caracter da string $a ?
+     Desde que o PHP (por razões históricas) suporta indexação de strings 
+     através de offsets utilizando a mesma sintaxe da indexação de arrays, o exemplo 
+     acima nos deixa um problema: $a se tornou um array sendo o primeiro 
+     elemento "f", ou será que "f" se tornou o primeiro caracter 
+     da string $a ?
     </para>
     <para>
-     Por essa razão, como no PHP 3.0.12 e PHP 4.0b3-RC4, o resultado
-     dessa conversão automática é considerada como indefinida. Correções,
-     entretanto, estão sendo discutidas.
+     As versões atuais do PHP interpretam a segunda assimilacao como
+     identificação de deslocamento na string, então $a se torna "f", o resultado
+     desta conversão automática entretanto pode ser considerada
+     indefinida. O PHP 4 introduziu a nova sintaxe de chaves para acessar
+     caracteres na string. Utilize esta sintaxe em vez do exemplo apresentado
+     acima:
+     <informalexample>
+      <programlisting role="php">
+<![CDATA[
+<?php
+$a    = "abc"; // $a eh uma string
+$a{1} = "f";   // $a eh agora "afc"
+?>
+]]>
+      </programlisting>
+     </informalexample>
+     Veja a seção entitulada <link linkend="language.types.string.substr">Acessando
+     caracteres da string</link> para mais informações.
     </para>
    </note>
 
@@ -2031,8 +2263,12 @@ $a[0] = "f";  // E com relação aos índices da string? O que acontece?
      que se deseja a moldagem.
      <informalexample>
       <programlisting role="php">
-$foo = 10;   // $foo é um inteiro
-$bar = (float) $foo;   // $bar é um número de ponto flutuante
+<![CDATA[
+<?php
+$foo = 10;             // $foo eh um inteiro
+$bar = (boolean) $foo; // $bar eh um booleano
+?>
+]]>
       </programlisting>
      </informalexample>
     </para>
@@ -2059,24 +2295,43 @@ $bar = (float) $foo;   // $bar é um número de ponto flutuante
       </listitem>
      </itemizedlist>
     </para>
-    <note>
-     <simpara>
-      Em vez de moldar uma variável para string, você também pode circundar
-      a variável entre aspas.
-      <!-- TODO: example -->
-     </simpara>
-    </note>
-
     <para>
      Note que tabulações e espaços são permitidos dentro dos parênteses, então
      o seguinte são funcionalmente equivalentes:
      <informalexample>
       <programlisting role="php">
+<![CDATA[
+<?php
 $foo = (int) $bar;
 $foo = ( int ) $bar;
+?>
+]]>
       </programlisting>
      </informalexample>
     </para>
+    <note>
+     <para>
+      Em vez de moldar uma variável para string, você também pode englobar
+      a variável entre aspas duplas.
+     <informalexample>
+      <programlisting role="php">
+<![CDATA[
+<?php
+$foo = 10;            // $foo eh um interio
+$str = "$foo";        // $str eh uma string
+$fst = (string) $foo; // $fst tambem eh uma string
+
+// Isto imprimirah "eles são o mesmo"
+if ($fst === $str) {
+    echo "eles são o mesmo";
+}
+?>
+]]>
+      </programlisting>
+     </informalexample>
+     </para>
+    </note>
+
     <para>
      Pode não ser tão óbvio o que exatamente ocorre quando se molda
      entre certos tipos. Para mais informações, veja essas seções:
@@ -2090,7 +2345,6 @@ $foo = ( int ) $bar;
        <simpara><link linkend="language.types.integer.casting">Convertendo para
         inteiro</link></simpara>
       </listitem>
-      <!-- don't exist yet
       <listitem>
        <simpara><link linkend="language.types.float.casting">Converting to
         float</link></simpara>
@@ -2111,56 +2365,19 @@ $foo = ( int ) $bar;
        <simpara><link linkend="language.types.resource.casting">Converting to
         resource</link></simpara>
       </listitem>
+      <!-- don't exist yet
       <listitem>
        <simpara><link linkend="language.types.null.casting">Converting to
         &null;</link></simpara>
       </listitem>
       -->
      </itemizedlist>
-
     </para>
-    <para>
-     <!-- TODO: move to 'converting to string' -->
-     Quando moldando ou forçando a conversão de um array para string,
-     o resultado será a palavra <literal>Array</literal>. Quando moldando
-     ou forçando o tipo de um objeto para string, o resultado será a
-     palavra <literal>Object</literal>.
-
-     <!-- not with my PHP, not even a notice... maybe in PHP3?
-     Does someone know?
-
-     In both cases a warning will
-     be issued. -->
-    </para>
-    <para>
-     Quando moldando de uma variável escalar ou string para um array, a
-     variável se torna o primeiro elemento do array:
-     <informalexample>
-      <programlisting role="php">
-$var = 'ciao';
-$arr = (array) $var;
-echo $arr[0];  // outputs 'ciao'
-      </programlisting>
-     </informalexample>
-    </para>
-    <para>
-     Quando moldando de uma variável escalar ou string para um objeto, a
-     variável se torna um atributo do objeto: o nome do atributo se
-     chamará 'scalar':
-     <informalexample>
-      <programlisting role="php">
-$var = 'ciao';
-$obj = (object) $var;
-echo $obj-&gt;scalar;  // imprime 'ciao'
-      </programlisting>
-     </informalexample>
-    </para>
-
    </sect2>
   </sect1>
 
  </chapter>
- 
+
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
