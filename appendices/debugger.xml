@@ -1,50 +1,76 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: 1.20 Maintainer: andre_ae Status: ready -->
  <appendix id="debugger">
   <title>O debugador do PHP</title>
 
+  <sect1 id="debugger-about">
+   <title>Sobre o debugador</title>
+   <simpara>
+    O PHP 3 tem suporte ao debug baseado em rede.
+   </simpara>
+   <simpara>
+    O PHP 4 não possui um utilitário de debug interno.
+    Mas você pode utilizar debugadores externos alternativamente. O
+    <ulink url="&url.zend.ide;">Zend IDE</ulink> inclui
+    um debugador e há também outras extensões grátis
+    como o DBG em <ulink url="&url.dbg;">&url.dbg;</ulink> ou o
+    <ulink url="&url.apd;">Advanced PHP Debugger</ulink> (APD).
+   </simpara>
+  </sect1>
+
   <sect1 id="debugger-using">
-   <title>Usando o Debugador</title>
+   <title>Utilizando o debugador</title>
 
    <para>
-    O debugador do PHP é util para procurar "bugs" simples.
-    O debugador trabalha conectando numa porta <acronym>TCP</acronym> para cada 
-    seção PHP aberta. Todas as mensagens de erro serão enviadas a esta conecção TCP.
-    Esta informação tem intenção de "debugar" o servidor de dentro de um sistema
-    <acronym>IDE</acronym> ou editor de arquivos programável (como o Emacs). Esse
-    debugador está disponível somente no PHP versão 3, e não pode ser utilizado
-    nas versões mais novas do PHP.
+    O debugador interno do PHP 3 é útil para rastrear bugs
+    fugitivos. O debugador trabalha conectado em uma porta
+    <acronym>TCP</acronym> cada vez que o PHP 3 inicia.
+    Todas as mensagens de erro daquela requisição será enviada para esta
+    conexão TCP. Estas informações são destinadas a 
+    "debugar o servidor" de dentro de um sistema
+    <acronym>IDE</acronym> ou editor de arquivos programável (como o Emacs).
    </para>
    <para>
-    Como levantar o debugger:
+    Como ativar o debugger:
     <orderedlist>
      <listitem>
-      <simpara> 
-       Configure  uma porta TCP para ele no <link
+      <simpara>
+       Configure uma porta TCP para ele no <link
        linkend="configuration.file">arquivo de configuração</link> (<link
-       linkend="ini.debugger.port">debugger.port</link>) e habilite ele 
+       linkend="ini.debugger.port">debugger.port</link>) e habilite ele
        (<link linkend="ini.debugger.enabled">debugger.enabled</link>).
       </simpara>
      </listitem>
      <listitem>
-      <simpara> 
+      <simpara>
        Configure um "ouvidor" TCP naquela porta em algum programa (por exemplo
        <command>socket -l -s 1400</command> no UNIX).
       </simpara>
      </listitem>
      <listitem>
-      <simpara> 
-       Em seu código execute "debugger_on(<replaceable>máquina</replaceable>)", onde <replaceable>máquina</replaceable> é o número IP ou nome do computador executando o "ouvidor" <acronym>TCP</acronym> .
+      <simpara>
+       Em seu código execute um
+       "debugger_on(<replaceable>endereço</replaceable>)", onde
+       <replaceable>endereço</replaceable> é o número IP ou nome do
+       computador executando o "ouvidor" <acronym>TCP</acronym>.
       </simpara>
      </listitem>
     </orderedlist>
-    Agora, todas as mensagens aparecerá no computador que está "ouvindo",<emphasis> mesmo que você desligue com <function>error_reporting</function></emphasis>.
+    Agora, todos os alarmes, avisos, etc. aparecerão no computador que está
+    "ouvindo", <emphasis> mesmo que você desligue com
+    <function>error_reporting</function></emphasis>.
    </para>
   </sect1>
 
   <sect1 id="debugger-protocol">
    <title>Protocolo do Debugger</title>
    <para>
-    O protocolo é baseado em linhas. Cada linha tem um <emphasis>tipo</emphasis>, e várias linhas compondo a <emphasis>mensagem</emphasis>.  Cada mensagem começa com uma linha de tipo <literal>start</literal> e termina com uma linha de tipo <literal>end</literal>. O PHP pode emviar linhas para diferentes mensagens simultaneamente.
+    O protocolo do debugador do PHP 3 é baseado em linhas. Cada linha tem um
+    <emphasis>tipo</emphasis>, e várias linhas compõem uma
+    <emphasis>mensagem</emphasis>. Cada mensagem começa com uma linha
+    do tipo <literal>start</literal> e termina com uma linha
+    do tipo <literal>end</literal>. O PHP 3 pode enviar linhas de diferentes
+    mensagens simultaneamente.
    </para>
    <para>
     Uma linha tem este formato:
@@ -78,7 +104,8 @@
       <term><replaceable>host</replaceable></term>
       <listitem>
        <simpara>
-	"Nome DNS ou IP da maquina onde está o script".
+        Nome DNS ou IP da maquina onde o erro do script foi
+        gerado.
        </simpara>
       </listitem>
      </varlistentry>
@@ -86,7 +113,8 @@
       <term><replaceable>pid</replaceable></term>
       <listitem>
        <simpara>
-	ID do processo na <replaceable>máquina</replaceable> do processo que gerou este erro de script.
+        ID do processo na <replaceable>máquina</replaceable> do
+        processo com o PHP 3 que gerou este erro de script.
        </simpara>
       </listitem>
      </varlistentry>
@@ -94,7 +122,8 @@
       <term><replaceable>type</replaceable></term>
       <listitem>
        <para>
-	Tipo da linha. Informa o programa sobre como ele deve tratar os seguintes dados:
+	Tipo da linha. Informa o programa sobre como ele 
+	deve tratar os seguintes dados:
 	<table>
 	 <title>Tipos de Linhas de Debug</title>
 	 <tgroup cols="2">
@@ -106,44 +135,54 @@
 	  </thead>
 	  <tbody>
 	   <row>
-	    <entry><literal>start</literal></entry> 
+	    <entry><literal>start</literal></entry>
 	    <entry>
-	     Informa ao programa que a mensagem começa aqui. O conteúdo de <replaceable>data</replaceable> será o tipo de erro da mensagem, listado abaixo.
+	     Informa ao programa que a mensagem
+	     começa aqui. O conteúdo de
+	     <replaceable>data</replaceable> será o tipo de erro
+	     da mensagem, como listado abaixo.
 	    </entry>
 	   </row>
 	   <row>
 	    <entry><literal>message</literal></entry>
-	    <entry>A mensagem de erro do PHP.</entry>
+	    <entry>A mensagem de erro do PHP 3.</entry>
 	   </row>
 	   <row>
 	    <entry><literal>location</literal></entry>
 	    <entry>
-	     Arquivo e número da linha onde ocorreu o erro. A primeira linha <literal>location</literal> sempre conterá o nível superior.
+	     Arquivo e número da linha onde ocorreu o erro. A
+	     primeira linha <literal>location</literal> sempre
+	     conterá o nível superior.
 	     <replaceable>data</replaceable> conterá:
 	     <literal><replaceable>arquivo</replaceable>:<replaceable>linha</replaceable></literal>.
-	     Sempre existirá uma linha <literal>location</literal> após uma <literal>message</literal> e após cada <literal>function</literal>.
+	     Sempre existirá uma linha <literal>location</literal>
+	     após uma <literal>message</literal> e após cada
+	     <literal>function</literal>.
 	    </entry>
 	   </row>
 	   <row>
 	    <entry>
 	     <literal>frames</literal></entry> <entry>Número de janelas (frames)
-	     na saida atual. Se houver quatro níveis, será esperado informação sobre quatro níveis de funções chamadas.
+	     na saida atual. Se houver quatro níveis,
+	     será esperado informação sobre quatro níveis de funções chamadas.
 	     Se não for dada nenhuma linha de janela (frame) assume que o valor é 0
 	     (o erro aconteceu no início).
 	    </entry>
 	   </row>
 	   <row>
 	    <entry>
-	     <literal>function</literal></entry> 
+	     <literal>function</literal></entry>
 	    <entry>
-	     Nome da função onde o erro apareceu. Será repetida para cada vez que
-	     a função for chamada.
+	     Nome da função onde o erro ocorreu. Será
+	     repetida para cada vez que a função for chamada
+	     dentro da pilha.
 	    </entry>
 	   </row>
 	   <row>
-	    <entry><literal>end</literal></entry> 
+	    <entry><literal>end</literal></entry>
 	    <entry>
-	     Informa ao programa que a mensagem de debug termina aqui.
+	     Informa ao programa que a mensagem de debug termina
+	     aqui.
 	    </entry>
 	   </row>
 	  </tbody>
@@ -161,49 +200,49 @@
     </variablelist>
 
     <table>
-     <title>Tipos de erros de debugação</title>
+     <title>Tipos de erros de debug</title>
      <tgroup cols="2">
       <thead>
        <row>
 	<entry>Debugador</entry>
-	<entry>Interno do PHP</entry>
+	<entry>Interno do PHP 3</entry>
        </row>
       </thead>
       <tbody>
        <row>
-	<entry><errortype>atenção</errortype></entry>
+	<entry><errortype>warning (alerta, atenção)</errortype></entry>
 	<entry><errortype>E_WARNING</errortype></entry>
        </row>
        <row>
-	<entry><errortype>erro</errortype></entry>
+	<entry><errortype>error (erro)</errortype></entry>
 	<entry><errortype>E_ERROR</errortype></entry>
        </row>
        <row>
-	<entry><errortype>interpretação</errortype></entry>
+	<entry><errortype>parse (interpretação)</errortype></entry>
 	<entry><errortype>E_PARSE</errortype></entry>
        </row>
        <row>
-	<entry><errortype>notificação</errortype></entry>
+	<entry><errortype>notice (notificação)</errortype></entry>
 	<entry><errortype>E_NOTICE</errortype></entry>
        </row>
        <row>
-	<entry><errortype>grave erro</errortype></entry>
+	<entry><errortype>core-error (erro grave)</errortype></entry>
 	<entry><errortype>E_CORE_ERROR</errortype></entry>
        </row>
        <row>
-	<entry><errortype>grave atenção</errortype></entry>
+	<entry><errortype>core-warning (aviso grave)</errortype></entry>
 	<entry><errortype>E_CORE_WARNING</errortype></entry>
        </row>
        <row>
-	<entry><errortype>desconhecido</errortype></entry>
+	<entry><errortype>unknown (desconhecido)</errortype></entry>
 	<entry>(qualquer outro)</entry>
        </row>
       </tbody>
      </tgroup>
     </table>
-    
+
     <example>
-     <title>Exemplo de Mensagem de Debug</title>
+     <title>Exemplo de uma mensagem de Debug</title>
      <literallayout>
 1998-04-05 23:27:400966 lucifer.guardian.no(20481) start: notice
 1998-04-05 23:27:400966 lucifer.guardian.no(20481) message: Uninitialized variable
@@ -235,4 +274,7 @@ sgml-exposed-tags:nil
 sgml-local-catalogs:nil
 sgml-local-ecat-files:nil
 End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
 -->
