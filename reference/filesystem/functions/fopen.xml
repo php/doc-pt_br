@@ -1,57 +1,75 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.2 Maintainer: rarruda Status: ready -->
+<!-- EN-Revision: 1.4 Maintainer: ae Status: ready --><!-- CREDITS: rarruda -->
 <!-- splitted from ./pt_BR/functions/filesystem.xml, last change in rev 1.5 -->
-<!-- last change to 'fopen' in en/ tree in rev 1.2 -->
   <refentry id="function.fopen">
    <refnamediv>
     <refname>fopen</refname>
-    <refpurpose>Abrir um arquivo ou uma URL</refpurpose>
+    <refpurpose>Abri um arquivo ou uma URL</refpurpose>
    </refnamediv>
    <refsect1>
     <title>Descrição</title>
      <methodsynopsis>
       <type>int</type><methodname>fopen</methodname>
-      <methodparam><type>string</type><parameter>nomedoarquivo</parameter></methodparam>
+      <methodparam><type>string</type><parameter>filename</parameter></methodparam>
       <methodparam><type>string</type><parameter>mode</parameter></methodparam>
-      <methodparam choice="opt"><type>int</type><parameter>
-        use_include_path
-       </parameter></methodparam>
+      <methodparam choice="opt"><type>int</type><parameter>use_include_path</parameter></methodparam>
+      <methodparam choice="opt"><type>resource</type><parameter>zcontext</parameter></methodparam>
      </methodsynopsis>
     <simpara>
-     Se <parameter>nomedoarquivo</parameter> começa com "http://"
-     (não diferencia entre caracteres maiusculas e minusculas),
-     uma conexão HTTP 1.0 é aberta para o servidor especificado, a
-     página é requisitada usando o método HTTP GET, e um ponteiro
-     de arquivo é retornado no começo do corpo da resposta. O 
-     cabeçalho 'Host:' é enviado com o pedido para que virtual
-     hosts baseados em nomes sejam suportados.
+     Se <parameter>filename</parameter> começa com "http://" (não
+     sensível ao caso), uma conexão HTTP 1.0 é aberta para o
+     servidor especificado, a página é requisitada usando o método HTTP GET
+     e um ponteiro de arquivo é retornado no começo
+     do corpo da resposta. Um cabeçalho 'Host:' é enviado com o
+     pedido para o caso de virtual hosts baseados em nomes.
+    </simpara>
+    <simpara>
+     A partir do PHP 4.3.0, se você tem compilado o suporta a OpenSSL,
+     você também pode utilizar "https://" para abrir conexões HTTP sobre SSL.
     </simpara>
     <simpara>
      Note que o ponteiro de arquivo deixa você retirar somente o
-     corpo(<emphasis>body</emphasis>) da resposta; você não pode
-     acessar o cabeçalho de resposta HTTP usando esta função.
+     corpo(<emphasis>body</emphasis>) da resposta. Para obter os cabeçalhos
+     HTTP de resposta, você precisa usar o PHP 4.0.5 ou posterior.
+     Os headers serão armazenados na variável $http_response_header.
+     A partir do PHP 4.3.0, as informações do header podem ser obtidas utilizando
+     <function>file_get_wrapper_data</function>.
+    </simpara>
+    <simpara>
+     Conexões HTTP são somente leitura: você não pode escrever dados ou copiar
+     arquivos em um recurso HTTP.
     </simpara>
     <simpara>
      Versões anteriores a PHP 4.0.5 não suportam redirecionamentos HTTP.
      Por causa disso, diretórios devem incluir a barra no final.
     </simpara>
     <simpara>
-     Se <parameter>nomedoarquivo</parameter> começa com "ftp://" (não
-     diferencia entre caracteres maiusculas e minusculas também), uma
-     conexão para o servidor especificado é aberta e um ponteiro para o
-     arquivo perdido é retornado. Se o servidor não suporta modo passivo,
-     isto irá falhar. Você pode abrir arquivos tanto para leitura quanto
-     para gravação via ftp (mas não para ambos simultâneamente).
+     Se <parameter>filename</parameter> começa com "ftp://" (não sensível
+     ao caso), uma conexão FTP é aberta para o servidor especificado
+     e um ponteiro para o arquivo solicitado é retornado. Se o servidor
+     não suporta modo passivo FTP, isto irá falhar. Você pode abrir
+     arquivos tanto para leitura quanto para gravação via ftp (mas não ambos
+     simultâneamente). Se o arquivo remoto já existir no servidor FTP
+     e você tentar abrí-lo para escrita, isto também falhará.
+     Se você precisa atualizar arquivos existentes sobre FTP, utilize
+     <function>ftp_connect</function>.
     </simpara>
     <simpara>
-     Se <parameter>nomedoarquivo</parameter> é ou "php://stdin",
-     ou "php://stdout", ou "php://stderr", o correspondente stream
-     stdio será aberto. (Isto foi introduziso no PHP 3.0.13; em
+     A partir do PHP 4.3.0, se você tiver o suporte compilado a OpenSSL,
+     você pode utilizar "ftps://" para abrir uma conexão FTP que
+     utilizará SSL para criptografar a conexão. O PHP funcionará
+     normalmente como em uma conexão ftp:// se o servidor não suportar
+     SSL.
+    </simpara>
+    <simpara>
+     Se <parameter>filename</parameter> é ou "php://stdin",
+     "php://stdout" ou "php://stderr", o correspondente stream
+     stdio será aberto. (Isto foi introduzido no PHP 3.0.13; em
      versões anteriores, um nome de arquivo como "/dev/stdin" ou
      "/dev/fd/0" deve ser usado para acessar os streams stdio.)
     </simpara>
     <simpara>
-     Se <parameter>nomedoarquivo</parameter> começa com qualquer outra
+     Se <parameter>filename</parameter> começa com qualquer outra
      coisa, o arquivo será aberto no filesystem e um ponteiro para o
      arquivo será retornado.
     </simpara>
@@ -113,41 +131,56 @@
     </note>
     <para>
      Você pode usar o terceiro parametro opctional como "1", se você
-     quer procurar pelo arquivo no <link
-     linkend="ini.include-path">include_path</link>, também.
+     quiser procurar pelo arquivo no <link
+     linkend="ini.include-path">include_path</link> também.
+    </para>
+    <para>
+     O quarto parâmetro <parameter>zcontext</parameter> (opcional) é utilizado
+     especificamente para ajuste de parâmetros e callbacks.
     </para>
     <para>
      <example>
       <title>exemplo do <function>fopen</function></title>
       <programlisting role="php">
-$fp = fopen ("/home/rasmus/arquivo.txt", "r");
-$fp = fopen ("/home/rasmus/arquivo.gif", "wb");
-$fp = fopen ("http://www.php.net/", "r");
-$fp = fopen ("ftp://usuario:senha@exemplo.com.br/", "w");
+<![CDATA[
+<?php
+$fp = fopen ("/home/rasmus/file.txt", "r");
+$fp = fopen ("/home/rasmus/file.gif", "wb");
+$fp = fopen ("http://www.example.com/", "r");
+$fp = fopen ("ftp://user:password@example.com/", "w");
+?>
+]]>
       </programlisting>
      </example>
     </para>
     <simpara>
      Se você está tendo problemas com a leitura e gravação para
-     arquivos e você está usando a versão de modulo de servidor do
-     PHP, lembre-se de ter certeza que os arquivos e diretórios que
-     você está usando precisam ser acessíveis ao processo do servidor
-     de HTTP.
+     arquivos e você está usando a versão de modulo de servidor do PHP, lembre-se
+     de que os arquivos e diretórios que você está usando precisam ser 
+     acessíveis ao processo do servidor HTTP.
     </simpara>
     <para>
-     Na plataforma Windows, tenha cuidado para usar uma segunda
-     barra invertida (escape) usada no path de um arquivo, ou usar
-     a barra normal.
+     Na plataforma Windows, tenha cuidado para usar uma segunda barra invertida
+     (escape) nos caminhos de arquivos, ou usar a barra normal.
      <informalexample>
-      <programlisting role="php"> 
+      <programlisting role="php">
+<![CDATA[
+<?php
 $fp = fopen ("c:\\data\\info.txt", "r");
+?>
+]]>
       </programlisting>
      </informalexample>
     </para>
     <simpara>
-     Veja também <function>fclose</function>,
+     Veja também: <xref linkend="wrappers"/>
+     <function>fclose</function>,
+     <function>fgets</function>,
      <function>fsockopen</function>,
-     <function>socket_set_timeout</function>, e
+     <function>file</function>,
+     <function>file_exists</function>,
+     <function>is_readable</function>,
+     <function>socket_set_timeout</function> e
      <function>popen</function>.
     </simpara>
    </refsect1>

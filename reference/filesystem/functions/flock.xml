@@ -1,83 +1,99 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.2 Maintainer: rarruda Status: ready -->
+<!-- EN-Revision: 1.3 Maintainer: ae Status: ready --><!-- CREDITS: rarruda -->
 <!-- splitted from ./pt_BR/functions/filesystem.xml, last change in rev 1.5 -->
-<!-- last change to 'flock' in en/ tree in rev 1.2 -->
   <refentry id="function.flock">
    <refnamediv>
     <refname>flock</refname>
-    <refpurpose>Portable advisory file locking</refpurpose>
+    <refpurpose>Monitor de travamento de arquivos portátil</refpurpose>
    </refnamediv>
    <refsect1>
     <title>Descrição</title>
      <methodsynopsis>
       <type>bool</type><methodname>flock</methodname>
       <methodparam><type>int</type><parameter>fp</parameter></methodparam>
-      <methodparam><type>int</type><parameter>operacao</parameter></methodparam>
-      <methodparam choice="opt"><type>int</type><parameter>
-        wouldblock
-       </parameter></methodparam>
+      <methodparam><type>int</type><parameter>operation</parameter></methodparam>
+      <methodparam choice="opt"><type>int</type><parameter>&amp;wouldblock</parameter></methodparam>
      </methodsynopsis>
     <simpara>
-     PHP suporta uma maneira portável de lock arquivos completos
+     O PHP suporta uma maneira portável de lock arquivos inteiros
      em uma advisory way (que significa que todos os programas acessando
-     tem que usar a mesma maneira de locking ou não irá funcionar).
+     tem que usar o mesmo tipo de travamento ou não irá funcionar).
     </simpara>
     <simpara>
      <function>flock</function> opera em <parameter>fp</parameter>,
      que tem que ser um ponteiro de arquivo aberto com sucesso.
-     <parameter>operacao</parameter> é um dos seguintes valores:
+     <parameter>operacao</parameter> é um dos seguintes
+     valores:
     </simpara>
     <para>
      <itemizedlist>
       <listitem>
        <simpara>
-         Para obter uma lock compartilhada (leitura), use
-         <parameter>operacao</parameter> como LOCK_SH (use 1 se a versão
+         Para obter um lock compartilhado (leitura), utilize
+         <parameter>operation</parameter> como LOCK_SH (ou use 1 se a versão
          do PHP for anterior a 4.0.1).
        </simpara>
       </listitem>
       <listitem>
        <simpara>
-         Para obter uma lock exclusiva (gravação), use
-         <parameter>operacao</parameter> como LOCK_EX (use 2 se a versão
+         Para obter um lock exclusivo (gravação), utilize
+         <parameter>operacao</parameter> como LOCK_EX (ou use 2 se a versão
          do PHP for anterior a 4.0.1).
        </simpara>
       </listitem>
       <listitem>
        <simpara>
-         Para retirar uma lock (compartilhada ou exclusiva), use
-         <parameter>operacao</parameter> como LOCK_UN (use 3 se a versão
+         Para retirar um lock (compartilhado ou exclusivo), uyilize
+         <parameter>operacao</parameter> como LOCK_UN (ou use 3 se a versão
          do PHP for anterior a 4.0.1).
        </simpara>
       </listitem>
       <listitem>
        <simpara>
          Se você não quer usar  <function>flock</function> para
-         bloquear enquanto locking, addicione LOCK_NB (3 se a versão
+         bloquear enquanto travando, adicione LOCK_NB (4 se a versão
          do PHP for anterior a 4.0.1) a <parameter>operacao</parameter>.
        </simpara>
       </listitem>
      </itemizedlist>
     </para>
     <simpara>
-     <function>flock</function> permite que você possa fazer um simples
-     modelo leitura/gravação (reader/writer) que pode ser usado em 
+     <function>flock</function> permite a você fazer um simples
+     modelo leitura/gravação (reader/writer) que pode ser usado em
      virtualmente todas as plataformas (incluindo a maior parte dos
      Unixes e até mesmo Windows). O terceiro argumento opcional é usado
-     como &true; se a lock iria bloquear (EWOULDBLOCK errno condition)
+     como &true; se a lock irá bloquear (EWOULDBLOCK errno condition).
     </simpara>
     <simpara>
-     <function>flock</function> retorna &true; em caso de sucesso e 
-     &false; em caso de erro (por exemplo quando uma lock não pode
-     ser obtida).
+     <function>flock</function> retorna &true; em caso de sucesso e
+     &false; em caso de erro (por exemplo quando um lock não pode ser obtido).
     </simpara>
+    <note>
+     <para>
+      Uma vez que <function>flock</function> requer um ponteiro de arquivo, você precisa
+      utilizar um lock de arquivo especial para proteger i acessi a um arquivo ao qual você pretende
+      truncar quando abrindo no modo de escrita (com um argumento "w" ou "w+" em
+      <function>fopen</function>).
+     </para>
+    </note>
     <warning>
      <para>
+      <function>flock</function> não funcionará em NFS ou em qualquer outro sistema de
+      arquivos em rede. Verifique a documentação do seu sistema operacional para mais
+      detalhes.
+     </para>
+     <para>
       Na maior parte dos sistemas operacionais <function>flock</function>
-      é implementada no nível do processo. Quando usando um servidor 
-      com um multithreaded API como ISAPI você não pode confiar no
+      é implementada no nível do processo. Quando utilizando um servidor
+      com uma API de multiprocessamento (como ISAPI), você não pode confiar em
       <function>flock</function> para proteger os arquivos contra outros
-      scripts PHP rodando em threads paralelos do mesmo servidor.
+      scripts PHP rodando em threads paralelas da mesma instância do servidor!
+     </para>
+     <para>
+      <function>flock</function> não é suportado em sistemas de arquivos antiquados como a
+      <literal>FAT</literal> e seus derivados, e sempre
+      retornará &false; sob esses ambientes (especialmente para usuários do
+      Windows 98).
      </para>
     </warning>
    </refsect1>
