@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.4 Maintainer: fernandoc Status: ready -->
+<!-- EN-Revision: 1.9 Maintainer: fernandoc Status: ready -->
 <!-- CREDITS: surfmax -->
 <!-- splitted from ./en/functions/session.xml, last change in rev 1.2 -->
   <refentry id="function.session-register">
    <refnamediv>
     <refname>session_register</refname>
     <refpurpose>
-     Registrar uma ou mais variáveis na sessão atual
+     Registrar uma ou mais variáveis globais na sessão atual
     </refpurpose>
    </refnamediv>
    <refsect1>
@@ -25,17 +25,33 @@
     </para>
     <caution>
      <para>
-      Esta registra uma variável <emphasis>global</emphasis>. Se você quer
-      registrar uma variável de sessão de dentro de uma função, você precisa
-      definir ela como <function>global</function> ou usar as matrizes de
-      sessão como mostradas abaixo.
+      Se você quer que seu script funcione independentemente do uso de
+      <link linkend="ini.register-globals">register_globals</link>,
+      você precisa usar a matriz
+      <link linkend="reserved.variables.session">$_SESSION</link>
+      já que <varname>$_SESSION</varname> é automaticamente registrada.
+      Se o seu script usa <function>session_register</function>, 
+      ele não irá funcionar em ambientes onde a diretiva de configuração
+      <link linkend="ini.register-globals">register_globals</link>
+      esteja desabilitada.
+     </para>
+    </caution>
+     &note.registerglobals;
+    <caution>
+     <para>
+      Isto registra uma variável <emphasis>global</emphasis>. Se 
+      você quiser registrar uma variável dntro de uma função, você 
+      deve certificar-se de faze-la global, usando
+      <link linkend="language.variables.scope"><command>global</command></link>
+      ou usando a matriz <varname>$GLOBALS[]</varname>, ou usando a matriz especial
+      para seções($_SESSION) como mostrado abaixo.
      </para>
     </caution>
     <caution>
      <para>
-      Se você está usando
-      <varname>$_SESSION</varname> (ou <varname>$HTTP_SESSION_VARS</varname>),
-      não utilize <function>session_register</function>,
+      Se você esta usando <varname>$_SESSION</varname>
+      (ou <varname>$HTTP_SESSION_VARS</varname>), não use
+      <function>session_register</function>,
       <function>session_is_registered</function> e
       <function>session_unregister</function>.
      </para>
@@ -48,6 +64,8 @@
      Se <function>session_start</function> não foi chamada antes desta função
      ser chamada, uma chamada implícita para <function>session_start</function> sem 
      parâmetros será feita.
+     <varname>$_SESSION</varname> não imita isto e
+     necessita que <function>session_start</function> seja chamada antes de usar.
     </para>
     <para>
      Você também pode criar variáveis de sessão simplesmente definindo o
@@ -56,28 +74,31 @@
      <informalexample>
       <programlisting role="php">
 <![CDATA[
+<?php
+// O uso de session_register() esta obsoleto
 $barney = "Um grande dinossauro púrpura.";
 session_register("barney");
-
+// O uso de $_SESSION é recomendado, apartir do PHP 4.1.0
 $_SESSION["zim"] = "Um invasor de outro planeta.";
 
-# The old way was to use $HTTP_SESSION_VARS
+// A maneira antiga é usar $HTTP_SESSION_VARS
 $HTTP_SESSION_VARS["spongebob"] = "Ele conseguiu calças ajustadas.";
+?>
 ]]>
       </programlisting>
      </informalexample>
     </para>
     <note>
      <para>
-      Não é possível registrar correntemente variáveis resource numa
+      Não é possível registrar atualmente variáveis resource numa
       sessão.  Por exemplo, você não pode criar uma conexão para um
       banco de dados e guardar a id de conexão como uma variável de sessão
       e esperar que a conexão ainda esteja válida na próxima vez que a sessão  
       estiver restaurada. Funções do PHP que retornam uma resource são 
       identificadas por conterem um retorno do tipo
       <literal>resource</literal> em suas definições de função.  Uma
-      lista de funções que retornam resources estão disponíveis em
-      <link linkend="resource">tipos resources</link> appendix.
+      lista de funções que retornam resources estão disponíveis no
+      apêndice <link linkend="resource">tipos resources</link>.
      </para>
      <para>
       Se <varname>$_SESSION</varname> (ou
@@ -87,8 +108,9 @@ $HTTP_SESSION_VARS["spongebob"] = "Ele conseguiu calças ajustadas.";
      </para>
     </note>
     <para>
-     Veja também <function>session_is_registered</function> eS
-     <function>session_unregister</function>.
+     Veja também <function>session_is_registered</function>,
+     <function>session_unregister</function> e
+      <link linkend="reserved.variables.session">$_SESSION</link>.
     </para>
    </refsect1>
   </refentry>

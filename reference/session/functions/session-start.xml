@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.2 Maintainer: fernandoc Status: ready -->
+<!-- EN-Revision: 1.5 Maintainer: fernandoc Status: ready -->
 <!-- CREDITS: surfmax -->
 <!-- splitted from ./en/functions/session.xml, last change in rev 1.2 -->
   <refentry id="function.session-start">
@@ -19,11 +19,6 @@
       uma variável GET ou um cookie).
     </simpara>
     <simpara>
-     Se você quer usar uma sessão nomeada, você deve chamar
-     <function>session_name</function> antes de chamar
-     <function>session_start</function>.
-    </simpara>
-    <simpara>
      Esta função sempre retorna &true;.
     </simpara>
     <note>
@@ -33,20 +28,95 @@
       para o navegador.
      </para>
     </note>
+    <para>
+     <example>
+      <title>Um exemplo de seção: <filename>page1.php</filename></title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+// page1.php
+
+session_start();
+
+echo 'Bem vindo a pagina #1';
+
+$_SESSION['favcolor'] = 'green';
+$_SESSION['animal']   = 'cat';
+$_SESSION['time']     = time();
+
+// Funciona se o cookie de seção foi aceito
+echo '<br /><a href="page2.php">page 2</a>';
+
+// Ou talves passando o ID da seção se necessário
+echo '<br /><a href="page2.php?' . SID . '">page 2</a>';
+?>
+]]>
+      </programlisting>
+     </example>
+    </para>
+    <para>
+     Após ver <filename>page1.php</filename>, a segunda pagina
+     <filename>page2.php</filename> irá magicamente conter os dados da seção.
+     Leia <link linkend="ref.session">Uso de seções</link>
+     para informações sobre <link linkend="session.idpassing">propagando
+     ids de seções</link> já que, por exemplo, explica tudo sobre a constante
+     <constant>SID</constant>.
+    </para>
+    <para>
+     <example>
+      <title>Um exemplo de seção: <filename>page2.php</filename></title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+// page2.php
+
+session_start();
+
+echo 'Bem vindo a pagina #2<br />';
+
+echo $_SESSION['favcolor']; // green
+echo $_SESSION['animal'];   // cat
+echo date('Y m d H:i:s', $_SESSION['time']);
+
+// Você pode querer usar o SID aqui, como fissemos em page1.php
+echo '<br /><a href="page1.php">page 1</a>';
+?>
+]]>
+      </programlisting>
+     </example>
+    </para>
     <simpara>
-     <function>session_start</function> irá registrar um handler de saída 
+     Se você quiser usar uma seção com nomes, você deve usar
+     <function>session_name</function> antes de
+     <function>session_start</function>.
+    </simpara>
+    <simpara>
+     <function>session_start</function> irá registrar um handler de saída
      interno para URL reescrevendo quando <literal>trans-sid</literal> está
      habilitada. Se um usuário utiliza <literal>ob_gzhandler</literal> ou
-      <function>ob_start</function>, a ordem do handler de exibição 
+      <function>ob_start</function>, a ordem do handler de exibição
      é importante para a exibição apropriada. Por exemplo, usuário
      deve registrar <literal>ob_gzhandler</literal> antes da sessão começar.
     </simpara>
     <note>
      <simpara>
-      Uso de <literal>zlib.output_compression</literal> é mais
+      Uso de <link linkend="ini.zlib.output-compression">zlib.output_compression</link>  é mais
       recomendado do que <literal>ob_gzhandler</literal>
      </simpara>
     </note>
+    <note>
+     <para>
+      Apartir do PHP 4.3.3, usar <function>session_start</function> quando a seção já tiver
+      sido iniciada irá resultar em um erro de nível.
+      <constant>E_NOTICE</constant>.  Também, o segundo início de seção será simplesmente ignorado.
+     </para>
+    </note>
+    <para>
+     Veja também
+     <link linkend="reserved.variables.session">$_SESSION</link>,
+     <link linkend="ini.session.auto-start">session.auto_start</link>, e
+     <function>session_id</function>.
+    </para>
    </refsect1>
   </refentry>
 
