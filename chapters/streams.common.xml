@@ -1,0 +1,1056 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: 1.12 Maintainer: narigone Status: ready -->
+<!-- Author: Wez Furlong <wez@thebrainroom.com>
+  Please contact me before making any major amendments to the
+  content of this section.  Splitting/Merging are fine if they are
+  required for php-doc restructuring purposes - just drop me a line
+  if you make a change (so I can update my local copy).
+-->
+ <sect1 id="stream.common-api">
+    <title>Referência da API Comum de Fluxos de Dados (Streams)</title>
+  
+  <refentry id="streams.php-stream-stat-path">
+   <refnamediv>
+    <refname>php_stream_stat_path</refname>
+    <refpurpose>Retorna o status de um arquivo ou URL</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>int</type><methodname>php_stream_stat_path</methodname>
+      <methodparam><type>char *</type><parameter>path</parameter></methodparam>
+      <methodparam><type>php_stream_statbuf *</type><parameter>ssb</parameter></methodparam>
+     </methodsynopsis>
+     <para>
+      <function>php_stream_stat_path</function> examina o arquivo ou URL especificado por <parameter>path</parameter>
+      e retorna informação tal como tamanho do arquivo, acesso, hora de criação e por aí vai.
+      O valor de retorno é 0 quando tiver de sucesso, -1 se ocorrer um erro.
+      Para mais informação sobre o que essa função retorna, veja
+      <link linkend="streams.struct-php-stream-statbuf">php_stream_statbuf</link>.
+     </para>
+    </refsect1>
+  </refentry>
+  
+  <refentry id="streams.php-stream-stat">
+   <refnamediv>
+    <refname>php_stream_stat</refname>
+    <refpurpose>Retorna o status sobre o sistema de armazenamento associado com um fluxo</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>int</type><methodname>php_stream_stat</methodname>
+      <methodparam><type>php_stream *</type><parameter>stream</parameter></methodparam>
+      <methodparam><type>php_stream_statbuf *</type><parameter>ssb</parameter></methodparam>
+     </methodsynopsis>
+     <para>
+      <function>php_stream_stat</function> examina o armazenamento para o qual <parameter>stream</parameter>
+      está ligado, e retorna informação tal como tamanho do arquivo, acesso, hora de criação e por aí vai.
+      O valor de retorno é 0 quando tiver de sucesso, -1 se ocorrer um erro.
+      Para mais informação sobre o que essa função retorna, veja
+      <link linkend="streams.struct-php-stream-statbuf">php_stream_statbuf</link>.
+     </para>
+    </refsect1>
+  </refentry>
+  
+  
+  <refentry id="streams.php-stream-open-wrapper">
+   <refnamediv>
+    <refname>php_stream_open_wrapper</refname>
+    <refpurpose>Abre um fluxo para um arquivo ou URL</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>php_stream *</type><methodname>php_stream_open_wrapper</methodname>
+      <methodparam><type>char *</type><parameter>path</parameter></methodparam>
+      <methodparam><type>char *</type><parameter>mode</parameter></methodparam>
+      <methodparam><type>int</type><parameter>options</parameter></methodparam>
+      <methodparam><type>char **</type><parameter>opened</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_open_wrapper</function> abre um fluxo de dados para o arquivo, URL ou
+     outro recurso especificado por <parameter>path</parameter>. Dependendo do
+     valor de <parameter>mode</parameter>, o fluxo pode ser aberto para leitura,
+     escrita, adição no final, ou combinação desses modos. Veja a tabela abaixo para os diferentes
+     modos que podem ser usados; além dos caracteres listados abaixo, você pode
+     incluir o caracter 'b' ou como o segundo ou como o último caracter na string com o modo.
+     A presença de 'b' informa à implementação relevanete de fluxo que deve
+     abrir o fluxo no modo binário.
+    </para>
+    <para>
+     O caracter 'b' é ignorado em todos os sistemas POSIX, por tratarem
+     arquivos binários e de texto da mesma maneira. É uma boa idéia especificar o 
+     caracter 'b' sempre que o fluxo estiver acessando dados onde todos os 8 bits
+     são importantes, para que o código funcione quando compilado onde
+     a opção 'b' é importante.
+    </para>
+    <para>
+     Qualquer arquivos locais criados pela API de fluxos terá as suas permissões iniciais configuradas
+     de acordo com os padrões do sistema operacional - em sistemas baseados no Unix,
+     isso significa que a umask do processo será usada. No Windows,
+     o arquivo será possuído pelo processo que o criou.
+     Qualquer arquivo remoto será criado de acordo com o wrapper de URL que foi
+     usado para abrir o arquivo, e as credenciais disponibilizadas ao servidor remoto.
+    </para>
+    <para>
+     <variablelist>
+      <varlistentry>
+       <term>
+        <constant>r</constant> 
+       </term>
+       <listitem>
+        <simpara>
+         Abre um arquivo de texto para leitura. O fluxo é posicionado no começo do
+         arquivo.
+        </simpara>
+       </listitem>
+      </varlistentry>
+      
+      <varlistentry>
+       <term>
+        <constant>r+</constant> 
+       </term>
+       <listitem>
+        <simpara>
+         Abre um arquivo de texto para leitura e escrita. O fluxo é posicionado no começo do
+         arquivo.
+        </simpara>
+       </listitem>
+      </varlistentry>
+
+      <varlistentry>
+       <term>
+        <constant>w</constant> 
+       </term>
+       <listitem>
+        <simpara>
+         Cria ou sobrescreve um arquivo de texto para escrita.
+         O fluxo é posicionado no começo do arquivo.
+        </simpara>
+       </listitem>
+      </varlistentry>
+      
+      <varlistentry>
+       <term>
+        <constant>w+</constant> 
+       </term>
+       <listitem>
+        <simpara>
+         Abre um arquivo de texto para leitura e escrita. O arquivo é criado se
+         não existir, caso contrário é sobrescrito. O fluxo é posicionado no
+         começo do arquivo.
+        </simpara>
+       </listitem>
+      </varlistentry>
+      
+      <varlistentry>
+       <term>
+        <constant>a</constant> 
+       </term>
+       <listitem>
+        <simpara>
+         Abre para escrita. O arquivo é criado se não existir.
+         O fluxo é posicionado no fim do arquivo.
+        </simpara>
+       </listitem>
+      </varlistentry>
+      
+      <varlistentry>
+       <term>
+        <constant>a+</constant> 
+       </term>
+       <listitem>
+        <simpara>
+         Abre o arquivo de texto para escrita e leitura. O arquivo é criado se
+         não existir. O fluxo é posicionado no fim do arquivo.
+        </simpara>
+       </listitem>
+      </varlistentry>
+      
+     </variablelist>    
+    </para>    
+    <para>
+     <parameter>options</parameter> afeta como o caminho/URL do fluxo é
+     interpretado, testes de modo seguro e ações tomadas se ocorrer um erro durante a abertura
+     do fluxo. Veja <link linkend="streams.options">opções de abertura de fluxos</link> para
+     mais informação sobre as opções.
+    </para>
+    <para>
+     Se <parameter>opened</parameter> não for NULL, receberá uma string contendo
+     o nome do arquivo/recurso que foi aberto. Isso é importante quando as
+     opções incluem <constant>USE_PATH</constant>, que faz com que include_path seja pesquisado para
+     encontrar o arquivo. Você, o chamador, é responsável por chamar <function>efree</function> no
+     nome de arquivo retornado nesse parâmetro.
+    </para>
+    <note>
+     <simpara>
+      Se você especificou <constant>STREAM_MUST_SEEK</constant> em <parameter>options</parameter>,
+      o caminho retornado em <parameter>opened</parameter> pode não ser o nome do
+      fluxo real que foi retornado para você. Ele será, no entanto, o nome do recurso
+      original do qual o fluxo pesquisável foi feito.
+     </simpara>
+    </note>
+   </refsect1>
+  </refentry>
+  
+  
+  <refentry id="streams.php-stream-read">
+   <refnamediv>
+    <refname>php_stream_read</refname>
+    <refpurpose>Lê um número de bytes de um fluxo para um buffer</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>size_t</type><methodname>php_stream_read</methodname>
+      <methodparam><type>php_stream *</type><parameter>stream</parameter></methodparam>
+      <methodparam><type>char *</type><parameter>buf</parameter></methodparam>
+      <methodparam><type>size_t</type><parameter>count</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_read</function> lê até <parameter>count</parameter>
+     bytes de dados da <parameter>stream</parameter> e copia eles em um 
+     buffer <parameter>buf</parameter>.
+    </para>
+    <para>
+     <function>php_stream_read</function> retorna o número de bytes que foram
+     lidos com sucesso. Não existe distinção entre uma leitura que falhou e uma condição
+     de fim de arquivo - use <function>php_stream_eof</function> para testar por um <constant>EOF</constant>.
+    </para>
+    <para>
+     A posição interna do fluxo avança o mesmo número de bytes que foram
+     lidos, então leituras subsequentes continuarão lendo desse ponto.
+    </para>
+    <para>
+     Se menos que <parameter>count</parameter> bytes estiverem disponíveis para leitura, a
+     chamada bloqueará (ou esperará) até que o número requerido esteja disponível, dependendo do
+     status de bloqueamento do fluxo. Por padrão, um fluxo é aberto em modo bloqueado.
+     Quando lê de arquivos normais, modo de bloqueio normalmente não fará qualquer
+     diferença: quando o fluxo encontra o <constant>EOF</constant>
+     <function>php_stream_read</function> retornará um valor menor que
+     <parameter>count</parameter>, e 0 em leituras subsequentes.
+    </para>
+   </refsect1>
+  </refentry>
+
+  <refentry id="streams.php-stream-write">
+   <refnamediv>
+    <refname>php_stream_write</refname>
+    <refpurpose>Escreve um número de bytes de um buffer para um fluxo</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>size_t</type><methodname>php_stream_write</methodname>
+      <methodparam><type>php_stream *</type><parameter>stream</parameter></methodparam>
+      <methodparam><type>const char *</type><parameter>buf</parameter></methodparam>
+      <methodparam><type>size_t</type><parameter>count</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_write</function> escreve <parameter>count</parameter>
+     bytes de dados do <parameter>buf</parameter> para o <parameter>stream</parameter>.
+    </para>
+    <para>
+     <function>php_stream_write</function> retorna o número de bytes que foram
+     escritos com sucesso. Se ocorreu um erro, o número de bytes escritos será 
+     menor que <parameter>count</parameter>.
+    </para>
+    <para>
+     A posição interna do fluxo avança o mesmo número de bytes que foram
+     escritos, então as escritas subsequentes continuarão escrevendo daquele ponto.
+    </para>
+   </refsect1>
+  </refentry>
+
+  <refentry id="streams.php-stream-eof">
+   <refnamediv>
+    <refname>php_stream_eof</refname>
+    <refpurpose>Testa por uma condição de fim de arquivo em um fluxo</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>int</type><methodname>php_stream_eof</methodname>
+      <methodparam><type>php_stream *</type><parameter>stream</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_eof</function> testa se o fluxo
+     <parameter>stream</parameter> está posicionado no fim do arquivo.
+    </para>
+    <para>
+     <function>php_stream_eof</function> retorna 1 para indicar 
+     <constant>EOF</constant>,  0 se não estiver em <constant>EOF</constant> e -1 para indicar um erro.
+    </para>
+   </refsect1>
+  </refentry>
+
+  <refentry id="streams.php-stream-getc">
+   <refnamediv>
+    <refname>php_stream_getc</refname>
+    <refpurpose>Lê um byte de um fluxo</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>int</type><methodname>php_stream_getc</methodname>
+      <methodparam><type>php_stream *</type><parameter>stream</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_getc</function> lê um único caracter de um
+     <parameter>stream</parameter> e retorna-o como um unsigned char convertido (cast)
+     em um int, ou <constant>EOF</constant> se chegou ao fim do arquivo ou um erro aconteceu.
+    </para>
+    <para>
+     <function>php_stream_getc</function> pode bloquear assim como 
+     <function>php_stream_read</function> bloqueia.
+    </para>
+    <para>
+     A posição interna do fluxo avança uma posição se tiver sucesso.
+    </para>
+   </refsect1>
+  </refentry>
+
+  <refentry id="streams.php-stream-gets">
+   <refnamediv>
+    <refname>php_stream_gets</refname>
+    <refpurpose>Lê uma linha de dados de um fluxo para um buffer</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>char *</type><methodname>php_stream_gets</methodname>
+      <methodparam><type>php_stream *</type><parameter>stream</parameter></methodparam>
+      <methodparam><type>char *</type><parameter>buf</parameter></methodparam>
+      <methodparam><type>size_t</type><parameter>maxlen</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_gets</function> lê até <parameter>count</parameter>-1
+     bytes de dados de um <parameter>stream</parameter> e copia eles em um
+     buffer <parameter>buf</parameter>.  A leitura para depois de encontrar <constant>EOF</constant>
+     ou um caracter de linha nova. Se uma nova linha for encontrada, ela é guardada em <parameter>buf</parameter> como parte dos
+     dados retornados. Um caracter de término NUL é guardado como o último caracter no
+     buffer.
+    </para>
+    <para>
+     <function>php_stream_read</function> retorna <parameter>buf</parameter>
+     quando tiver sucesso ou NULL caso contrário.
+    </para>
+    <para>
+     A posição interna do fluxo avança o mesmo número de bytes que foram
+     lidos, então todas as leituras subsequentes continuarão lendo daquele ponto.
+    </para>
+    <para>
+     Essa função pode bloquear da mesma maneira que <function>php_stream_read</function>.     
+    </para>
+   </refsect1>
+  </refentry>
+
+  <refentry id="streams.php-stream-close">
+   <refnamediv>
+    <refname>php_stream_close</refname>
+    <refpurpose>Fecha um fluxo</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>int</type><methodname>php_stream_close</methodname>
+      <methodparam><type>php_stream *</type><parameter>stream</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_close</function> fecha com segurança <parameter>stream</parameter>
+     e libera os recursos associados com o mesmo. Depois que <parameter>stream</parameter>
+     foi fechado, o seu valor é indefinido e não deve ser usado.
+    </para>
+    <para>
+     <function>php_stream_close</function> retorna 0 se o fluxo foi fechado ou
+     <constant>EOF</constant> para indicar um erro. Independente do sucesso da chamada,
+     <parameter>stream</parameter> torna-se indefinido e não deve ser usado após a chamada
+     dessa função.
+    </para>
+   </refsect1>
+  </refentry>
+
+  <refentry id="streams.php-stream-flush">
+   <refnamediv>
+    <refname>php_stream_flush</refname>
+    <refpurpose>Força o envio dos buffers dos fluxos para o armazenamento</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>int</type><methodname>php_stream_flush</methodname>
+      <methodparam><type>php_stream *</type><parameter>stream</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_flush</function> faz com que quaisquer dados guardados 
+     em buffers de escrita em <parameter>stream</parameter> seja enviado para o
+     sistema de armazenamento ligado ao fluxo.
+    </para>
+    <para>
+     <function>php_stream_flush</function> retorna 0 se os buffers forem enviados
+     ou se os buffers não precisarem ser enviados, mas retorna <constant>EOF</constant>
+     para indicar um erro.
+    </para>
+   </refsect1>
+  </refentry>
+
+  <refentry id="streams.php-stream-seek">
+   <refnamediv>
+    <refname>php_stream_seek</refname>
+    <refpurpose>Reposiciona um fluxo</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>int</type><methodname>php_stream_seek</methodname>
+      <methodparam><type>php_stream *</type><parameter>stream</parameter></methodparam>
+      <methodparam><type>off_t</type><parameter>offset</parameter></methodparam>
+      <methodparam><type>int</type><parameter>whence</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_seek</function> reposiciona a posição
+     interna de <parameter>stream</parameter>.
+     A nova posição é determinada adicionando o <parameter>offset</parameter>
+     à posição indicada por <parameter>whence</parameter>.
+     Se <parameter>whence</parameter> tiver o valor <constant>SEEK_SET</constant>,
+     <constant>SEEK_CUR</constant> ou <constant>SEEK_END</constant> o offset 
+     é relativo ao início, a posição atual ou o fim do fluxo, respectivamente.
+    </para>
+    <para>
+     <function>php_stream_seek</function> retorna 0 se tiver sucesso, mas -1 se ocorreu um erro.
+    </para>
+    <note>
+     <para>
+     Nem todos os fluxos suportam pesquisa aleatória, embora a API de fluxo irá emular uma pesquisa se
+     <parameter>whence</parameter> tiver o valor <constant>SEEK_CUR</constant>
+     e <parameter>offset</parameter> for positivo, chamando <function>php_stream_read</function>
+     para ler (e descartar) <parameter>offset</parameter> bytes.
+      </para>
+      <para>
+      A emulação só se aplica quando a implementação de fluxo não suportar
+      pesquisa. Se o fluxo é (por exemplo) um arquivo que está envolvendo (wrapping)
+      um pipe não-pesquisável, a API de fluxos não aplicará a emulação porque o fluxo
+      implementa um operação de pesquisa; a pesquisa falhará e resultará em um erro que
+      será retornado ao chamador.
+      </para>
+    </note>
+   </refsect1>
+  </refentry>
+
+  <refentry id="streams.php-stream-tell">
+   <refnamediv>
+    <refname>php_stream_tell</refname>
+    <refpurpose>Determina a posição do fluxo</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>off_t</type><methodname>php_stream_tell</methodname>
+      <methodparam><type>php_stream *</type><parameter>stream</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_tell</function> retorna a posição interna do
+     <parameter>stream</parameter>, relativo ao início do fluxo.
+     Se ocorrer um erro, -1 é retornado.
+     </para>
+   </refsect1>
+  </refentry>
+
+ <refentry id="streams.php-stream-copy-to-stream">
+   <refnamediv>
+    <refname>php_stream_copy_to_stream</refname>
+    <refpurpose>Copia dados de um fluxo para o outro</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>size_t</type><methodname>php_stream_copy_to_stream</methodname>
+      <methodparam><type>php_stream *</type><parameter>src</parameter></methodparam>
+      <methodparam><type>php_stream *</type><parameter>dest</parameter></methodparam>
+      <methodparam><type>size_t</type><parameter>maxlen</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_copy_to_stream</function> tenta ler até <parameter>maxlen</parameter>
+      bytes de dados de <parameter>src</parameter> e escreve-os em <parameter>dest</parameter>,
+      e retorna o número de bytes que foram copiados com sucesso.
+    </para>
+    <para>
+     Se você quiser copiar todos os dados contidos no fluxo <parameter>src</parameter>, passe a
+     constante <constant>PHP_STREAM_COPY_ALL</constant> como o valor de <parameter>maxlen</parameter>.
+    </para>
+    <note>
+     <simpara>
+      Essa função tentará copiar os dados da maneira mais eficiente, usando arquivos mapeados na 
+      memória quando possível.
+     </simpara>
+    </note>
+   </refsect1>
+  </refentry>
+
+ <refentry id="streams.php-stream-copy-to-mem">
+   <refnamediv>
+    <refname>php_stream_copy_to_mem</refname>
+    <refpurpose>Copia dados de um fluxo em um buffer alocado</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>size_t</type><methodname>php_stream_copy_to_mem</methodname>
+      <methodparam><type>php_stream *</type><parameter>src</parameter></methodparam>
+      <methodparam><type>char **</type><parameter>buf</parameter></methodparam>
+      <methodparam><type>size_t</type><parameter>maxlen</parameter></methodparam>
+      <methodparam><type>int</type><parameter>persistent</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_copy_to_mem</function> aloca um buffer com <parameter>maxlen</parameter>+1
+     bytes de tamanho usando <function>pemalloc</function> (passando <parameter>persistent</parameter>).
+     Ele então lê <parameter>maxlen</parameter> bytes de <parameter>src</parameter> e guarda-os
+     no buffer alocado.
+    </para>
+    <para>
+     O buffer alocado é retornado no <parameter>buf</parameter>, e o número de bytes lidos com
+     sucesso. Você, o chamador, é responsável por liberar o buffer passando ele e <parameter>persistent</parameter>
+     para a função <function>pefree</function>.
+    </para>
+    <para>
+     Se você quiser copiar todos os dados contidos no fluxo <parameter>src</parameter>, passe a
+     constante <constant>PHP_STREAM_COPY_ALL</constant> como valor de <parameter>maxlen</parameter>.
+    </para>
+    <note>
+     <simpara>
+      Essa função tentará copiar os dados da maneira mais eficiente, usando arquivos mapeados na 
+      memória quando possível.
+     </simpara>
+    </note>
+   </refsect1>
+  </refentry>
+
+ <refentry id="streams.php-stream-make-seekable">
+   <refnamediv>
+    <refname>php_stream_make_seekable</refname>
+    <refpurpose>Converte o fluxo para um fluxo que suporta pesquisa</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>int</type><methodname>php_stream_make_seekable</methodname>
+      <methodparam><type>php_stream *</type><parameter>origstream</parameter></methodparam>
+      <methodparam><type>php_stream **</type><parameter>newstream</parameter></methodparam>
+      <methodparam><type>int</type><parameter>flags</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_make_seekable</function> testa se <parameter>origstream</parameter> é
+     pesquisável. Se não for, copiará os dados em um novo fluxo temporário.
+     Se tiver sucesso, <parameter>newstream</parameter> sempre é editada para a stream que é válida para o uso, mesmo que a original
+     seja pesquisável.
+    </para>
+    <para>
+     <parameter>flags</parameter> permite que você especifique sua preferência pelo fluxo pesquisável que é
+     retornado: use <constant>PHP_STREAM_NO_PREFERENCE</constant> para usar o fluxo pesquisável padrão
+     (que usa um buffer em memória que expande dinamicamente, mas muda para um fluxo para um arquivo temporário
+     quando fica grande demais), ou use <constant>PHP_STREAM_PREFER_STDIO</constant> para
+     usar um arquivo temporário normal como fluxo.
+    </para>
+    <para>
+     <table>
+      <title>Valores de retorno de <function>php_stream_make_seekable</function></title>
+      <tgroup cols="2">
+       <thead>
+        <row>
+         <entry>Valor</entry>
+         <entry>Significado</entry>
+        </row>
+       </thead>
+       <tbody>
+
+        <row>
+         <entry>PHP_STREAM_UNCHANGED</entry>
+         <entry>Fluxo original é pesquisável. <parameter>newstream</parameter> recebe o valor de
+          <parameter>origstream</parameter>.
+         </entry>
+        </row>
+
+        <row>
+         <entry>PHP_STREAM_RELEASED</entry>
+         <entry>Fluxo original não era pesquisável e foi liberado. <parameter>newstream</parameter> recebe o valor do
+          novo fluxo pesquisável. Você não deve acessar <parameter>origstream</parameter> depois desse ponto.
+         </entry>
+        </row>
+
+        <row>
+         <entry>PHP_STREAM_FAILED</entry>
+         <entry>Um erro ocorreu enquanto tentando fazer a conversão. <parameter>newstream</parameter> recebe o valor de NULL;
+          <parameter>origstream</parameter> ainda é válido.
+         </entry>
+        </row>
+
+        <row>
+         <entry>PHP_STREAM_CRITICAL</entry>
+         <entry>Um erro ocorreu enquanto tentando converter o fluxo que  deixou <parameter>origstream</parameter> em
+         um estado indeterminado. <parameter>newstream</parameter> recebe o valor de NULL e é altamente recomendado que
+         você feche <parameter>origstream</parameter>.
+         </entry>
+        </row>
+         
+       </tbody>
+      </tgroup>
+     </table>
+    </para>
+    <note>
+     <simpara>
+      Se você precisar pesquisar e escrever em um fluxo, não faz sentido usar essa função, porque o fluxo
+      que ela retorna não é necessariamente presa ao mesmo recurso do fluxo original.
+     </simpara>
+    </note>
+    <note>
+     <simpara>
+      Se você só precisa procurar para frente, não há necessidade de chamar essa função, já que a API de fluxos irá emular
+      pesquisa desse tipo quando o parâmetro whence é <constant>SEEK_CUR</constant>.
+     </simpara>
+    </note>
+    <note>
+     <simpara>
+      Se <parameter>origstream</parameter> for baseado em rede, essa função irá bloquear até todo o conteúdo
+      tenha sido baixado.
+      </simpara>
+    </note>
+    <note>
+     <simpara>
+      NUNCA chame essa função quando <parameter>origstream</parameter> é uma referência por um ponteiro para arquivo
+      em um script PHP! Essa função pode causar que o fluxo seja fechado o que pode causar falhas 
+      quando o próximo script acessar o ponteiro para arquivo!
+     </simpara>
+    </note>
+    <note>
+     <simpara>
+     Em muitos casos, essa função só pode ter sucesso quando <parameter>origstream</parameter> é um fluxo recém aberto
+     com nenhum dado nos buffers. Por essa razão, e porque essa função é complicada de se usar
+     corretamente, é recomendado que você use <function>php_stream_open_wrapper</function> e passe
+     <constant>PHP_STREAM_MUST_SEEK</constant> nas suas opções ao invés de chamar essa função diretamente.
+     </simpara>
+    </note>
+    </refsect1>
+  </refentry>
+
+
+<refentry id="streams.php-stream-cast">
+   <refnamediv>
+    <refname>php_stream_cast</refname>
+    <refpurpose>Converte um fluxo para uma outra forma, como FILE* ou socket</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>int</type><methodname>php_stream_cast</methodname>
+      <methodparam><type>php_stream *</type><parameter>stream</parameter></methodparam>
+      <methodparam><type>int</type><parameter>castas</parameter></methodparam>
+      <methodparam><type>void **</type><parameter>ret</parameter></methodparam>
+      <methodparam><type>int</type><parameter>flags</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_cast</function> tenta converter <parameter>stream</parameter> em um
+     recurso indicado por <parameter>castas</parameter>.
+     Se <parameter>ret</parameter> for NULL, o fluxo é verificado para descobrir de tal conversão é
+     possível, sem realizar de fato a conversão (no entanto, algum estado interno do fluxo *pode*
+     ser alterado nesse caso).
+     Se <parameter>flags</parameter> tiver o valor constant>REPORT_ERRORS</constant>, uma mensagem
+     de erro será mostrada se algum erro ocorrer durante a conversão.
+    </para>
+    <note>
+        <para>
+         Essa função retorna <constant>SUCCESS</constant> caso tenha sucesso ou <constant>FAILURE</constant>
+         se falhar. Esteja avisado que você deve compara explicitamente o valor de retorno com <constant>SUCCESS</constant>
+         ou <constant>FAILURE</constant> devido aos valores que essas constantes tem. Uma expressão
+         booleana simples não será interpretada como você deseja.
+        </para>
+    </note>
+    <para>
+     <table>
+      <title>Tipos de recursos para <parameter>castas</parameter></title>
+      <tgroup cols="2">
+       <thead>
+        <row>
+         <entry>Valor</entry>
+         <entry>Significado</entry>
+        </row>
+       </thead>
+       <tbody>
+        <row>
+         <entry>PHP_STREAM_AS_STDIO</entry>
+         <entry>Pede um ANSI FILE* que representa um fluxo</entry>
+        </row>
+        <row>
+         <entry>PHP_STREAM_AS_FD</entry>
+         <entry>Pede um descritor de arquivo POSIX que representa o fluxo</entry>
+        </row>
+        <row>
+         <entry>PHP_STREAM_AS_SOCKETD</entry>
+         <entry>Pede um descritor de socket de rede que representa o fluxo</entry>
+        </row>
+       </tbody>
+      </tgroup>
+     </table>
+    </para>
+    <para>
+     Além dos tipos de recursos básicos acima, o processo de conversão podem ser alterados usando as
+     seguintes opções usando o operador OR para combinar o tipo de recurso com um ou mais dos
+     seguintes valores:
+     <table>
+      <title>Tipos de recursos para <parameter>castas</parameter></title>
+      <tgroup cols="2">
+       <thead>
+        <row>
+         <entry>Valor</entry>
+         <entry>Significado</entry>
+        </row>
+       </thead>
+       <tbody>
+        <row>
+         <entry>PHP_STREAM_CAST_TRY_HARD</entry>
+         <entry>Tenta o máximo possível, ao custo de recursos adicionais, para assegurar-se que a conversão tenha sucesso</entry>
+        </row>
+        <row>
+         <entry>PHP_STREAM_CAST_RELEASE</entry>
+         <entry>Informa a API de fluxos que outro código (possivelmente uma biblioteca de terceiros) será responsável por fechar o
+         o fluxo. Isso causa que <parameter>stream</parameter> seja fechado de tal maneira que o 
+         handle abaixo é preservado e retornado em <parameter>ret</parameter>. Se essa função tiver sucesso, <parameter>stream</parameter>
+         deve ser considerado fechado e não deve ser usado após disso.
+         </entry>
+        </row>
+       </tbody>
+      </tgroup>
+     </table>
+    </para>
+    <note>
+     <simpara>
+      Se seu sistema suportar <function>fopencookie</function> (sistemas usando glibc 2 ou superior), a API de fluxos
+      sempre será capaz de sintetizar um ponteiro ANSI FILE* para qualquer fluxo.
+      Enquanto isso é tremendamente útil para passar qualquer fluxo do PHP para qualquer biblioteca de terceiros, tal comportamento não
+      é portável. Você deve considerar as implicações de portabilidade antes de distribuir sua extensão.
+      Se a síntese gerada pela função fopencookie não for desejável, você eve pedir ao fluxo para ver se ele suporta nativamente FILE*
+      usando a função <function>php_stream_is</function>.
+     </simpara>
+    </note>
+    <note>
+     <simpara>
+      Se você pedir um fluxo baseado em socket para um FILE*, a API de fluxos usará <function>fdopen</function> para
+      criá-lo para você. Esteja avisado que fazer isso pode causar que os dados que estavam no buffer na camada de fluxos sejam
+      perdidos se você misturar chamadas da API de fluxos com chamadas da ANSI stdio.
+     </simpara>
+    </note>
+    <para>
+     Veja também <function>php_stream_is</function> e <function>php_stream_can_cast</function>.
+    </para>
+   </refsect1>
+  </refentry>
+ 
+<refentry id="streams.php-stream-can-cast">
+   <refnamediv>
+    <refname>php_stream_can_cast</refname>
+    <refpurpose>Determina se um fluxo pode ser convertido em uma outra forma, tal como FILE * ou socket</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>int</type><methodname>php_stream_can_cast</methodname>
+      <methodparam><type>php_stream *</type><parameter>stream</parameter></methodparam>
+      <methodparam><type>int</type><parameter>castas</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     Essa função é equivalente a chamar <function>php_stream_cast</function> com <parameter>ret</parameter>
+     tendo o valor NULL e <parameter>flags</parameter> com valor 0.
+     Retorna <constant>SUCCESS</constant> se o fluxo pode ser convertido na forma requisitada, ou
+     <constant>FAILURE</constant> se a conversão não pode ser realizada.
+    </para>
+    <note>
+     <simpara>
+      Embora essa função não realizará a conversão, algum estado interno do fluxo *pode* ser 
+      alterado pela chamada.
+     </simpara>
+    </note>
+    <note>
+     <simpara>
+      Você deve comparar explicitamente o valor de retorno dessa função com uma das constantes, como destritos
+      em <function>php_stream_cast</function>.
+      </simpara>
+    </note>
+    <para>
+     Veja também <function>php_stream_cast</function> e <function>php_stream_is</function>.
+    </para>
+   </refsect1>
+  </refentry>
+
+<refentry id="streams.php-stream-is-persistent">
+   <refnamediv>
+    <refname>php_stream_is_persistent</refname>
+    <refpurpose>Determina se um fluxo é persistente ou não</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>int</type><methodname>php_stream_is_persistent</methodname>
+      <methodparam><type>php_stream *</type><parameter>stream</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_is_persistent</function> retorna 1 se o fluxo é persistente,
+     0 caso contrário.
+    </para>
+ </refsect1>
+</refentry>
+
+<refentry id="streams.php-stream-is">
+   <refnamediv>
+    <refname>php_stream_is</refname>
+    <refpurpose>Determina se um fluxo é de um tipo em particular</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>int</type><methodname>php_stream_is</methodname>
+      <methodparam><type>php_stream *</type><parameter>stream</parameter></methodparam>
+      <methodparam><type>int</type><parameter>istype</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_is</function> retorna 1 se <parameter>stream</parameter> é de
+     um tipo especificado por <parameter>istype</parameter>, ou 0 caso contrário.
+    <table>
+      <title>Valores para <parameter>istype</parameter></title>
+      <tgroup cols="2">
+       <thead>
+        <row>
+         <entry>Valor</entry>
+         <entry>Significado</entry>
+        </row>
+       </thead>
+       <tbody>
+        <row>
+         <entry>PHP_STREAM_IS_STDIO</entry>
+         <entry>O fluxo é implementado usando a implementação stdio</entry>
+        </row>
+        <row>
+         <entry>PHP_STREAM_IS_SOCKET</entry>
+         <entry>O fluxo é implementado usando a implementação socket de rede</entry>
+        </row>
+        <row>
+         <entry>PHP_STREAM_IS_USERSPACE</entry>
+         <entry>O fluxo é implementado usando a implementação de objeto em espaço de usuário</entry>
+        </row>
+        <row>
+         <entry>PHP_STREAM_IS_MEMORY</entry>
+         <entry>O fluxo é implementado usando a implementação de fluxo em memória que cresce com a demanda</entry>
+        </row>
+       </tbody>
+      </tgroup>
+     </table>
+
+    </para>
+    <note>
+     <simpara>
+      As "constantes" PHP_STREAM_IS_XXX são de fato definidas como ponteiros para a estrutura
+      de operações de fluxos. Se sua extensão (ou qualquer outra extensão) define fluxos
+      adicionais, ela deve declarar constantes PHP_STREAM_IS_XXX nos seus arquivos de cabeçalho (header) que
+      você pode usar como base na comparação.
+      </simpara>
+    </note>
+    <note>
+     <simpara>
+      Essa função é implementada como uma comparação simples (e rápida) de ponteiros, e não muda
+      o estado do fluxo em qualquer maneira.
+     </simpara>
+    </note>
+    <para>
+     Veja também <function>php_stream_cast</function> e <function>php_stream_can_cast</function>.
+    </para>
+   </refsect1>
+  </refentry>
+  
+  <refentry id="streams.php-stream-passthru">
+   <refnamediv>
+    <refname>php_stream_passthru</refname>
+    <refpurpose>Mostra todos os dados restantes de um fluxo</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>size_t</type><methodname>php_stream_passthru</methodname>
+      <methodparam><type>php_stream *</type><parameter>stream</parameter></methodparam>
+     </methodsynopsis>
+     <para>
+      <function>php_stream_passthru</function> mostra todos os dados restantes de <parameter>stream</parameter>
+      para o buffer de saída ativo e retorna o número de bytes mostrados.
+      Se buffering estiver desabilitado, os dados são escritos direto para a saída, que é o browser quando
+      faz uma requisição do PHP ao servidor web, ou stdout para scripts executados com o CLI.
+      Essa função usará arquivos mapeados na memória se possível para ajudar melhora a performance.
+     </para>
+    </refsect1>
+  </refentry>
+
+  <refentry id="streams.php-register-url-stream-wrapper">
+   <refnamediv>
+    <refname>php_register_url_stream_wrapper</refname>
+    <refpurpose>Registra um wrapper com a API de fluxos</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>int</type><methodname>php_register_url_stream_wrapper</methodname>
+      <methodparam><type>char *</type><parameter>protocol</parameter></methodparam>
+      <methodparam><type>php_stream_wrapper *</type><parameter>wrapper</parameter></methodparam>
+      <methodparam><type>TSRMLS_DC</type><parameter></parameter></methodparam>
+     </methodsynopsis>
+     <para>
+      <function>php_register_url_stream_wrapper</function> registra <parameter>wrapper</parameter>
+      como um tratador para o protocolo especificado por <parameter>protocol</parameter>.
+     </para>
+     <note>
+      <simpara>
+       Se você chamar essa função de um módulo carregável, você *DEVE* chamar <function>php_unregister_url_stream_wrapper</function>
+       na sua função de desligamento do módulo, caso contrário o PHP irá travar.
+      </simpara>
+     </note>
+    </refsect1>
+  </refentry>
+
+  <refentry id="streams.php-unregister-url-stream-wrapper">
+   <refnamediv>
+    <refname>php_unregister_url_stream_wrapper</refname>
+    <refpurpose>Tira um wrapper do registro de wrappers com a API de fluxos</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>int</type><methodname>php_unregister_url_stream_wrapper</methodname>
+      <methodparam><type>char *</type><parameter>protocol</parameter></methodparam>
+      <methodparam><type>TSRMLS_DC</type><parameter></parameter></methodparam>
+     </methodsynopsis>
+     <para>
+      <function>php_unregister_url_stream_wrapper</function> tira o wrapper do registro de wrappers
+      associados com <parameter>protocol</parameter>.
+     </para>
+    </refsect1>
+  </refentry>
+
+  <refentry id="streams.php-stream-open-wrapper-ex">
+   <refnamediv>
+    <refname>php_stream_open_wrapper_ex</refname>
+    <refpurpose>Abre um fluxo em um arquivo ou URL, especificando um contexto</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>php_stream *</type><methodname>php_stream_open_wrapper_ex</methodname>
+      <methodparam><type>char *</type><parameter>path</parameter></methodparam>
+      <methodparam><type>char *</type><parameter>mode</parameter></methodparam>
+      <methodparam><type>int</type><parameter>options</parameter></methodparam>
+      <methodparam><type>char **</type><parameter>opened</parameter></methodparam>
+      <methodparam><type>php_stream_context *</type><parameter>context</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_open_wrapper_ex</function> é exatamente como
+     <function>php_stream_open_wrapper</function>, mas permite especificar um
+     objeto php_stream_context usando <parameter>context</parameter>.
+     Para achar mais sobre contextos de fluxos, veja
+     To find out more about stream contexts, see
+     <link linkend="stream.contexts">Contextos de Fluxos</link>.
+    </para>
+    </refsect1>
+    </refentry>
+
+  <refentry id="streams.php-stream-open-wrapper-as-file">
+   <refnamediv>
+    <refname>php_stream_open_wrapper_as_file</refname>
+    <refpurpose>Abre um fluxo para arquivo ou URL e converte para um FILE*</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis role="c">
+      <type>FILE *</type><methodname>php_stream_open_wrapper_as_file</methodname>
+      <methodparam><type>char *</type><parameter>path</parameter></methodparam>
+      <methodparam><type>char *</type><parameter>mode</parameter></methodparam>
+      <methodparam><type>int</type><parameter>options</parameter></methodparam>
+      <methodparam><type>char **</type><parameter>opened</parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>php_stream_open_wrapper_as_file</function> é exatament como
+     <function>php_stream_open_wrapper</function>, mas converte o fluxo
+     em um ANSI stdio FILE* e retorna o mesmo ao invés de um fluxo.
+     Isso é um atalho conviniente para extensões que passam FILE* para bibliotecas de terceiros.
+    </para>
+   </refsect1>
+  </refentry>
+  <refentry id="streams.php-stream-filter-register-factory">
+   <refnamediv>
+    <refname>php_stream_filter_register_factory</refname>
+    <refpurpose>Registra uma fábrica de filtros com a API de fluxos</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+    <methodsynopsis role="c">
+     <type>int</type><methodname>php_stream_filter_register_factory</methodname>
+     <methodparam><type>const char *</type><parameter>filterpattern</parameter></methodparam>
+     <methodparam><type>php_stream_filter_factory *</type><parameter>factory</parameter></methodparam>
+    </methodsynopsis>
+    <para>
+     Use essa função para registra uma fábrica de filtro com o nome dados por
+     <parameter>filterpattern</parameter>.  <parameter>filterpattern</parameter>
+     pode ser ou um nome de string normal (ex.: <literal>myfilter</literal>) ou
+     um padrão global (ex.: <literal>myfilterclass.*</literal>) para permitir que um único
+     filtro faça diferentes operações dependendo do nome exato do filtro
+     invocado (ex.: <literal>myfilterclass.foo</literal>, <literal>myfilterclass.bar</literal>,
+     etc...)
+    </para>
+    <note>
+     <simpara>
+      Filtros registrados por uma extensão carregável deve se assegurar de chamar
+      php_stream_filter_unregister_factory() durante MSHUTDOWN.
+     </simpara>
+    </note>
+   </refsect1>
+  </refentry>
+  <refentry id="streams.php-stream-filter-unregister-factory">
+   <refnamediv>
+    <refname>php_stream_filter_unregister_factory</refname>
+    <refpurpose>Tira a fábrica de filtro do registro com a API de fluxos</refpurpose>
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+    <methodsynopsis role="c">
+     <type>int</type><methodname>php_stream_filter_unregister_factory</methodname>
+     <methodparam><type>const char *</type><parameter>filterpattern</parameter></methodparam>
+    </methodsynopsis>
+    <para>
+     Tira <parameter>filterfactory</parameter> especificado por 
+     <parameter>filterpattern</parameter> do registro, faznedo com que deixe de estar disponível para o uso.
+    </para>
+    <note>
+     <simpara>
+      Filtros registrados por uma extensão carregável deve se assegurar de chamar
+      php_stream_filter_unregister_factory() durante MSHUTDOWN.
+     </simpara>
+    </note>
+   </refsect1>
+  </refentry>
+</sect1>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"../../manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
+
