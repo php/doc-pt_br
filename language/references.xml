@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: 1.24 Maintainer: ae Status: ready -->
+ <chapter id="language.references">
+  <title>Referências</title>
+
+  <sect1 id="language.references.whatare">
+   <title>O que são referências</title>
+   <simpara>
+    Referências, em PHP, significa acessar o mesmo conteúdo de variável
+    através de vários nomes. Isto não é parecido como os ponteiros em C: aqui temos apelidos
+    numa tabela simbólica. Note que no PHP nomes de variáveis e conteúdo de variável
+    são tratados diferentemente, então um mesmo conteúdo pode ter nomes diferentes.
+    A analogia mais próxima é a dos arquivos e seus nomes em sistemas UNIX:
+    nomes de variáveis são o caminho completo dos arquivos, enquanto o conteúdo da variável são
+    os dados desse arquivo. Assim, referências pode ser tomadas como os links
+    físicos dentro do sistema de arquivos UNIX.
+   </simpara>
+  </sect1>
+
+  <sect1 id="language.references.whatdo">
+   <title>O as referências fazem</title>
+   <para>
+    Referências PHP permitem fazer duas variáveis se referirem ao
+    mesmo conteúdo. Ou seja:
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+$a =& $b
+]]>
+     </programlisting>
+    </informalexample>
+    aqui <varname>$a</varname> e <varname>$b</varname>
+    apontam para a mesma variável.
+    <note>
+     <para>
+      <varname>$a</varname> e <varname>$b</varname> são completamente
+      iguais aqui, mas não porque <varname>$a</varname> está apontando para
+      <varname>$b</varname> ou vice versa, mas sim que
+      <varname>$a</varname> e <varname>$b</varname> apontam para o
+      mesmo lugar.
+     </para>
+    </note>
+   </para>
+   <para>
+   A mesma sintaxe pode ser utilizada com funções, que retornem referências,
+   e com o operador <literal>new</literal> (a partir do PHP 4.0.4):
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+$bar =& new fooclass();
+$foo =& find_var ($bar);
+]]>
+    </programlisting>
+    </informalexample>
+    </para>
+    <note>
+     <para>
+     A não utilização do operador <literal>&amp;</literal> causará a cópia
+     do objeto. Se você utiliza <literal>$this</literal> em classes, ele
+     operará na instância atual do objeto. A assimilação sem
+     <literal>&amp;</literal> irá copiar a instância (o objeto em si) e
+     <literal>$this</literal> irá operar na cópia, podendo não ser esse procedimento
+     sempre desejável. Normalmente você precisará trabalhar com uma instância única,
+     seja por motivos de performance ou de consumo de memória.
+     </para>
+     <para>
+      Você pode utilizar o operador <literal>@</literal> para
+      <emphasis>esconder</emphasis> quaisquer erros em construtores na forma
+      <literal>@new</literal>, mas isto não funciona quando utilizada a
+      instrução <literal>&amp;new</literal>. Esta é uma limitação da Zend
+      Engine e irá gerar um erro de interpretação (parser error).
+     </para>
+   </note>
+   <para>
+    A segunda coisa que referências permitem é passar variáveis
+    por referência. Isto é feito marcando uma variável local de uma função e
+    a variável do escopo chamador como referências ao mesmo conteúdo. Exemplo:
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+function foo (&$var)
+{
+    $var++;
+}
+
+$a=5;
+foo ($a);
+]]>
+     </programlisting>
+    </informalexample>
+    fará que <varname>$a</varname> seja 6. Isto acontece porque na
+    função <varname>foo</varname> a variável
+    <varname>$var</varname> se refere ao mesmo conteúdo que
+    <varname>$a</varname>. Veja explicações mais detalhadas em <link
+    linkend="language.references.pass">passagem por referência</link>.
+   </para>
+   <simpara>
+    Em terceiro lugar, referências permitem também <link
+    linkend="language.references.return">retorno por referência</link>.
+   </simpara>
+  </sect1>
+
+  <sect1 id="language.references.arent">
+   <title>O que as referências não são</title>
+   <para>
+    Como dito anteriormente, referências não são ponteiros. Isto significa que
+    o construtor seguinte não fará o que você espera:
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+function foo (&$var)
+{
+    $var =& $GLOBALS["baz"];
+}
+foo($bar);
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+   <simpara>
+    Acontece que <varname>$var</varname> na função
+    <varname>foo</varname> estará apontada para
+    <varname>$bar</varname> na chamada, mas ela será
+    re-apontada para <varname>$GLOBALS["baz"]</varname>. Não existe maneira
+    de apontar <varname>$bar</varname> no escopo chamador para qualquer outra coisa
+    utilizando o mecanismo de referências, desde que <varname>$bar</varname> não está
+    disponível na função <varname>foo</varname> (ela é representa por
+    <varname>$var</varname>, mas <varname>$var</varname> somente tem
+    o conteúdo da variável e não um relacionamento nome para valor na
+    tabela simbólica).
+   </simpara>
+  </sect1>
+
+  <sect1 id="language.references.pass">
+   <title>Passagem por referência</title>
+   <para>
+   Você pode passar variáveis para funções por referência, então a função poderá modificar
+   seus argumentos. A sintaxe é a seguinte:
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+function foo (&$var)
+{
+    $var++;
+}
+
+$a=5;
+foo ($a);
+// $a é 6 aqui
+]]>
+     </programlisting>
+    </informalexample>
+  Note que não há o sinal de referência na chamada da função, somente
+  na definição da função. A marcação na definição da função sozinha é suficiente para
+  configurar corretamente a passagem de argumentos por referência.
+  </para>
+  <para>
+  As coisas a seguir podem ser passadas por referência:
+   <itemizedlist>
+    <listitem>
+     <simpara>
+      Variáveis. Exemplo: <literal>foo($a)</literal>
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      Instrução new. Exemplo <literal>foo(new foobar())</literal>
+     </simpara>
+    </listitem>
+    <listitem>
+     <para>
+      Outra referência, retornada de uma função. Exemplo:
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+function &bar()
+{
+    $a = 5;
+    return $a;
+}
+foo(bar());
+]]>
+     </programlisting>
+    </informalexample>
+    Veja explicações sobre isso em <link
+    linkend="language.references.return">retorno por referência</link>.
+     </para>
+    </listitem>
+  </itemizedlist>
+  </para>
+  <para>
+  Nenhuma outra expressão poderá ser passada por referência, com
+  resultados indefinidos. Por exemplo, o exemplo seguinte de passagem
+  por referência é inválido:
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+function bar() // Note a falta do &
+{
+    $a = 5;
+    return $a;
+}
+foo(bar());
+
+foo($a = 5) // Expressão, não é variável
+foo(5) // Constante, não é variável
+]]>
+     </programlisting>
+    </informalexample>
+    Essas limitações valem para o PHP 4.0.4 em diante.
+  </para>
+  </sect1>
+
+  <sect1 id="language.references.return">
+   <title>Retornando referências</title>
+   <para>
+    Retorno por referência é útil quando você precisa utilizar uma função
+    para localizar variável cuja referência precisa ser obtida. Para
+    retornar referências, utilize esta sintaxe:
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+function &procura_var ($param)
+{
+    ...codigo...
+    return $variavel_encontrada;
+}
+
+$foo =& procura_var ($bar);
+$foo->x = 2;
+]]>
+     </programlisting>
+    </informalexample>
+    Neste exemplo, a propriedade do objeto retornado pela
+    função <varname>procura_var</varname> precissa ser assimilada, não
+    copiada, como acontecerá se não utilizar a sintaxe de referências.
+   </para>
+   <note>
+    <simpara>
+     Diferentemente da passagem de parâmetros por referência, aqui você precisa utilizar
+     <literal>&amp;</literal> em ambos os lugares --- primeiro para indicar o
+     retorno por referência (e não a cópia), e depois para indicar a
+     ligação da referência (em vez da assimilação convencional) que precisa ser
+     explícita.
+    </simpara>
+   </note>
+  </sect1>
+
+  <sect1 id="language.references.unset">
+   <title>Destruindo referências</title>
+   <para>
+    Quando você quebra uma referência, ela apenas pára de fazer o apontamento entre
+    o nome da variável e o conteúdo. Mas isto não significa que
+    o conteúdo da variável será destruído. Por exemplo:
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+$a = 1;
+$b =& $a;
+unset ($a);
+]]>
+     </programlisting>
+    </informalexample>
+    não apaga <varname>$b</varname>, apenas <varname>$a</varname>.
+   </para>
+   <simpara>
+    Novamente, é mais fácil pensar em analogia ao comando UNIX
+    <command>unlink</command>.
+   </simpara>
+  </sect1>
+
+  <sect1 id="language.references.spot">
+   <title>Demonstrando referências</title>
+   <simpara>
+    Vários construtores sintáticos do PHP são implementados através de mecanismos
+    de referência, assim, tudo o explicado até aqui sobre referências também
+    se aplica a esses construtores. Alguns desses construtores, como a passagem e o
+    retorno de referências foram mencionados acima. Outros construtores que
+    também utilizam referências são:
+   </simpara>
+
+   <sect2 id="references.global">
+    <title><literal>global</literal></title>
+    <para>
+     Quando você declara uma variável com <command>global</command>, você
+     está de fato criando um referência para a variável global. Isto significa que
+     isto é o mesmo que:
+     <informalexample>
+      <programlisting role="php">
+<![CDATA[
+$var =& $GLOBALS["var"];
+]]>
+      </programlisting>
+     </informalexample>
+    </para>
+    <simpara>
+     O que significa também que destruir <varname>$var</varname>
+     não apaga a variável global.
+    </simpara>
+   </sect2>
+
+   <sect2 id="references.this">
+    <title><literal>$this</literal></title>
+    <simpara>
+     Num método de objeto, <varname>$this</varname> sempre referencia
+     o instância atual.
+    </simpara>
+   </sect2>
+  </sect1>
+
+ </chapter>
+ 
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"../../manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
