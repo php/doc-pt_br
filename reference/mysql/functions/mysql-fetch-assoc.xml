@@ -20,13 +20,13 @@
     <para>
      <function>mysql_fetch_assoc</function> é equivalente a chamar
      <function>mysql_fetch_array</function> com MYSQL_ASSOC para o segundo
-     parametro, que é opcional. Somente retorna uma matriz associativa.
+     parâmetro, que é opcional. Somente retorna uma matriz associativa.
      Este é o  jeito que <function>mysql_fetch_array</function> funcionava 
      originalmente. Se você precisa dos índices numéricos assim como o 
      associativo, use <function>mysql_fetch_array</function>.
     </para>
     <para>Se duas ou mais colunas do resultado tiverem o mesmo nome do campo,
-     a ultima coluna terá precedencia. Para acessar as outras coluna(s) com o mesmo nome, 
+     a ultima coluna terá precedência. Para acessar as outras coluna(s) com o mesmo nome, 
      você deve usar o índice numérico da coluna usando <function>mysql_fetch_row</function> ou 
      fazer um apelido para a coluna.
      Veja o exemplo em <function>mysql_fetch_array</function>
@@ -43,21 +43,53 @@
      <programlisting role="php">
 <![CDATA[
 <?php
-    mysql_connect("localhost", "mysql_user", "mysql_password");
-    mysql_select_db("mydb");
-    $query = "select * from table";
-    $result = mysql_query($query);
-    while ($row = mysql_fetch_assoc($result)) {
-        echo $row["user_id"];
-        echo $row["fullname"];
+
+    $conn = mysql_connect("localhost", "mysql_user", "mysql_password");
+    
+    if (!$conn) {
+        echo "Não foi possível conectar: " . mysql_error();
+        exit;
     }
+
+    if (!mysql_select_db("mydbname")) {
+        echo "Não foi possível selecionar mydb: " . mysql_error();
+        exit;
+    }
+
+    $sql = "SELECT id as userid, fullname, userstatus
+            FROM   sometable
+            WHERE  userstatus = 1";
+
+    $result = mysql_query($sql);
+
+    if (!$result) {
+        echo "Não foi possível executar a query ($sql): " . mysql_error();
+        exit;
+    }
+
+    if (mysql_num_rows($result) == 0) {
+        echo "Nenhuma linha encontrada, nada para mostrar, então estou saindo";
+        exit;
+    }
+
+    // Enquanto uma linha com dados existir, coloca esta linha em $row como uma matriz associativa
+    // Nota: Se você esta esperando somente uma linha, não é necessário usar o loop
+    // Note: Se você colocar extract($row); dentro o loop a seguir,
+    //       então você irá criar $userid, $fullname, and $userstatus
+    while ($row = mysql_fetch_assoc($result)) {
+        echo $row["userid"];
+        echo $row["fullname"];
+        echo $row["userstatus"];
+    }
+
     mysql_free_result($result);
+
 ?>
 ]]>
      </programlisting>
     </example>
     <para>
-     Para maiores detalhes, veja também 
+     Para maiores detalhes, veja também
      <function>mysql_fetch_row</function>,
      <function>mysql_fetch_array</function> e
      <function>mysql_query</function>.
