@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.22 Maintainer: fernandoc Status: ready -->
+<!-- EN-Revision: 1.24 Maintainer: fernandoc Status: ready -->
 <!-- splitted from ./en/functions/image.xml, last change in rev 1.36 -->
  <refentry id="function.getimagesize">
   <refnamediv>
@@ -11,7 +11,7 @@
     <methodsynopsis>
      <type>array</type><methodname>getimagesize</methodname>
      <methodparam><type>string</type><parameter>filename</parameter></methodparam>
-     <methodparam choice="opt"><type>array</type><parameter>imageinfo</parameter></methodparam>
+     <methodparam choice="opt"><type>array</type><parameter>&amp;imageinfo</parameter></methodparam>
     </methodsynopsis>
    <para>
     A função <function>getimagesize</function> irá determinar o
@@ -26,13 +26,36 @@
     o tipo de arquivo e a altura/largura para usar dentro de uma tag 
     <acronym>HTML</acronym> <literal>IMG</literal>.
    </para>
+    <para>
+    Se for impossível acessar a imagem <parameter>filename</parameter>,
+    ou se não for uma imagem válida, <function>getimagesize</function>
+    irá retornar &false; e gerar um erro de nível
+    <varname>E_WARNING</varname>.
+   </para>
    <note>
     <para>
      Suporte para <acronym>JPC</acronym>, <acronym>JP2</acronym>,
      <acronym>JPX</acronym>, <acronym>JB2</acronym>,
      <acronym>XBM</acronym>, e <acronym>WBMP</acronym> tornou-se disponível no
-     PHP 4.3.2.  Supporte para <acronym>SWC</acronym> a partir do PHP 4.3.0.
+     PHP 4.3.2.  Supporte para <acronym>SWC</acronym> a partir do PHP 4.3.0 e
+     o suporte a <acronym>TIFF</acronym> foi adicionado no PHP 4.2.0 
     </para>
+   </note>
+   <note>
+    <simpara>
+     Suporte a JPEG 2000 foi adicionado no PHP 4.3.2. Note que JPC e JP2 são
+     capazes de ter componentes com profundidades diferentes de bit. Neste caso
+     o valor para 'bits' é a maior profundidade de bits encontrada. Também, arquivos JP2
+     podem conter múltiplos JPEG 2000 codestreams. Neste caso,
+     <function>getimagesize</function> retorna o valor para o primeiro
+     codestream que encontrar na raíz do arquivo.
+    </simpara>
+   </note>
+   <note>
+    <simpara>
+     A função <function>getimagesize</function> não requer a
+     biblioteca de imagem GD.
+    </simpara>
    </note>
    <para>
     Retorna uma matriz com 4 elementos. O índice 0 contém a largura da imagem
@@ -57,6 +80,7 @@ echo "<img src=\"img/flag.jpg\" $attr alt=\"getimagesize() example\" />";
     </example>
    </para>
    <para>
+    Suporte para URL foi adicionado PHP 4.0.5
     <example>
      <title>getimagesize (URL)</title>
      <programlisting role="php">
@@ -79,7 +103,7 @@ $size = getimagesize("http://www.example.com/gifs/lo%20go.gif");
     <literal>bits</literal> é o número de bits para cada cor.
    </para>
    <para>
-    Começando no PHP 4.3, <literal>bits</literal> e
+    Começando no PHP 4.3.0, <literal>bits</literal> e
     <literal>channels</literal> estão presentes para outros tipos de imagens também.
     Entretanto, a presença desses valores pode ser um pouco confusa. Por exemplo,
     <acronym>GIF</acronym> sempre usa 3 channels por pixel, mas o
@@ -93,7 +117,7 @@ $size = getimagesize("http://www.example.com/gifs/lo%20go.gif");
     zero para a altura e largura nestes casos.
    </para>
    <para>
-    Começando no PHP 4.3, <function>getimagesize</function> também retorna um 
+    Começando no PHP 4.3.0, <function>getimagesize</function> também retorna um 
     parâmetro adicional, <literal>mime</literal>, que corresponde ao tipo
     MIME da imagem. Esta informação pode ser usada para enviar imagens
     com o cabeçalho HTTP Content-type correto:
@@ -117,11 +141,6 @@ if ($size && $fp) {
     </example>
    </para>
    <para>
-    Se for impossível acessar a imagem <parameter>filename</parameter>,
-    ou não for uma imagem válida, <function>getimagesize</function>
-    irá retornar &false; e gerar um warning.
-   </para>
-   <para>
     O parâmetro opcional <parameter>imageinfo</parameter> permite a você extrair
     alguma informação extendida do arquivo de imagem.
     Atualmente, irá retornar os diferentes
@@ -132,6 +151,8 @@ if ($size && $fp) {
     APP13 marker. Você poderá usar a função <function>iptcparse</function>
     para interpretar o binário APP13 marker em algo
     legível.
+   </para>
+   <para> 
     <example>
      <title>getimagesize() retornando IPTC</title>
      <programlisting role="php">
@@ -146,34 +167,14 @@ if (isset($info["APP13"])) {
 ]]>
      </programlisting>
     </example>
-    <note>
-     <simpara>
-      Suporte a JPEG 2000 foi adicionado no PHP 4.3.2. Note que JPC e JP2 podem
-      ter componentes com uma quantidade diferente de bits. Neste caso
-      o valor para "bits" é o maior encontrado. Também, um arquivo JP2 
-      pode ter múltiplos JPEG 2000 codestreams. Neste caso, 
-      <function>getimagesize</function> retorna os valores para o primeiro 
-      codestream que encontrar na raíz do arquivo.
-     </simpara>
-    </note>
-    <note>
-     <simpara>
-      Suporte a TIFF foi adicionado no PHP 4.2.
-     </simpara>
-     <simpara>
-      Esta função não requer a biblioteca de imagens GD.
-     </simpara>
-     <simpara>
-      Veja também <function>image_type_to_mime_type</function>, 
-      <function>exif_imagetype</function>, <function>exif_read_data</function>
-      e <function>exif_thumbnail</function>.
-     </simpara>
-     <simpara>
-      Suporte a URL foi adicionado no PHP 4.0.5.
-     </simpara>
-    </note>
    </para>
-  </refsect1>
+   <para>
+    Veja também <function>image_type_to_mime_type</function>, 
+    <function>exif_imagetype</function>, 
+    <function>exif_read_data</function> e 
+    <function>exif_thumbnail</function>. 
+   </para> 
+   </refsect1>
  </refentry>
 
 <!-- Keep this comment at the end of the file
