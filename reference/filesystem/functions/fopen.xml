@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.5 Maintainer: ae Status: ready --><!-- CREDITS: rarruda -->
+<!-- EN-Revision: 1.18 Maintainer: ae Status: ready --><!-- CREDITS: rarruda -->
 <!-- splitted from ./pt_BR/functions/filesystem.xml, last change in rev 1.5 -->
   <refentry id="function.fopen">
    <refnamediv>
@@ -9,7 +9,7 @@
    <refsect1>
     <title>Descrição</title>
      <methodsynopsis>
-      <type>int</type><methodname>fopen</methodname>
+      <type>resource</type><methodname>fopen</methodname>
       <methodparam><type>string</type><parameter>filename</parameter></methodparam>
       <methodparam><type>string</type><parameter>mode</parameter></methodparam>
       <methodparam choice="opt"><type>int</type><parameter>use_include_path</parameter></methodparam>
@@ -31,7 +31,7 @@
      a um arquivo local, então ele tentará abrir o stream para aquele arquivo.
      Esse arquivo precisa ser acessível pelo PHP, então você precisa certificar-se que
      as permissões de acesso que garantam esse acesso.
-     Se você está com <link linkend="ini.safe-mode">safe_mode</link> ativado
+     Se você está com &safemode; ativado
      ou <link linkend="ini.open-basedir">open_basedir</link>, essas
      restrições serão aplicadas.
     </simpara>
@@ -46,61 +46,163 @@
     <note>
      <simpara>
       A lista de protocolos registrados pode ser encontrada em <xref linkend="wrappers"/>.
+      Alguns protocolos (também conhecidos como <literal>wrappers</literal>) suportam
+      opções de <literal>context</literal> e/ou &php.ini;.
+      Veja na página específica do protocolo em uso para uma lista de opções
+      possíveis. (por exemplo, o valor &php.ini;
+      <literal>user_agent</literal> utilizado pelo wrapper <literal>http</literal>)
+      Para uma descrição de <literal>contexts</literal> e o parâmetro
+      <parameter>zcontext</parameter>, veja <xref linkend="ref.stream"/>.
      </simpara>
     </note>
     <para>
-     <parameter>mode</parameter> especifica a tipo de acesso que você
-     requer na stream. Ele pode ser um dos seguintes:
-     <itemizedlist>
-      <listitem>
-       <simpara>
-        'r' - Abrir somente para leitura; coloca o ponteiro de arquivo
-        no começo do arquivo.
-       </simpara>
-      </listitem>
-      <listitem>
-       <simpara>
-        'r+' - Abrir para leitura e gravação; colocar o ponteiro de
-        arquivo no começo do arquivo.
-       </simpara>
-      </listitem>
-      <listitem>
-       <simpara>
-        'w' - Abrir somente para gravação; colocar o ponteiro de
-        arquivo no começo do arquivo e truncar o arquivo para tamanho
-        zero. Se o arquivo não existir, tentar cria-lo.
-       </simpara>
-      </listitem>
-      <listitem>
-       <simpara>
-        'w+' - Abrir para leitura e escrita; colocar o ponteiro de
-        arquivo no início do arquivo e truncar o arquivo para tamanho
-        zero. Se o arquivo não existir, tentar cria-lo.
-       </simpara>
-      </listitem>
-      <listitem>
-       <simpara>
-        'a' - Abrir o arquivo somente para escrita; colocar o ponteiro
-        de arquivo no fim do arquivo.  Se o arquivo não existe, tentar
-        cria-lo.
-       </simpara>
-      </listitem>
-      <listitem>
-       <simpara>
-        'a+' - Abrir o arquivo para leitura e gravação; colocar o
-        ponteiro no fim do arquivo. Se o arquivo não existe, tentar
-        cria-lo.
-       </simpara>
-      </listitem>
-     </itemizedlist>
+     O parâmetro <parameter>mode</parameter> configura o tipo de acesso
+     que você precisa no stream. Pode ser um dos seguintes:
+     <table>
+      <title>
+       Lista dos possíveis modos de <function>fopen</function>
+       para o parâmetro <parameter>mode</parameter>
+      </title>
+      <tgroup cols="2">
+       <thead>
+        <row>
+         <entry><parameter>mode</parameter></entry>
+         <entry>Descrição</entry>
+        </row>
+       </thead>
+       <tbody>
+        <row>
+         <entry><literal>'r'</literal></entry>
+         <entry>
+          Abre somente leitura; coloca o ponteiro do arquico no
+          começo do arquivo.
+         </entry>
+        </row>
+        <row>
+         <entry><literal>'r+'</literal></entry>
+         <entry>
+          Abre para leitura e escrita; coloca o ponteiro do arquivo no
+          começo do arquivo.
+         </entry>
+        </row>
+        <row>
+         <entry><literal>'w'</literal></entry>
+         <entry>
+          Abre para escrita somente; coloca o ponteiro do arquivo no
+          começo do arquivo e diminui (trunca) o tamanho do arquivo para zero.
+          Se o arquivo não existe, tenta criá-lo.
+         </entry>
+        </row>
+        <row>
+         <entry><literal>'w+'</literal></entry>
+         <entry>
+          Abre o arquivo para leitura e escrita; coloca o ponteiro do arquivo no
+          começo e diminui (trunca) o tamanho do arquivo para
+          zero. Se o arquivo não existe, tenta criá-lo.
+         </entry>
+        </row>
+        <row>
+         <entry><literal>'a'</literal></entry>
+         <entry>
+          Abre para escrita somente; coloca o ponteiro do arquivo no
+          final. Se o arquivo não existe, tenta criá-lo.
+         </entry>
+        </row>
+        <row>
+         <entry><literal>'a+'</literal></entry>
+         <entry>
+          Abre o arquivo para escrita e gravação; coloca o ponteiro do arquivo no
+          final. Se o arquivo não existe, tenta
+          criá-lo.
+         </entry>
+        </row>
+        <row>
+         <entry><literal>'x'</literal></entry>
+         <entry>
+          Cria e abre o arquivo para escrita somente; coloca o ponteiro no
+          início do arquivo. Se o arquivo já existe, a chamada a
+          <function>fopen</function> irá falhar, retornando &false; e
+          gerando um erro nível <constant>E_WARNING</constant>. Se
+          o arquivo não existe, tenta criá-lo. Isto é o equivalente
+          a informar as flags <literal>O_EXCL|O_CREAT</literal> numa
+          chamada a <literal>open(2)</literal>. Esta opção é
+          suportada no PHP 4.3.2 e posteriores, e somente funciona em arquivos locais.
+         </entry>
+        </row>
+        <row>
+         <entry><literal>'x+'</literal></entry>
+         <entry>
+          Cria e abre um arquivo para escrita e leitura; coloca o ponteiro do
+          arquivo no início. Se o arquivo já existe, a chamada a
+          <function>fopen</function> irá falhar, retornando &false; e
+          gerando um erro nível <constant>E_WARNING</constant>. Se
+          o arquivo não existe, tenta criá-lo. Isto é o equivalente
+          a informar as flags <literal>O_EXCL|O_CREAT</literal> numa
+          chamada a <literal>open(2)</literal>. Esta opção é
+          suportada no PHP 4.3.2 e posteriores, e somente funciona em arquivos locais.
+         </entry>
+        </row>
+       </tbody>
+      </tgroup>
+     </table>
     </para>
     <note>
      <para>
-      O <parameter>mode</parameter> pode conter a letra 'b'. Isto é
-      útil somente em sistemas que diferenciam entre arquivos
-      binários e texto (por exemplo Windows. É inútil em Unix).
-      Se não necessário, será ignorado. Você é encorajado a
-      incluir o modo 'b' de forma a tornar seus scripts mais portáveis.
+      Sistemas operacionais diferentes tem convenções de delimitação de linhas
+      diferentes. Quando você escreve num arquivo e deseja inserir uma quebra de
+      linha, você precisa utilizar o(s) caractere(s) de fim de linha adequado(s) em seu
+      sistema operacional. Sistemas baseados no Unix utilizam <literal>\n</literal> como
+      final de linha, sistemas baseados no Windows usam <literal>\r\n</literal>
+      e sistemas baseados no Macintosh usam
+      <literal>\r</literal>.
+     </para>
+     <para>
+      Se escrever caracteres de fim de linha inadequados em seus arquivos, eles
+      deverão "parecer engraçados" quando você os abrir em outras
+      aplicações.
+     </para>
+     <para>
+      O Windows oferece uma flag de tradução do modo texto (<literal>'t'</literal>)
+      que traduz, transparentemente, <literal>\n</literal> para
+      <literal>\r\n</literal> quando trabalhando no arquivo. Em contraste, você
+      também pode utilizar <literal>'b'</literal> para forçar o modo binário, que não
+      irá traduzir o arquivo. Para usar essas flags, informe ou
+      <literal>'b'</literal> ou <literal>'t'</literal> como o último caracter
+      no parâmetro <parameter>mode</parameter>.
+     </para>
+     <para>
+      O modo do sistema de tradução default depende da versao da SAPI sob o qual você
+      está usando o PHP, então é encorajado a sempre utilizar a flag apropriada
+      por razões de portabilidade. Você deve usar o modo <literal>'t'</literal>
+      se estiver trabalhando em arquivos texto simples e utilizar 
+      <literal>\n</literal> para delimitar as linhas em seu script, de forma que
+      você pode esperar que eles sejam lidos em outras aplicações como o Notepad. Você
+      deve usar <literal>'b'</literal> em todos os outros casos.
+     </para>
+     <para>
+      Se você não especificar a flag 'b' quando trabalhando com arquivos binários, você
+      pode experimentar problemas estranhos com seus dados, incluindo arquivos de imagens
+      danificados e problemas estranhos com os caracteres <literal>\r\n</literal>.
+     </para>
+     <para>
+      <emphasis>Para portabilidade, é estremamente recomendado que você sempre
+       utilize a flag 'b' quando abrindo arquivos com <function>fopen</function>.
+      </emphasis>
+     </para>
+     <para>
+      <emphasis>Novamente, por portabilidade, é estremamente recomendável que você
+       re-escreva seu código nas situações em que o modo <literal>'t'</literal>
+       deva ser utilizado para corrigir os fim de linha, onde o modo 'b' não
+       deva ser utilizado.
+      </emphasis>
+     </para>
+     <para>
+      <emphasis>A partir do PHP 4.3.2, o modo padrão é configurado para binário em todas
+       as plataformas que distinguem entre modo texto e binário. Se você está
+       tendo problemas em seus scripts depois de um upgrade, tente acrescentar a
+       flag<literal>'t'</literal> como um paliativo até que você tenha tornado seus
+       scripts portáveis como mencionado acima.
+      </emphasis>
      </para>
     </note>
     <para>
@@ -108,12 +210,11 @@
      quiser procurar pelo arquivo no <link
      linkend="ini.include-path">include_path</link> também.
     </para>
-    <para>
-     O quarto parâmetro <parameter>zcontext</parameter> (opcional) é utilizado
-     especificamente para ajuste de parâmetros e callbacks.
-    </para>
     <simpara>
-     Se a abertura falhar, a função retorna &false;.
+     Se a abertura falhar, a função retorna &false; e um erro nível
+     <constant>E_WARNING</constant> é gerado. Você pode utilizar
+     <link linkend="language.operators.errorcontrol">@</link> para
+     suprimir esse alerta.
     </simpara>
     <para>
      <example>
@@ -121,10 +222,10 @@
       <programlisting role="php">
 <![CDATA[
 <?php
-$fp = fopen ("/home/rasmus/file.txt", "r");
-$fp = fopen ("/home/rasmus/file.gif", "wb");
-$fp = fopen ("http://www.example.com/", "r");
-$fp = fopen ("ftp://user:password@example.com/", "w");
+$handle = fopen ("/home/rasmus/file.txt", "r");
+$handle = fopen ("/home/rasmus/file.gif", "wb");
+$handle = fopen ("http://www.example.com/", "r");
+$handle = fopen ("ftp://user:password@example.com/somefile.txt", "w");
 ?>
 ]]>
       </programlisting>
@@ -143,7 +244,7 @@ $fp = fopen ("ftp://user:password@example.com/", "w");
       <programlisting role="php">
 <![CDATA[
 <?php
-$fp = fopen ("c:\\data\\info.txt", "r");
+$handle = fopen ("c:\\data\\info.txt", "r");
 ?>
 ]]>
       </programlisting>
@@ -153,11 +254,13 @@ $fp = fopen ("c:\\data\\info.txt", "r");
      Veja também: <xref linkend="wrappers"/>,
      <function>fclose</function>,
      <function>fgets</function>,
+     <function>fread</function>,
+     <function>fwrite</function>,
      <function>fsockopen</function>,
      <function>file</function>,
      <function>file_exists</function>,
      <function>is_readable</function>,
-     <function>socket_set_timeout</function> e
+     <function>stream_set_timeout</function> e
      <function>popen</function>.
     </simpara>
    </refsect1>
