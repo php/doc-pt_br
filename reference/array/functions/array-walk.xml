@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.4 Maintainer: lucasr Status: ready -->
+<!-- EN-Revision: 1.5 Maintainer: lucasr Status: ready -->
 <!-- splitted from ./pt_BR/functions/array.xml, last change in rev 1.1 -->
 <!-- last change to 'array-walk' in en/ tree in rev 1.2 -->
   <refentry id="function.array-walk">
@@ -20,44 +20,52 @@
     <simpara>
      Aplica uma função definida pelo usuário nomeada pelo argumento 
      <parameter>func</parameter> em cada elemento de <parameter>arr</parameter>.
-     <parameter>func</parameter> terá como primeiro o argumento o valor do
-     elemento e sua chave como segundo parâmetro.  Se
+     Normalmente, <parameter>func</parameter> recebe dois argumentos: o
+     primeiro é o valor do elemento e o segundo, sua chave. Se
      <parameter>userdata</parameter> for especificado, ele será usado como
-     terceiro argumento da função do usuário. <parameter>func</parameter> 
+     terceiro argumento da função do usuário. 
+    </simpara>
+    <simpara> 
+     <parameter>func</parameter> 
      deve ser uma função definida pelo usuário, e não uma função nativa do PHP.
      Dessa forma, você não pode usar <function>array_walk</function> juntamente com
-     <function>str2lower</function>, primeiro deve ser definida uma função de
-     usuário, e depois passá-la como argumento.
+     <function>str2lower</function>, por exemplo. Primeiro, deve ser definida uma função de
+     usuário que pode usar funções nativas do PHP.
     </simpara>
     &note.func-callback;
     <simpara>
-     Se <parameter>func</parameter> necessita de mais de dois ou três
-     argumentos, dependendo de <parameter>userdata</parameter>, um aviso
-     será mostrado a cada vez que 
+     Se <parameter>func</parameter> necessita de mais argumentos do que o que
+     está sendo passado para ela, um erro do nível <link linkend="errorfunc.constants">
+     E_WARNING</link> será gerado a cada vez que 
      <function>array_walk</function> executar
      <parameter>func</parameter>. Esses avisos podem ser suprimidos
-     adicionando o operador '@' à chamada da função <function>array_walk</function>,
+     adicionando o operador <link linkend="language.operators.errorcontrol">@</link> 
+     à chamada da função <function>array_walk</function>,
      ou usando <function>error_reporting</function>.
     </simpara>
     <note>
      <para>
       Se <parameter>func</parameter> precisar alterar realmente os valores 
       do array, especifique que o primeiro parâmetro de
-      <parameter>func</parameter> deve ser passado por referência. Então
-      qualquer mudança feita nesses elementos serão feitas no próprio array
-      também.
+      <parameter>func</parameter> deve ser passado por <link linkend="language.references">
+      referência</link>. Então qualquer mudança feita nesses elementos serão feitas 
+      no próprio array também.
      </para>
     </note>
     <note>
      <para>
       A passagem das chaves e do terceiro argumento para <parameter>func</parameter> foi
-      adicionada no PHP 4.0.
+      adicionada no PHP 4.0.0.
      </para>
-     <para>
-      Em PHP 4 <function>reset</function> precisa ser chamada necessariamente
-      uma vez que <function>array_walk</function> não reinicia o array por
-      padrão.
-     </para>
+    </note>
+    <para>
+     <function>array_walk</function> não é afetada pelo ponteiro interno do
+     array <parameter>arr</parameter>.  <function>
+     array_walk</function> irá percorrer todo o array independente da posição
+     atual do ponteiro interno. Para reiniciar o ponteiro, use 
+     <function>reset</function>.  No PHP 3, 
+     <function>array_walk</function> reinicia o ponteiro.
+    </para>
      <para>
       Usuários não podem alterar o array a partir da função definida para
       ser usada. Por exemplo, adicionar/remover elementos, removerá o array
@@ -70,6 +78,7 @@
       <title>Exemplo de <function>array_walk</function></title>
       <programlisting role="php">
 <![CDATA[
+<?php
 $frutas = array ("d" => "limao", "a" => "laranja", "b" => "banana", "c" => "melancia");
 
 function test_alter (&$item1, $key, $prefix) {
@@ -82,11 +91,12 @@ function test_print ($item2, $key) {
 
 echo "Antes ...:\n";
 array_walk ($frutas, 'test_print');
-reset ($frutas);
+
 array_walk ($frutas, 'test_alter', 'fruta');
 echo "... e depois:\n";
-reset ($frutas);
+
 array_walk ($frutas, 'test_print');
+?>
 ]]>
       </programlisting>
       <para>
@@ -109,7 +119,8 @@ c. fruit: melancia
      </example>
     </para>
     <simpara>
-     Veja também <function>each</function> e <function>list</function>.
+     Veja também <function>list</function>, <link linkend="control-structures.foreach">foreach</link>,
+     <function>each</function> e <function>call_user_func_array</function>.
     </simpara>
    </refsect1>
   </refentry>
