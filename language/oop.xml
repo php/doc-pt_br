@@ -1,165 +1,959 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: 1.36 Maintainer: ae Status: ready -->
  <chapter id="language.oop">
   <title>Classes e Objetos</title>
 
   <sect1 id="keyword.class">
-   <title><literal>classe</literal></title>
+   <title><literal>class</literal></title>
    <para>
     Uma classe é uma coleção de variáveis e funções trabalhando com essas
     variáveis. Uma classe é definida usando-se a seguinte sintaxe:
- 
+
     <informalexample>
      <programlisting role="php">
-&lt;?php
-class Cart {
-    var $items;  // Items no nosso carrinho de compras
-   
-    // Acrescenta $num artigos de $artnr ao carrinho
- 
-    function add_item ($artnr, $num) {
+<![CDATA[
+<?php
+class CarrinhoDeCompras
+{
+    var $items;  // Itens do carrinho de compras
+
+    // Acrescenta a quantidade $num do artigo $artnr no carrinho
+
+    function add_item ($artnr, $num)
+    {
         $this->items[$artnr] += $num;
     }
-   
-    // Tira $num artigos de $artnr do carrinho
- 
-    function remove_item ($artnr, $num) {
+
+    // Retira a quantidade $num de artigos $artnr do carrinho
+
+    function remove_item ($artnr, $num)
+    {
         if ($this->items[$artnr] > $num) {
             $this->items[$artnr] -= $num;
             return true;
         } else {
             return false;
-        }   
+        }
     }
 }
 ?>
+]]>
      </programlisting>
     </informalexample>
    </para>
- 
+
    <para>
-    Isto define uma classe chamada Cart que consiste de uma matriz associativa de
-    artigos no carrinho e duas funções para acrescentar e remover items deste 
+    Isto define uma classe chamada CarrinhoDeCompras que consiste de uma matriz associativa de
+    artigos no carrinho e duas funções para acrescentar e remover itens deste
     carrinho.
    </para>
-   <para>
-    Classes são tipos, ou seja, eles são modelos de variáveis atuais. Você tem que 
-    criar uma variável do tipo desejado com o novo operador.
-   </para>
- 
-   <informalexample>
-    <programlisting role="php">
- $cart = new Cart;
- $cart->add_item("10", 1);
-    </programlisting>
-   </informalexample>
- 
-   <para>
-    Isto cria um objeto $cart da classe Cart. A função
-    add_item() daquele objeto está sendo chamada para acrescentar 1 item do artigo
-    número 10 ao carrinho. </para><para> Classes podem ser extensões de outras classes.
-    A classe estendida ou derivada tem todas as variáveis e funções da classe base e o
-    que você acrescentar na definição estendida. Isto é feito usando-se a palavra-chave
-    'extends'. Herança múltipla não é suportada.
-   </para>
- 
-   <informalexample>
-    <programlisting role="php">
-class Named_Cart extends Cart {
-    var $owner;
-  
-    function set_owner ($name) {
-        $this->owner = $name;
+
+   <caution>
+    <simpara>
+     Os cuidados a seguir devem ser tomados a partir do PHP 4:
+    </simpara>
+
+    <simpara>
+     O nome <literal>stdClass</literal> é utilizado internamente pela
+     Zend e é uma palavra reservada. Você não pode ter uma classe chamada
+     <literal>stdClass</literal> no PHP.
+    </simpara>
+
+    <simpara>
+      O nome de função <literal>__sleep</literal> e
+      <literal>__wakeup</literal> são especialmente mágicos para as classes PHP. Você
+      não pode ter esses nomes em nenhuma de suas
+      classes a não ser que você deseje aplicar essa funcionalidade mágica
+      com elas. Veja abaixo para mais detalhes.
+    </simpara>
+
+    <simpara>
+      O PHP reserva todos os nomes de funções começando com __ como mágicas.
+      É recomendável que você não utilize nome de funções começando com
+      __ no PHP a não ser que você precise dessas funcionalidades mágicas.
+    </simpara>
+   </caution>
+
+   <note>
+    <simpara>
+     No PHP 4, somente inicializações com constantes são permitidas para
+     variáveis com <literal>var</literal>. Para inicializar variáveis com valores
+     não constantes, você precisará de uma função de inicialização chamada
+     automaticamente quando o objeto for construído a partir da
+     classe. Por isso, essa função é conhecida como construtor (veja baixo).
+    </simpara>
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+<?php
+/* Nenhuma delas funcionarão com o PHP 4 */
+class CarrinhoDeCompras
+{
+    var $data_de_hoje = date("Y-m-d");
+    var $nome = $primeiro_nome;
+    var $proprietario = 'Fred ' . 'Jones';
+    var $items = array("VCR", "TV");
+}
+
+/* Esta é a forma como deve ser feito */
+class CarrinhoDeCompras
+{
+    var $data_de_hoje;
+    var $nome;
+    var $proprietario;
+    var $items;
+
+    function CarrinhoDeCompras()
+    {
+        $this->data_de_hoje = date("Y-m-d");
+        $this->nome = $GLOBALS['primeiro_nome'];
+        /* etc. . . */
     }
 }
-    </programlisting>
-   </informalexample>
- 
+?>
+]]>
+     </programlisting>
+    </informalexample>
+   </note>
+
    <para>
-    Isto define uma classe Named_Cart que tem todas as variáveis e funções de Cart mais 
-    uma variável adicional $owner e uma função adicional set_owner(). Você pode criar um
-    carrinho com nome na forma normal, e agora pode setar e obter o proprietário do carrinho.
-    Você pode ainda usar as funções normais do carrinho em carrinhos com nomes:
+    Classes são tipos, ou seja, são apenas um modelo das variáveis
+    normais. Você pode criar uma variável (ou instância) do tipo desejado com
+    o operador <literal>new</literal>.
    </para>
- 
+
    <informalexample>
     <programlisting role="php">
-$ncart = new Named_Cart;    // Cria um carrinho com nome
-$ncart->set_owner ("kris"); // Nomeia aquele carrinho
-print $ncart->owner;        // imprime o nome dos proprietários do carrinho
-$ncart->add_item ("10", 1); // (funcionalidade herdada de 'cart')
+<![CDATA[
+<?php
+$carrinho = new CarrinhoDeCompras;
+$carrinho->add_item("10", 1);
+
+$outro_carrinho = new CarrinhoDeCompras;
+$outro_carrinho->add_item("0815", 3);
+]]>
     </programlisting>
    </informalexample>
-  
+
    <para>
-    Dentro das funções de uma classe, a variável $this significa este objeto. Você tem que 
-    usar $this->algo para acessar qualquer variável ou função chamada 'algo' dentro do seu
-    objeto corrente.
+    Isto cria os objetos $carrinho e $outro_carrinho, ambos a partir
+    da classe CarrinhoDeCompras. A função add_item() do objeto $carrinho
+    foi chamada e acrescentou 1 item do artigo número 10 a
+    ele. 3 itens do artigo número 0815 foi acrescentado no
+    $outro_carrinho.
    </para>
+
    <para>
-    Construtores são funções em uma classe que são chamadas automaticamente quando você cria 
-    uma nova instância de uma classe. Uma função se torna um construtor quando ela tem o 
-    mesmo nome que a classe.
+    Ambos, $carrinho e $outro_carrinho, tem as funções add_item(),
+    remove_item() e a variável itens. Elas são funções e
+    variáveis distintas entre si. Você pode pensar no objetos como
+    os diretórios de um sistema de arquivos. Num
+    disco você pode ter dois arquivos diferentes README.TXT,
+    partindo de que eles estão em diretórios diferentes. Da mesma
+    forma que você teria de especificar o caminho completo
+    para acessar cada arquivo a partir do diretório principal, você
+    também tem de especificar o nome completo do objeto e função que você
+    quer chamar. Em termos do PHP, o diretório principal pode ser o
+    escopo global de nomes, e o separador de diretórios -&gt;.
+    Portanto, os nomes $carrinho-&gt;items e $outro_carrinho-&gt;items
+    são duas variáveis diferentes. Note que a variável é
+    chamada $carrinho-&gt;items e não $carrinho-&gt;$items, mesmo porque,
+    um nome de variável em PHP tem apenas um único sinal de cifrão.
    </para>
- 
+
    <informalexample>
     <programlisting role="php">
-class Auto_Cart extends Cart {
-    function Auto_Cart () {
+<![CDATA[
+// correcto, apenas um $
+$carrinho->items = array("10" => 1);
+
+// inválido, porque $carrinho->$items se transforma em $carrinho->""
+$carrinho->$items = array("10" => 1);
+
+// correto, mas pode ou não ser o que você quer:
+// $carrinho->$myvar se torna $carrinho->items
+$myvar = 'items';
+$carrinho->$myvar = array("10" => 1);
+]]>
+    </programlisting>
+   </informalexample>
+
+   <para>
+    Quando definindo uma classe, você não pode saber com que nome os objetos
+    serão acessados em seus programas: enquanto escrevia a classe CarrinhoDeCompras,
+    é impossível saber se o objeto criado a partir dela será chamado $carrinho ou
+    $outro_carrinho (ou ainda ambos). Assim, você não pode escrever $carrinho&gt;items dentro
+    da própria classe CarrinhoDeCompras. Entretanto, para poder acessar suas próprias
+    funções e variáveis de dentro da classe, pode-se utilizar a
+    pseudo-variável $this, que pode ser lida como 'eu mesmo' ou
+    'objeto atual'. Dessa forma, '$this-&gt;items[$artnr] += $num' pode
+    ser lido como 'acrescente $num para o contador $artnr do meu array
+    items' ou 'acrescente $num para o contador $artnr do array
+    do objeto atual'.
+   </para>
+
+   <note>
+    <para>
+    Há funções muito boas para manipulação de classes e objetos. Dê uma
+    olhada em <link linkend="ref.classobj">Funções de
+    Classes e Objetos</link>
+    </para>
+   </note>
+  </sect1>
+
+  <sect1 id="keyword.extends">
+   <title><literal>extends</literal></title>
+
+   <para>
+    Permite classes com variáveis e funções similares
+    a uma outra classe. De fato, é uma boa prática
+    definir classes genéricas que podem ser utilizadas em todos os seus
+    projetos, e adaptar essas classes com as necessidades
+    específicas de cada projeto. Para facilitar isso, classes podem ser
+    extensões de outras classes. A classe estendida ou derivada
+    tem todas as variáveis e funções da classe base (isto é
+    chamado herança, afora o fato que ninguém morreu) e mais aquelas
+    que venha a acrescentar na versão estendida. Não é possível
+    subtrair uma classe, ou seja, indefinir quaisquer funções ou
+    variáveis existentes. Uma classe estendida é sempre dependente
+    de uma única classe base, e portanto, herança múltipla não é
+    suportada. Classes são estendidas utilizando a instrução 'extends'.
+   </para>
+
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+class CarrinhoDeComprasNomeado extends CarrinhoDeCompras
+{
+    var $proprietario;
+
+    function set_proprietario ($name)
+    {
+        $this->proprietario = $name;
+    }
+}
+]]>
+    </programlisting>
+   </informalexample>
+
+   <para>
+    Isto define uma classe chamada CarrinhoDeComprasNomeado que tem todas as variáveis e
+    funções de CarrinhoDeCompras mais a variável $proprietario e uma
+    função set_proprietario(). Você pode criar um carrinho nomeado da maneira
+    usual e configurar e obter o proprietário do carrinho. Você ainda pode continuar utilizando
+    carrinhos normais e carrinhos nomeados:
+   </para>
+
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+$ncart = new CarrinhoDeComprasNomeado;
+$ncart->set_proprietario("kris");
+print $ncart->proprietario;
+$ncart->add_item("10", 1);  // (funcionalidade herdade do CarrinhoDeCompras)
+]]>
+    </programlisting>
+   </informalexample>
+
+   <para>
+    Isto é chamado relacionamento "pai-filho". Você cria uma classe
+    pai e utiliza <literal>extends</literal> para criar uma nova classe
+    <emphasis>baseada</emphasis> na classe pai: sua classe filha. Você ainda
+    pode criar uma nova classe estendida a partir dessa classe
+    filha e assim por diante.
+   </para>
+   <note>
+    <para>
+     As classes precisam ser definidas antes de serem utilizadas! Se você estender a classe
+     <literal>CarrinhoDeComprasNomeado</literal> da classe
+     <literal>CarrinhoDeCompras</literal>, você precisa antes criar a classe chamada
+     <literal>CarrinhoDeCompras</literal>. Se você quiser criar uma outra classe chamada
+     <literal>CarrinhoDeComprasNomeadoAmarelo</literal> baseada na classe
+     <literal>CarrinhoDeComprasNomeado</literal> você tem que definir
+     <literal>CarrinhoDeComprasNomeado</literal> primeiro. Trocando em miúdos: a ordem em
+     que as classes são definidas é importante.
+    </para>
+   </note>
+  </sect1>
+
+  <sect1 id="language.oop.constructor">
+   <title><literal>Construtores</literal></title>
+
+   <caution>
+    <simpara>
+     Os construtores se comportam diferentemente entre o PHP 3 e o PHP 4.
+     A semântica do PHP 4 é atualmente preferencial.
+    </simpara>
+   </caution>
+
+   <para>
+    Construtores são funções numa classe que são automaticamente
+    chamados quando você cria uma nova instância da classe com
+    <literal>new</literal>. No PHP 3, uma
+    função se torna um construtor quando ele tem o mesmo nome
+    da classe. No PHP 4, uma função se torna um construtor quando
+    ele tem o mesmo nome da classe onde ela foi definida (a
+    diferença é sutil, mas crucial --- veja abaixo).
+   </para>
+
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+// Funciona no PHP 3 e 4
+class CarrinhoDeComprasAutomatico extends CarrinhoDeCompras
+{
+    function CarrinhoDeComprasAutomatico()
+    {
         $this->add_item ("10", 1);
     }
 }
+]]>
     </programlisting>
    </informalexample>
- 
+
    <para>
-    Isto define uma classe Auto_Cart que é um Cart mais um construtor que inicializa o 
-    'cart' com um item do artigo número "10" cada vez que um novo Auto_Cart está sendo
-    feito com "new". Construtores também podem levar argumentos e esses argumentos podem
-    ser opcionais, o que os torna muito mais úteis.
+    Isto define uma classe chamada CarrinhoDeComprasAutomatico que é um CarrinhoDeCompras mais um construtor
+    que inicializa o carrinho com um item do artigo numero "10"
+    cada vez que um novo CarrinhoDeComprasAutomatico for criado com "new". Construtores
+    pode ter argumentos e esses argumentos podem ser opcionais, o que os
+    torna muito mais práticos. Para permitir a criação de classes
+    sem parâmetros, todos os parâmetros dos construtores pode ser
+    feitos opcionais simplesmente por terem valores default.
    </para>
- 
+
    <informalexample>
     <programlisting role="php">
-class Constructor_Cart extends Cart {
-    function Constructor_Cart ($item = "10", $num = 1) {
+<![CDATA[
+// Funciona no PHP 3 e 4
+class CarrinhoDeComprasComConstrutor extends CarrinhoDeCompras
+{
+    function CarrinhoDeComprasComConstrutor($item = "10", $num = 1)
+    {
         $this->add_item ($item, $num);
     }
 }
- 
-// Compra aquele mesmo material velho e chato.
- 
-$default_cart   = new Constructor_Cart;
- 
-// Compra para valer...
- 
-$different_cart = new Constructor_Cart ("20", 17);
+
+// Fazendo compras do mesmo modo antigo
+
+$carrinho_default = new CarrinhoDeComprasComConstrutor;
+
+// Fazendo compres de verdade
+
+$carrinhho_diferente = new CarrinhoDeComprasComConstrutor("20", 17);
+]]>
     </programlisting>
    </informalexample>
- 
+
+   <para>
+    Você pode usar o operador <literal>@</literal> para
+    <emphasis>esconder</emphasis> erros gerados no construtor do objeto,
+    por exemplo: <literal>@new</literal>.
+   </para>
+
    <caution>
     <simpara>
-     Para classes derivadas, o construtor da classe pai não é chamado automaticamente 
-     quando o construtor da classe derivada é chamado.
-    </simpara> 
+     No PHP 3, classes derivadas e construtores tem uma série de
+     limitações. Os exemplo seguintes precisam ser lidos cuidadosamente
+     para que você entenda essas limitações.
+    </simpara>
    </caution>
+
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+class A
+{
+    function A()
+    {
+      echo "Eu sou o construtor de A.<br>\n";
+    }
+}
+
+class B extends A
+{
+    function C()
+    {
+        echo "Eu sou uma função normal.<br>\n";
+    }
+}
+
+// nenhum construtor é chamado no PHP 3
+$b = new B;
+]]>
+    </programlisting>
+   </informalexample>
+
+   <para>
+    No PHP 3, nenhum construtor é chamado no exemplo acima.
+    A regra no PHP 3 é: 'Um construtor é uma função com o mesmo
+    nome da classe'. O nome da classe é B, e não há
+    nenhuma função chamada B() na classe B. Nada ocorre.
+   </para>
+
+   <para>
+    Isto foi corrigido no PHP 4 pela instrução de outra regra: Se uma classe
+    não tem construtor, o construtor da classe base é
+    chamado, se existir. O exemplo acima teriam impresso
+    'Eu sou o construtor de A&lt;br>'. no PHP 4.
+   </para>
+
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+class A
+{
+    function A()
+    {
+        echo "Eu sou o construtor de A.<br>\n";
+    }
+
+    function B()
+    {
+        echo "Eu sou uma função normal chamada B na classe A.<br>\n";
+        echo "Eu não sou o construtor de A.<br>\n";
+    }
+}
+
+class B extends A
+{
+    function C()
+    {
+        echo "Eu sou uma função normal.<br>\n";
+    }
+}
+
+// Isto irá chamar B() como um construtor.
+$b = new B;
+]]>
+    </programlisting>
+   </informalexample>
+
+   <para>
+    No PHP 3, a função B() na classe A se tornará silenciosamente um
+    construtor na classe B, mesmo que isso nunca tenha sido planejado.
+    A regra no PHP 3 é: 'Um construtor é uma função com o mesmo
+    nome da classe'. PHP 3 não se preocupa se a função
+    foi definida na classe B, ou se ela foi herdada.
+   </para>
+
+   <para>
+    Isto foi corrigido no PHP 4 pela modificação da regra para: 'Um construtor
+    é uma função com o mesmo nome da classe onde ela é definida.'.
+    Assim, no PHP 4, como a classe B não tem nenhuma função construtora
+    definida nela mesma então o construtor da classe base será
+    chamado, imprimindo 'Eu sou o construtor de A.&lt;br>'.
+   </para>
+
+   <caution>
+    <simpara>
+     Nem o PHP 3 ou o 4 chamam automaticamente os construtores da
+     classe base a partir do construtor da classe derivada. É de sua
+     responsabilidade propagar a chamada dos construtores
+     herança acima, onde apropriado.
+    </simpara>
+   </caution>
+
+   <note>
+    <simpara>
+     Não existem destrutores no PHP 3 ou 4. Mas você pode usar
+     <function>register_shutdown_function</function>
+     para simular a maioria dos efeitos de destrutores.
+    </simpara>
+   </note>
+
+   <para>
+    Destrutores são funções que são chamadas automaticamente
+    quando um objeto é destruído, ou pela utilização de <function>unset</function>
+    ou pela simples saída do escopo. Não existem destrutores
+    no PHP.
+   </para>
   </sect1>
- 
+
+ <sect1 id="keyword.paamayim-nekudotayim"><!-- :-) -->
+   <title><literal>::</literal></title>
+
+   <caution>
+    <simpara>
+     O seguinte é valido para o PHP 4 somente.
+    </simpara>
+   </caution>
+
+   <para>
+    As vezes pode ser útil se referir a funções e variáveis
+    na classe base ou referenciar funções em classes que
+    não possuem qualquer instância. O operador :: pode ser utilizado
+    nessas ocasiões.
+   </para>
+
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+class A
+{
+    function exemplo()
+    {
+        echo "Eu sou a função original A::exemplo().<br>\n";
+    }
+}
+
+class B extends A
+{
+    function exemplo()
+    {
+        echo "Eu sou a função redefinida B::exemplo().<br>\n";
+        A::exemplo();
+    }
+}
+
+// Nao ha nenhum objeto da classe A.
+// Isto ira imprimir
+//   Eu sou a função original A::exemplo().<br>
+A::exemplo();
+
+// cria um objeto a partir da classe B
+$b = new B;
+
+// Isto ira imprimir
+//   Eu sou a função redefinida B::exemplo().<br>
+//   Eu sou a função original A::exemplo().<br>
+$b->exemplo();
+]]>
+    </programlisting>
+   </informalexample>
+
+   <para>
+    O exemplo acima chama a função exemplo() da
+    classe A, mas não há nenhum objeto da classe A, então
+    não podemos escrever $a->exemplo() ou qualquer coisa similar, Em vez disso, nós
+    chamamos exemplo() como uma 'função de classe', ou seja, como uma
+    função da classe propriamente dita, não qualquer objeto dessa
+    classe.
+   </para>
+
+   <para>
+    Existem funções de classe, mas não variáveis de classe.
+    De fato, não há nenhum objeto durante toda a execução.
+    Assim, uma função de classe não pode usar qualquer variável de objeto (mas
+    pode usar variáveis locais e globais), e nunca podendo utilizar-se
+    de $this.
+   </para>
+
+   <para>
+    Ainda no exemplo acima, a classe B redefine a função exemplo().
+    A definição da função original na classe A é ocultada
+    e nunca disponível, a não ser que você se referencie especificamente
+    a implementação de exemplo() da classe A utilizando-se do
+    operador ::. Escrevemos A::exemplo() para isso (de fato, você
+    também pode escrever parent::exemplo(), como mostrado na próxima
+    seção).
+   </para>
+
+   <para>
+    Nesse contexto, existe um objeto e ele pode
+    ter variáveis de objeto. Assim, quando utilizado de DENTRO de uma
+    função de objeto, você pode usar $this e variáveis de objeto.
+   </para>
+
+ </sect1>
+
+ <sect1 id="keyword.parent">
+   <title><literal>parent</literal></title>
+
+  <para>
+   Você pode se encontrar escrevendo código que precisa referenciar a
+   variáveis e funções na classe base. Isto é
+   particularmente verdade se você derivou uma classe como um refinamento
+   ou especialização de código de sua classe base.
+  </para>
+
+  <para>
+   Em vez de utilizar o nome literal da classe base em seu
+   código, você pode usar o nome especial
+   <literal>parent</literal>, que se refere ao nome da sua
+   classe base como informado na declaração <literal>extends</literal>.
+   Fazendo isso, evita assim a utilização do
+   nome da sua classe base em mais de um lugar. Se sua
+   árvore de herança mudar durante a implementação, a
+   modificação é mais facilmente realizada pela simples alteração
+   da declaração <literal>extends</literal> de suas classes.
+  </para>
+
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+class A
+{
+    function exemplo()
+    {
+        echo "Eu sou A:exemplo() e provenho funcionalidades básicas.<br>\n";
+    }
+}
+
+class B extends A
+{
+    function exemplo()
+    {
+        echo "Eu sou B::exemplo() e provenho funcionalidades adicionais.<br>\n";
+        parent::exemplo();
+    }
+}
+
+$b = new B;
+
+// Isto ira chamar B::exemplo(), que por sua vez chama A::exemplo().
+$b->exemplo();
+]]>
+   </programlisting>
+  </informalexample>
+ </sect1>
+
+ <sect1 id="language.oop.serialization">
+  <title>Serializando objetos - objetos em sessões</title>
+
+  <note>
+   <simpara>
+    No PHP 3, objetos perdem suas associações entre classes
+    através do processo de serialização e desserialização.
+    A variável resultante é do tipo objeto, mas sem classe
+    nem métodos, algo bem sem utilidade (de fato, ele se torna
+    apenas um array com uma sintaxe engraçada).
+   </simpara>
+  </note>
+
+  <caution>
+   <simpara>
+    As informações seguintes se aplicam somente ao PHP 4.
+   </simpara>
+  </caution>
+
+  <para>
+   <function>serialize</function> retorna uma string contendo uma
+   representação linear de qualquer valor que pode ser armazenado no
+   PHP. <function>unserialize</function> pode ser utilizado para
+   recriar os valores da variável original. Usando serialize para
+   salvar um objeto irá preservar todas as variáveis de um objeto. As
+   funções de um objeto não serão salvas, apenas o nome
+   da classe.
+  </para>
+
+  <para>
+   Para ser possível fazer o <function>unserialize</function> de um
+   objeto, a classe do objeto precisa estar definida. Ou
+   seja, se você tem um objeto $a da classe A em page1.php e a
+   serializa, você consegue uma string que se refere a classe A
+   e contém todos os valores de variáveis contidos em $a. Se
+   você precisa desserializa-la em page2.php,
+   recriando $a da classe A, a definição da classe A precisa
+   estar presente na page2.php. Isto pode por ser feito, por exemplo,
+   armazenando a definição da classe A em um arquivo
+   separado, incluindo este arquivo e ambos os arquivos page1.php e page2.php.
+  </para>
+
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+classe_a.inc.php:
+  class A
+  {
+      var $um = 1;
+
+      function mostre_um()
+      {
+          echo $this->um;
+      }
+  }
+
+page1.php:
+  include("classe_a.inc.php");
+
+  $a = new A;
+  $s = serialize($a);
+  // armazena $s em algum lugar que page2,php possa encontra-la
+  $fp = fopen("armazenamento", "w");
+  fputs($fp, $s);
+  fclose($fp);
+
+page2.php:
+  // Isto e preciso para que unserialize funcione normalmente
+  include("classe_a.inc.php");
+
+  $s = implode("", @file("armazenamento"));
+  $a = unserialize($s);
+
+  // Agora podemos usar a funcao mostre_um() do objeto $a
+  $a->mostre_um();
+]]>
+   </programlisting>
+  </informalexample>
+  
+  <para>
+   Se você está utilizando sessões e usar <function>session_register</function>
+   para registrar objetos, esses objetos serão serializados automaticamente
+   no final de cada script PHP, e automaticamente desserializados em
+   cada uma das páginas seguintes. Isto significa que esse objetos
+   podem estar em qualquer uma de suas páginas desde que elas sejam parte
+   de sua sessão.
+  </para>
+
+  <para>
+   É extremamente recomendável que você inclua as definições
+   de classe de todos os objetos registrados de todas as suas
+   páginas, mesmo que você não use essas classes em todas as
+   suas páginas. Se você não o fizer e um objeto for
+   desserializado sem sua definição de classe presente, ele
+   perde usa associação com a classe e se torna um objeto da classe
+   <literal>stdClass</literal>, sem qualquer funções disponíveis.
+   o que as deixa silenciosamente sem funcionalidade.
+  </para>
+
+  <para>
+   Assim, se no exemplo acima $a se tornar parte de uma sessão pela
+   utilização de <literal>session_register("a")</literal>, você precisa
+   incluir o arquivo <literal>classe_a.inc.php</literal> em todos as suas
+   páginas, não somente em page1.php e page2.php.
+  </para>
+ </sect1>
+
+ <sect1 id="language.oop.magic-functions">
+  <title>As funções mágicas <literal>__sleep</literal> e <literal>__wakeup</literal></title>
+
+  <para>
+   <function>serialize</function> verifica se sua classe tem uma função
+   com o nome mágico <literal>__sleep</literal>. Se sim, essa função será
+   executada antes de qualquer serialização. Assim é possível controlar
+   a persistência do objeto enquanto deve retornar um array com os nomes de todas as variáveis
+   daquele objeto que precisam ser serializadas.
+  </para>
+
+  <para>
+   <literal>__sleep</literal> é planejado para fechar quaisquer
+   conexões com bancos de dados que o objeto tenha, realizar commits pendentes
+   ou realizar tarefas de limpeza semelhantes. A função também é
+   útil se você tem objetos muito grandes que não precisam
+   ser salvos completamente.
+  </para>
+
+  <para>
+   Da mesma forma, <function>unserialize</function> verifica pela
+   presença de uma função com o nome mágico
+   <literal>__wakeup</literal>. Se presente, esta função
+   pode reconstruir quaisquer recursos que o objeto tenha.
+  </para>
+
+  <para>
+    <literal>__wakeup</literal> é planejado para
+    restabelecer conexões com bancos de dados perdidas
+    durante a serialização e para realizar outras tarefas
+    de reinicialização.
+  </para>
+ </sect1>
+
+ <sect1 id="language.oop.newref">
+   <title>Referências dentro do construtor</title>
+   <para>
+    A criação de referências em construtores pode gerar resultados
+    confusos. Esta seção tentará ajudá-lo e evitar essas situações.
+
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+class Foo
+{
+    function Foo($name)
+    {
+        // cria uma referencia dentro do array global $globalref
+        global $globalref;
+        $globalref[] = &$this;
+        // configura o nome conforme o parametro
+        $this->setName($name);
+        // e o mostra
+        $this->echoName();
+    }
+
+    function echoName()
+    {
+        echo "<br>",$this->name;
+    }
+
+    function setName($name)
+    {
+        $this->name = $name;
+    }
+}
+]]>
+    </programlisting>
+   </informalexample>
+  </para>
+
+   <para>
+    Vamos verificar, abaixo, se há alguma diferença entre
+    <varname>$bar1</varname>, que foi criado usando
+    operador de cópia <literal>=</literal>, e
+    <varname>$bar2</varname> que foi criado usando
+    o operador de referência <literal>=&amp;</literal> ...
+
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+$bar1 = new Foo('configurado no construtor');
+$bar1->echoName();
+$globalref[0]->echoName();
+
+/* saida:
+configurado no construtor
+configurado no construtor
+configurado no construtor */
+
+$bar2 =& new Foo('configurado no construtor');
+$bar2->echoName();
+$globalref[1]->echoName();
+
+/* saida:
+configurado no construtor
+configurado no construtor
+configurado no construtor */
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+   <para>
+    Aparentemente não há nenhuma diferença, mas de fato há uma
+    muito significativa: <varname>$bar1</varname> e
+    <varname>$globalref[0]</varname> não se referenciam, elas
+    NÃO são a mesma variável. Isto acontece porque "new" não
+    retorna uma referência por default. Ao invés, retorna uma cópia.
+    <note>
+     <simpara>
+      Isto não causa perda de performance (desde que o PHP 4 usa a contagem
+      de referências) retornando copias em vez de referências. Do contrário,
+      isso oferece melhora por simplificar o trabalho com cópias
+      ao invés de referências, porque a criação de referências toma mais
+      tempo enquanto a criação de cópias virtualmente não toma tempo algum (a não ser
+      no caso de grandes arrays ou objetos, onde um deles é modificado
+      e o(s) outro(s) também na seqüência, então é melhor
+      usar referências para mudar todos ao mesmo tempo).
+     </simpara>
+    </note>
+    Para comprovar o que escrevemos acima, analise o seguinte código.
+
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+// Agora nos vamos mudar o nome. O que voce espera?
+// Voce pode acreditar que ambos $bar1 e $globalref[0] mudem seus nomes...
+$bar1->setName('configurado por fora');
+
+// Como mencionado, este nao eh o caso.
+$bar1->echoName();
+$globalref[0]->echoName();
+
+/* output:
+configurado por fora
+configurado no construtor */
+
+// Agora vamos ver a diferenca entre $bar2 e $globalref[1]
+$bar2->setName('configurado por fora');
+
+// Por sorte, eles nao sao apenas iguais, eles sao a mesma variavel
+// Assim, $bar2->name e $globalref[1]->name sao o mesmo tambem
+$bar2->echoName();
+$globalref[1]->echoName();
+
+/* output:
+configurado por fora
+configurado por fora */
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+   <para>
+   E apenas mais um exemplo final. Entenda-o com cuidado.
+
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+class A
+{
+    function A($i)
+    {
+        $this->value = $i;
+        // tente entender porque aqui nos nao precisamos de referencia
+        $this->b = new B($this);
+    }
+
+    function createRef()
+    {
+        $this->c = new B($this);
+    }
+
+    function echoValue()
+    {
+        echo "<br>","classe ",get_class($this),': ',$this->value;
+    }
+}
+
+
+class B
+{
+    function B(&$a)
+    {
+        $this->a = &$a;
+    }
+
+    function echoValue()
+    {
+        echo "<br>","classe ",get_class($this),': ',$this->a->value;
+    }
+}
+
+// Tente entender porque usando uma simples copia aqui ter
+// um resultado indesejavel na linha marcada com *
+$a =& new A(10);
+$a->createRef();
+
+$a->echoValue();
+$a->b->echoValue();
+$a->c->echoValue();
+
+$a->value = 11;
+
+$a->echoValue();
+$a->b->echoValue(); // *
+$a->c->echoValue();
+
+/*
+output:
+classe A: 10
+classe B: 10
+classe B: 10
+classe A: 11
+classe B: 11
+classe B: 11
+*/
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+  </sect1>
  </chapter>
  
- <!-- Keep this comment at the end of the file
- Local variables:
- mode: sgml
- sgml-omittag:t
- sgml-shorttag:t
- sgml-minimize-attributes:nil
- sgml-always-quote-attributes:t
- sgml-indent-step:1
- sgml-indent-data:t
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
 indent-tabs-mode:nil
- sgml-parent-document:nil
- sgml-default-dtd-file:"../../manual.ced"
- sgml-exposed-tags:nil
- sgml-local-catalogs:nil
- sgml-local-ecat-files:nil
- End:
- -->
+sgml-parent-document:nil
+sgml-default-dtd-file:"../../manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
