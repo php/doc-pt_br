@@ -1,12 +1,127 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.1 Maintainer: narigone Status: ready  -->
+<!-- EN-Revision: 1.6 Maintainer: narigone Status: ready  -->
  <sect1 id="language.oop5.magic">
   <title>Métodos Mágicos</title>
   <para>
-   .
-  </para>
+   Os nomes de funções
+   <literal>__construct</literal>,
+   <literal>__destruct</literal>
+   (veja <link linkend="language.oop5.decon">Construtores e Destrutores</link>),
+   <literal>__call</literal>,
+   <literal>__get</literal>,
+   <literal>__set</literal>
+   (veja <link linkend="language.oop5.overloading">Sobrecarga</link>),
+   <literal>__sleep</literal>,
+   <literal>__wakeup</literal>, e
+   <literal>__toString</literal> 
+   são mágicos nas classes do PHP. Você
+   não pode ter funções com esses nomes em nenhuma de suas
+   classes a não ser que queria que a funcionalidade mágica associada
+   com eles.
+  <caution>
+   <simpara>
+    PHP reserva todas as funções com nomes começando com __ como mágicas.
+    É recomendado que você não use funções com nomes com 
+    __ no PHP a não ser que você queira alguma funcionalidade mágica documentada.
+   </simpara>
+  </caution>
+ 
+  <sect2 id="language.oop5.magic.sleep">
+   <title><literal>__sleep</literal> e <literal>__wakeup</literal></title>
+   <para>
+    <function>serialize</function> checa se sua classe tem uma função com 
+    o nome mágico <literal>__sleep</literal>. Se tiver, a função é
+    executa antes de qualqer serialização. Ela pode limpar o objeto
+    e deve retornar um array com os nomes de todas as variáveis 
+    do objeto que devem ser serializadas.
+   </para>
+   <para>
+    O intuito do método <literal>__sleep</literal> é fechar qualquer
+    conexão com bancos de dados que o objeto possa ter, enviando dados
+    pendentes ou realizar tarefas similares de limpeza. Além disso, a função é
+    útil se você tiver objetos muito grandes que não precisarão ser
+    salvos completamente.
+   </para>
+   <para>
+    Inversamente, <function>unserialize</function> checa pela
+    presença da função com o nome mágico
+    <literal>__wakeup</literal>. Se achar, essa função pode
+    reconstruir qualquer recursos que o objeto pode ter.
+   </para>
+   <para>
+    O intuito do método <literal>__wakeup</literal> é
+    reestabelecer qualquer conexão com banco de daos que podem ter sido perdidas
+    durante a serialização e realizar tarefas de
+    reinicialização.
+   </para>
+  </sect2>
 
+  <sect2 id="language.oop5.magic.tostring">
+   <title><literal>__toString</literal></title>
+   <para>
+    O método <literal>__toString</literal> permite que uma classe decida
+    como se comportar quando for convertida para uma string.
+   </para>
+   <example>
+    <title>Exemplo Simples</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// Declara uma classe simples
+class ClasseTeste
+{
+    public $foo;
 
+    public function __construct($foo) {
+        $this->foo = $foo;
+    }
+
+    public function __toString() {
+        return $this->foo;
+    }
+}
+
+$classe = new ClasseTeste('Olá');
+echo $classe;
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Olá
+]]>
+    </screen>
+   </example>
+   <para>
+    Vale lembrar que o método <literal>__toString</literal>
+    só será chamado quando diretamente combinado com    
+    <function>echo</function> ou <function>print</function>.
+   </para>
+   <example>
+    <title>Casos onde <literal>__toString</literal> é chamado</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// __toString chamado
+echo $classe;
+
+// __toString chamado (ainda um parâmetro normal para o echo)
+echo 'texto', $classe;
+
+// __toString não é chamado (operador de concatenação usado primeiro)
+echo 'text' . $class;
+
+// __toString não é chamado (converte para string primeiro)
+echo (string) $class;
+
+// __toString não é chamado (converte para string primeiro)
+echo "text $class";
+?>
+]]>
+    </programlisting>
+   </example>
+  </sect2>
  </sect1>
  
 <!-- Keep this comment at the end of the file
