@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: 1.6 Maintainer: fernandoc Status: ready -->
+<refentry id="function.sqlite-create-function">
+ <refnamediv>
+  <refname>sqlite_create_function</refname>
+  <refpurpose>
+   Registra uma Função Definida pelo Usuário(UDF)para usar em SQL.
+  </refpurpose>
+ </refnamediv>
+ <refsect1>
+  <title>Descrição</title>
+  <methodsynopsis>
+   <type>bool</type><methodname>sqlite_create_function</methodname>
+   <methodparam><type>resource</type><parameter>dbhandle</parameter></methodparam>
+   <methodparam><type>string</type><parameter>function_name</parameter></methodparam>
+   <methodparam><type>mixed</type><parameter>callback</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>numero_de_argumentos</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   <function>sqlite_create_function</function> permite a você registrar uma função do PHP
+   para usar com o SQLite como uma <acronym>UDF</acronym> (Função Definida
+   pelo Usuário), assim ela pode ser usada apartir de suas SQLs.
+  </para>
+  <para>
+   O parâmetro <parameter>dbhandle</parameter> especifica o banco de dados
+   que você quer estender, <parameter>function_name</parameter> especifica no nome da função
+   que você quer usar em seus SQL,
+   <parameter>callback</parameter> é qualquer função valida(função criada com function)
+   que deve ser chamada para cuidar da função SQL.
+   O parâmetro opcional <parameter>numero_de_argumentos</parameter> é usado como uma dica
+   pelo parser do SQLite. É recomendado que você especifique um valor apenas
+   se sua função aceitar sempre um numero fixo de parâmetros.
+  </para>
+  <para>
+   A UDF pode ser usada em qualquer SQL que possa chamar funções, como
+   SELECT e UPDATE statements, também em triggers.
+  </para>
+  <para>
+   <example>
+    <title>Exemplo de <function>sqlite_create_function</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+function md5_and_reverse($string) {
+    return strrev(md5($string));
+}
+
+if ($dbhandle = sqlite_open('mysqlitedb', 0666, $sqliteerror)) {
+
+    sqlite_create_function($dbhandle, 'md5rev', 'md5_and_reverse', 1);
+
+    $sql  = 'SELECT md5rev(filename) FROM files';
+    $rows = sqlite_array_query($dbhandle, $sql);
+} else {
+    echo 'Erro ao abrir o banco de dados sqlite: ' . $sqliteerror;
+    exit;
+}
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   Neste exemplo, nós temos uma função que calcula a soma md5 de uma string
+   e a reverte. Quando a SQL é executada, retorna o valor de filename transformado pela nossa função.
+   Os dados retornados em <parameter>$rows</parameter> contém o resultado processado.
+  </para>
+  <para>
+   A beleza desta tecnica é que você não precisa processar o resultado
+   usando um loop foreach() depois de ter feito a query na tabela.
+  </para>
+  <para>
+   O PHP registra uma função chamada <literal>php</literal> quando
+   o banco de dados é aberto. A função php pode ser usada para chamar 
+   qualquer função do PHP sem precisar registrar ela antes.
+  </para>
+  <para>
+   <example>
+    <title>Exemplo de como usar a função php</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$rows = sqlite_array_query($dbhandle, "SELECT php('md5', filename) from files");
+?>
+]]>
+    </programlisting>
+    <para>
+     Esta função irá chamar a função <function>md5</function> para cada
+     coluna <literal>filename</literal> na tabela e retornar o resultado 
+     em <parameter>$rows</parameter>
+    </para>
+   </example>
+  </para>
+  <note>
+   <para>
+    Por razões de velocidade, O PHP não irá codificar/decodificar dados binários
+    passados para e das UDF´s. Você precisa manualmente codificar/decodificar
+    os parâmetros e valores de retorno de precisar lidar com dados binários
+    desta maneira. De uma olhada em <function>sqlite_udf_encode_binary</function>
+    e <function>sqlite_udf_decode_binary</function> para maiores detalhes.
+   </para>
+  </note>
+  <tip>
+   <para>
+    Não é recomendado usar UDF's para procassar dados binários, 
+    a menos que velocidade não seja um requerimento para a sua aplicação.
+   </para>
+  </tip>
+  <tip>
+   <para>
+    Você pode usar <function>sqlite_create_function</function> e
+    <function>sqlite_create_aggregate</function> para sobrescrever as funções
+    nativas de SQL do SQLite.
+   </para>
+  </tip>
+  <para>
+   Veja também <function>sqlite_create_aggregate</function>.
+  </para>
+ </refsect1>
+</refentry>
+<!-- Keep this comment at the end of the file
+ Local variables:
+ mode: sgml
+ sgml-omittag:t
+ sgml-shorttag:t
+ sgml-minimize-attributes:nil
+ sgml-always-quote-attributes:t
+ sgml-indent-step:1
+ sgml-indent-data:t
+ sgml-parent-document:nil
+ sgml-default-dtd-file:"../../manual.ced"
+ sgml-exposed-tags:nil
+ sgml-local-catalogs:nil
+ sgml-local-ecat-files:nil
+ End:
+ vim600: syn=xml fen fdm=syntax fdl=2 si
+ vim: et tw=78 syn=sgml
+ vi: ts=1 sw=1
+ -->
