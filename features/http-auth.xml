@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: 1.40 Maintainer: narigone Status: ready -->
+ <chapter id="features.http-auth">
+  <title>Autenticação HTTP com PHP</title>
+
+  <simpara>
+   Autenticação via <acronym>HTTP</acronym> no PHP só é disponível quando o mesmo
+   for executador como módulo do Apache e, portanto, não é disponível na versão CGI.
+   Em um script PHP no módulo Apache, é possível usar a função
+   <function>header</function> para enviar uma janela de entrada
+   "Authentication Required". Uma vez que o usuário preencheu seu nome de usuário e senha,
+   a URL contendo o script PHP será chamada de novo com as   
+   <link linkend="reserved.variables">variáveis predefinidas</link> 
+   <varname>PHP_AUTH_USER</varname>, <varname>PHP_AUTH_PW</varname>, 
+   e <varname>AUTH_TYPE</varname> contendo o nome de usuário, senha e
+   tipo de autenticação, respectivamente. Essas variáveis predefinidas são achadas
+   nos arrays <link linkend="reserved.variables.server">$_SERVER</link> e 
+   <varname>$HTTP_SERVER_VARS</varname>. Somente autenticação "Basic" (Básica)
+   é suportada. Veja a função <function>header</function> para mais
+   informações.
+  </simpara>
+
+  <note>
+   <title>Nota de Versão do PHP</title>
+   <para>
+    <link linkend="language.variables.superglobals">Autoglobais</link>, 
+    como o <link linkend="reserved.variables.server">$_SERVER</link>, tornaram-se
+    disponíveis no PHP <ulink url="&url.php.release4.1.0;">4.1.0</ulink>. 
+    <varname>$HTTP_SERVER_VARS</varname> está disponível desde o PHP 3.
+   </para>
+  </note>
+
+  <para>
+   Um script de exemplo que forçaria autenticação do cliente
+   em uma página:
+  </para>
+  <para>
+   <example>
+    <title>Exemplo de Autenticação HTTP</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+  if (!isset($_SERVER['PHP_AUTH_USER'])) {
+    header('WWW-Authenticate: Basic realm="My Realm"');
+    header('HTTP/1.0 401 Unauthorized');
+    echo 'Texto a ser enviado caso o usuário aperte o botão Cancelar';
+    exit;
+  } else {
+    echo "<p>Olá, {$_SERVER['PHP_AUTH_USER']}.</p>";
+    echo "<p>Você digitou {$_SERVER['PHP_AUTH_PW']} como sua senha.</p>";
+  }
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+
+  <note>
+   <title>Nota de Compatibilidade</title>
+   <para>
+    Por favor, tenha cuidado quando codificar as linhas do cabeçalho do HTTP. Para garantir
+    compatibilidade máxima com todos os clientes, a palavra chave "Basic" deve ser escrita com
+    "B" maiúsculo, deve se usar aspas duplas (não simples) em volta da string realm,
+    e exatamente um espaço deve preceder o código <emphasis>401</emphasis> na 
+    linha do cabeçalho <emphasis>HTTP/1.0 401</emphasis>.
+   </para>
+  </note>
+
+  <para>
+   Ao invés de simplesmente mostrar o valor de <varname>PHP_AUTH_USER</varname>
+   e <varname>PHP_AUTH_PW</varname>, como foi feito no exemplo acima, 
+   você deve querer checar a validade do nome de usuário e a senha.
+   Talvez enviando uma query para um banco de dados, ou procurando o
+   usuário em um arquivo dbm.
+  </para>
+
+  <para>
+   Cuidado com browsers Internet Explorer bugados por aí. Eles 
+   parecem muito minuciosos sobre a ordem dos cabeçalhos. Enviar
+   o cabeçalho <emphasis>WWW-Authenticate</emphasis> antes do
+   cabeçalho <literal>HTTP/1.0 401</literal> resolve isso
+   por enquanto.
+  </para>
+
+  <simpara>
+   A partir do PHP 4.3.0, para evitar que alguém escreva um script que
+   revele a senha para uma página que foi autenticada através de um
+   mecanismo externo tradicional, as variáveis PHP_AUTH não serão
+   configuradas se autenticação externa estiver disponível para aquela página
+   em particular e se &safemode; estiver ligado. No entanto,
+   <varname>REMOTE_USER</varname> pode ser usada
+   para identificar um usuário autenticado externamente. Então, você pode usar
+   <varname>$_SERVER['REMOTE_USER']</varname>.
+  </simpara>
+
+  <note>
+   <title>Nota de Configuração</title>
+   <para>
+    PHP usa a presença de uma diretiva chamada <literal>AuthType</literal>
+    para determinar se autenticação externa está em efeito.
+   </para>
+  </note>
+
+  <simpara>
+   Perceba, no entanto, que a diretiva citada não previne que alguém que
+   controle uma URL não autenticada de roubar senhas de
+   URLs autenticadas no mesmo servidor.
+  </simpara>
+  <simpara>
+   Tanto o Netscape Navigator quanto o Internet Explorer limparão o cache de
+   autenticação da janela do navegador para o realm após receber uma
+   resposta 401 do servidor. Isso pode efetivamente "deslogar" um usuário,
+   forçando o mesmo a re-entrar seu nome de usuário e senha. Algumas pessoas
+   usam isso para delimitar o tempo de um login, ou fazer um botão de "log-out".
+  </simpara>
+  <para>
+   <example>
+    <title>Exemplo de Autenticação via HTTP forçando um(a) novo(a) nome/senha</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+  function authenticate() {
+    header('WWW-Authenticate: Basic realm="Test Authentication System"');
+    header('HTTP/1.0 401 Unauthorized');
+    echo "Você deve usar um login e uma senha válidos para acessar esse recurso\n";
+    exit;
+  }
+ 
+  if (!isset($_SERVER['PHP_AUTH_USER']) ||
+      ($_POST['SeenBefore'] == 1 && $_POST['OldAuth'] == $_SERVER['PHP_AUTH_USER'])) {
+   authenticate();
+  } 
+  else {
+   echo "<p>Bem vindo: {$_SERVER['PHP_AUTH_USER']}<br />";
+   echo "Login antigo: {$_REQUEST['OldAuth']}";
+   echo "<form action='{$_SERVER['PHP_SELF']}' METHOD='post'>\n";
+   echo "<input type='hidden' name='SeenBefore' value='1' />\n";
+   echo "<input type='hidden' name='OldAuth' value='{$_SERVER['PHP_AUTH_USER']}' />\n";
+   echo "<input type='submit' value='Re Autenticar' />\n";
+   echo "</form></p>\n";
+  }
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <simpara>
+   Esse comportamento não é necessário pelo padrão autenticação básica 
+   via HTTP, então você nunca deve depender disso. Testando com Lynx
+   mostrou que Lynx não limpa as credenciais de autenticação com uma
+   resposta 401 do servidor, então apertar voltar e depois avançar
+   novamente abrirá o recurso enquanto os requerimentos de
+   credenciais não mudarem. Porém, o usuário pode apertar a
+   tecla '_' para limpar a sua informação de autenticação.
+  </simpara>
+  <simpara>
+   Também perceba que até o PHP 4.3.3, Autenticação HTTP não funcionava
+   usando o servidor IIS da Microsoft com a versão CGI do PHP devido a
+   limitação do IIS. Para fazer ela funcionar no PHP 4.3.3 ou superior,
+   você deve editar a configuração "Directory Security" do IIs. Clique
+   em "Editar" e apenas marque "Anonymous Access", todos os outros
+   campos devem ser mantidos desmarcados.
+  </simpara>
+  <simpara>
+   Outra limitação é se você estiver usando o módulo IIS (ISAPI), você não deve
+   usar as variáveis <literal>PHP_AUTH_*</literal> mas sim, a variável 
+   <literal>HTTP_AUTHORIZATION</literal>. Por exemplo, considere 
+   o seguinte código: <literal>list($user, $pw) = explode(':',  
+   base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));</literal>
+  </simpara>
+  <note>
+   <title>IIS Note:</title>
+   <simpara>
+    Para autenticação via HTTP funcionar no IIS, a diretiva do PHP    
+    <link linkend="ini.cgi.rfc2616-headers">cgi.rfc2616_headers</link> deve
+    estar configurada para <literal>0</literal> (o valor padrão).
+   </simpara>
+  </note>
+  <note>
+   <para>
+    Se <link linkend="ini.safe-mode">modo de segurança</link> estiver ligado, o
+    uid do script é adicionado a parte <literal>realm</literal> do
+    cabeçalho <literal>WWW-Authenticate</literal>.
+   </para>
+  </note>
+
+ </chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"../../manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
