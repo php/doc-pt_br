@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.4 Maintainer: ae Status: ready --><!-- CREDITS: rarruda -->
+<!-- EN-Revision: 1.14 Maintainer: ae Status: ready --><!-- CREDITS: rarruda -->
 <!-- splitted from ./pt_BR/functions/filesystem.xml, last change in rev 1.5 -->
   <refentry id="function.fread">
    <refnamediv>
@@ -10,15 +10,16 @@
     <title>Descrição</title>
      <methodsynopsis>
       <type>string</type><methodname>fread</methodname>
-      <methodparam><type>int</type><parameter>fp</parameter></methodparam>
-      <methodparam><type>int</type><parameter>comprimento</parameter></methodparam>
+      <methodparam><type>resource</type><parameter>handle</parameter></methodparam>
+      <methodparam><type>int</type><parameter>length</parameter></methodparam>
      </methodsynopsis>
     <simpara>
      <function>fread</function> lê até
-     <parameter>comprimento</parameter> bytes. A leitura é
-     interrompida quando <parameter>comprimento</parameter>
-     bytes foram lidos ou o fim do arquivo (eof) foi alcançado,
-     o que ocorrer primeiro.
+     <parameter>length</parameter> bytes do ponteiro de arquivo
+     informado em <parameter>handle</parameter>. A leitura é interrompida quando
+     <parameter>length</parameter> bytes foram lidos ou 
+     o fim do arquivo (eof) foi alcançado, ou (para streams de rede) quando um
+     pacote se torna disponível, o que ocorrer primeiro.
     </simpara>
     <para>
      <informalexample>
@@ -26,10 +27,61 @@
 <![CDATA[
 <?php
 // ler o conteúdo do arquivo para uma string
-$nomedoarquivo = "/usr/local/algo.txt";
-$fd = fopen ($nomedoarquivo, "r");
-$conteudo = fread ($fd, filesize ($nomedoarquivo));
-fclose ($fd);
+$filename = "/usr/local/qualquer.txt";
+$handle = fopen ($filename, "r");
+$conteudo = fread ($handle, filesize ($filename));
+fclose ($handle);
+?>
+]]>
+      </programlisting>
+     </informalexample>
+    </para>
+    <warning>
+     <para>
+      Em sistemas que diferenciam entre arquivos binários e texto
+      (por exemplo Windows) o arquivo tem que ser aberto com 'b'
+      incluído como parametro na função <function>fopen</function>.
+     </para>
+    </warning>
+    <para>
+     <informalexample>
+      <programlisting role="php">
+<![CDATA[
+<?php
+$nomedoarquivo = "c:\\files\\figura.gif";
+$handle = fopen ($nomedoarquivo, "rb");
+$conteudo = fread ($handle, filesize ($filename));
+fclose ($handle);
+?>
+]]>
+      </programlisting>
+     </informalexample>
+    </para>
+
+    <warning>
+     <para>
+      Quando lendo de streams de rede ou canais (pipes), como aqueles retornados pela
+      leitura de <link linkend="features.remote-files">arquivos remotos</link> ou de
+      <function>popen</function> e <function>proc_open</function>, a leitura
+      irá parar depois que um pacote se torna disponível. Isto significa que você
+      deve juntar os dados em blocos como demonstrado no exemplo seguinte.
+     </para>
+    </warning>
+    <para>
+     <informalexample>
+      <programlisting role="php">
+<![CDATA[
+<?php
+$handle = fopen ("http://www.example.com/", "rb");
+$conteudo = "";
+do {
+    $data = fread($handle, 8192);
+    if (strlen($data) == 0) {
+        break;
+    }
+    $conteudo .= $data;
+} while(true);
+fclose ($handle);
 ?>
 ]]>
       </programlisting>
@@ -37,25 +89,18 @@ fclose ($fd);
     </para>
     <note>
      <para>
-      Em sistemas que diferenciam entre arquivos binários e texto
-      (por exemplo Windows) o arquivo tem que ser aberto com 'b'
-      incluído como parametro na função <function>fopen</function>.
+      O exemplo acima tem uma performance melhor que o jeito comum
+      usando while(!<function>feof</function>), porque ele economiza o overhead
+      de uma chamada de função por iteração.
      </para>
     </note>
-    <para>
-     <informalexample>
-      <programlisting role="php">
-<![CDATA[
-<?php
-$nomedoarquivo = "c:\\arquivos\\algumaimg.gif";
-$fd = fopen ($nomedoarquivo, "rb");
-$conteudo = fread ($fd, filesize ($nomedoarquivo));
-fclose ($fd);
-?>
-]]>
-      </programlisting>
-     </informalexample>
-    </para>
+    <note>
+     <para>
+      Se você quer apenas pegar o conteúdo de um arquivo para uma string, utilize
+      <function>file_get_contents</function> que tem uma performance ainda melhor
+      que o código acima.
+     </para>
+    </note>
     <simpara>
      Veja também <function>fwrite</function>, <function>fopen</function>,
      <function>fsockopen</function>, <function>popen</function>,
