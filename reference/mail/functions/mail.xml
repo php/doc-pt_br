@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- $Revision: 1.3 $ -->
+<!-- EN-Revision: 1.24 Maintainer: surfmax Status: ready -->
 <!-- splitted from ./en/functions/mail.xml, last change in rev 1.2 -->
   <refentry id="function.mail">
    <refnamediv>
@@ -30,23 +30,23 @@
      </simpara>     
      <simpara>
     Os seguintes RFC's pode ser úteis:
-     <ulink url="&url.rfc1896;">RFC 1896</ulink>,
-     <ulink url="&url.rfc2045;">RFC 2045</ulink>,
-     <ulink url="&url.rfc2046;">RFC 2046</ulink>,
-     <ulink url="&url.rfc2047;">RFC 2047</ulink>,
-     <ulink url="&url.rfc2048;">RFC 2048</ulink>, and 
-     <ulink url="&url.rfc2049;">RFC 2049</ulink>.
+     <ulink url="&url.rfc;1896">RFC 1896</ulink>,
+     <ulink url="&url.rfc;2045">RFC 2045</ulink>,
+     <ulink url="&url.rfc;2046">RFC 2046</ulink>,
+     <ulink url="&url.rfc;2047">RFC 2047</ulink>,
+     <ulink url="&url.rfc;2048">RFC 2048</ulink>, e
+     <ulink url="&url.rfc;2049">RFC 2049</ulink>.
     </simpara>
     <para>
-     <function>mail</function> retorna &true; se o email enviado foi 
-     aceito para entrega, do contrário &false;.
+     <function>mail</function>devolve &true; se o email foi enviado com
+     sucesso, &false; se não foi.
     </para>
     <warning>
      <para>
       A implentação do Windows de <function>mail</function> difere bastante
       da implentação Unix. Primeiro, ele não usa um binary local
       para compor mensagens mas apenas opera com sockets diretos o que
-      significa que uma <literal>MTA</literal> é necessária prestando atenção num
+      significa que uma <literal>MTA</literal> é necessária monitorando um
       socket de rede (que pode ser ou o localhost ou uma máquina remota). Segundo,
       os cabeçalhos personalizados como <literal>From:</literal>,
       <literal>Cc:</literal>, <literal>Bcc:</literal> e <literal>Date:</literal> são
@@ -55,16 +55,18 @@
       em primeiro lugar, mas são analizados pelo <literal>PHP</literal>.
       <literal>PHP</literal> &lt; 4.3 somente elementos suportados
       <literal>Cc:</literal> elemento de cabeçalho (e foi caso-sensitivo).  <literal>PHP</literal> &gt;= 4.3
-      suporta todos os elementos de cabeçalho suportados e não distante
+      suporta todos os elementos de cabeçalho mensionados e não mais
       caso-sensitivo.
      </para>
     </warning>
-    <para>
+	 <para>
      <example>
       <title>Enviando email.</title>
-      <programlisting>
+      <programlisting role="php">
 <![CDATA[
+<?php
 mail("joecool@example.com", "My Subject", "Line 1\nLine 2\nLine 3");
+?>
 ]]>
       </programlisting>
      </example>
@@ -78,47 +80,55 @@ mail("joecool@example.com", "My Subject", "Line 1\nLine 2\nLine 3");
     <note>
      <para>
      Você deve utilizar <literal>\r\n</literal> para separar headers, embora
-     alguns agentes de transferência de email Unix mail podem trabalhar 
-     com uma simples linha somente 
+     alguns agentes de transferência de email Unix  podem trabalhar 
+     com uma simples "newline" (nova linha) apenas 
      (<literal>\n</literal>).
      </para>
     </note>
     <para>
      <example>
       <title>Enviando email com cabeçalhos extras.</title>
-      <programlisting>
+      <programlisting role="php">
 <![CDATA[
+<?php
 mail("nobody@example.com", "the subject", $message,
-     "From: webmaster@$SERVER_NAME\r\n"
-    ."Reply-To: webmaster@$SERVER_NAME\r\n"
+     "From: webmaster@{$_SERVER['SERVER_NAME']}\r\n"
+    ."Reply-To: webmaster@{$_SERVER['SERVER_NAME']}\r\n"
     ."X-Mailer: PHP/" . phpversion());
+?>
 ]]>
       </programlisting>
      </example>
     </para>
     <para>
      O parâmetro <parameter>additional_parameters</parameter> pode ser usado
-     para passar parâmetros adicionais para o programa configurado
+     para passar um parâmetro adicional para o programa configurado
      para usar quando enviar email usando a definição de configuração  
      <literal>sendmail_path</literal>. Por exemplo, isto pode ser usado para 
-     definir o endereço do envelope remetente quando usar sendmail. Você pode 
-     precisar adicionar o usuário que seu servidor web executa como para sua 
+     definir o endereço do envelope remetente quando usar sendmail com a opção de
+	 configuração <literal>-f</literal>. Você pode  precisar adicionar o usuário que seu servidor web executa como para sua 
      configuração de sendmail para evitar que um cabeçalho 'X-Warning' seja
      adicionado á mensagem quando você define o envelope remetente usando este 
      método.
      <example>
       <title>Enviando email com cabeçalhos extras e definindo um parâmetro de uma linha de comando adicional.</title>
-      <programlisting>
+      <programlisting role="php">
 <![CDATA[
+<?php
 mail("nobody@example.com", "the subject", $message,
-     "From: webmaster@$SERVER_NAME", "-fwebmaster@$SERVER_NAME");
+     "From: webmaster@{$_SERVER['SERVER_NAME']}", "-fwebmaster@{$_SERVER['SERVER_NAME']}");
+?>
 ]]>
       </programlisting>
      </example>
     </para>
     <note>
      <para>
-      O quinto parâmetro foi adicionado no PHP 4.0.5.
+      Este quinto parâmetro foi adicionado no PHP 4.0.5.
+       Desde o PHP 4.2.3 este parâmetro está desabilitado em
+       <link linkend="ini.safe-mode">safe_mode</link>
+      e a função <function>mail</function> irá expor uma mensagem de aviso e 
+	  devolverá &false; se você estiver tentando usá-la.
      </para>
     </note>
     <para>
@@ -126,11 +136,12 @@ mail("nobody@example.com", "the subject", $message,
      mensagens complexas.
      <example>
       <title>Enviando email complexo.</title>
-      <programlisting>
+      <programlisting role="php">
 <![CDATA[
+<?php
 /* recipients */
-$to  = "Mary <mary@example.com>" . ", " ; //note the comma
-$to .= "Kelly <kelly@example.com>";
+$to  = "mary@example.com" . ", " ; // note the comma
+$to .= "kelly@example.com";
 
 /* subject */
 $subject = "Birthday Reminders for August";
@@ -163,6 +174,7 @@ $headers  = "MIME-Version: 1.0\r\n";
 $headers .= "Content-type: text/html; charset=iso-8859-1\r\n";
 
 /* additional headers */
+$headers .= "To: Mary <mary@example.com>, Kelly <kelly@example.com>\r\n";
 $headers .= "From: Birthday Reminder <birthday@example.com>\r\n";
 
 $headers .= "Cc: birthdayarchive@example.com\r\n";
@@ -170,6 +182,7 @@ $headers .= "Bcc: birthdaycheck@example.com\r\n";
 
 /* and now mail it */
 mail($to, $subject, $message, $headers);
+?>
 ]]>
       </programlisting>
      </example>
@@ -181,6 +194,17 @@ mail($to, $subject, $message, $headers);
        ou o email não será enviado corretamente.
      </para>
     </note>
+	<note>
+     <para>
+      O parâmetro <parameter>to</parameter>não deveria ser um endereços
+      na forma de &quot;Algo &lt;alguem@example.com&gt;&quot;.  O comando de
+      email poderia não analisar isso adequadamente enquanto se comunica com o 
+       MTA (Particularmente dentro do Windows).
+     </para>
+    </note>
+    <para>
+     Veja também <function>imap_mail</function>.
+    </para>
    </refsect1>
   </refentry>
 
