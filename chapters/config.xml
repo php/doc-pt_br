@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.59 Maintainer: ae Status: ready -->
+<!-- EN-Revision: 1.67 Maintainer: ae Status: ready -->
  <chapter id="configuration">
   <title>Configuração</title>
 
@@ -24,6 +24,19 @@
     variavável ambiente <literal>PHPRC</literal> para colocar caminhos adicionais
     para procura do &php.ini;.
    </para>
+   <para>
+    Note que nem todas as diretivas do PHP estão documentadas a seguir. Para uma lista completa,
+    leia o seu próprio e bem comentado arquivo &php.ini;. Você também pode ver a
+    <ulink url="&url.php.cvs.phpini;">versão mais atualizada</ulink> diretamente do CVS.
+   </para>
+   <note>
+    <para>
+     O valor default da diretiva
+     <link linkend="ini.register-globals">register_globals</link> mudou de
+     <emphasis>on</emphasis> para <emphasis>off</emphasis> a partir do PHP
+     <ulink url="&url.php.release4.2.0;">4.2.0</ulink>.
+    </para>
+   </note>
    <para>
     <example>
      <title>&php.ini; example</title>
@@ -52,12 +65,14 @@ include_path = ".;c:\php\lib"
     Quando usando o PHP como um módulo do Apache, você também pode mudar
     as definições de configuração usando diretivas na configuração dos arquivos
     Apache e dos arquivos .htaccess (Você irá precisar de privilégios
-    "AllowOverride Options" ou "AllowOverride All")</simpara>
+    "AllowOverride Options" ou "AllowOverride All")
+   </simpara>
 
    <simpara>
     Com o PHP 3.0, existem diretivas Apache que correspondem a cada
     definição de configuração no nome <filename>php3.ini</filename>,
-    exceto o nome predefinido por "php3_".</simpara>
+    exceto o nome predefinido por "php3_".
+   </simpara>
 
    <para>
     Com o PHP 4.0, existem várias diretivas do Apache que lhe permitem
@@ -129,15 +144,27 @@ include_path = ".;c:\php\lib"
 ]]>
 </programlisting>
     </example>
+
+    <note>
+     <para>
+      Constantes PHP não existem fora do PHP. Por exemplo, no
+      <filename>httpd.conf</filename> não adianta utilizar-se de constantes PHP
+      como <constant>E_ALL</constant> ou <constant>E_NOTICE</constant>
+      para configurar a diretiva <link linkend="ini.error-reporting">error_reporting</link>,
+      pois elas não tem nenhum sentido e serão avaliados como
+      <emphasis>0</emphasis>. Nesses casos, utilize seus valores de bit.
+      Essas constantes só podem ser utilizadas dentro do &php.ini;
+     </para>
+    </note>
    </para>
 
    <simpara>
     Você pode visualizar as definições dos valores de configuração na
     saída de <function>phpinfo</function>. Você também pode acessar
     os valores de definições de configuração originais usando
-    <function>get_cfg_var</function>.
+    <function>ini_get</function> ou <function>get_cfg_var</function>.
    </simpara>
-   
+
    <sect2 id="ini.sect.general">
     <title>Diretivas Gerais de Configuração</title>
     <para>
@@ -149,10 +176,9 @@ include_path = ".;c:\php\lib"
        </term>
        <listitem>
         <para>
-         Esta opção habilita o URL-aware fopen wrappers que possibilitam 
-         o acesso a objetos URL
-         como arquivos. Wrappers padrão são fornecidos para o acesso de
-         <link linkend="features.remote-files">arquivos remotos</link>
+         Esta opção habilita o URL-aware fopen wrappers que possibilitam
+         o acesso a objetos URL como arquivos. Wrappers padrão são fornecidos para
+         o acesso de <link linkend="features.remote-files">arquivos remotos</link>
          usando os protocolos FTP ou HTTP, algumas extensões como zlib podem
          registrar wrappers adicionais.
         </para>
@@ -160,13 +186,10 @@ include_path = ".;c:\php\lib"
         <note>
          <para>
           Esta opção foi introduzida imediatamente após o lançamento da versão
-          4.0.3.
-          Para versões superiores incluindo a 4.0.3, você só pode desabilitar essa
-          função na
-          compilação usando o argumento
-          <link 
-          linkend="install.configure.disable-url-fopen-wrapper"><parameter>--d
-          isable-url-fopen-wrapper</parameter></link> na configuração (configure).
+          4.0.3. Para versões superiores incluindo a 4.0.3, você só pode desabilitar essa
+          função na compilação usando o argumento
+          <link linkend="install.configure.disable-url-fopen-wrapper"><parameter>
+          --disable-url-fopen-wrapper</parameter></link> na configuração (configure).
          </para>
         </note>
         <warning>
@@ -192,11 +215,13 @@ include_path = ".;c:\php\lib"
          &lt;?php ?&gt; usuais. Isso inclui a impressão resumida
          de valor de variável &lt;%= $valor %&gt;. Para maiores informações
          veja <link
-         linkend="language.basic-syntax.phpmode">Saindo do HTML</link>.
+         linkend="language.basic-syntax.phpmode">Escapando do HTML</link>.
         </simpara>
 
         <note>
-         <para>O suporte para tags no estilo ASP foi adicionado na versão 3.0.4.</para>
+         <para>
+          O suporte para tags no estilo ASP foi adicionado na versão 3.0.4.
+         </para>
         </note>
 
        </listitem>
@@ -220,7 +245,8 @@ include_path = ".;c:\php\lib"
           <simpara>
            Se o script é finalizado com <function>exit</function>,
            auto-append <emphasis>não</emphasis> ocorrerá.</simpara>
-         </note></para>
+         </note>
+        </para>
        </listitem>
       </varlistentry>
 
@@ -237,18 +263,27 @@ include_path = ".;c:\php\lib"
          <link linkend="ini.include-path">include_path</link> é usado.</para>
         <para>
          O valor especial <systemitem class="constant">none</systemitem>
-         desabilita o auto-prepending.</para>
+         desabilita o auto-prepending.
+        </para>
        </listitem>
       </varlistentry>
 
-      <varlistentry id="ini.cgi-ext">
+      <varlistentry id="ini.disable-functions">
        <term>
-        <parameter>cgi_ext</parameter>
+        <parameter>disable_functions</parameter>
         <type>string</type>
        </term>
        <listitem>
-        <para>
-        </para>
+        <simpara>
+         Esta diretiva permite a você desabilitar certas funções por
+         <link linkend="security">motivos de segurança</link>. Informe
+         uma lista de nomes de funções separados por vírgula. disable_functions
+         não é afetado pelo <link linkend="ini.safe-mode">Safe Mode</link>.
+        </simpara>
+        <simpara>
+         Esta diretiva só pode ser configurada no &php.ini; Por exemplo, você
+         não pode modificá-la no <filename>httpd.conf</filename>.
+        </simpara>
        </listitem>
       </varlistentry>
 
@@ -309,7 +344,8 @@ include_path = ".;c:\php\lib"
          valor especial <literal>syslog</literal> for usado, os erros serão
          enviados para o logger do sistema. No UNIX, isto significa
          syslog(3) e no Windows NT isto significa o event log. O
-         system logger não é suportado no Windows 95.</para>
+         system logger não é suportado no Windows 95.
+        </para>
        </listitem>
       </varlistentry>
 
@@ -407,7 +443,9 @@ include_path = ".;c:\php\lib"
           "open_basedir = /dir/incl/"
         </para>
         <note>
-         <para>O supporte para múltiplos diretórios foi adicionado na versão 3.0.7.</para>
+         <para>
+          O supporte para múltiplos diretórios foi adicionado na versão 3.0.7.
+         </para>
         </note>
         <para>
          O padrão é permitir que todos os arquivos sejam abertos.
@@ -530,17 +568,6 @@ include_path=".;c:\www\phplib"
        </listitem>
       </varlistentry>
 
-      <varlistentry id="ini.isapi-ext">
-       <term>
-        <parameter>isapi_ext</parameter>
-        <type>string</type>
-       </term>
-       <listitem>
-        <para>
-        </para>
-       </listitem>
-      </varlistentry>
-
       <varlistentry id="ini.log-errors">
        <term>
         <parameter>log_errors</parameter>
@@ -634,17 +661,6 @@ include_path=".;c:\www\phplib"
          Isto define a quantidade máxima de memória em bytes que um script
          é capaz de alocar. Isto ajuda a prevenir scripts mal escritos de consumir
          toda a memória disponível no servidor.
-        </para>
-       </listitem>
-      </varlistentry>
-
-      <varlistentry id="ini.nsapi-ext">
-       <term>
-        <parameter>nsapi_ext</parameter>
-        <type>string</type>
-       </term>
-       <listitem>
-        <para>
         </para>
        </listitem>
       </varlistentry>
@@ -851,7 +867,8 @@ include_path=".;c:\www\phplib"
         <para>
          O caminho base do usado como diretório home do usuário
          para arquivos PHP, por exemplo
-         <literal>public_html</literal>.</para>
+         <literal>public_html</literal>.
+        </para>
        </listitem>
       </varlistentry>
 
@@ -866,7 +883,8 @@ include_path=".;c:\www\phplib"
          mais (<literal>+</literal>) é usado em variáveis string.
          Isto é para tornar mais fácil encontrar scripts que precisam ser reescritos
          para substituir pelo concatenador de strings
-         (<literal>.</literal>).</para>
+         (<literal>.</literal>).
+        </para>
        </listitem>
       </varlistentry>
 
@@ -888,7 +906,8 @@ include_path=".;c:\www\phplib"
         Quando habilitar o modo seguro do PHP, leia os capítulos
         <link linkend="security">Capítulo de Segurança</link> e
         <link linkend="features.safe-mode">Safe Mode</link> para
-        maiores informações</para>
+        maiores informações
+       </para>
       </listitem>
      </varlistentry>
 
@@ -916,7 +935,8 @@ include_path=".;c:\www\phplib"
        <para>
         Se o PHP está sendo usado em modo seguro, <function>system</function> e
         as outras funções de execução do sistema recusam-se a iniciar programas que
-        não estejam neste diretório.</para>
+        não estejam neste diretório.
+       </para>
       </listitem>
      </varlistentry>
 
@@ -949,7 +969,8 @@ include_path=".;c:\www\phplib"
       </term>
       <listitem>
        <para>
-        Nome do DNS ou endereço IP da máquina usada pelo debuger.</para>
+        Nome do DNS ou endereço IP da máquina usada pelo debuger.
+       </para>
       </listitem>
      </varlistentry>
 
@@ -960,7 +981,8 @@ include_path=".;c:\www\phplib"
       </term>
       <listitem>
        <para>
-        Número da porta usada pelo debugger.</para>
+        Número da porta usada pelo debugger.
+       </para>
       </listitem>
      </varlistentry>
 
@@ -971,7 +993,8 @@ include_path=".;c:\www\phplib"
       </term>
       <listitem>
        <para>
-        Se o debugger está habilitado ou não.</para>
+        Se o debugger está habilitado ou não.
+       </para>
       </listitem>
      </varlistentry>
 
@@ -1015,10 +1038,11 @@ include_path=".;c:\www\phplib"
       <listitem>
        <para>
         Nesse diretório o PHP deve procurar por extensões dinamicamente
-        carregáveis.</para>
+        carregáveis.
+       </para>
       </listitem>
      </varlistentry>
-     
+
      <varlistentry id="ini.extension">
       <term>
        <parameter>extension</parameter>
@@ -1026,7 +1050,8 @@ include_path=".;c:\www\phplib"
       </term>
       <listitem>
        <para>
-        Que extensões dinamicamente carregáveis devem ser carregadas quando o PHP inicia.
+        Que extensões dinamicamente carregáveis devem ser carregadas quando o PHP
+        inicia.
        </para>
       </listitem>
      </varlistentry>
