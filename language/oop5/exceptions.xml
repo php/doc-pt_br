@@ -1,11 +1,203 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.1 Maintainer: narigone Status: ready  -->
+<!-- EN-Revision: 1.4 $ Maintainer: narigone Status: ready -->
  <sect1 id="language.oop5.exceptions">
   <title>Exceções</title>
 
   <para>
-   .
+   PHP 5 tem um modelo de exceção similar ao de outras linguagens de programação.
+   Uma exceção pode ser disparada (thrown), tentada (try) ou pega (caught) no PHP. Um bloco Try
+   deve incluir ao menos um bloco catch. Vários blocos catch podem ser usados para
+   pegar diferentes tipos de exceções; a execução continuará depois do último bloco
+   catch definido na sequência. Exceções podem ser disparadas de dentro de blocos catch.
   </para>
+  <para>
+   Quando uma exceção é disparada, o código que segue a instrução não será
+   executado e o PHP tentará achar o primeiro bloco catch que bate com o tipo de exceção.
+   Se uma exceção não for pega, acontecerá um Erro Fatal do PHP com uma mensagem
+   de Uncaught Exception, ao menos que tenha sido definido um tratador com
+   <function>set_exception_handler</function>.
+  </para>
+   <example>
+    <title>Disparando uma Exceção</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+try {
+  $error = 'Sempre dispara esse erro';
+  throw new Exception($error);
+
+  // Código que segue uma exceção não é executado
+  echo 'Nunca é executado';
+}
+catch (Exception $e) {
+  echo "Exceção pega: ",  $e, "\n";
+}
+
+/* continua execução */
+?>
+]]>
+    </programlisting>
+   </example>
+
+  <sect2 id="language.oop5.exceptions.extending">
+   <title>Herdando Exceções</title>
+   <para>
+    Uma classe de exceção definida pelo usuário pode ser criada herdando a classe
+    Exception. Os membros e propriedades abaixo mostram o que é acessível
+    a partir da classe filha que deriva da Exception.
+   </para>
+   <example>
+    <title>A classe nativa Exception</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+class Exception {
+
+  protected $message = 'Unknown exception'; // Mensagem da exceção
+  protected $code = 0;                      // Código da exceção definido pelo usuário 
+  protected $file;                          // Arquivo gerador da exceção
+  protected $line;                          // Linha geradora da exceção
+
+  function __construct(string $message=NULL, int code=0);
+
+  final function getMessage();              // Mensagem da exceção 
+  final function getCode();                 // Código da exceção
+  final function getFile();                 // Arquivo gerador
+  final function getTrace();                // um array com o backtrace()
+  final function getTraceAsString();        // String formatada do trace
+
+  /* Sobrecarregável */
+  function _toString();                     // String formatada para ser mostrada
+   
+}
+?>
+]]>
+    </programlisting>
+   </example>
+   <para>
+    Se uma classe herda da classe Exception e redefine o <link
+    linkend="language.oop5.decon">construtor</link>, é altamente recomendado
+    que o mesmo chame <link
+    linkend="language.oop5.paamayim-nekudotayim">parent::__construct()</link> 
+    para garantir que todas as informações disponíveis sejam devidamente atribuídas. O 
+    método <link linkend="language.oop5.magic">__toString()</link> pode ser sobrecarregado
+    para permitir uma saída personalizada quando o objeto é apresentado como string.
+   </para>
+   <example>
+    <title>Herdando a classe Exception</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+class MyException extends Exception {
+
+  /* Redefine a exceção para que a mensagem não seja opcional */
+  public function __construct($message, $code = 0) {
+
+    // coisas personalizadas que você queira fazer
+    // ...
+    
+    /* Garante que tudo é atribuído corretamente */
+    parent::__construct($message, $code);
+  }
+
+  /* Representação do objeto personalizada no formato string */
+  public function __toString() {
+    return __CLASS__ . ": [{$this->code}]: {$this->message}\n";
+  }
+
+  public function customFunction() {
+    echo "Uma função personalizada para esse tipo de exceção\n";
+  }
+
+}
+
+class TestException {
+
+  public $var;
+
+  const THROW_NONE    = 0;
+  const THROW_CUSTOM  = 1;
+  const THROW_DEFAULT = 2;
+
+
+  function __construct($avalue = self::THROW_NONE) {
+
+    switch ($avalue) {
+      case self::THROW_CUSTOM:
+        // dispara exceção personalizada
+        throw new MyException('1 é um parâmetro inválido', 5);
+        break;
+
+      case self::THROW_DEFAULT:
+        // dispara a padrão
+        throw new Exception('2 não é permitido como parâmetro', 6);
+
+        break;
+
+      default: 
+        // Nenhuma exceção, objeto será criado.
+        $this->var = $avalue;
+        break;
+
+    }
+
+  }
+
+}
+
+$o = null;
+
+try {
+  $o = new TestException(TestException::THROW_CUSTOM);
+}
+catch (MyException $e) {            /* Será pega */
+  echo "Pegou minha exceção\n", $e;
+  $e->customFunction();
+}
+catch (Exception $e) {              /* Ignorado */
+  echo "Pegou Exceção Padrão\n", $e;
+}
+var_dump($o);                       /* continua execução */
+echo "\n\n";
+
+try {
+  $o = new TestException(TestException::THROW_DEFAULT);
+}
+catch (MyException $e) {            /* Tipos não batem */
+  echo "Pegou minha exceção\n", $e;
+  $e->customFunction();
+}
+catch (Exception $e) {              /* Será pega */
+  echo "Pegou Exceção Padrão\n", $e;
+}
+var_dump($o);                       /* continua execução */
+echo "\n\n";
+
+
+try {
+  $o = new TestException(TestException::THROW_CUSTOM);
+}
+catch (Exception $e) {              /* Será pega */
+  echo "Default Exception caught\n", $e;
+}
+var_dump($o);                       /* continua execução */
+echo "\n\n";
+
+try {
+  $o = new TestException();
+}
+catch (Exception $e) {              /* Ignorada, nenhuma exceção */
+  echo "Default Exception caught\n", $e;
+}
+var_dump($o);                       /* continua execução */
+echo "\n\n";
+
+
+]]>
+    </programlisting>
+   </example>
+  </sect2>
 
  </sect1>
  
