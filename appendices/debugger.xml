@@ -5,57 +5,46 @@
    <title>Usando o Debugador</title>
 
    <para>
-    PHP's internal debugger is useful for tracking down evasive bugs.
-    The debugger works by connecting to a <acronym>TCP</acronym> port
-    for every time PHP starts up.  All error messages from that
-    request will be sent to this TCP connection.  This information is
-    intended for "debugging server" that can run inside an
-    <acronym>IDE</acronym> or programmable editor (such as Emacs).
+    O debugger do PHP é util para procurar "bugs" simples.
+    O debugador trabalha conectando numa porta <acronym>TCP</acronym> para cada seção PHP aberta. Todas as mensagens de erro serão enviadas a esta conecção TCP.
+    Esta informação tem intenção de "debugar" o servidor de dentro de um sistema
+    <acronym>IDE</acronym> ou editor de arquivos programável (como o Emacs).
    </para>
    <para>
-    How to set up the debugger:
+    Como levantar o debugger:
     <orderedlist>
      <listitem>
       <simpara> 
-       Set up a TCP port for the debugger in the <link
-       linkend="configuration.file">configuration file</link> (<link
-       linkend="ini.debugger.port">debugger.port</link>) and enable it
+       Configure  uma porta TCP para ele no <link
+       linkend="configuration.file">arquivo de configuração</link> (<link
+       linkend="ini.debugger.port">debugger.port</link>) e habilite ele 
        (<link linkend="ini.debugger.enabled">debugger.enabled</link>).
       </simpara>
      </listitem>
      <listitem>
       <simpara> 
-       Set up a TCP listener on that port somewhere (for example
-       <command>socket -l -s 1400</command> on UNIX).
+       Configure um "ouvidor" TCP naquela porta em algum programa (por exemplo
+       <command>socket -l -s 1400</command> no UNIX).
       </simpara>
      </listitem>
      <listitem>
       <simpara> 
-       In your code, run
-       "debugger_on(<replaceable>host</replaceable>)", where
-       <replaceable>host</replaceable> is the IP number or name of the
-       host running the <acronym>TCP</acronym> listener.
+       Em seu código execute "debugger_on(<replaceable>máquina</replaceable>)", onde <replaceable>máquina</replaceable> é o número IP ou nome do computador executando o "ouvidor" <acronym>TCP</acronym> .
       </simpara>
      </listitem>
     </orderedlist>
-    Now, all warnings, notices etc. will show up on that listener
-    socket, <emphasis>even if you them turned off with
+    Agora, todas as mensagens aparecerá no computador que está "ouvindo",<emphasis> mesmo que você desligue com <function>error_reporting</function></emphasis>.
     <function>error_reporting</function></emphasis>.  
    </para>
   </sect1>
 
   <sect1 id="debugger-protocol">
-   <title>Debugger Protocol</title>
+   <title>Protocolo do Debugger</title>
    <para>
-    The debugger protocol is line-based.  Each line has a
-    <emphasis>type</emphasis>, and several lines compose a
-    <emphasis>message</emphasis>.  Each message starts with a line of
-    the type <literal>start</literal> and terminates with a line of
-    the type <literal>end</literal>.  PHP may send lines for different
-    messages simultaneously.
+    O protocolo é baseado em linhas. Cada linha tem um <emphasis>tipo</emphasis>, e várias linhas compondo a <emphasis>mensagem</emphasis>.  Cada mensagem começa com uma linha de tipo <literal>start</literal> e termina com uma linha de tipo <literal>end</literal>. O PHP pode emviar linhas para diferentes mensagens simultaneamente.
    </para>
    <para>
-    A line has this format:
+    Uma linha tem este formato:
     <informalexample>
      <literallayout>
 <replaceable>date</replaceable> <replaceable>time</replaceable>
@@ -69,7 +58,7 @@
       <term><replaceable>date</replaceable></term>
       <listitem>
        <simpara>
-	Date in ISO 8601 format
+	Data no formato ISO 8601
 	(<replaceable>yyyy</replaceable>-<replaceable>mm</replaceable>-<replaceable>dd</replaceable>)
        </simpara>
       </listitem>
@@ -77,7 +66,7 @@
      <varlistentry>
       <term><replaceable>time</replaceable></term>
       <listitem>
-       <simpara>Time including microseconds:
+       <simpara>Hora, incluindo microsegundos:
 	<replaceable>hh</replaceable>:<replaceable>mm</replaceable>:<replaceable>uuuuuu</replaceable>
        </simpara>
       </listitem>
@@ -86,8 +75,7 @@
       <term><replaceable>host</replaceable></term>
       <listitem>
        <simpara>
-	DNS name or IP address of the host where the script error was
-	generated.
+	"Nome DNS ou IP da maquina onde está o script".
        </simpara>
       </listitem>
      </varlistentry>
@@ -95,8 +83,7 @@
       <term><replaceable>pid</replaceable></term>
       <listitem>
        <simpara>
-	PID (process id) on <replaceable>host</replaceable> of the
-	process with the PHP script that generated this error.
+	ID do processo na <replaceable>máquina</replaceable> do processo que gerou este erro de script.
        </simpara>
       </listitem>
      </varlistentry>
@@ -104,67 +91,56 @@
       <term><replaceable>type</replaceable></term>
       <listitem>
        <para>
-	Type of line.  Tells the receiving program about what it
-	should treat the following data as:
+	Tipo da linha. Informa o programa sobre como ele deve tratar os seguintes dados:
 	<table>
-	 <title>Debugger Line Types</title>
+	 <title>Tipos de Linhas de Debug</title>
 	 <tgroup cols="2">
 	  <thead>
 	   <row>
-	    <entry>Name</entry>
-	    <entry>Meaning</entry>
+	    <entry>Nome</entry>
+	    <entry>Significado</entry>
 	   </row>
 	  </thead>
 	  <tbody>
 	   <row>
 	    <entry><literal>start</literal></entry> 
 	    <entry>
-	     Tells the receiving program that a debugger message
-	     starts here.  The contents of
-	     <replaceable>data</replaceable> will be the type of error
-	     message, listed below.
+	     Informa ao programa que a mensagem começa aqui. O conteúdo de <replaceable>data</replaceable> será o tipo de erro da mensagem, listado abaixo.
 	    </entry>
 	   </row>
 	   <row>
 	    <entry><literal>message</literal></entry>
-	    <entry>The PHP error message.</entry>
+	    <entry>A mensagem de erro do PHP.</entry>
 	   </row>
 	   <row>
 	    <entry><literal>location</literal></entry>
 	    <entry>
-	     File name and line number where the error occured.  The
-	     first <literal>location</literal> line will always
-	     contain the top-level location.
-	     <replaceable>data</replaceable> will contain
-	     <literal><replaceable>file</replaceable>:<replaceable>line</replaceable></literal>.
-	     There will always be a <literal>location</literal> line
-	     after <literal>message</literal> and after every
-	     <literal>function</literal>.
+	     Arquivo e número da linha onde ocorreu o erro. A primeira linha <literal>location</literal> sempre conterá o nível superior.
+	     <replaceable>data</replaceable> conterá:
+	     <literal><replaceable>arquivo</replaceable>:<replaceable>linha</replaceable></literal>.
+	     Sempre existirá uma linha <literal>location</literal> após uma <literal>message</literal> e após cada <literal>function</literal>.
 	    </entry>
 	   </row>
 	   <row>
 	    <entry>
-	     <literal>frames</literal></entry> <entry>Number of frames
-	     in the following stack dump.  If there are four frames,
-	     expect information about four levels of called functions.
-	     If no "frames" line is given, the depth should be assumed
-	     to be 0 (the error occured at top-level).
+	     <literal>frames</literal></entry> <entry>Número de janelas (frames)
+	     na saida atual. Se houver quatro níveis, será esperado informação sobre quatro níveis de funções chamadas.
+	     Se não for dada nenhuma linha de janela (frame) assume que o valor é 0
+	     (o erro aconteceu no início).
 	    </entry>
 	   </row>
 	   <row>
 	    <entry>
 	     <literal>function</literal></entry> 
 	    <entry>
-	     Name of function where the error occured.  Will be
-	     repeated once for every level in the function call
-	     stack.
+	     Nome da função onde o erro apareceu. Será repetida para cada vez que
+	     a função for chamada.
 	    </entry>
 	   </row>
 	   <row>
 	    <entry><literal>end</literal></entry> 
 	    <entry>
-	     Tells the receiving program that a debugger message ends
-	     here.
+	     Informa ao programa que a mensagem de debug termina aqui.
 	    </entry>
 	   </row>
 	  </tbody>
@@ -176,7 +152,7 @@
      <varlistentry>
       <term><replaceable>dados</replaceable></term>
       <listitem>
-       <simpara>Line data.</simpara>
+       <simpara>Linha de dados.</simpara>
       </listitem>
      </varlistentry>
     </variablelist>
