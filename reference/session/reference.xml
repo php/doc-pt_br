@@ -1,70 +1,272 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- $Revision: 1.2 $ -->
+<!-- $Revision: 1.3 $ -->
  <reference id="ref.session">
   <title>Manejo de sessões</title>
-  <titleabbrev>Sessions</titleabbrev>
+  <titleabbrev>Sessões</titleabbrev>
 	
   <partintro>
-   <para>
-    Suporte a sessões no PHP consiste em uma forma de preservar certos dados
+  
+   <section id="session.intro">
+    &reftitle.intro;
+    <para>
+      Suporte a sessões no PHP consiste em uma forma de preservar certos dados
     através de acessos subseqüentes. Isto te permite construir aplicações mais 
 	personalizadas e aumenta a atração ao seu web site.
-   </para>
-   <para>
-    Se você está familiarizado com o gerenciamento de sessões do PHPLIB, você
+    </para>
+    <para>
+     Se você está familiarizado com o gerenciamento de sessões do PHPLIB, você
     irá notar que alguns conceitos são similares ao suporte de sessões do PHP.
-   </para>
-   <para>
-    Um visitante acessando seu web site está determinado por uma única id, a
-    então chamada id de sessão. Ista ou é guardada em um cookie do lado do usuário
+    </para>
+    <para>
+     Um visitante acessando seu web site está determinado por uma única id, a
+    então chamada id de sessão. Esta ou é guardada em um cookie do lado do usuário
     ou está na URL.
-   </para>
-   <para>
-    Sessões te permite registrar arbitrariamente números de variáveis
+    </para>
+    <para>
+     Sessões te permite registrar arbitrariamente números de variáveis
     para estarem lado a lado com os requerimentos. Quando um visitante 
     acessa seu site, o PHP checará automaticamente (se session.auto_start 
     está definida para  1) ou no seu pedido (explicitamente através da
 	<function>session_start</function> ou implicitamente através da
     <function>session_register</function>) se uma id de sessão especifica
     foi enviada com o pedido. Se este é o caso, o ambiente
-     anterior guardado é restaurado.
-   </para>
-   <para>
-    Todas as variáveis registradas são publicadas em série após o pedido
+    anterior guardado é restaurado.
+    </para>
+    <para>
+     Todas as variáveis registradas são publicadas em série após o pedido
     terminar.  Variáveis registradas que estão indefinidas estão marcadas 
 	como estando não definida. Num acesso subseqüente, estas não estarão 
 	definidas pelo módulo da sessão a menos que o usuário defina elas mais tarde.
-   </para>
-   <para>
-    A configuração de <link
+    </para>
+    <note>
+     <para>
+      Manejo de sessões foi adicionado no PHP 4.0.
+     </para>
+    </note>
+   </section>
+   
+   <section id="session.requirements">
+    &reftitle.required;
+    &no.requirement;
+   </section>
+
+   <section id="session.installation">
+    &reftitle.install;
+    <para>
+     Suporte a sessões esta habilitado no PHP 4.0 por definição. Se você
+     não gostaria de seu PHP com suporte a sessão, você  
+     especifica a  opção de configuração <option role="configure">--disable-session</option>.
+    </para>
+   </section>
+
+   <section id="session.configuration">
+    &reftitle.runtime;
+    <para>
+     O sistema de suporte de sessão oferece no arquivo &php.ini; numerosas
+     opções de configuração. nós daremos um breve resumo.
+     <itemizedlist>
+      <listitem>
+       <simpara>
+        <literal>session.save_handler</literal>define o nome do operador(funções-handler)
+       que é usado para guardar e resgatar dados
+       associados com a sessão. Por definição  
+        <literal>files</literal>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        <literal>session.save_path</literal> define o argumento que 
+       que é passado para o save handler. Se você escolher o default files
+       handler, este é o caminho onde os arquivos serão criados.
+       Por definição para <literal>/tmp</literal>. Se a profundidade do caminho de
+       <literal>session.save_path</literal> é maior do que
+       2, coleção de lixo não será executada(garbage collection - gc).
+       </simpara>
+       <warning>
+        <para>
+         Se você deixar isto definido para um diretório muito visível, tal como
+        <filename>/tmp</filename> (o padrão), outros usuários do servidor
+        poderão ser capazes de assumir o controle da sessão obtendo a lista de arquivos
+        naquele diretório.
+        </para>
+       </warning>
+      </listitem>
+      <listitem>
+       <simpara>
+        <literal>session.name</literal> especifica o nome da sessão
+       que é usada como nome de cookie. Ela poderia apenas conter
+       caracteres alfanuméricos. Por definição
+       <literal>PHPSESSID</literal>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        <literal>session.auto_start</literal> especifica se o módulo
+       da sessão inicia a sessão automaticamente num pedido na inicialização.
+	    Por definição <literal>0</literal> (desabilitado).
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        <literal>session.cookie_lifetime</literal> especifica o tempo de vida
+       de um cookie em segundos que é enviado para o navegador. O valor 0
+       significa "até que o navegador seja fechado." Por definição
+        <literal>0</literal>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        <literal>session.serialize_handler</literal> define o nome
+       do operador(handler) que é usado para serializar/deserializar
+       dados. Correntemente, um formato interno do PHP (nome
+       <literal>php</literal>) e WDDX é suportado (nome
+       <literal>wddx</literal>). WDDX está apenas disponível, se o PHP 
+	   está compilado com o suporte<link linkend="ref.wddx">WDDX.
+        Por definição <literal>php</literal>.
+        </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        <literal>session.gc_probability</literal> especifica a
+       probabilidade que a rotina gc (coleção de lixo-garbage collection) é 
+	   iniciada em cada pedido em porcentagem. Por definição <literal>1</literal>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        <literal>session.gc_maxlifetime</literal> especifica o número 
+	   de segundos depois que o dado será visto como 'lixo' e 
+       limpado.  
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        <literal>session.referer_check</literal> contém a substring que você
+       quer checar cada HTTP Referer para. Se o Referer foi enviado pelo 
+       cliente e a substring não foi encontrada, a id de sessão embutida 
+       será percebida como inválida. Por definição uma string vazia.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        <literal>session.entropy_file</literal> dá um caminho para um 
+	   recurso externo(file) que será usado como um entropy source 
+	   na criação da id de sessão. São exemplos
+       <literal>/dev/random</literal> ou
+       <literal>/dev/urandom</literal> que estão disponéveis em muitos
+       Sistemas Unix.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        <literal>session.entropy_length</literal> especifíca o número
+	    de bytes que serão lidos do arquivo especificado acima.
+		 Por definição <literal>0</literal> (desabilitada).
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        <literal>session.use_cookies</literal> especifica se o 
+       módulo usará cookies para gravar a id de sessão no lado 
+       do cliente. Por definição <literal>1</literal> (habilitada).
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        <literal>session.use_only_cookies</literal> especifica se
+       o módulo usará<emphasis role="strong">apenas</emphasis> cookies para
+       gravar a id de sessão no lado do cliente. Por definição
+       <literal>0</literal> (desabilitada). Habilitar esta
+       definição previni ataques envolvendo id de sessão passadas em URLs.
+       Esta definição foi adicionada no <literal>PHP</literal> 4.3.0.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        <literal>session.cookie_path</literal> especifica o caminho para 
+       definir em session_cookie. Por definição <literal>/</literal>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        <literal>session.cookie_domain</literal> especifica o domínio para 
+       para definir em session_cookie. Nenhuma definição. 
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        <literal>session.cache_limiter</literal> especifica o método 
+        de controle do cache para usar para páginas de sessão
+       (none/nocache/private/private_no_expire/public).  Por definição
+       <literal>nocache</literal>.
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       <literal>session.cache_expire</literal> especifica o tempo de vida
+        para páginas de sessão no cache em minutos, isto não tem efeito para
+        para limitador sem cache. Por definição <literal>180</literal>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        <literal>session.use_trans_sid</literal> se o suporte de sid transparente 
+	   está habilitado ou não, se habilitado por compilação com 
+       <link linkend="install.configure.enable-trans-sid">
+       <literal>--enable-trans-sid</literal>.
+       Por definição <literal>1</literal> (habilitado).
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       <literal>url_rewriter.tags</literal> especifica quais  tags html estão
+       reescritas para incluir id de sessão se o suporte transparente de sid está habilitado. 
+       Por definição <literal>a=href,area=href,frame=src,input=src,form=fakeentry</literal>
+       </simpara>
+      </listitem>
+     </itemizedlist>
+    </para>
+    <para>
+     A configuração de <link
     linkend="ini.track-vars"><literal>track_vars</literal> e
     <link
     linkend="ini.register-globals"><literal>register_globals</literal>
      influencia em como as variáveis da sessão conseguem 
 	 armazenar e devolver.
-   </para>
-
-   <note>
-    <para>
-     NO PHP 4.0.3, <link
-     linkend="ini.track-vars"><literal>track_vars</literal> está 
-     sempre ativada.
     </para>
-   </note>
-   <note>
-    <para>
-     No 4.1.0, <varname>$_SESSION</varname> está disponível como
-     cvariável global apenas como <varname>$_POST</varname>,
+
+    <note>
+     <para>
+      No PHP 4.0.3, <link
+      linkend="ini.track-vars"><literal>track_vars</literal> está
+      sempre ligada.
+     </para>
+    </note>
+   </section>
+
+   <section id="session.resources">
+    &reftitle.resources;
+    &no.resource;
+   </section>
+
+   &reference.session.constants;
+
+   <section id="session.examples">
+    &reftitle.examples;
+    <note>
+     <para>
+      No PHP 4.1.0, <varname>$_SESSION</varname> está disponível como
+     variável global apenas como <varname>$_POST</varname>,
      <varname>$_GET</varname>, <varname>$_REQUEST</varname> e assim por diante.
      Não como <varname>$HTTP_SESSION_VARS</varname>,
      <varname>$_SESSION</varname> está sempre global. Então,
      <literal>global</literal> poderia não ser usada para
      <varname>$_SESSION</varname>.
-    </para>
-   </note>
+     </para>
+    </note>
 
-   <para>
-    Se <link
+    <para>
+     Se <link
     linkend="ini.track-vars"><literal>track_vars</literal> está
     habilitada e <link
     linkend="ini.register-globals"><literal>register_globals</literal>
@@ -77,8 +279,8 @@
       Registrando uma variável com <link
       linkend="ini.track-vars"><literal>track_vars</literal>
       habilitada
-     </title>
-     <programlisting role="php">
+      </title>
+      <programlisting role="php">
 <![CDATA[
 <?php
 session_start();
@@ -90,11 +292,11 @@ else {
 }
 ?>
 ]]>
-     </programlisting>
-    </example>
-   </para>
-   <para>
-    Uso de <varname>$_SESSION</varname> (ou
+      </programlisting>
+     </example>
+    </para>
+    <para>
+     Uso de <varname>$_SESSION</varname> (ou
     <varname>$HTTP_SESSION_VARS</varname> com PHP 4.0.6 ou inferior) é
     recomendado por segurança e code readablity. Com
     <varname>$_SESSION</varname> ou
@@ -104,8 +306,8 @@ else {
 	 <example>
      <title>
       Registrando uma variável com $_SESSION.
-     </title>
-     <programlisting role="php">
+      </title>
+      <programlisting role="php">
 <![CDATA[
 <?php
 session_start();
@@ -117,13 +319,13 @@ if (!isset($_SESSION['count'])) {
 }
 ?>
 ]]>
-     </programlisting>
-    </example>
-    <example>
-     <title>
-      Desregistrando uma variável com $_SESSION.
-     </title>
-     <programlisting role="php">
+      </programlisting>
+     </example>
+     <example>
+      <title>
+       Desregistrando uma variável com $_SESSION.
+      </title>
+      <programlisting role="php">
 <![CDATA[
 <?php
 session_start();
@@ -131,11 +333,11 @@ session_start();
 unset($_SESSION['count']);
 ?>
 ]]>
-     </programlisting>
-    </example>
-   </para>
-   <para>
-    Se a <link
+      </programlisting>
+     </example>
+    </para>
+    <para>
+     Se a <link
     linkend="ini.register-globals"><literal>register_globals</literal>
     está habilitada, então todas as variáveis globais podem ser registradas como 
     variáveis de sessão e as variáveis de sessão serão restauradas para a variável 
@@ -153,9 +355,9 @@ unset($_SESSION['count']);
       não faça uso de <function>session_register</function>,
       <function>session_is_registered</function> e
       <function>session_unregister</function>.
-     </para>
-     <para>
-      Se você habilita <link
+      </para>
+      <para>
+       Se você habilita <link
        linkend="ini.register-globals"><literal>register_globals</literal>,
        <function>session_unregister</function> poderiam ser usadas desde que 
        as variáveis de sessão estejam registradas como variáveis globais quando 
@@ -169,8 +371,8 @@ unset($_SESSION['count']);
       Registrando uma variável com <link
       linkend="ini.register-globals"><literal>register_globals</literal>
       habilitada
-     </title>
-     <programlisting role="php">
+      </title>
+      <programlisting role="php">
 <![CDATA[
 <?php
 if (!session_is_registered('count')) {
@@ -182,47 +384,51 @@ else {
 }
 ?>
 ]]>
-     </programlisting>
-    </example>
-   </para>
-   <para>
-    Se ambas <link
+      </programlisting>
+     </example>
+    </para>
+    <para>
+     Se ambas <link
     linkend="ini.track-vars"><literal>track_vars</literal> e
     <link
     linkend="ini.register-globals"><literal>register_globals</literal>
     estão habilitadas, então as variáveis globais e as entradas
     <varname>$HTTP_SESSION_VARS</varname>/<varname>$_SESSION</varname>
     farão referência ao mesmo valor para as variáveis já registradas.
-   </para>
-   <para>
-    Se o usuário utiliza session_register() para registrar variável de sessão,
+    </para>
+    <para>
+     Se o usuário utiliza session_register() para registrar variável de sessão,
     <varname>$HTTP_SESSION_VARS</varname>/<varname>$_SESSION</varname>
     não terão esta variável numa matriz até que ela seja lida de um
     armazém de sessão. (i.e. até o próximo pedido)
-   </para>
-   <para>
-    Há dois métodos para propagar uma id de sessão:
-    <itemizedlist>
-     <listitem>
-      <simpara>
-       Cookies
-      </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       Parâmetro URL 
-      </simpara>
-     </listitem>
-    </itemizedlist>
-   </para>
-   <para>
-    Módulo de sessão suporta ambos os métodos. Cookies são mais eficientes, mas se
+    </para>
+   </section>
+    
+   <section id="session.idpassing">
+    <title>Passando a ID de sessão</title>
+    <para>
+     Há dois métodos para propagar uma id de sessão:
+     <itemizedlist>
+      <listitem>
+       <simpara>
+        Cookies
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Parâmetro URL 
+       </simpara>
+      </listitem>
+     </itemizedlist>
+    </para>
+    <para>
+      Módulo de sessão suporta ambos os métodos. Cookies são mais eficientes, mas se
     eles não estiverem autorizados (clientes não são obrigados a aceita-los),
-	 nós não podemos conter deles. O segundo método inclui a id de sessão
+	nós não podemos conter deles. O segundo método inclui a id de sessão
     diretamente na URL.
-   </para>
-   <para>
-    PHP é capaz de fazer isto transpaentemente quando compilado com
+    </para>
+    <para>
+     PHP é capaz de fazer isto transparentemente quando compilado com
     <link linkend="install.configure.enable-trans-sid">
     <literal>--enable-trans-sid</literal>. Se você habilitar esta opção,
      URIs ligadas serão automaticamente mudadas para conter a id 
@@ -231,19 +437,19 @@ else {
     o cookie apropriado.  <literal>SID</literal> é do 
 	formulário <literal>session_name=session_id</literal> ou é uma string
     vazia.
-    <note>
-     <para>
-     A  diretriz <link linkend="ini.arg_separator.output">arg_separator.output
+     <note>
+      <para>
+      A diretriz <link linkend="ini.arg_separator.output">arg_separator.output
      &php.ini; permite personalizar o argumento separador.
-     </para>
-    </note> 
-   </para>
-   <para>
-    O seguinte exemplo demonstra como registrar uma variável, e
+      </para>
+     </note> 
+    </para>
+    <para>
+     O seguinte exemplo demonstra como registrar uma variável, e
     e como ligar corretamente a outra página usando SID.
-    <example>
-     <title>Contar o número de visitas de um simples usuário</title>
-     <programlisting role="php">
+     <example>
+      <title>Contar o número de visitas de um simples usuário</title>
+      <programlisting role="php">
 <![CDATA[
 <?php
 if (!session_is_registered('count')) {
@@ -255,21 +461,21 @@ else {
 }
 ?>
 
-Olá visitante, você visitou esta página <?php echo $count; ?> vezes.<p>;
+Hello visitor, you have seen this page <?php echo $count; ?> times.<p>;
 
 <?php
-# A <?php echo SID?> (<?=SID?> pode ser usada se tag curta esta habilitada) 
-# é necessário para preservar a id de sessão
-# no caso do usuário desabilitar cookies
+# the <?php echo SID?> (<?=SID?> can be used if short tag is enabled) 
+# is necessary to preserve the session id
+# in the case that the user has disabled cookies
 ?>
 
-Para continuar, <A HREF="nextpage.php?<?php echo SID?>">Clique aqui</A>
+To continue, <A HREF="nextpage.php?<?php echo SID?>">click here</A>
 ]]>
-     </programlisting>
-    </example>
-   </para>
-   <para>
-    A <literal>&lt;?=SID?&gt;</literal> não é necessário, se
+      </programlisting>
+     </example>
+    </para>
+    <para>
+     A <literal>&lt;?=SID?&gt;</literal> não é necessário, se
     <link linkend="install.configure.enable-trans-sid">
     <literal>--enable-trans-sid</literal> foi usada para compilar o PHP.
    </para>
@@ -277,185 +483,19 @@ Para continuar, <A HREF="nextpage.php?<?php echo SID?>">Clique aqui</A>
     <para>
      URLs não ligadas estão assumidas para apontar para sites externos e
      portanto não anexam a SID, pois ela poderia escapar para outro servidor.
-    </para>
-   </note>
-   <para>
-    Para implementar o armazenamento num banco de dados, ou qualque outra forma 
+     </para>
+    </note>
+   </section>
+   
+   <section id="session.customhandler">
+    <title>Session handlers customizáveis</title>
+    <para>
+     Para implementar o armazenamento num banco de dados, ou qualque outra forma 
 	de aramzenamento, você vai precisar usar <function>session_set_save_handler</function>* para
     define as funções de armazenamento que são usadas (* to create a set of 
 	user-level storage functions).
-   </para>
-   <para>
-    O sistema de gerenciamento de sessões suporta um número opções de configurações
-    que você pode estabelecer no arquivo &php.ini;. Nós daremos
-    daremos uma breve visão geral.
-    <itemizedlist>
-     <listitem>
-      <simpara>
-       <literal>session.save_handler</literal> define o nome do operador(funções-handler)
-       que é usado para guardar e resgatar dados
-       associados com a sessão. Por definição  
-       <literal>files</literal>.
-      </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>session.save_path</literal> define o argumento que 
-       que é passado para o save handler. Se você escolher o default files
-       handler, este é o caminho onde os arquivos serão criados.
-       Por definição para <literal>/tmp</literal>. Se a profundidade do caminho de
-       <literal>session.save_path</literal> é maior do que
-       2, coleção de lixo não será executada(garbage collection - gc).
-      </simpara>
-      <warning>
-       <para>
-        Se você deixar isto definido para um diretório muito visível, tal como
-        <filename>/tmp</filename> (o padrão), outros usuários do servidor
-        poderão ser capazes de assumir o controle da sessão obtendo a lista de arquivos
-        naquele diretório.
-       </para>
-      </warning>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>session.name</literal> especifica o nome da sessão
-       que é usada como nome de cookie. Ela poderia apenas conter
-       caracteres alfanuméricos. Por definição
-       <literal>PHPSESSID</literal>.
-      </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>session.auto_start</literal> especifica se o módulo
-       da sessão inicia a sessão automaticamente num pedido na inicialização.
-	    Por definição <literal>0</literal> (desabilitado).
-      </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>session.cookie_lifetime</literal> especifica o tempo de vida
-       de um cookie em segundos que é enviado para o navegador. O valor 0
-       significa "até que o navegador seja fechado." Por definição
-       <literal>0</literal>.
-      </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>session.serialize_handler</literal> define o nome
-       do operador(handler) que é usado para serializar/deserializar
-       dados. Correntemente, um formato interno do PHP (nome
-       <literal>php</literal>) e WDDX é suportado (nome
-       <literal>wddx</literal>). WDDX está apenas disponível, se o PHP 
-	   está compilado com o suporte<link linkend="ref.wddx">WDDX.
-        Por definição <literal>php</literal>.
-       </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>session.gc_probability</literal> especifica a
-       probabilidade que a rotina gc (coleção de lixo-garbage collection) é 
-	   iniciada em cada pedido em porcentagem. Por definição <literal>1</literal>.
-      </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>session.gc_maxlifetime</literal> especifica o número s
-	   e segundos depois que o dado será visto como 'lixo' e 
-       limpado.  
-      </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>session.referer_check</literal> contem a substring que você
-       quer checar cada HTTP Referer para. Se o Referer foi envidado pelo 
-       cliente e a substring não foi encontrada, a id de sessão embutida 
-       será percebida como inválida. Por definição uma string vazia.
-      </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>session.entropy_file</literal> dá um caminho para um 
-	   recurso externo(file) que será usado como um entropy source 
-	   na criação da id de sessão. São exemplos
-       <literal>/dev/random</literal> ou
-       <literal>/dev/urandom</literal> que estão disponéveis em muitos
-       Sistemas Unix.
-      </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>session.entropy_length</literal> especifíca o número
-	    de bytes que serão lidos do arquivo especificado acima.
-		 Por definição <literal>0</literal> (desabilitada).
-      </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>session.use_cookies</literal> especifica se o 
-       módulo usará cookies para gravar a id de sessão no lado 
-       do cliente. Por definição <literal>1</literal> (habilitada).
-      </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>session.use_only_cookies</literal> especifica se
-       o módulo usará<emphasis role="strong">apenas</emphasis> cookies para
-       gravar a id de sessão no lado do cliente. Por definição
-       <literal>0</literal> (desabilitada). Habilitar esta
-       definição previni ataques envolvendo id de sessão passadas em URLs.
-       Esta definição foi adicionada no <literal>PHP</literal> 4.3.0.
-      </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>session.cookie_path</literal> especifica o caminho para 
-       definir em session_cookie. Por definição <literal>/</literal>.
-      </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>session.cookie_domain</literal> especifica o domínio para 
-       para definir em session_cookie. Nenhuma definição. 
-      </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>session.cache_limiter</literal> especifica o método 
-        de controle do cache para usar para páginas de sessão
-       (none/nocache/private/private_no_expire/public).  Por definição
-       <literal>nocache</literal>.
-      </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>session.cache_expire</literal> especifica o tempo de vida
-        para páginas de sessão no cache em minutos, isto não tem efeito para
-        para limitador sem cache. Por definição <literal>180</literal>.
-      </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>session.use_trans_sid</literal> se o suporte de sid transparente 
-	   está habilitado ou não, se habilitado por compilação com 
-       <link linkend="install.configure.enable-trans-sid">
-       <literal>--enable-trans-sid</literal>.
-       Por definição <literal>1</literal> (habilitado).
-      </simpara>
-     </listitem>
-     <listitem>
-      <simpara>
-       <literal>url_rewriter.tags</literal> especifica quais  tags html estão
-       reescritas para incluir id de sessão se o suporte transparente de sid está habilitado. 
-       Por definição <literal>a=href,area=href,frame=src,input=src,form=fakeentry</literal>
-      </simpara>
-     </listitem>
-    </itemizedlist>
-    <note>
-     <para>
-      Manejo de sessões foi adicionado no PHP 4.0.
-     </para>
-    </note>
-   </para>
+    </para>
+   </section>
   </partintro>
 
 &reference.session.functions;
