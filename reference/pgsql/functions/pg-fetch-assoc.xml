@@ -1,22 +1,37 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!-- EN-Revision: 1.1 Maintainer: lucasr Status: ready -->
 <!-- splitted from ./en/functions/pgsql.xml, last change in rev 1.2 -->
-  <refentry id="function.pg-fetch-all">
+  <refentry id="function.pg-fetch-assoc">
    <refnamediv>
-    <refname>pg_fetch_all</refname>
-    <refpurpose>Retorna todas as linhas (registros) como um array</refpurpose>
+    <refname>pg_fetch_assoc</refname>
+    <refpurpose>Retorna uma linha (registro) como um array</refpurpose>
    </refnamediv>
    <refsect1>
     <title>Descrição</title>
      <methodsynopsis>
-      <type>array</type><methodname>pg_fetch_all</methodname>
+      <type>array</type><methodname>pg_fetch_assoc</methodname>
       <methodparam><type>resource</type><parameter>result</parameter></methodparam>
       <methodparam choice="opt"><type>int</type><parameter>row</parameter></methodparam>
      </methodsynopsis>
     <para>
-     <function>pg_fetch_all</function> retorna uma array que contém
-     todas as linhas (registros) do recurso (resourse) de resultado. Retorna
-     &false;, se não existem mais registros.
+     <function>pg_fetch_assoc</function> retorna um array associativo que
+     corresponde à linha (registro) recuperado. Retorna
+     &false;, se não houver mais registros.
+    </para>
+    <para>
+     <function>pg_fetch_assoc</function> é uma versão extendida de 
+     <function>pg_fetch_row</function>. Além de guardar em índices numéricos, 
+     no array resultante, também guarda dados em arrays com chaves
+     associativas (nome do campo) por padrão.
+    </para>
+    <para>
+     <parameter>row</parameter> é o número da linha (registro) a ser
+     recuperado. A primeira linha é 0.
+    </para>
+    <para>
+     <function>pg_fetch_assoc</function> NÃO é significativamente mais lenta
+     que <function>pg_fetch_row</function>, e ainda fornece uma
+     significativa facilidade de uso.
     </para>
     <para>
      Veja também <function>pg_fetch_row</function>,
@@ -30,22 +45,20 @@
       <programlisting role="php">
 <![CDATA[
 <?php 
-$conn = pg_pconnect ("dbname=escritor");
+$conn = pg_pconnect ("dbname=revista");
 if (!$conn) {
-    echo "Ocorreu um erro!\n";
+    echo "Ocorreu um erro.\n";
     exit;
 }
 
 $result = pg_query ($conn, "SELECT * FROM authors");
 if (!$result) {
-    echo "Ocorreu um erro!\n";
+    echo "Ocorreu um erro.\n";
     exit;
 }
 
-$arr = pg_fetch_all ($result, 0, PGSQL_NUM);
-
-var_dump($arr);
-
+$arr = pg_fetch_assoc ($result, 1, PGSQL_ASSOC);
+echo $arr["author"] . " <- array\n";
 ?>
 ]]>
       </programlisting>
