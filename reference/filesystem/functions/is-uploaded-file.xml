@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.2 Maintainer: rarruda Status: ready -->
+<!-- EN-Revision: 1.2 Maintainer: ae Status: ready --><!-- CREDITS: rarruda -->
 <!-- splitted from ./pt_BR/functions/filesystem.xml, last change in rev 1.5 -->
-<!-- last change to 'is-uploaded-file' in en/ tree in rev 1.39 -->
   <refentry id="function.is-uploaded-file">
    <refnamediv>
     <refname>is_uploaded_file</refname>
@@ -9,35 +8,63 @@
    </refnamediv>
    <refsect1>
     <title>Descrição</title>
-     <methodsynopsis>
-      <type>bool</type><methodname>is_uploaded_file</methodname>
-      <methodparam><type>string</type><parameter>nomedoarquivo</parameter></methodparam>
-     </methodsynopsis>
-
+    <methodsynopsis>
+     <type>bool</type><methodname>is_uploaded_file</methodname>
+     <methodparam><type>string</type><parameter>filename</parameter></methodparam>
+    </methodsynopsis>
     <para>
-     Esta função é somente disponível em versões do PHP3 depois de
-     3.0.16, e em versões do PHP 4 depois de 4.0.2.
-    </para>
-
-    <para>
-     Retorna &true; se o arquivo com o nome <varname>nomedoarquivo</varname>
+     Retorna &true; se o arquivo com o nome <varname>filename</varname>
      foi uploaded via HTTP POST. Isto é útil para ter certeza que um
      usuário malicioso, não está tentando confundir o script em trabalhar
-     em arquivos que não deve estar trabalhando--por exemplo,
+     em arquivos que não deve estar trabalhando --- por exemplo,
      <filename>/etc/passwd</filename>.
     </para>
-
     <para>
      Este tipo de confirmação é importante principalmente se existe
-     alguma chance que qualquer coisa feita com os arquivos uploadeados
+     alguma chance que qualquer coisa feita com os arquivos carregados
      poderiam revelar o seu conteúdo para o usuário, ou mesmo
      para outros usuários no mesmo sistema.
     </para>
-
     <para>
-     Veja também <function>move_uploaded_file</function>, e a seção
-     <link linkend="features.file-upload">Handling file uploads</link>
-     para um simples exemplo de utilização desta função.
+     <function>is_uploaded_file</function> está disponível somente em
+     versões do PHP 3 depois da 3.0.16 e em versões do PHP 4 posteriores a
+     4.0.2. Se você ainda está utilizando uma versão anterior, você pode
+     utilizar o seguinte código para se proteger:
+     <note>
+      <para>
+       O exemplo seguinte <emphasis>não</emphasis> funcionará em
+       versões do PHP posteriores a 4.0.2. Isto depende de uma funcionalidade
+       interna do PHP que mudou depois dessa versão.
+      </para>
+     </note>
+     <programlisting role="php">
+<![CDATA[
+<?php
+/* Teste de arquivo carregado pelo usuário */
+function is_uploaded_file($filename) {
+    if (!$tmp_file = get_cfg_var('upload_tmp_dir')) {
+        $tmp_file = dirname(tempnam('', ''));
+    }
+    $tmp_file .= '/' . basename($filename);
+    /* Pode haver uma barra no final do php.ini... */
+    return (ereg_replace('/+', '/', $tmp_file) == $filename);
+}
+
+/* Utilize isto se por acaso você não tiver
+ * move_uploaded_file() em versões antigas: */
+if (is_uploaded_file($HTTP_POST_FILES['userfile'])) {
+    copy($HTTP_POST_FILES['userfile'], "/place/to/put/uploaded/file");
+} else {
+    echo "Possível ataque de carregamento de arquivo: filename '$HTTP_POST_FILES[userfile]'.";
+}
+?>
+]]>
+     </programlisting>
+    </para>
+    <para>
+     Veja também <function>move_uploaded_file</function> e a seção
+     <link linkend="features.file-upload">Manipulando upload de arquivos</link>
+     para um exemplo de utilização desta função.
     </para>
    </refsect1>
   </refentry>
