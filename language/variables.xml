@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.49 Maintainer: ae Status: ready -->
+<!-- EN-Revision: 1.52 Maintainer: ae Status: ready -->
  <chapter id="language.variables">
   <title>Variáveis</title>
 
@@ -30,6 +30,7 @@
     <informalexample>
      <programlisting role="php">
 <![CDATA[
+<?php
 $var = "Bob";
 $Var = "Joe";
 echo "$var, $Var";      // exibe "Bob, Joe"
@@ -37,6 +38,7 @@ echo "$var, $Var";      // exibe "Bob, Joe"
 $4site = 'not yet';     // inválido; começa com um número
 $_4site = 'not yet';    // válido; começa com um sublinhado
 $täyte = 'mansikka';    // válido; 'ä' é um caracter ASCII 228.
+?>
 ]]>
      </programlisting>
     </informalexample>
@@ -49,18 +51,20 @@ $täyte = 'mansikka';    // válido; 'ä' é um caracter ASCII 228.
     Isto significa também que, após atribuir o valor de uma variável a
     outra, a alteração de uma destas variáveis
     não afetará a outra. Para maiores informações sobre este tipo de
-    atribuição, veja <link
+    atribuição, veja o capítulo em <link
     linkend="language.expressions">Expressões</link>.
    </para>
    <para>
     O PHP 4 oferece um outro meio de atribuir valores a variáveis: a
-    <emphasis>atribuição por referência</emphasis>. Isto significa que
-    a nova variável simplesmente referencia (em outras palavras, "torna-se
-    um apelido para" ou "aponta para") a variável original.  Alterações na
-    nova variável afetam a original e vice versa.  Isto significa também que
-    nenhuma cópia é realizada, de modo que a atribuição ocorre mais rapidamente.
-    Entretanto, qualquer aumento de velocidade só será realmente notado
-    em *loops* complexos ou em atribuições de grandes matrizes (*arrays*) ou objetos.
+    <link linkend="language.references">atribuição por referência</link>.
+    Isto significa que a nova variável simplesmente referencia (em outras palavras,
+    "torna-se um apelido para" ou "aponta para") a variável original.
+    Alterações na nova variável afetam a original e vice versa.
+    Isto significa também que nenhuma cópia é realizada, de modo que a atribuição
+    ocorre mais rapidamente. Entretanto, qualquer aumento de velocidade só será realmente notado
+    em *loops* complexos ou em atribuições de grandes
+    <link linkend="language.types.array">arrays</link> ou
+    <link linkend="language.types.object">objetos</link>.
    </para>
    <para>
     Para atribuir por referência, simplesmente adicione um e-comercial (&amp;)
@@ -116,35 +120,43 @@ $bar = &test();    // Inválido.
     que ele execute. Muitas destas variáveis, entretanto, não podem ser completamente
     documentadas uma vez dependem de diversos fatores, como o servidor no qual scripts são executados, a
     versão e configuração deste servidor e outros. Algumas destas
-    variáveis não estarão disponíveis quando o PHP for executado na linha de
-    comando. Para uma lista destas variáveis, veja a seção
+    variáveis não estarão disponíveis quando o PHP for executado na
+    <link linkend="features.commandline">linha de comando</link>.
+    Para uma lista destas variáveis, veja a seção
     <link linkend="reserved.variables">Variáveis reservadas</link>.
    </simpara>
 
    <warning>
     <simpara>
-     No PHP 4.2.0 e posteriores, a variedade de variáveis predefinidas
-     disponíveis no escopo global foi modificada. Parâmetros
-     individuais e variáveis do servidor <emphasis>por default não</emphasis>
-     são disponíveis diretamente no escopo global: elas são
-     colocadas dentro dos <link
-     linkend="language.variables.superglobals">arrays
-     superglobais</link>.
+     No PHP 4.2.0 e posteriores, o valor default da diretiva <link
+     linkend="ini.register-globals">register_globals</link> é
+     <emphasis>off</emphasis>. Esta é a maior modificação no PHP. Tendo
+     register_globals <emphasis>off</emphasis> afeta o conjunto de variáveis
+     predefinidas disponíveis no escopo global. POr exemplo, para ler
+     <varname>DOCUMENT_ROOT</varname> você usará
+     <varname>$_SERVER['DOCUMENT_ROOT']</varname> em vez de
+     <varname>$DOCUMENT_ROOT</varname>, ou <varname>$_GET['id']</varname> da
+     URL <literal>http://www.example.com/test.php?id=3</literal> em vez
+     de <varname>$id</varname>, or <varname>$_ENV['HOME']</varname> em vez de
+     <varname>$HOME</varname>.
     </simpara>
     <simpara>
-     Você também pode forçar o antigo comportamento configurando <link
-     linkend="ini.register-globals">register_globals</link> para 'On' em
-     seu arquivo &php.ini;.
+     Para informações relacionadas desta modificação, veja detalhes da diretiva
+     <link linkend="ini.register-globals">register_globals</link>, no capítulo de
+     segurança em <link linkend="security.registerglobals">Usando register_globals
+     </link>, assim como o detalhamento de lançamento das versões do PHP
+     <ulink url="&url.php.release4.1.0;">4.1.0</ulink> e
+     <ulink url="&url.php.release4.2.0;">4.2.0</ulink>.
     </simpara>
     <simpara>
-     Para maiores informações desta modificação, veja 
-     o <ulink url="&url.php.release4.1.0;">PHP 4.1.0 Release
-     Announcement</ulink>.
+     Utilizar as Variáveis Predefinidas do PHP, como os
+     <link linkend="language.variables.superglobals">arrays superglobais</link>,
+     é muito mais preferível.
     </simpara>
    </warning>
 
    <simpara>
-    Desde a versão 4.1.0, o PHP fornece um conjunto de arrays predefinidos
+    Desde a versão 4.1.0, o PHP fornece um conjunto adicional de arrays predefinidos
     contendo as variáveis do servidor web (se aplicável), as
     variáveis ambiente e as entradas do usuário. Esses novos arrays são especiais
     pelo motivo que são automaticamente globais (significa que são automaticamente
@@ -154,12 +166,14 @@ $bar = &test();    // Inválido.
     Entretanto, para uma explicação de seu conteúdo e detalhes sobre
     as variáveis predefinidas do PHP e sua natureza, veja a seção
     <link linkend="reserved.variables">Variáveis Predefinidas</link>.
+    Veja também que todas as outras variáveis predefinidas antigas
+    (<varname>$HTTP_*_VARS</varname>) ainda existem.
    </simpara>
 
    <para>
     Se todos os indicadores não estiverem configurados no <link
     linkend="ini.variables-order">variables_order</link>, seus
-    arrays superglobais respectivos estarão vazios.
+    arrays superglobais predefinidos respectivos estarão vazios.
    </para>
 
    <variablelist id="language.variables.superglobals">
@@ -171,6 +185,7 @@ $bar = &test();    // Inválido.
        Contém um referência para todas as variáveis que são atualmente
        disponíveis dentro do escopo global do script. As chaves
        desse array são os nomes das variáveis globais.
+       <varname>$GLOBALS</varname> existe desde o PHP 3.
       </simpara>
      </listitem>
     </varlistentry>
@@ -243,16 +258,21 @@ $bar = &test();    // Inválido.
      <listitem>
       <simpara>
        Variáveis postadas para o script por todas os mecanismos de input,
-       e que não podem ter seu conteúdo garantido de qualquer forma. Note: quando executando
-       da linha de comando, elas <emphasis>não</emphasis> incluem
-       as entidades <varname>argv</varname> e <varname>argc</varname>;
-       elas estão presentes no array <varname>$_SERVER</varname>.
-       A presença e a ordem de inclusão das variáveis nesse array
-       é definida de acordo com a diretiva de configuração <link
+       e que não podem ter seu conteúdo garantido de qualquer forma. A presença e a ordem
+       de inclusão das variáveis nesse array é definida de acordo com a diretiva de configuração <link
        linkend="ini.variables-order">variables_order</link>.
        Este array não tem um equivalente nas
-       versões anteriores do PHP 4.1.0.
+       versões anteriores do PHP 4.1.0. Veja também
+       <function>import_request_variables</function>.
       </simpara>
+      <note>
+       <simpara>
+        Quando executando na <link linkend="features.commandline">linha de comando
+        </link>, isto <emphasis>não inclui</emphasis> as entradas
+        <varname>argv</varname> e <varname>argc</varname>; elas estão
+        presentes no array <varname>$_SERVER</varname>.
+       </simpara>
+      </note>
      </listitem>
     </varlistentry>
     <varlistentry>
@@ -285,8 +305,10 @@ $bar = &test();    // Inválido.
    <informalexample>
     <programlisting role="php">
 <![CDATA[
+<?php
 $a = 1;
 include "b.inc";
+?>
 ]]>
     </programlisting>
    </informalexample>
@@ -301,6 +323,7 @@ include "b.inc";
    <informalexample>
     <programlisting role="php">
 <![CDATA[
+<?php
 $a = 1; /* escopo global */
 
 function Teste()
@@ -309,6 +332,7 @@ function Teste()
 }
 
 Test();
+?>
 ]]>
     </programlisting>
    </informalexample>
@@ -329,6 +353,7 @@ Test();
    <informalexample>
     <programlisting role="php">
 <![CDATA[
+<?php
 $a = 1;
 $b = 2;
 
@@ -341,6 +366,7 @@ function Soma()
 
 Soma();
 echo $b;
+?>
 ]]>
     </programlisting>
    </informalexample>
@@ -362,6 +388,7 @@ echo $b;
    <informalexample>
     <programlisting role="php">
 <![CDATA[
+<?php
 $a = 1;
 $b = 2;
 
@@ -372,15 +399,44 @@ function Soma()
 
 Soma();
 echo $b;
+?>
 ]]>
     </programlisting>
    </informalexample>
 
    <simpara>
-    <varname>$GLOBALS</varname> é um array associativo em que
-    o nome das variáveis globais são suas chaves e o conteúdo dessas
-    variáveis são o valor do elemento do array.
+    O array <varname>$GLOBALS</varname> é um array associativo onde
+    o nome da variável global é a chave do array e o seu conteúdo da
+    variável como o valor do elemento do array.
+    Veja que <varname>$GLOBALS</varname> existe em qualquer escopo, isto
+    porque $GLOBALS é uma <link
+    linkend="language.variables.superglobals">superglobal</link>.
+    Segue um exemplo demonstrando o poder das superglobais:
    </simpara>
+   <para>
+
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+function test_global()
+{
+    // A maioria das variaveis predefinidas nao sao 'super' e requerem
+    // 'global' para serem disponiveis para funcoes em qualquer escopo.
+    global $HTTP_POST_VARS;
+
+    print $HTTP_POST_VARS['name'];
+
+    // Superglobais são disponiveis em qualquer escopo e
+    // nao precisam de 'global'. Superglobais existem
+    // desde o PHP 4.1.0
+    print $_POST['name'];
+}
+?>
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
 
    <simpara>
     Outro recurso importante do escopo de variáveis é a
@@ -393,12 +449,14 @@ echo $b;
    <informalexample>
     <programlisting role="php">
 <![CDATA[
+<?php
 function Teste ()
 {
     $a = 0;
     echo $a;
     $a++;
 }
+?>
 ]]>
     </programlisting>
    </informalexample>
@@ -416,12 +474,14 @@ function Teste ()
    <informalexample>
     <programlisting role="php">
 <![CDATA[
+<?php
 function Teste()
 {
     static $a = 0;
     echo $a;
     $a++;
 }
+?>
 ]]>
     </programlisting>
    </informalexample>
@@ -444,6 +504,7 @@ function Teste()
    <informalexample>
     <programlisting role="php">
 <![CDATA[
+<?php
 function Teste()
 {
     static $count = 0;
@@ -455,6 +516,7 @@ function Teste()
     }
     $count--;
 }
+?>
 ]]>
     </programlisting>
    </informalexample>
@@ -471,6 +533,7 @@ function Teste()
    <informalexample>
     <programlisting role="php">
 <![CDATA[
+<?php
 function test_global_ref() {
     global $obj;
     $obj = &new stdclass;
@@ -485,6 +548,7 @@ test_global_ref();
 var_dump($obj);
 test_global_noref();
 var_dump($obj);
+?>
 ]]>
     </programlisting>
    </informalexample>
@@ -507,6 +571,7 @@ object(stdClass)(0) {
    <informalexample>
     <programlisting role="php">
 <![CDATA[
+<?php
 function &get_instance_ref() {
     static $obj;
 
@@ -538,6 +603,7 @@ $still_obj1 = get_instance_ref();
 echo "\n";
 $obj2 = get_instance_noref();
 $still_obj2 = get_instance_noref();
+?>
 ]]>
     </programlisting>
    </informalexample>
@@ -578,7 +644,9 @@ Objeto estatico: object(stdClass)(1) {
    <informalexample>
     <programlisting role="php">
 <![CDATA[
+<?php
 $a = "hello";
+?>
 ]]>
     </programlisting>
    </informalexample>
@@ -593,7 +661,9 @@ $a = "hello";
    <informalexample>
     <programlisting role="php">
 <![CDATA[
+<?php
 $$a = "world";
+?>
 ]]>
     </programlisting>
    </informalexample>
@@ -608,7 +678,9 @@ $$a = "world";
    <informalexample>
     <programlisting role="php">
 <![CDATA[
+<?php
 echo "$a ${$a}";
+?>
 ]]>
     </programlisting>
    </informalexample>
@@ -620,7 +692,9 @@ echo "$a ${$a}";
    <informalexample>
     <programlisting role="php">
 <![CDATA[
+<?php
 echo "$a $hello";
+?>
 ]]>
     </programlisting>
    </informalexample>
@@ -641,10 +715,12 @@ echo "$a $hello";
    </simpara>
 
    <simpara>
-    Verifique que variáveis variáveis não podem ser utilizadas com as novas superglobais do PHP.
+    Verifique que variáveis variáveis não podem ser utilizadas com os novos
+    <link linkend="language.variables.superglobals">arrays superglobais</link>.
     Isto significa que você não pode fazer coisas como <varname>${$_GET}</varname>. Se você está
     procurando uma maneira de manipular as superglobais como as antigas
-    HTTP_*_VARS, você deve tentar <link linkend="language.references">referenciá-las</link>.
+    <varname>HTTP_*_VARS</varname>, você deve tentar
+    <link linkend="language.references">referenciá-las</link>.
    </simpara>
 
   </sect1>
@@ -657,30 +733,19 @@ echo "$a $hello";
 
     <simpara>
      Quando um formulário é submetido para um script PHP, qualquer variável do
-     formulário será automaticamente disponível para o script pelo
-     PHP. Se a diretiva de configuração <link linkend="ini.track-vars">track_vars</link>
-     estiver ativada, então essas variáveis estarão
-     localizadas nos arrays associativos
-     <varname>$_POST</varname>,
-     <varname>$_GET</varname> e/ou
-     <varname>$_FILES</varname>, de acordo com
-     a fonte da variável em questão.
+     formulário será automaticamente disponível para o script. Há
+     várias maneiras de acessar estas informações, por exemplo:
     </simpara>
 
     <para>
-     Para maiores informações sobre essas veiáveis, veja <link
-     linkend="language.variables.predefined">Variáveis
-     Predefinidas</link>.
-    </para>
-
-    <para>
      <example>
-      <title>Variáveis simples de formulários</title>
-      <programlisting role="php">
+      <title>Um formulário HTML simples</title>
+      <programlisting role="html">
 <![CDATA[
 <form action="foo.php" method="post">
-    Name: <input type="text" name="username"><br>
-    <input type="submit">
+    Nome:  <input type="text" name="username"><br>
+    Email: <input type="text" name="email"><br>
+    <input type="submit" name="submit" value="Me aperte!">
 </form>
 ]]>
       </programlisting>
@@ -688,12 +753,63 @@ echo "$a $hello";
     </para>
 
     <para>
-     Quando o formulário é submetido, o valor da caixa de texto
-     estará disponível em
-     <varname>$_POST['username']</varname>. Se a diretiva de configuração <link
+     Dependendo da configuração local e suas preferencias pessoais, essas
+     são as vias pela qual você pode acessar os dados de seus formulários:
+    </para>
+
+    <para>
+     <example>
+      <title>Acessando dados de um formulário HTML via POST</title>
+      <programlisting role="html">
+<![CDATA[
+<?php
+// Disponível desde o PHP 4.1.0
+
+   print $_POST['username'];
+   print $_REQUEST['username'];
+
+   import_request_variables('p', 'p_');
+   print $p_username;
+
+// Disponível deste o PHP 3.
+
+   print $HTTP_POST_VARS['username'];
+
+// Disponível se a diretiva register_globals = on.
+// Desde o PHP 4.2.0 o valor default de register_globals é off
+// Usar/manter esse método é preferível.
+
+   print $username;
+?>
+]]>
+      </programlisting>
+     </example>
+    </para>
+    <para>
+     Utilizar um formulário GET é similar, exceto que você use a variável
+     GET predefinida. O metodo GET obtem os dados da
+     QUERY_STRING (a informação depois do '?' numa URL). Então,
+     por exemplo, <literal>http://www.example.com/test.php?id=3</literal>
+     contém os dados GET que serão acessíveis com <varname>$_GET['id']</varname>.
+     Veja também <link linkend="reserved.variables.request">$_REQUEST</link> e
+     <function>import_request_variables</function>.
+    </para>
+
+    <note>
+     <para>
+      <link linkend="language.variables.superglobals">Arrays superglobais</link>,
+      como <varname>$_POST</varname> e <varname>$_GET</varname>, estão
+      disponíveis desde o PHP 4.1.0.
+     </para>
+    </note>
+
+    <para>
+     Como explicado, antes do PHP 4.2.0 o valor default de <link
      linkend="ini.register-globals">register_globals</link>
-     estiver ativada, então a estará disponível
-     a variável <varname>$username</varname> no escopo global.
+     era <emphasis>on</emphasis>. E no PHP ele era sempre on. A comunidade
+     PHP está encorajando todos a não alterarem essa diretiva, assumindo-a
+     sempre como <emphasis>off</emphasis> e codificando
+     em conformidade com isso.
     </para>
 
     <note>
@@ -711,25 +827,41 @@ echo "$a $hello";
      O PHP entende arrays no contexto de variáveis de formulários
      (veja o <link linkend="faq.html">FAQ</link> relacionado). Você pode,
      por exemplo, agrupar variáveis relacionadas juntas, ou usar
-     esse recurso para receber valores de um campo de seleção múltipla.
+     esse recurso para receber valores de um campo de seleção múltipla. Por
+     exemplo, podemos ter um formulario que manda informações para si mesmo
+     até um comando submetido para mostrar todos os dados.
     </simpara>
 
     <para>
      <example>
-      <title>Variáveis de formulários complexos</title>
+      <title>Variáveis de formulários mais complexos</title>
       <programlisting role="php">
 <![CDATA[
-<form action="array.php" method="post">
-    Name: <input type="text" name="personal[name]"><br>
+<?php
+if ($HTTP_POST_VARS['action'] == 'submitted') {
+    print '<pre>';
+
+    print_r($HTTP_POST_VARS);
+    print '<a href="'. $HTTP_SERVER_VARS['PHP_SELF'] .'">De novo</a>';
+
+    print '</pre>';
+} else {
+?>
+<form action="<?php echo $HTTP_SERVER_VARS['PHP_SELF']; ?>" method="post">
+    Nome:  <input type="text" name="personal[name]"><br>
     Email: <input type="text" name="personal[email]"><br>
-    Beer: <br>
+    Cerveja: <br>
     <select multiple name="beer[]">
-        <option value="warthog">Warthog
-        <option value="guinness">Guinness
-        <option value="stuttgarter">Stuttgarter Schwabenbräu
-        </select>
-    <input type="submit">
+        <option value="antartica">Antartica</option>
+        <option value="brahma">Brahma</option>
+        <option value="skol">Skol</option>
+    </select><br>
+    <input type="hidden" name="action" value="submitted">
+    <input type="submit" name="submit" value="Enviar dados!">
 </form>
+<?php
+}
+?>
 ]]>
       </programlisting>
      </example>
@@ -745,10 +877,11 @@ echo "$a $hello";
 
      <simpara>
       Quando submetendo um formulário, é possível de se utilizar imagens ao invés
-      do botão de submit padrão com uma tag do tipo:</simpara>
+      do botão de submit padrão com uma tag do tipo:
+     </simpara>
 
      <informalexample>
-      <programlisting role="php">
+      <programlisting role="html">
 <![CDATA[
 <input type="image" src="image.gif" name="sub">
 ]]>
@@ -779,23 +912,36 @@ echo "$a $hello";
      a função <function>setcookie</function>. Cookies são parte do
      header HTTP, então, a função <function>setcookie</function> precisa ser chamada antes
      de qualquer saída ser enviada ao browser. Esta é a mesma restrição
-     da função <function>header</function>. Quaisquer cookies
-     enviados para você do cliente será automaticamente transformada em
-     variáveis PHP assim como os dados postados via GET ou POST.</simpara>
+     da função <function>header</function>. Dados de cookies
+     são disponíveis nos arrays de dados de cookies apropriados,
+     como <varname>$_COOKIE</varname>, <varname>$HTTP_COOKIE_VARS</varname>
+     como também em <varname>$_REQUEST</varname>. Veja o manual de
+     <function>setcookie</function> para mais detalhes e
+     exemplos.
+    </simpara>
 
     <simpara>
-     Se você precisa armazenar múltiplos valores em um único cookies, basta
-     apenas acrescentar <emphasis>[]</emphasis> ao nome do cookie. Por
-     exemplo:
+     Se você deseja assimilar vários valores para uma única variável cookie, você
+     pode fazer dele um array:
     </simpara>
 
     <informalexample>
      <programlisting role="php">
 <![CDATA[
-setcookie("MeuCookie[]", "Testando", time()+3600);
+<?php
+  setcookie("MeuCookie[foo]", "Testando 1", time()+3600);
+  setcookie("MeuCookie[bar]", "Testando 2", time()+3600);
+?>
 ]]>
      </programlisting>
     </informalexample>
+
+    <simpara>
+     Isso irá criar dois cookies separados enquanto MeuCookie será
+     um único array em seu script. Se você quiser colocar em apenas um cookie
+     vários valores, considere utilizar <function>serialize</function> ou
+     <function>explode</function> nos valores primeiro.
+    </simpara>
 
     <simpara>
      Note que um cookie substituirá um anterior com o mesmo
@@ -805,43 +951,18 @@ setcookie("MeuCookie[]", "Testando", time()+3600);
     </simpara>
 
     <example>
-     <title>Exemplo SetCookie</title>
+     <title>Exemplo <function>setcookie</function></title>
      <programlisting role="php">
 <![CDATA[
-$Count++;
-setcookie("Count", $Count, time()+3600);
-setcookie("Cart[$Count]", $item, time()+3600);
+<?php
+$count++;
+setcookie("count", $count, time()+3600);
+setcookie("Cart[$count]", $item, time()+3600);
+?>
 ]]>
      </programlisting>
     </example>
 
-   </sect2>
-
-   <sect2 id="language.variables.external.environment">
-    <title>Variáveis ambiente</title>
-
-    <para>
-     O PHP automaticamente torna as variáveis de ambiente disponíveis como variáveis
-     PHP normais.
-
-     <informalexample>
-      <programlisting role="php">
-<![CDATA[
-echo $HOME;  /* Exibe a variável ambiente HOME, se existente. */
-]]>
-      </programlisting>
-     </informalexample>
-    </para>
-
-    <para>
-     Desde que as informações oriundas dos mecanismos GET, POST ou Cookie
-     são automaticamente criadas como variáveis PHP, as vezes é melhor
-     fazer a leitura direto do ambiente de execução para ter certeza que
-     a esta obtendo a versão correta. A
-     função <function>getenv</function> pode ser utilizada para isso. Você
-     também pode criar uma variável de ambiente com a
-     função <function>putenv</function>.
-    </para>
    </sect2>
 
    <sect2 id="language.variables.external.dot-in-names">
@@ -854,7 +975,9 @@ echo $HOME;  /* Exibe a variável ambiente HOME, se existente. */
      variáveis do PHP. Para ilustrar, veja o seguinte exemplo:
      <programlisting role="php">
 <![CDATA[
+<?php
 $varname.ext;  /* nome de variável inválido */
+?>
 ]]>
      </programlisting>
      Dessa forma, o interpretador entende isso como uma variável nomeada
@@ -879,11 +1002,12 @@ $varname.ext;  /* nome de variável inválido */
      Porque o PHP determina os tipos de variáveis e faz conversões
      (geralmente) quando necessárias, nem sempre é óbvio o tipo de uma variável
      tem em todos os momentos. O PHP incluí várias funções
-     que permitem determinar qual o tipo de uma variável. Elas são
+     que permitem determinar qual o tipo de uma variável, por exemplo:
      <function>gettype</function>, <function>is_array</function>,
      <function>is_float</function>, <function>is_int</function>,
      <function>is_object</function>, e
-     <function>is_string</function>.
+     <function>is_string</function>. Veja também o capítulo
+     <link linkend="features.types">Tipos</link>.
     </para>
    </sect2>
 
