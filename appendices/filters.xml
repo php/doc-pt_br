@@ -1,0 +1,444 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: 1.12 Maintainer: narigone Status: ready -->
+<appendix id="filters">
+ <title>Lista de Filtros Disponíveis</title>
+ <para>
+  A seguir está uma lista de alguns filtros built-in de stream para
+  o uso com <function>stream_filter_append</function>.
+  Sua versão de PHP pode ter mais filtros (ou menos) que os 
+  listados aqui.
+ </para>
+
+ <para>
+  Vale repara em uma leve assimetria entre 
+  <function>stream_filter_append</function>
+  e <function>stream_filter_prepend</function>
+  Toda stream no PHP contem um pequeno <emphasis>buffer de leitura</emphasis>
+  onde ele guarda blocos de dados recuperados do
+  sistema de arquivo ou outro recurso (resource) com o propósito de processar dados
+  da maneira mais eficiente. Assim que os dados são puxados
+  do recurso para o buffer interno da stream, ele é
+  imediatamente processado através de qualquer filtro anexo caso
+  a aplicação PHP está preparada ou não para receber os dados.
+  Se os dados estão esperando no buffer de leitura quando o filtro é 
+  <emphasis>appended</emphasis>, esses dados serão imediatamente
+  processados através daquele buffer, fazendo o fato de que eles estavam
+  esperando num buffer transparente. No entanto, se os dados estão
+  esperando no buffer de leitura quando um filtro é 
+  <emphasis>prepended</emphasis>, esses dados <emphasis>NÃO</emphasis> serão
+  processados pelo filtro. Ao invés disso, eles esperarão até
+  o próximo bloco de dados ser recuperado do recurso.
+ </para>
+
+ <para>
+  Para uma lista dos filtros instalados na sua versão do
+  PHP use <function>stream_get_filters</function>.
+ </para>
+
+ <section id="filters.string">
+  <title>Filtros de String</title>
+
+  <simpara>
+   Cada um dos filtros faz precisamente o que o seu nome implica e
+   corresponde ao comportamente da função de manuseio de string homônima.
+   Para mais informação em um dados filtro, veja a página do manual para
+   a função correspondente.
+  </simpara>
+
+  <simpara>
+   <literal>string.rot13</literal>
+   (since PHP 4.3.0)
+   Uso desse filtro é equivalente a processar todos os dados da stream com
+   a função <function>str_rot13</function>.
+  </simpara>
+  <example>
+   <title>string.rot13</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$fp = fopen('php://output', 'w');
+stream_filter_append($fp, 'string.rot13');
+fwrite($fp, "This is a test.\n");
+/* Outputs:  Guvf vf n grfg.   */
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <simpara>
+   <literal>string.toupper</literal>
+   (since PHP 5.0.0)
+   Uso desse filtro é equivalente a processar todos os dados da stream com
+   a função <function>strtoupper</function>.
+  </simpara>
+  <example>
+   <title>string.toupper</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$fp = fopen('php://output', 'w');
+stream_filter_append($fp, 'string.toupper');
+fwrite($fp, "This is a test.\n");
+/* Outputs:  THIS IS A TEST.   */
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <simpara>
+   <literal>string.tolower</literal>
+   (since PHP 5.0.0)
+   Uso desse filtro é equivalente a processar todos os dados da stream com
+   a função <function>strtolower</function>.
+  </simpara>
+  <example>
+   <title>string.tolower</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$fp = fopen('php://output', 'w');
+stream_filter_append($fp, 'string.tolower');
+fwrite($fp, "This is a test.\n");
+/* Outputs:  this is a test.   */
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <simpara>
+   <literal>string.strip_tags</literal>
+   (since PHP 5.0.0)
+   Uso desse filtro é equivalente a processar todos os dados da stream com
+   a função <function>strip_tags</function>.
+   Ela aceita parâmetros em uma das duas formas:
+   Ou como uma string contendo uma lista de tags similares ao
+   segundo parâmetro da função <function>strip_tags</function>,
+   ou como um array dos nomes das tags.
+  </simpara>
+  <example>
+   <title>string.strip_tags</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$fp = fopen('php://output', 'w');
+stream_filter_append($fp, 'string.strip_tags', STREAM_FILTER_WRITE, "<b><i><u>");
+fwrite($fp, "<b>bolded text</b> enlarged to a <h1>level 1 heading</h1>\n");
+fclose($fp);
+/* Outputs:  <b>bolded text</b> enlarged to a level 1 heading   */
+
+$fp = fopen('php://output', 'w');
+stream_filter_append($fp, 'string.strip_tags', STREAM_FILTER_WRITE, array('b','i','u'));
+fwrite($fp, "<b>bolded text</b> enlarged to a <h1>level 1 heading</h1>\n");
+fclose($fp);
+/* Outputs:  <b>bolded text</b> enlarged to a level 1 heading   */
+?>
+]]>
+   </programlisting>
+  </example>
+   
+ </section>
+
+ <section id="filters.convert">
+  <title>Fitros de Conversão</title>
+
+  <simpara>
+   Como os filtros de string, os filtros convert fazem ações
+   similar aos seus nomes. Os filtros de conversão foram adicionados com
+   PHP 5.0.0.
+   Para mais informações em um dado filtro, veja a página do manual para
+   a função correspondente.
+  </simpara>
+
+  <simpara>
+   <literal>convert.base64-encode</literal> e
+   <literal>convert.base64-decode</literal>
+   Uso desses filtros são equivalentes ao processamento de todos os dados de stream pelas
+   funções <function>base64_encode</function> e <function>base64_decode</function>
+   respectivamente.
+   <literal>convert.base64-encode</literal> suporta parâmetros no formato de
+   um array associativo. Se <parameter>line-length</parameter> for passado, a
+   saída do base64 será quebrado em pedaços de <parameter>line-length</parameter>
+   caracteres cada. Se <parameter>line-break-chars</parameter> for passado, cada 
+   pedaço será delimitado pelos caracteres passados. Esses parâmetros dão o
+   mesmo efeito que usar <function>base64_encode</function> com
+   <function>chunk_split</function>.
+  </simpara>
+  <example>
+   <title>
+    convert.base64-encode &amp;
+    convert.base64-decode
+   </title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$fp = fopen('php://output', 'w');
+stream_filter_append($fp, 'convert.base64-encode');
+fwrite($fp, "This is a test.\n");
+fclose($fp);
+/* Outputs:  VGhpcyBpcyBhIHRlc3QuCg==  */
+
+$param = array('line-length' => 8, 'line-break-chars' => "\r\n");
+$fp = fopen('php://output', 'w');
+stream_filter_append($fp, 'convert.base64-encode', STREAM_FILTER_WRITE, $param);
+fwrite($fp, "This is a test.\n");
+fclose($fp);
+/* Outputs:  VGhpcyBp
+          :  cyBhIHRl
+          :  c3QuCg==  */
+
+$fp = fopen('php://output', 'w');
+stream_filter_append($fp, 'convert.base64-decode');
+fwrite($fp, "VGhpcyBpcyBhIHRlc3QuCg==");
+fclose($fp);
+/* Outputs:  This is a test.  */
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <simpara>
+   <literal>convert.quoted-printable-encode</literal> and
+   <literal>convert.quoted-printable-decode</literal>
+   Uso da versão de decodificação desse filtro é equivalente ao processamente de todos
+   os dados da stream pelas funções <function>quoted_printable_decode</function>.
+   Não há nenhuma função equivalente a <literal>convert.quoted-printable-encode</literal>.
+   <literal>convert.quoted-printable-encode</literal> suporta parâmetros passados como
+   um array associativo. Além dos parâmetros suportados por 
+   an associative array.  In addition to the parameters supported by 
+   <literal>convert.base64-encode</literal>, <literal>convert.quoted-printable-encode</literal>
+   também suporta argumentos boolean <parameter>binários</parameter> e
+   <parameter>force-encode-first</parameter>.
+   <literal>convert.base64-decode</literal> só suporta o
+   parâmetro <parameter>line-break-chars</parameter> como uma indução de tipo
+   para cortar o conteúdo codificado.
+  </simpara>
+  <example>
+   <title>
+    convert.quoted-printable-encode &amp;
+    convert.quoted-printable-decode
+   </title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$fp = fopen('php://output', 'w');
+stream_filter_append($fp, 'convert.quoted-printable-encode');
+fwrite($fp, "This is a test.\n");
+/* Outputs:  =This is a test.=0A  */
+?>
+]]>
+   </programlisting>
+  </example>
+ </section>
+
+ <section id="filters.compression">
+  <title>Filtros de Compressão</title>
+
+  <simpara>
+   Enquanto os <xref linkend="wrappers.compression"/> permitem uma maneira de criar
+   arquivos compatívels com gzip and bz2 no seu sistema de arquivos local, eles não permitem 
+   meios para compressão generalizada sobre streams de rede, nem permitem uma 
+   maneira de começar com uma stream não-comprimida e transição para uma comprimida.
+   Para isso, um filtro comprimido pode ser aplicado a qualquer recuso de stream em qualquer momento.
+  </simpara>
+
+  <note>
+   <simpara>
+    Filtros de compressão <emphasis>não</emphasis> geram cabeçalhos e rodapés
+    usados por utilitários de linha de comando como o <literal>gzip</literal>. Eles apenas comprimem
+    e descomprimem as porções de conteúdo das streams de dados comprimidos.
+   </simpara>
+  </note>
+
+  <simpara>
+   <literal>zlib.deflate</literal> (compressão) e
+   <literal>zlib.inflate</literal> (descompressão) são implementações dos
+   métodos de compressão descritos no <ulink url="&url.rfc;1951">RFC 1951</ulink>.
+   O filtro <literal>deflate</literal> recebe até três parâmetros passados como
+   um array associativo.  
+
+   <parameter>level</parameter> descreve a força
+   de compressão a ser usada (1-9).  Números mais altos geralmente resultam em cargas menores com
+   o custo de tempo de processamento adicional. Dois níveis especiais de compressão também existem:
+   0 (para nenhuma compressão), e -1 (padrão interno da zlib -- atualmente 6).
+   
+   <parameter>window</parameter> é o logaritmo na base 2 do tamanho da janela de loopback de compressão.
+   Valores mais altos (acima de 15 -- 32768 bytes) resultam em melhor compressão com o custo de memória,
+   enquanto valores menores (abaixo de 9 -- 512 bytes) resultam de pior compressão uando menos memória.
+   O tamanho padrão de <parameter>window</parameter> atualmente é <constant>15</constant>.
+
+   <parameter>memory</parameter> é uma escala indicando quanta memória deve ser alocada para trabalhar.
+   Valores válidos vão de 1 (alocação mínima) até 9 (alocação máxima). Essa alocação de memória
+   afeta apenas a velocidade e não tem impacto sobre o tamanho da carga gerada.
+  </simpara>
+
+  <note>
+   <simpara>
+    O nível de compressão, por ser o parâmetro mais usado normalmente, pode ser passado
+    de maneira alternativa com um simples valor inteiro (ao invés de um elemento de um array).
+   </simpara>
+  </note>
+
+  <simpara>
+    Filtros de compressão zlib estão disponíveis com o PHP a partir da versão <literal>5.1.0</literal> se
+    o suporte à <xref linkend="ref.zlib"/> estiver ativado. Eles também estão disponíveis como uma backport na versão
+    <literal>5.0.x</literal> instalando o pacote <ulink url="&url.pecl.package;zlib_filter">zlib_filter</ulink>
+    da <ulink url="&url.pecl;">PECL</ulink>. Esses filtros <emphasis>não</emphasis> estão disponíveis para
+    o PHP 4.
+  </simpara>
+
+  <example>
+   <title>
+    <literal>zlib.deflate</literal> e
+    <literal>zlib.inflate</literal>
+   </title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$params = array('level' => 6, 'window' => 15, 'memory' => 9);
+
+$original_text = "This is a test.\nThis is only a test.\nThis is not an important string.\n";
+echo "The original text is " . strlen($original_text) . " characters long.\n";
+
+$fp = fopen('test.deflated', 'w');
+stream_filter_append($fp, 'zlib.deflate', STREAM_FILTER_WRITE, $params);
+fwrite($fp, $original_text);
+fclose($fp);
+
+echo "The compressed file is " . filesize('test.deflated') . " bytes long.\n";
+echo "The original text was:\n";
+/* Use readfile and zlib.inflate to decompress on the fly */
+readfile('php://filter/zlib.inflate/resource=test.deflated');
+
+/* Generates output:
+
+The original text is 70 characters long.
+The compressed file is 56 bytes long.
+The original text was:
+This is a test.
+This is only a test.
+This is not an important string.
+
+ */
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <example>
+   <title>
+    <literal>zlib.deflate</literal> simples
+   </title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$original_text = "This is a test.\nThis is only a test.\nThis is not an important string.\n";
+echo "The original text is " . strlen($original_text) . " characters long.\n";
+
+$fp = fopen('test.deflated', 'w');
+/* Here "6" indicates compression level 6 */
+stream_filter_append($fp, 'zlib.deflate', STREAM_FILTER_WRITE, 6);
+fwrite($fp, $original_text);
+fclose($fp);
+
+echo "The compressed file is " . filesize('test.deflated') . " bytes long.\n";
+
+/* Generates output:
+
+The original text is 70 characters long.
+The compressed file is 56 bytes long.
+
+ */
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <simpara>
+   <literal>bzip2.compress</literal> e
+   <literal>bzip2.decompress</literal>
+   funcionam da mesma maneira como os filtros da zlib descritos acima.
+
+   O filtro <literal>bzip2.compress</literal> aceitam até dois parâmetros passados como
+   elementos de um array associativo:
+
+   <parameter>blocks</parameter> é um valor inteiro
+   de 1 até 9 especificando o número de blocos de 100kbyte de memória para alocar para
+   o espaço de trabalho.
+
+   <parameter>work</parameter> também é um valor inteiro variando entre
+   0 e 250 indicando quanto esforço será gasto usando o método normal de compressão
+   antes de desistir e usar um mais lento, mas mais confiável. Alterar esse parâmetro
+   afeta apenas a velocidade de compressão. Nem o tamanho da saída comprimida nem o uso de memória
+   são alterados por essa configuração. Um fator de work de 0 diz à biblioteca bzip para usar
+   o padrão interno.
+
+   O filtro <literal>bzip2.decompress</literal> só aceita um parâmetro,
+   que pode ser passado ou como um valor boolean comum ou como o
+   elemento <parameter>small</parameter> de um array associativo.
+
+   
+   <parameter>small</parameter>, quando configurado para o valor &true;, diz a biblioteca bzip 
+   para fazer a descompressão usando o mínimo de memória com o custo de velocidade.
+  </simpara>
+
+  <simpara>
+    Filtros de compressão bzip2 estão disponívems no PHP a partir da versão <literal>5.1.0</literal> se
+    o suporte à <xref linkend="ref.bzip2"/> estiver ativado. Eles também estão disponíveis como um backport na versão
+    <literal>5.0.x</literal> instalando o pacote <ulink url="&url.pecl.package;bz2_filter">bz2_filter</ulink>
+    da <ulink url="&url.pecl;">PECL</ulink>. Esses filtros <emphasis>não</emphasis> estão 
+    disponíveis para o PHP 4.
+  </simpara>
+
+  <example>
+   <title>
+    <literal>bzip2.compress</literal> e
+    <literal>bzip2.decompress</literal>
+   </title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$param = array('blocks' => 9, 'work' => 0);
+
+echo "The original file is " . filesize('LICENSE') . " bytes long.\n";
+
+$fp = fopen('LICENSE.compressed', 'w');
+stream_filter_append($fp, 'bzip2.compress', STREAM_FILTER_WRITE, $param);
+fwrite($fp, file_get_contents('LICENSE'));
+fclose($fp);
+
+echo "The compressed file is " . filesize('LICENSE.compressed') . " bytes long.\n";
+
+/* Generates output:
+
+The original text is 3288 characters long.
+The compressed file is 1488 bytes long.
+
+ */
+?>
+]]>
+   </programlisting>
+  </example>
+ </section>
+
+</appendix>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"../../manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
