@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: 1.6 Maintainer: fernandoc Status: ready -->
+<refentry id="function.sqlite-open">
+ <refnamediv>
+  <refname>sqlite_open</refname>
+  <refpurpose>Abre um banco de dados SQLite. Irá criar o banco de dados se ele não existir</refpurpose>
+ </refnamediv>
+ <refsect1>
+  <title>Descrição</title>
+  <methodsynopsis>
+   <type>resource</type><methodname>sqlite_open</methodname>
+   <methodparam><type>string</type><parameter>filename</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>mode</parameter></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>&amp;errmessage</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Retorna um recurso se funcionar, &false; on error.
+  </para>
+  <para>
+   O parâmetro <parameter>filename</parameter> é o nome do banco de dados. 
+   Pode ser um caminho relativo ou absoluto para o arquivo
+   que o sqlite irá usar para guardar os seus dados. Se o arquivo não existir, o sqlite
+   tentará cria-lo. Você <emphasis>DEVE</emphasis> ter permissões de escrita
+   para o arquivo caso você queira inserir dados ou modificar o seu banco de dados.
+  </para>
+  <para>
+   O parâmetro <parameter>mode</parameter> especifica o modo que o arquivo será aberto.
+   A intenção é para ser usado para abrir o banco de dados em modo somente-leitura.
+   Atualmente, este parâmetro é ignorado pela biblioteca sqlite.
+   O valor padrão é o valor octal <literal>0666</literal> e este é o valor
+   recomendado se você precisa usar o parâmetro <parameter>errmessage</parameter>.
+  </para>
+  <para>
+   <parameter>errmessage</parameter> é passado por referencia para conter
+   uma mensagem de erro descritiva explicando porque o banco de dados não
+   pôde ser aberto se houver um erro.
+  </para>
+  <para>
+   <example>
+    <title>Exemplo <function>sqlite_open</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+if ($db = sqlite_open('mysqlitedb', 0666, $sqliteerror)) {
+  sqlite_query('CREATE TABLE foo (bar varchar(10))');
+  sqlite_query("INSERT INTO foo VALUES ('fnord')");
+  $result = sqlite_query('select bar from foo');
+  var_dump(sqlite_fetch_array($result));
+} else {
+  die ($sqliteerror);
+}
+?>]]>
+    </programlisting>
+   </example>
+  </para>
+  <tip>
+   <simpara>
+    Em plataformas Unix, SQLite é sensível a scripts que usam a chamada do sistema fork(). Se você
+    tem um script como esse, é recomendavel que você feche o banco de dados
+    antes de usar o fork() e abra-o novamente no outro processo.
+    Para maiores informações sobre isto, veja <ulink
+    url="&url.sqlite.interface.c;">The C language interface
+    to the SQLite library</ulink> na seção entitulada
+    <literal>Multi-Threading And SQLite</literal>.
+   </simpara>
+  </tip>
+  <tip>
+   <simpara>
+    Não é recomentado trabalhar com banco de dados SQLite sobre partições NFS.
+    Desde que NFS é notoriamente ruim quando se usa travas
+    você vai achar que não pode abrir o banco de dados, e se abrir,
+    o funcionamento das travas será indefinido.
+   </simpara>
+  </tip>
+  <note>
+   <simpara>
+    Apartir da versão 2.8.2 da biblioteca do SQLite, você pode especificar
+    <literal>:memory:</literal> como o parâmetro <parameter>filename</parameter> para
+    criar um banco de dados que vive somente na memória do computador.
+    Isto é útil principalmente para processar algo temporário, já que o banco de dados
+    na memória será destruidoas ao final do processo.
+    Também pode ser útil quando usado com o SQL <literal>ATTACH DATABASE</literal>
+    para abrir outros banco de dados e realizar uma query entre eles.
+   </simpara>
+  </note>
+  <note>
+   <simpara>
+    SQLite é &safemode; e a par do open_basedir.
+   </simpara>
+  </note>
+
+  <para>
+   Veja também <function>sqlite_popen</function>,
+   <function>sqlite_close</function> e
+   <function>sqlite_query</function>.
+  </para>
+ </refsect1>
+</refentry>
+<!-- Keep this comment at the end of the file
+ Local variables:
+ mode: sgml
+ sgml-omittag:t
+ sgml-shorttag:t
+ sgml-minimize-attributes:nil
+ sgml-always-quote-attributes:t
+ sgml-indent-step:1
+ sgml-indent-data:t
+ sgml-parent-document:nil
+ sgml-default-dtd-file:"../../manual.ced"
+ sgml-exposed-tags:nil
+ sgml-local-catalogs:nil
+ sgml-local-ecat-files:nil
+ End:
+ vim600: syn=xml fen fdm=syntax fdl=2 si
+ vim: et tw=78 syn=sgml
+ vi: ts=1 sw=1
+ -->
