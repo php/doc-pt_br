@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.4 Maintainer: lucasr Status: ready -->
+<!-- EN-Revision: 1.6 Maintainer: lucasr Status: ready -->
 <!-- splitted from ./en/functions/pgsql.xml, last change in rev 1.2 -->
   <refentry id="function.pg-fetch-assoc">
    <refnamediv>
     <refname>pg_fetch_assoc</refname>
-    <refpurpose>Retorna uma linha (registro) como um array</refpurpose>
+    <refpurpose>Retorna uma linha (registro) como uma matriz associativa</refpurpose>
    </refnamediv>
    <refsect1>
     <title>Descrição</title>
@@ -19,10 +19,11 @@
      &false;, se não houver mais registros.
     </para>
     <para>
-     <function>pg_fetch_assoc</function> é uma versão extendida de 
-     <function>pg_fetch_row</function>. Além de guardar em índices numéricos, 
-     no array resultante, também guarda dados em arrays com chaves
-     associativas (nome do campo) por padrão.
+     <function>pg_fetch_assoc</function> é equivalente a usar
+     <function>pg_fetch_row</function> com PGSQL_ASSOC para o terceiro parâmetro.
+     Ela guarda dados em matrizes com chaves
+     associativas (nome do campo). Se você precisar utilizar
+     os índices numéricos use <function>pg_fetch_row</function>.
     </para>
     <para>
      <parameter>row</parameter> é o número da linha (registro) a ser
@@ -39,20 +40,24 @@
       <programlisting role="php">
 <![CDATA[
 <?php
-$conn = pg_pconnect ("dbname=revista");
+$conn = pg_pconnect("dbname=revista");
 if (!$conn) {
     echo "Ocorreu um erro.\n";
     exit;
 }
 
-$result = pg_query ($conn, "SELECT * FROM authors");
+$result = pg_query($conn, "SELECT * FROM authors");
 if (!$result) {
     echo "Ocorreu um erro.\n";
     exit;
 }
 
-$arr = pg_fetch_assoc ($result, 1, PGSQL_ASSOC);
-echo $arr["author"] . " <- array\n";
+while ($row = pg_fetch_assoc($result)) {
+      echo $row['id'];
+      echo $row['author'];
+      echo $row['email'];
+}
+
 ?>
 ]]>
       </programlisting>

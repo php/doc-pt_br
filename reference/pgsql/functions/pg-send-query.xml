@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.3 Maintainer: lucasr Status: ready -->
+<!-- EN-Revision: 1.6 Maintainer: lucasr Status: ready -->
 <!-- CREDITS: phaser -->
 <!-- splitted from ./en/functions/pgsql.xml, last change in rev 1.2 -->
   <refentry id='function.pg-send-query'>
@@ -38,10 +38,47 @@
      cosulta seja finalizada e descarta todos os resultados.
     </para>
     <para>
+     <example>
+      <title>Asynchronous Queries</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+    $dbconn = pg_connect("dbname=publisher") or die("Could not connect");
+    if (!pg_connection_busy($dbconn)) {
+        pg_send_query($dbconn,"select * from authors; select count(*) from authors;");
+    }
+
+    $res1 = pg_get_result($dbconn);
+    echo "First call to pg_get_result(): $res1\n";
+    $rows1 = pg_num_rows($res1);
+    echo "$res1 has $rows1 records\n\n";
+
+    $res2 = pg_get_result($dbconn);
+    echo "second call to pg_get_result(): $res2\n";
+    $rows2 = pg_num_rows($res2);
+     echo "$res2 has $rows2 records\n";
+?>
+]]>
+      </programlisting>
+      <para>
+       O exemplo acima deve mostrar a seguinte saída:
+      </para>
+      <screen>
+<![CDATA[
+first call to pg_get_result(): Resource id #3
+Resource id #3 has 3 records
+
+second call to pg_get_result(): Resource id #4
+Resource id #4 has 1 records
+]]>
+      </screen>
+     </example>
+    </para>
+    <para>
      Veja também <function>pg_query</function>,
      <function>pg_cancel_query</function>,
-     <function>pg_get_result</function> e 
-     <function>pg_connection_busy</function>
+     <function>pg_get_result</function> e
+     <function>pg_connection_busy</function>.
     </para>
    </refsect1>
   </refentry>
