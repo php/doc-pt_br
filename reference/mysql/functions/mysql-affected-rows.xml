@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: 1.5 Maintainer: fernandoc Status: ready -->
+
+  <refentry id="function.mysql-affected-rows">
+   <refnamediv>
+    <refname>mysql_affected_rows</refname>
+    <refpurpose>Devolve o número de linhas afetadas na operação anterior com o MySQL</refpurpose>
+
+   </refnamediv>
+   <refsect1>
+    <title>Descrição</title>
+     <methodsynopsis>
+      <type>int</type><methodname>mysql_affected_rows</methodname>
+      <methodparam choice="opt"><type>resource</type><parameter>
+        link_identifier
+       </parameter></methodparam>
+     </methodsynopsis>
+    <para>
+     <function>mysql_affected_rows</function> retorna o número
+     de linhas afetadas pela ultima query INSERT, UPDATE ou DELETE
+     associada a <parameter>link_identifier</parameter>.  Se o indentificador
+     de link não é especificado, o ultimo link aberto por
+     <function>mysql_connect</function> é utilizado.
+    </para>
+    <note>
+     <para>
+      Se você esta usando transações, você deve chamar
+      <function>mysql_affected_rows</function> após sua query INSERT,
+      UPDATE, ou DELETE, não depois de commit.
+     </para>
+    </note>
+    <para>
+     Se a ultima query foi um DELETE sem a cláusula WHERE, todos
+     os registros foram apagados da tabela, mas esta
+     função retornará zero.
+    </para>
+    <note>
+     <para>
+      Quando usando UPDATE, o MySQL não atualizará as colunas onde o novo
+      valor é o mesmo que o valor anterior. Isto cria a possibilidade de
+      que a função <function>mysql_affected_rows</function> não seja atualmente igual
+      ao número de linhas encontradas, somente o número de linhas que
+      literalmete foram afetadas pela query.
+     </para>
+    </note>
+    <para>
+     A função <function>mysql_affected_rows</function> não funciona com os comandos
+     SELECT; somente comandos que modificam os registros. Para
+     pegar o número de linhas retornados por SELECT, use
+     <function>mysql_num_rows</function>.
+    </para>
+    <para>
+     Se a ultima query falhou, esta função irá retornar -1.
+     <example>
+      <title>Delete-Query</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+    /* Conecta com o banco de dados */
+    mysql_pconnect("localhost", "mysql_user", "mysql_password") or
+        die ("Não pude conectar");
+
+    /* Este deve retornar o número coreto de registros excluidos */
+    mysql_query("DELETE FROM mytable WHERE id < 10");
+    printf ("Registros excluidos: %d\n", mysql_affected_rows());
+
+    /* Sem a clausula where no comando delete, deve retornar 0 */
+    mysql_query("DELETE FROM mytable");
+    printf ("Registros excluidos: %d\n", mysql_affected_rows());
+?>
+]]>
+      </programlisting>
+      <para>
+      O exemplo acima deve produzir a seguite saida:
+      <screen>
+<![CDATA[
+Registros excluidos: 10
+Registros excluidos: 0
+]]>
+       </screen>
+      </para>
+     </example>
+     <example>
+      <title>Update-Query</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+    /* conecta com o banco de dados */
+    mysql_pconnect("localhost", "mysql_user", "mysql_password") or
+        die ("Não pude conectar");
+
+    /* Atualiza os registros */
+    mysql_query("UPDATE mytable SET used=1 WHERE id < 10");
+    printf ("Registros atualizados: %d\n", mysql_affected_rows());
+mysql_query("COMMIT");
+?>
+]]>
+      </programlisting>
+      <para>
+          O exemplo acima deve produzir a seguite saida:
+       <screen>
+<![CDATA[
+Registros atualizados: 10
+]]>
+       </screen>
+      </para>
+     </example>
+    </para>
+    <para>
+     Vela também: <function>mysql_num_rows</function>,
+               <function>mysql_info</function>.
+    </para>
+   </refsect1>
+  </refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"../../../../manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
