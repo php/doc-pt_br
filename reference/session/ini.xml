@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.16 Maintainer: fernandoc Status: ready -->
+<!-- EN-Revision: 1.23 Maintainer: fernandoc Status: ready -->
 <!-- CREDITS: surfmax -->
 <section id="session.configuration">
  &reftitle.runtime;
@@ -10,9 +10,9 @@
   <tgroup cols="3">
    <thead>
     <row>
-     <entry>Name</entry>
-     <entry>Default</entry>
-     <entry>Changeable</entry>
+     <entry>Nome</entry>
+     <entry>Padrão</entry>
+     <entry>Modificável</entry>
     </row>
    </thead>
    <tbody>
@@ -39,6 +39,11 @@
     <row>
      <entry>session.gc_probability</entry>
      <entry>"1"</entry>
+     <entry>PHP_INI_ALL</entry>
+    </row>
+    <row>
+     <entry>session.gc_divisor</entry>
+     <entry>"100"</entry>
      <entry>PHP_INI_ALL</entry>
     </row>
     <row>
@@ -119,6 +124,16 @@
     <row>
      <entry>session.bug_compat_warn</entry>
      <entry>"1"</entry>
+     <entry>PHP_INI_ALL</entry>
+    </row>
+    <row>
+     <entry>session.hash_function</entry>
+     <entry>"0"</entry>
+     <entry>PHP_INI_ALL</entry>
+    </row>
+    <row>
+     <entry>session.hash_bits_per_character</entry>
+     <entry>"4"</entry>
      <entry>PHP_INI_ALL</entry>
     </row>
     <row>
@@ -257,12 +272,35 @@
    </term>
    <listitem>
     <simpara>
-     <literal>session.gc_probability</literal> especifíca a probabilidade de que a rotina gc (garbage collection) ser iniciada em cada pedido em percentual. Padrão <literal>1</literal>.
+     <literal>session.gc_probability</literal> em conjunto com 
+     <literal>session.gc_divisor</literal> é usado para gerenciar a probabilidade
+     que o gc (coletor de lixo) seja iniciado.
+     O padrão é <literal>1</literal>. Veja <link 
+     linkend="ini.session.gc-divisor">session.gc_divisor</link> para detalhes.
     </simpara>
    </listitem>
   </varlistentry>
 
-  <varlistentry id="ini.session.gc-maxlifetime">
+<varlistentry id="ini.session.gc-divisor">
+   <term>
+    <parameter>session.gc_divisor</parameter>
+    <type>integer</type>
+   </term>
+   <listitem>
+    <simpara>
+     <literal>session.gc_divisor</literal> em conjunto com
+     <literal>session.gc_probability</literal> define a probabilidade
+     que o processo do gc (coletor de lixo) seja iniciado na inicialização de
+     cada sessão.
+     A propabilidade é cauculada usando gc_probability/gc_divisor,
+     ex. 1/100 indica que existe 1% de chance que o processo GC comece
+     em cada requisição..
+     O padrão para <literal>session.gc_divisor</literal> é <literal>100</literal>.
+    </simpara>
+   </listitem>
+  </varlistentry>
+
+    <varlistentry id="ini.session.gc-maxlifetime">
    <term>
     <parameter>session.gc_maxlifetime</parameter>
     <type>integer</type>
@@ -270,8 +308,10 @@
    <listitem>
     <simpara>
      <literal>session.gc_maxlifetime</literal> especifíca o número de
-	 segundos após os dados terem sido considerados como lixo ('garbage')
-	 e limpados.
+      segundos após os dados terem sido considerados como lixo ('garbage')
+      e limpados.
+      Desde o PHP 4.2.3 é usado mtime (data de modificação) ao invés de atime. Assim você
+      não terá problemas em sistemas de arquivos onde atime não esteja disponível.   
     </simpara>
     <note>
      <simpara>Se você está usando o file-based session handler como padrão, seu sistema de arquivos deve manter registrado quantidade de acessos
@@ -469,7 +509,7 @@
      <simpara>
       Para PHP 4.1.2 ou inferior, ele só é habilitado se fizer a opção
 	  na compilação com 
-      <link linkend="install.configure.enable-trans-sid">
+      <link linkend="configure.enable-trans-sid"> 
       <literal>--enable-trans-sid</literal></link>.
       A partir do PHP 4.2.0, está sempre compilado.
      </simpara>
@@ -517,14 +557,53 @@
    </listitem>
   </varlistentry>
 
-  <varlistentry id="ini.url-rewriter.tags">
+  <varlistentry id="ini.session.hash-function">
+   <term>
+    <parameter>session.hash_function</parameter>
+    <type>integer</type>
+   </term>
+   <listitem>
+    <simpara>
+     <literal>session.hash_function</literal> permite a você especificar o algoritimo de
+     hash usado para gerar os IDs de sessão. '0' indica MD5 (128 bits) e
+     '1' indica SHA-1 (160 bits).
+    </simpara>
+    <note>
+     <para>
+      Isto foi introduzido no PHP 5.
+     </para>
+    </note>
+   </listitem>
+  </varlistentry>
+ 
+  <varlistentry id="ini.session.hash-bits-per-character">
+   <term>
+    <parameter>session.hash_bits_per_character</parameter>
+    <type>integer</type>
+   </term>
+   <listitem>
+    <simpara>
+     <literal>session.hash_bits_per_character</literal> permite a você definir
+     quantos bits são guardaddos em cada caractere ao converter os dados binários
+     de hash para algo que possa ser legível. Os valores possíveis são '4' (0-9, a-f),
+     '5' (0-9, a-v), e '6' (0-9, a-z, A-Z, "-", ",").
+    </simpara>
+    <note>
+     <para>
+      Isto foi introduzido no PHP 5.
+     </para>
+    </note>
+   </listitem>
+  </varlistentry>
+ 
+   <varlistentry id="ini.url-rewriter.tags">
    <term>
     <parameter>url_rewriter.tags</parameter>
     <type>string</type>
    </term>
    <listitem>
     <simpara>
-     <literal>url_rewriter.tags</literal> epecifíca quais tags html
+     <literal>url_rewriter.tags</literal> epecifíca quais tags HTML
      são reescritas para incluir a id de sessão se o suporte
 	 a sid transparente está habilitado. 
 	 O padrão é     <literal>a=href,area=href,frame=src,input=src,form=fakeentry,fieldset=</literal>
