@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: 1.8 Maintainer: narigone Status: ready -->
+  <sect1 id="install.windows.iis">
+   <title>Microsoft IIS / PWS</title>
+   <para>
+    Essa seção contêm notas e dicas específicas para o IIS (Microsoft
+    Internet Information Server). Nós incluímos instruções de
+    instalação para as versões <link linkend="install.windows.iis.iis3">PWS/IIS 3</link>,
+    <link linkend="install.windows.iis.pws4">PWS 4 ou superior</link> e
+    <link linkend="install.windows.iis.iis4">IIS 4 ou superior</link>.
+   </para>
+
+   <note>
+    <title>Importante para usuários CGI</title>
+    <para>
+     Leia o <link linkend="faq.installation.forceredirect">faq
+     sobre cgi.force_redirect</link> para detalhes importantes. Essa 
+     diretiva precisa estar configurada para o valor <literal>0</literal>.
+    </para>
+   </note>
+   &warn.install.cgi;
+
+   <sect2 id="install.windows.iis.iis3">
+    <title>Windows e PWS/IIS 3</title>
+    
+    <simpara>
+     O método recomendado para configurar o PHP nesses servidores é usar
+     o arquivo REG incluso na distribuição 
+     (<filename>pws-php4cgi.reg</filename> na pasta SAPI para o PHP 4, ou
+     <filename>pws-php5cgi.reg</filename> na pasta principal para o PHP 5).
+     Você pode querer editar o arquivo e assegurar-se que
+     o diretório das extensões e do PHP estão
+     corretos. Ou você pode seguir os passos abaixo para fazer
+     manualmente.
+    </simpara>
+    <warning>
+     <para>
+      Esses passos involvem trabalhar diretamente com o registro do
+      Windows. Um erro aqui pode deixar seu sistema em um estado
+      instável. Nós recomendamos que você faça um backup do seu registro
+      primeiro. O time de desenvolvimento do PHP não será responsável se 
+      você danificar seu registro.
+     </para>
+    </warning>
+
+    <para>
+     <itemizedlist>
+      <listitem>
+       <simpara>
+        Execute Regedit.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Vá até: <literal>HKEY_LOCAL_MACHINE /System
+         /CurrentControlSet /Services /W3Svc /Parameters
+         /ScriptMap</literal>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        No menu de editar (edit) selecione: <literal>New->String Value</literal>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Digite a extensão que você quer para seus scripts
+        PHP. Por exemplo  <literal>.php</literal>
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Clique duas vezes no novo valor string e entre o caminho para
+        <filename>php.exe</filename> no campo de valor. ex:
+        <filename>C:\php\php.exe</filename> para o PHP 4, ou
+        <filename>C:\php\php-cgi.exe</filename> para o PHP 5.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Repita esses passos para cada extensão que você quiser associar
+        com scripts PHP..
+       </simpara>
+      </listitem>
+     </itemizedlist>
+    </para>
+    <para>
+     Os passos a seguir não afetam a instalação do servidor web
+     e só se aplicam se você quiser que seus scripts sejam executados quando
+     eles forem chamados da linha de comando (ex. run
+     <filename>C:\myscripts\test.php</filename>) ou clicando duas vezes
+     neles na janela de visualização de diretório. Você pode pular esses passos
+     já que você pode preferir que os arquivos PHP sejam carregados em um
+     editor de texto quando você clicar duas vezes neles.
+    </para>
+    <para>
+     <itemizedlist>
+      <listitem>
+       <simpara>
+        Vá até: <literal>HKEY_CLASSES_ROOT</literal>
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        No menu de editar (edit) selecione: <literal>New->Key</literal>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Nomeie a chave com a extensão que você configurou na seção
+        anterior. ex: <literal>.php</literal>
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Selecione a chave nova e no painel do lado direto, clique duas vezes
+        no "default value" e digite <literal>phpfile</literal>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Repita o passo anterior para cada extensão que você configurou 
+        na seção anterior.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Agora crie um outra chave (<literal>New->Key</literal>) em
+        <literal>HKEY_CLASSES_ROOT</literal> e chame ela de
+        <literal>phpfile</literal>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Selecione a chave nova <literal>phpfile</literal> e no painel
+        do lado direito, clique duas vezes em "default value" e digite
+        <literal>PHP Script</literal>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Clique com o botão direito na chave <literal>phpfile</literal> e selecione
+        <literal>New->Key</literal>, e a chame de <literal>Shell</literal>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Clique com o botão direito na chave <literal>Shell</literal> e selecione
+        <literal>New->Key</literal>, e a chame de <literal>open</literal>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Clique com o botão direito na chave <literal>open</literal> e selecione
+        <literal>New->Key</literal>, e a chame de
+        <literal>command</literal>. 
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Selecione a chave nova <literal>command</literal> e no painel
+        do lado direito, clique duas vezes em "default value" e entre
+        o caminho para <filename>php.exe</filename>. ex:
+        <literal>c:\php\php.exe -q %1</literal>. (não esqueça o
+        <literal>%1</literal>). 
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Saia do Regedit.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Se estiver usando PWS no Windows, reinicie para recarrega o registro.
+       </simpara>
+      </listitem>
+     </itemizedlist>
+    </para>
+    <simpara>
+     Usuários do PWS e do IIS 3 agora tem um sistema totalmente operacional. Usuários do 
+     IIS 3 pode usar uma <ulink url="&url.iiscfg;">ferramenta</ulink> legal
+     de Steven Genusa para configurar os mapas dos seus scripts.
+    </simpara>
+    
+   </sect2>
+
+   <sect2 id="install.windows.iis.pws4">
+    <title>Windows e PWS 4 ou superior</title>
+
+    <simpara>
+     Quando estiver instalando o PHP no Windows com PWS 4 ou superior,
+     você tem duas opções. Uma é configurar o PHP como CGI,
+     a outra é usar a DLL de módulo ISAPI.
+    </simpara>
+     
+    <para>
+     Se você escolheu o binário CGI, faça o seguinte:
+     <itemizedlist>
+      <listitem>
+       <simpara>
+        Edite o arquivo <filename>pws-php4cgi.reg</filename> /
+        <filename>pws-php5cgi.reg</filename> (procure na pasta SAPI
+        para o PHP 4, ou na pasta principal para o PHP 5) para que a localização de
+        <filename>php.exe</filename> / <filename>php-cgi.exe</filename> esteja correta.
+        Barras invertidas devem ser escapadas, por exemplo:
+        <literal>[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\w3svc\parameters\Script
+         Map] ".php"="C:\\php\\php.exe"</literal> (mude para
+        <literal>C:\\php\\php-cgi.exe</literal> se você estiver usando o PHP 5)
+        Agora faça com o arquivo sejam acrescentados ao registro do Windows, você pode
+        fazer isso clicando duas vezes no mesmo.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        No PWS Manager, clique com o botão direito em um diretório qualquer
+        que você queira adicionar suporte ao PHP nele e selecione Propriedades. Cheque
+        a caixa 'Executar' e confirme.
+       </simpara>
+      </listitem>
+     </itemizedlist>
+    </para>
+
+    <para>
+     Se você escolher o módulo ISAPI, faça o seguinte:
+     <itemizedlist>
+      <listitem>
+       <simpara>
+        Edite o arquivo <filename>pws-php4isapi.reg</filename> /
+        <filename>pws-php5isapi.reg</filename> (procure na pasta SAPI
+        para o PHP 4, ou na pasta principal para o PHP 5) para que a localização de
+        <filename>php4isapi.dll</filename> /
+        <filename>php5isapi.dll</filename> esteja correta. Barras invertidas devem ser escapadas, por exemplo:
+        <literal>[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\w3svc\parameters\Script
+         Map] ".php"="C:\\php\\sapi\\php4isapi.dll"</literal> (ou
+        <literal>C:\\php\\php5isapi.dll</literal> para o PHP 5)
+        Agora faça com o arquivo sejam acrescentados ao registro do Windows, você pode
+        fazer isso clicando duas vezes no mesmo.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        No PWS Manager, clique com o botão direito em um diretório qualquer
+        que você queira adicionar suporte ao PHP nele e selecione Propriedades. Cheque
+        a caixa 'Executar' e confirme.
+       </simpara>
+      </listitem>
+     </itemizedlist>
+    </para>
+
+   </sect2>
+
+   <sect2 id="install.windows.iis.iis4">
+    <title>Windows NT/2000/XP e IIS 4 ou superior</title>
+
+    <simpara>
+     Para instalar o PHP em um servidor NT/2000/XP Server rodando IIS 4 ou superior,
+     siga essas instruções. Você tem duas opções de configuração
+     para o PHP, usando o binário CGI (<filename>php.exe</filename> no PHP 4, ou
+     <filename>php-cgi.exe</filename> no PHP 5) ou com o módulo ISAPI.
+    </simpara>
+    
+    <simpara>
+     Em ambos os casos, você precisa iniciar o Microsoft Management
+     Console (pode aparecer como 'Internet Services Manager', ou
+     no seu Windows NT 4.0 Option Pack branch ou no Painel de 
+     Controle=&gt;Ferramentas Administrativas no Windows 2000/XP). Então
+     clique com o botão direito no nódulo do seu servidor Web (provavelmente
+     aparecerá como 'Default Web Server'), e selecione 'Propriedades'.
+    </simpara>
+
+    <para>
+     Se você quiser usar o binário CGI, faça o seguinte:
+     <itemizedlist>
+      <listitem>
+       <simpara>
+        Em 'Diretório Home', 'Diretório Virtual', ou
+        'Diretório', clique no botão 'Configuração',
+        e entre no tab App Mappings.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Clique em Adicionar (Add), e na caixa Executável (Executable), digite:
+        <literal>C:\php\php.exe</literal> para o PHP 4 ou
+        <literal>C:\php\php-cgi.exe</literal> para o PHP 5 (presumindo
+        que pode descompactou o PHP em <filename>c:\php\</filename>).
+        </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Na caixa Extensão (Extension), digire o nome da extensão de arquivo que você
+        quer que seja associada ao PHP. Deixe 'Method exclusions'
+        em branco, e marque a caixa 'Script engine'. Você pode querer
+        também marcar a caixa 'check that file exists'- gera
+        uma pequena queda de performance, IIS (ou PWS) testará que o arquivo
+        do script existe e testa autenticação antes de iniciar o PHP.
+        Isso significa que você terá uma mensagem de erro 404
+        ao ivés de erros de CGI reclamando que o PHP não teve resultado algum.
+       </simpara>
+       <simpara>
+        Você deve refazer o passo anterior para cada extensão
+        que você quiser associar com scripts PHP.
+        <literal>.php</literal> e <literal>.phtml</literal>
+        são comuns, embora <literal>.php3</literal> pode ser
+        necessário para aplicações antigas.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Configure a segurança apropriada. (Isso é feito no Internet
+        Service Manager), e se servidor NT usar o sistema de arquivos NTFS,
+        adicione direitos de execução para I_USR_ no o diretório que contem
+        <filename>php.exe</filename> / <filename>php-cgi.exe</filename>.
+       </simpara>
+      </listitem>
+     </itemizedlist>
+    </para>
+    
+    <para>
+     Para o módulo ISAPI, faça o seguinte:
+     <itemizedlist>
+      <listitem>
+       <simpara>
+        Se você não quiser fazer autenticação HTTP usando o PHP,
+        você pode (e deve) pular esse passo. Em filtros ISAPI,
+        adicione um novo filtro ISAPI. Use PHP como nome do filtro e
+        dê o caminho para o arquivo <filename>php4isapi.dll</filename> /
+        <filename>php5isapi.dll</filename>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Em 'Diretório Home', clique no botão 'Configuração'.
+        Adicione um novo valor à Application Mappings. Use o caminho 
+        para o arquivo <filename>php4isapi.dll</filename> /
+        <filename>php5isapi.dll</filename> como o Executável, dê 
+        <literal>.php</literal> como extensão, deixe 'Method exclusions'
+        em branco, e marque a caixa 'Script engine'.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Pare o IIS completamente (NET STOP iisadmin)
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Inicie o IIS de novo (NET START w3svc)
+       </simpara>
+      </listitem>
+     </itemizedlist>
+    </para>
+    <para>
+     Se você tiver uso de CPU de 100% por algum tempo, desligue o IIS 
+     configurando <literal>Cache ISAPI Application</literal>.
+    </para>
+   </sect2>
+  </sect1>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shouttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"../../manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
