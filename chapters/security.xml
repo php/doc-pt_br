@@ -9,8 +9,9 @@
    properties make anything run on a web server insecure by default.
    PHP is designed specifically to be a more secure language for
    writing CGI programs than Perl or C, and with correct selection of
-   compile-time and runtime configuration options it gives you
-   exactly the combination of freedom and security you need.
+   compile-time and runtime configuration options, and proper coding
+   practices, it can give you exactly the combination of freedom and
+   security you need.
   </simpara>
   <simpara>
    As there are many different ways of utilizing PHP, there are many
@@ -18,12 +19,25 @@
    selection of options guarantees you can use PHP for a lot of
    purposes, but it also means there are combinations of these
    options and server configurations that result in an insecure
-   setup.  This chapter explains the different configuration option
-   combinations and the situations they can be safely used.
+   setup.
+  </simpara>
+  <simpara>
+   The configuration flexibility of PHP is equally rivalled by the
+   code flexibility. PHP can be used to build complete server
+   applications, with all the power of a shell user, or it can be used
+   for simple server-side includes with little risk in a tightly
+   controlled environment. How you build that environment, and how
+   secure it is, is largely up to the PHP developer.
+  </simpara>
+  <simpara>
+   This chapter starts by explaining the different configuration
+   option combinations and the situations they can be safely used. It
+   then describes different considerations in coding for different
+   levels of security, and ends with some general security advice.
   </simpara>
 
   <sect1 id="security.cgi">
-   <title>CGI binary</title>
+   <title>Installed as CGI binary</title>
 
    <sect2 id="security.cgi.attacks">
     <title>Possible attacks</title>
@@ -85,7 +99,7 @@
       </simpara>
       <simpara>
        In PHP, compile-time configuration option <link
-       linkend="enable-force-cgi-redirect">--enable-force-cgi-redirect</link>
+       linkend="install.configure.enable-force-cgi-redirect">--enable-force-cgi-redirect</link>
        and runtime configuration directives <link
        linkend="ini.doc-root">doc_root</link> and <link
        linkend="ini.user-dir">user_dir</link> can be used to prevent
@@ -107,7 +121,7 @@
      you to do redirects, or the server does not have a way to
      communicate to the PHP binary that the request is a safely
      redirected request, you can specify the option <link
-     linkend="enable-force-cgi-redirect">--disable-force-cgi-redirect</link>
+     linkend="install.configure.enable-force-cgi-redirect">--enable-force-cgi-redirect</link>
      to the configure script.  You still have to make sure your PHP
      scripts do not rely on one or another way of calling the script,
      neither by directly <filename
@@ -233,7 +247,7 @@ AddHandler php3-script .php3
      To get PHP to handle <envar>PATH_INFO</envar> and
      <envar>PATH_TRANSLATED</envar> information correctly with this
      setup, the php parser should be compiled with the <link
-     linkend="enable-discard-path">--enable-discard-path</link>
+     linkend="install.configure.enable-discard-path">--enable-discard-path</link>
      configure option.
     </para>
    </sect2>
@@ -241,14 +255,329 @@ AddHandler php3-script .php3
   </sect1>
 
   <sect1 id="security.apache">
-   <title>Apache module</title>
+   <title>Installed as an Apache module</title>
    <simpara>
     When PHP is used as an Apache module it inherits Apache's user
-    permissions (typically those of the "nobody"
-    user).
+    permissions (typically those of the "nobody" user). This has several
+    impacts on security and authorization. For example, if you are using
+    PHP to access a database, unless that database has built-in access
+    control, you will have to make the database accessable to the
+    "nobody" user. This means a malicious script could access and modify
+    the databse, even without a username and password. It's entirely
+    possible that a web spider could stumble across a database
+    adminisitror's web page, and drop all of your databases. You can
+    protect against this with Apache authorization, or you can design
+    your own access model using LDAP, .htaccess files, etc. and include
+    that code as part of your PHP scripts.
+   </simpara>
+   <simpara>
+    Often, once security is established to the point where the PHP user
+    (in this case, the apache user) has very little risk, it is
+    discovered that PHP now has been prevented from writing virus files
+    to user directories. Or perhaps it has been prevented from accessing
+    or changing a non-public database. It has equally been secured from
+    writing files that it should, or entering database transactions.
+   </simpara>
+   <simpara>
+    A frequent security mistake made at this point is to allow apache
+    root permissions.
+   </simpara>
+   <simpara>
+    Escalating the Apache user's permissions to root is extremely
+    dangerous and may compromise the entire system, so sudo'ing,
+    chroot'ing ,or otherwise running as root should not be considered by
+    those who are not security professionals.
    </simpara>
   </sect1>
+
+  <sect1 id="security.filesystem">
+   <title>Filesystem Security</title>
+   <simpara>
+    PHP is subject to the security built into most server systems with
+    respect to permissions on a file and directory basis. This allows
+    you to control which files in the filesystem may be read. Care
+    should be taken with any files which are world readable to ensure
+    that they are safe for reading by all users who have access to that
+    filesystem.
+   </simpara>
+   <simpara>
+    Since PHP was designed to allow user level access to the filesystem,
+    it's entirely possible to write a PHP script that will allow you
+    to read system files such as /etc/password, modify your ethernet
+    connections, send massive printer jobs out, etc. This has some
+    obvious implications, in that you need to ensure that the files
+    that you read from and write to are the appropriate ones.
+   </simpara>
+   <simpara>
+    Consider the following script, where a user indicates that they'd
+    like to delete a file in their home directory. This assumes a
+    situation where a PHP web interface is regularly used for file
+    management, so the Apache user is allowed to delete files in
+    the user home directories.
+   </simpara>
+   <para>
+    <example>
+     <title>Poor variable checking leads to....</title>
+     <programlisting role="php">
+&lt;?php
+// remove a file from the user's home directory
+$username = $user_submitted_name;
+$homedir = "/home/$username";
+$file_to_delete = "$userfile";
+unlink ($homedir/$userfile);
+echo "$file_to_delete has been deleted!";
+?>
+     </programlisting>
+    </example>
+   Since the username is postable from a user form, they can submit
+   a username and file belonging to someone else, and delete files.
+   In this case, you'd want to use some other form of authentication.
+   Consider what could happen if the variables submitted were
+   "../etc/" and "passwd". The code would then effectively read:
+    <example>
+     <title>... A filesystem attack</title>
+     <programlisting role="php">
+&lt;?php
+// removes a file from anywhere on the hard drive that
+// the PHP user has access to. If PHP has root access:
+$username = "../etc/";
+$homedir = "/home/../etc/";
+$file_to_delete = "passwd";
+unlink ("/home/../etc/passwd");
+echo "/home/../etc/passwd has been deleted!";
+?>
+     </programlisting>
+    </example>   
+    There are two important measures you should take to prevent these
+    issues.
+    <itemizedlist>
+     <listitem>
+      <simpara>
+       Only allow limited permissions to the PHP web user binary.
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       Check all variables which are submitted.
+      </simpara>
+     </listitem>
+    </itemizedlist>
+    Here is an improved script:
+    <example>
+     <title>More secure file name checking</title>
+     <programlisting role="php">
+&lt;?php
+// removes a file from the hard drive that
+// the PHP user has access to. 
+$username = $HTTP_REMOTE_USER; // use an authentication mechanisim
+
+$homedir = "/home/$username";
+
+$file_to_delete = basename("$userfile"); // strip paths
+unlink ($homedir/$file_to_delete);
+
+$fp = fopen("/home/logging/filedelete.log","+a"); //log the deletion
+$logstring = "$HTTP_REMOTE_USER $homedir $file_to_delete";
+fputs ($fp, $logstring);
+fclose($fp);
+
+echo "$file_to_delete has been deleted!";
+?>
+     </programlisting>
+    </example>
+    Alternately, you may prefer to write a more customized check:
+    <example>
+     <title>More secure file name checking</title>
+     <programlisting role="php">
+&lt;?php
+$username = $HTTP_REMOTE_USER;
+$homedir = "/home/$username";
+
+if (!ereg('^[^./][^/]*$', $userfile))
+    die('bad filename'); //die, do not process
     
+//etc...
+?>
+     </programlisting>
+    </example> 
+    Depending on your operating system, there are a wide variety of files
+    which you should be concerned about, including device entries (/dev/
+    or COM1), configuration files (/etc/ files and the .ini files),
+    well known file storage areas (/home/, My Documents), etc. For this
+    reason, it's usually easier to create a policy where you forbid
+    everything except for what you explicitly allow.
+   </para>   
+  </sect1>
+
+  <sect1 id="security.errors">
+   <title>Error Reporting</title>
+   <simpara>
+    A standard attack tactic involves profiling a system by feeding
+    it improper data, and checking for the kinds, and contexts, of the
+    errors which are returned. This allows the system cracker to probe
+    for information about the server, to determine possible weaknesses.
+   </simpara>
+   <simpara>
+    The PHP errors which are normally returned can be quite helpful to a
+    developer who is trying to debug a script, indicating such things
+    as the function or file that failed, the PHP file it failed in,
+    and the line number which the failure occured in. This is all
+    information that can be exploited.
+   </simpara>
+   <simpara>
+    For example, the very style of error indicates a system is running
+    PHP. If the attacker was looking at an .html page, and wanted to
+    probe for the back-end (to look for known weaknesses in the system),
+    by feeding it the wrong data they may be able to determine that a
+    system was built with PHP.
+   </simpara>
+   <simpara>
+    A function error can indicate whether a system may be running a
+    specific database engine, or give clues as to how a web page or
+    programmed or designed. This allows for deeper investigation into
+    open database ports, or to look for specific bugs or weaknesses
+    in a web page. By feeding different pieces of bad data, for example,
+    an attacker can determine the order of authentication in a script,
+    (from the line number errors) as well as probe for exploits that
+    may be exploited in different locations in the script.
+   </simpara>
+   <simpara>
+    A filesystem or general PHP error can indicate what permissions
+    the webserver has, as well as the structure and organization of
+    files on the web server.
+   </simpara>
+   <simpara>
+    There are three major solutions to this issue. The first is to
+    scrutinize all functions, and attempt to compensate for the bulk
+    of the errors. The second is to disable error reporting entirely
+    on the running code. The third is to use PHP's custom error
+    handling functions to create your own error handler. Depending
+    on your security policy, you may find all three to be applicable
+    to your situation.
+   </simpara>
+  </sect1>
+  
+  <sect1 id="security.variables">
+   <title>User Submitted Data</title>
+   <para>
+    The greatest weakness in many PHP programs is not inherent in the
+    language itself, but merely an issue of code not being written with
+    security in mind. For this reason, you should always take the time
+    to consider the implications of a given piece of code, to ascertain
+    the possible damage if an unexpected variable is submitted to it.
+    <example>
+     <title>Dangerous Variable Usage</title>
+     <programlisting role="php">
+&lt;?php
+// remove a file from the user's home directory... or maybe
+// somebody else's?
+unlink ($evil_var);
+
+// Write logging of their access... or maybe not?
+fputs ($fp, $evil_var);
+
+// Execute something trivial.. or rm -rf *?
+system ($evil_var);
+exec ($evil_var);
+
+?>
+     </programlisting>
+    </example>
+    You should always carefully examine your code to make sure that any
+    variables being submitted from a web browser are being properly
+    checked, and ask yourself the following questions:
+    <itemizedlist>
+     <listitem>
+      <simpara>
+       Will this script only affect the intended files?
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       Can unusual or undesirable data be acted upon?
+      </simpara>
+     </listitem>
+     <listitem>
+     <simpara>
+       Can this script be used in unintended ways?
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       Can this be used in conjunction with other scripts in a negative
+       manner?
+      </simpara>
+     </listitem> 
+     <listitem>
+      <simpara>
+       Will any transactions be adequately logged?
+      </simpara>
+     </listitem>
+    </itemizedlist>
+    By adequately asking these questions while writing the script,
+    rather than later, you prevent an unfortunate re-write when you
+    need to increase your security. By starting out with this mindset,
+    you won't guarantee the security of your system, but you can help
+    improve it.
+   </para>
+   <para>
+    You may also want to consider turning off register_globals,
+    magic_quotes, or other convenience settings which may confuse
+    you as to the validity, source, or value of a given variable.
+    Working with PHP in error_reporting(E_ALL) mode can also help warn
+    you about variables being used before they are checked or
+    initialized (so you can prevent unusual data from being
+    operated upon).
+   </para>
+  </sect1>
+
+  <sect1 id="security.general">
+   <title>General considerations</title>
+   <simpara>
+    A completely secure system is a virtual impossibility, so an
+    approach often used in the security profession is one of balancing
+    risk and usability. If every variable submitted by a user required
+    two forms of biometric validation (such as a retinal scan and a
+    fingerprint), you would have an extremely high level of
+    accountability. It would also take half an hour to fill out a fairly
+    complex form, which would tend to encourage users to find ways of
+    bypassing the security.
+   </simpara>
+   <simpara>
+    The best security is often inobtrusive enough to suit the
+    requirements without the user being prevented from accomplishing
+    their work, or over-burdening the code author with excessive
+    complexity. Indeed, some security attacks are merely exploits of
+    this kind of overly built security, which tends to erode over time.
+   </simpara>
+   <simpara>
+    A phrase worth remembering: A system is only as good as the weakest
+    link in a chain. If all transactions are heavily logged based on
+    time, location, transaction type, etc. but the user is only
+    verified based on a single cookie, the validity of tying the users
+    to the transaction log is severely weakened.
+   </simpara>
+   <simpara>
+    When testing, keep in mind that you will not be able to test all
+    possibilities for even the simplest of pages. The input you
+    may expect will be completely unrelated to the input given by
+    a disgruntled employee, a cracker with months of time on their
+    hands, or a housecat walking across the keyboard. This is why it's
+    best to look at the code from a logical perspective, to discern
+    where unexpected data can be introduced, and then follow how it is
+    modified, reduced, or amplified.
+   </simpara>
+   <simpara>
+    The Internet is filled with people trying to make a name for
+    themselves by breaking your code, crashing your site, posting
+    inappropriate content, and otherwise making your day interesting.
+    It doesn't matter if you have a small or large site, you are
+    a target by simply being online, by having a server that can be
+    connected to. Many cracking programs do not discern by size, they
+    simply trawl massive IP blocks looking for victims. Try not to
+    become one.
+   </simpara>
+  </sect1>
  </chapter>
 
 <!-- Keep this comment at the end of the file
