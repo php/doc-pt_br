@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.41 Maintainer: narigone Status: ready -->
+<!-- EN-Revision: 1.43 Maintainer: narigone Status: ready -->
  <chapter id="features.http-auth">
   <title>Autenticação HTTP com PHP</title>
 
@@ -7,15 +7,15 @@
    Autenticação via <acronym>HTTP</acronym> no PHP só é disponível quando o mesmo
    for executador como módulo do Apache e, portanto, não é disponível na versão CGI.
    Em um script PHP no módulo Apache, é possível usar a função
-   <function>header</function> para enviar uma janela de entrada "Authentication Required" 
-   que causará que o browser cliente abra um diálogo de entrada de 
+   <function>header</function> para enviar uma janela de entrada "Authentication Required"
+   que causará que o browser cliente abra um diálogo de entrada de
    usuário/senha. Uma vez que o usuário preencheu seu nome de usuário e senha,
-   a URL contendo o script PHP será chamada de novo com as   
-   <link linkend="reserved.variables">variáveis predefinidas</link> 
-   <varname>PHP_AUTH_USER</varname>, <varname>PHP_AUTH_PW</varname>, 
+   a URL contendo o script PHP será chamada de novo com as
+   <link linkend="reserved.variables">variáveis predefinidas</link>
+   <varname>PHP_AUTH_USER</varname>, <varname>PHP_AUTH_PW</varname>,
    e <varname>AUTH_TYPE</varname> contendo o nome de usuário, senha e
    tipo de autenticação, respectivamente. Essas variáveis predefinidas são achadas
-   nos arrays <link linkend="reserved.variables.server">$_SERVER</link> e 
+   nos arrays <link linkend="reserved.variables.server">$_SERVER</link> e
    <varname>$HTTP_SERVER_VARS</varname>. Somente autenticação "Basic" (Básica)
    é suportada. Veja a função <function>header</function> para mais
    informações.
@@ -24,9 +24,9 @@
   <note>
    <title>Nota de Versão do PHP</title>
    <para>
-    <link linkend="language.variables.superglobals">Autoglobais</link>, 
+    <link linkend="language.variables.superglobals">Autoglobais</link>,
     como o <link linkend="reserved.variables.server">$_SERVER</link>, tornaram-se
-    disponíveis no PHP <ulink url="&url.php.release4.1.0;">4.1.0</ulink>. 
+    disponíveis no PHP <ulink url="&url.php.release4.1.0;">4.1.0</ulink>.
     <varname>$HTTP_SERVER_VARS</varname> está disponível desde o PHP 3.
    </para>
   </note>
@@ -56,27 +56,76 @@
    </example>
   </para>
 
+  <para>
+    <example>
+        <title>Exemplo de Autenticação HTTP do tipo Digest</title>
+    <para>
+        Esse exemplo mostra como implementar um script simples
+        Autenticação HTTP do tipo Digest. Para mais informação leia o <ulink
+                                                                    url="&url.rfc;2617">RFC 2617</ulink>.
+    </para>
+    <programlisting role="php">
+        <![CDATA[
+        <?php
+        $realm = 'Restricted area';
+
+        //user => password
+        $users = array('admin' => 'mypass', 'guest' => 'guest');
+
+
+        if (!isset($_SERVER['PHP_AUTH_DIGEST'])) {
+        header('HTTP/1.1 401 Unauthorized');
+        header('WWW-Authenticate: Digest realm="'.$realm.
+        '" qop="auth" nonce="'.uniqid().'" opaque="'.md5($realm).'"');
+
+        die('Texto a ser enviado caso o usuário aperte o botão Cancelar');
+        }
+
+        // analisa a variável PHP_AUTH_DIGEST variabl
+        preg_match('/username="(?P<username>.*)",\s*realm="(?P<realm>.*)",\s*nonce="(?P<nonce>.*)",\s*uri="(?P<uri>.*)",\s*response="(?P<response>.*)",\s*opaque="(?P<opaque>.*)",\s*qop=(?P<qop>.*),\s*nc=(?P<nc>.*),\s*cnonce="(?P<cnonce>.*)"/', $_SERVER['PHP_AUTH_DIGEST'], $digest);
+
+        if (!isset($users[$digest['username']]))
+        die('Nome de usuário inválido!');
+
+
+        // gera a resposta válida
+        $A1 = md5($digest['username'] . ':' . $realm . ':' . $users[$digest['username']]);
+        $A2 = md5($_SERVER['REQUEST_METHOD'].':'.$digest['uri']);
+        $valid_response = md5($A1.':'.$digest['nonce'].':'.$digest['nc'].':'.$digest['cnonce'].':'.$digest['qop'].':'.$A2);
+
+        if ($digest['response'] != $valid_response)
+        die('Credenciais Erradas!');
+
+        // ok, valid username & password
+        echo 'Você está logado como: ' . $digest['username'];
+
+        ?>
+        ]]>
+        </programlisting>
+    </example>
+  </para>
+
   <note>
    <title>Nota de Compatibilidade</title>
    <para>
     Por favor, tenha cuidado quando codificar as linhas do cabeçalho do HTTP. Para garantir
     compatibilidade máxima com todos os clientes, a palavra chave "Basic" deve ser escrita com
     "B" maiúsculo, deve se usar aspas duplas (não simples) em volta da string realm,
-    e exatamente um espaço deve preceder o código <emphasis>401</emphasis> na 
+    e exatamente um espaço deve preceder o código <emphasis>401</emphasis> na
     linha do cabeçalho <emphasis>HTTP/1.0 401</emphasis>.
    </para>
   </note>
 
   <para>
    Ao invés de simplesmente mostrar o valor de <varname>PHP_AUTH_USER</varname>
-   e <varname>PHP_AUTH_PW</varname>, como foi feito no exemplo acima, 
+   e <varname>PHP_AUTH_PW</varname>, como foi feito no exemplo acima,
    você deve querer checar a validade do nome de usuário e a senha.
    Talvez enviando uma query para um banco de dados, ou procurando o
    usuário em um arquivo dbm.
   </para>
 
   <para>
-   Cuidado com browsers Internet Explorer bugados por aí. Eles 
+   Cuidado com browsers Internet Explorer bugados por aí. Eles
    parecem muito minuciosos sobre a ordem dos cabeçalhos. Enviar
    o cabeçalho <emphasis>WWW-Authenticate</emphasis> antes do
    cabeçalho <literal>HTTP/1.0 401</literal> resolve isso
@@ -126,11 +175,11 @@
     echo "Você deve usar um login e uma senha válidos para acessar esse recurso\n";
     exit;
   }
- 
+
   if (!isset($_SERVER['PHP_AUTH_USER']) ||
       ($_POST['SeenBefore'] == 1 && $_POST['OldAuth'] == $_SERVER['PHP_AUTH_USER'])) {
    authenticate();
-  } 
+  }
   else {
    echo "<p>Bem vindo: {$_SERVER['PHP_AUTH_USER']}<br />";
    echo "Login antigo: {$_REQUEST['OldAuth']}";
@@ -146,7 +195,7 @@
    </example>
   </para>
   <simpara>
-   Esse comportamento não é necessário pelo padrão autenticação básica 
+   Esse comportamento não é necessário pelo padrão autenticação básica
    via HTTP, então você nunca deve depender disso. Testando com Lynx
    mostrou que Lynx não limpa as credenciais de autenticação com uma
    resposta 401 do servidor, então apertar voltar e depois avançar
@@ -164,15 +213,15 @@
   </simpara>
   <simpara>
    Outra limitação é se você estiver usando o módulo IIS (ISAPI), você não deve
-   usar as variáveis <literal>PHP_AUTH_*</literal> mas sim, a variável 
-   <literal>HTTP_AUTHORIZATION</literal>. Por exemplo, considere 
-   o seguinte código: <literal>list($user, $pw) = explode(':',  
+   usar as variáveis <literal>PHP_AUTH_*</literal> mas sim, a variável
+   <literal>HTTP_AUTHORIZATION</literal>. Por exemplo, considere
+   o seguinte código: <literal>list($user, $pw) = explode(':',
    base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));</literal>
   </simpara>
   <note>
    <title>IIS Note:</title>
    <simpara>
-    Para autenticação via HTTP funcionar no IIS, a diretiva do PHP    
+    Para autenticação via HTTP funcionar no IIS, a diretiva do PHP
     <link linkend="ini.cgi.rfc2616-headers">cgi.rfc2616_headers</link> deve
     estar configurada para <literal>0</literal> (o valor padrão).
    </simpara>
