@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.8 Maintainer: narigone Status: ready -->
+<!-- EN-Revision: 1.13 Maintainer: narigone Status: ready -->
  <sect1 id="language.oop5.abstract">
   <title>Abstração de Objetos</title>
 
@@ -12,10 +12,12 @@
   </para>
 
   <para>
-   A classe que implementa o método abstrato deve definir com a mesma
-   <link linkend="language.oop5.visibility">visibilidade</link> ou mais fraca. Se
-   o método abstrato é definido como protected, a implementação da função deve ser
-   definida ou como protected ou como public.
+   Quando uma classe herda uma classe abstrata, todos os métodos marcados como abstratos
+   na declaração da classe-pai devem ser definidos na classe filha; além disso,
+   esses métodos devem ser definidos com a mesma <link linkend="language.oop5.visibility">visibilidade</link>
+   ou mais fraca. Por exemplo,
+   se um método abstrado é definido como protected, a implementação da função
+   deve ser definida ou como protected ou public.
   </para>
 
   <example>
@@ -23,42 +25,59 @@
     <programlisting role="php">
 <![CDATA[
 <?php
-abstract class ClasseAbstrata {
+abstract class ClasseAbstrata
+{
+    // Força a classe que extende (a subclasse) a definir esse método
+    abstract protected function pegarValor();
+    abstract protected function valorComPrefixo( $prefixo );
 
-   /* Força a classe que extende (a subclasse) a definir esse método */ 
-   abstract protected function pegarValor();
-   
-   /* Método comum */
-   public function imprimir() {
-     print $this->pegarValor();
-   }
-
+    // Método comum
+    public function imprimir() {
+        print $this->pegarValor();
+    }
 }
 
-class ClasseConcreta1 extends ClasseAbstrata {
+class ClasseConcreta1 extends ClasseAbstrata
+{
+    protected function pegarValor() {
+        return "ClasseConcreta1";
+    }
 
-   protected function pegarValor() {
-     return "ClasseConcreta1";
-   }
-
+    public function valorComPrefixo( $prefixo ) {
+        return "{$prefixo}ClasseConcreta1";
+    }
 }
 
-class ClasseConcreta2 extends ClasseAbstrata {
+class ClasseConcreta2 extends ClasseAbstrata
+{
+    protected function pegarValor() {
+        return "ClasseConcreta2";
+    }
 
-   protected function pegarValor() {
-     return "ClasseConcreta2";
-   }
-
+    public function valorComPrefixo( $prefixo ) {
+        return "{$prefixo}ClasseConcreta2";
+    }
 }
 
 $classe1 = new ClasseConcreta1;
 $classe1->imprimir();
+echo $classe1->valorComPrefixo('FOO_') ."\n";
 
 $classe2 = new ClasseConcreta2;
 $classe2->imprimir();
-?> 
+echo $classe2->valorComPrefixo('FOO_') ."\n";
+?>
 ]]>
-   </programlisting>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+ConcreteClass1
+FOO_ConcreteClass1
+ConcreteClass2
+FOO_ConcreteClass2
+]]>
+    </screen>
   </example>
 
    <para>
