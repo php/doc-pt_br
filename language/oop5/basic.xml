@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.9 Maintainer: narigone Status: ready -->
+<!-- EN-Revision: 1.14 Maintainer: narigone Status: ready -->
 
  <sect1 id="language.oop5.basic">
   <title>O Básico</title>
@@ -8,27 +8,75 @@
    <title>Classe</title>
    <para>
     Toda definição de classe começa com a palavra-chave class, seguido por um nome
-    da classe, que pode ser qualquer nome que não seja uma palavra<link linkend="reserved">
-    reservada</link> no PHP. seguido por um par de chaves, que 
-    contém a definição dos membros e métodos da classe. Dentro de cada método,
-    exceto por métodos<link linkend="language.oop5.static">estáticos (static)</link>,
-    uma pseudo variável <varname>$this</varname> está disponível.
-    <varname>$this</varname> é uma referência para a mesma instância que 
-    chamou o método.
+    da classe, que pode ser qualquer nome que não seja uma palavra <link linkend="reserved">
+    reservada</link> no PHP. seguido por um par de chaves, que
+    contém a definição dos membros e métodos da classe. Uma
+    pseudo variável, <varname>$this</varname>, está disponível quando um método é
+    chamado dentro de um contexto de objeto. <varname>$this</varname> é uma referência
+    para o objeto chamador do método (normalmente o objeto ao qual o método
+    pertence, mas pode ser outro objeto, se o método é chamado
+    <link linkend="language.oop5.static">statically</link> do contexto
+    de um objeto secundário). Isso é ilustrado no exemplo a seguir:
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+<?php
+class A
+{
+    function foo()
+    {
+        if (isset($this)) {
+            echo '$this está definida (';
+            echo get_class($this);
+            echo ")\n";
+        } else {
+            echo "\$this não está definida.\n";
+        }
+    }
+}
+
+class B
+{
+    function bar()
+    {
+        A::foo();
+    }
+}
+
+$a = new A();
+$a->foo();
+A::foo();
+$b = new B();
+$b->bar();
+B::bar();
+?>
+]]>
+     </programlisting>
+     &example.outputs;
+     <screen>
+<![CDATA[
+$this está definida (a)
+$this não está definida.
+$this está definida (b)
+$this não está definida.
+]]>
+     </screen>
+    </informalexample>
    </para>
    <example>
-    <title>Definição simples de uma classe</title>
+    <title>Definição de SimpleClass</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-class ClasseSimples {
-   /* declaração de membro */
-   public $var = 'um valor padrão';
+class SimpleClass
+{
+    // declaração de membro
+    public $var = 'um valor padrão';
 
-   /* declaração de método */   
-   public function mostraVar() {
-     echo $this->var;
-   }
+    // declaração de método
+    public function displayVar() {
+        echo $this->var;
+    }
 }
 ?>
 ]]>
@@ -40,45 +88,43 @@ class ClasseSimples {
    <title>new</title>
    <para>
     Para criar uma instância de um objeto, um novo objeto deve ser criado e
-    atribuído a uma variável. Um objeto sempre será atribuído quando
-    um novo objeto for criado a não ser que o objeto tem um<link
-    linkend="language.oop5.decon">construtor</link> definido que dispara (throws) uma<link
-    linkend="language.exceptions">exceção</link> por um erro.
+    atribuído à uma variável. Um objeto sempre será atribuído quando
+    for criado um novo objeto, a não ser que o objeto tenha um
+    <link linkend="language.oop5.decon">construtor</link> definido que dispare uma
+    <link linkend="language.exceptions">exceção</link> por um erro.
    </para>
    <example>
     <title>Criando uma instância</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-$instancia = new ClasseSimples();
+$instance = new SimpleClass()
 ?>
 ]]>
     </programlisting>
    </example>
    <para>
-    Quando atribuindo um instância já criada de um objeto à uma nova variável, a nova variável
-    acessará a mesma instância do objeto que foi atribuída. Esse
-    comportamento é o mesmo quando passando instâncias à uma função. Uma nova instância
-    de um objeto já criado pode ser feita<link
-    linkend="language.oop5.cloning">clonando (cloning)</link> ele.
+    Quando atribuír um instância já criada de um objeto à uma variável nova, essa
+    acessarpa a mesma instância do objeto que foi atribuído. Esse
+    comportamento se mantem quando passando instâncias à uma função. Uma nova instância
+    de um objeto já criado pode ser feita
+    <link linkend="language.oop5.cloning">clonando</link> o mesmo.
    </para>
    <example>
-    <title>Atribuição de Objetos</title>
+    <title>Atribuíção de Objetos</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-$atribuido  =  $instancia;
-$referencia =& $instancia;
+$assigned   =  $instance;
+$reference  =& $instance;
 
+$instance->var = '$assigned terá esse valor';
 
-$instancia->var = '$atribuido terá esse valor';
+$instance = null; // $instance e $reference tornam-se nulos
 
-$instancia = null; /* $instancia e $referencia se tornam nulos (null) */
-
-
-var_dump($instancia);
-var_dump($referencia);
-var_dump($atribuido);
+var_dump($instance);
+var_dump($reference);
+var_dump($assigned);
 ?>
 ]]>
     </programlisting>
@@ -87,52 +133,52 @@ var_dump($atribuido);
 <![CDATA[
 NULL
 NULL
-object(ClasseSimples)#1 (1) {
+object(SimpleClass)#1 (1) {
    ["var"]=>
-     string(26) "$atribuido terá esse valor"
+     string(30) "$assigned terá esse valor"
 }
 ]]>
     </screen>
    </example>
   </sect2>
 
-  <sect2 id="language.oop5.basic.extend">
-   <title>Herança (extend)</title>
+  <sect2 id="language.oop5.basic.extends">
+   <title>extends</title>
    <para>
-    Uma classe pode herdar métodos e membros de uma outra classe usando a
-    palavra-chave extend na declaração. Não é possível herdar classes
-    múltiplas, uma classe só pode herdar de uma classe base.
+    Uma classe pode herdar métodos e membros de outra classe usando a
+    palavra-chave extends na sua declaração. Não é possível herdar classes
+    múltiplas, uma classe só pode herdar uma classe base.
    </para>
    <para>
-    Os métodos e membros herdados podem ser sobrecarregados, a menos que a classe
-    pai tenha definido o método como <link
-    linkend="language.oop5.final">final</link>, redeclarando-os
-    usando o mesmo nome definido na classe pai. É possível acessar o método ou membro
-    sobrecarregado referenciando-os com<link
-    linkend="language.oop5.paamayim-nekudotayim">parent::</link>
-   </para>
+    Os métodos e membros herdados podem ser sobrescritos, a não ser que a classe
+    pai definiu um método como <link linkend="language.oop5.final">final</link>,
+    redeclarando eles com o mesmo nome definido na classe pai.
+    É possível acessar os métodos e membros sobrescritos
+    referenciado eles com <link linkend="language.oop5.paamayim-nekudotayim">parent::</link>   </para>
    <example>
     <title>Herança Simples</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-class ClasseHerdeira extends ClasseSimples {
-  /* Redefine o método pai */
-  function mostraVar() {
-    echo "Classe Herdeira\n";
-    parent::mostraVar();
-  }
+class ExtendClass extends SimpleClass
+{
+    // Redefine o método pai
+    function displayVar()
+    {
+        echo "Classe Herdeira\n";
+        parent::displayVar();
+    }
 }
 
-$herdeira = new ClasseHerdeira();
-$herdeira->mostraVar();
+$extended = new ExtendClass();
+$extended->displayVar();
 ?>
 ]]>
     </programlisting>
     &example.outputs;
     <screen>
 <![CDATA[
-Class Herdeira
+Classe Herdeira
 um valor padrão
 ]]>
     </screen>
