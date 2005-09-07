@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.8 Maintainer: narigone Status: ready -->
+<!-- EN-Revision: 1.16 Maintainer: narigone Status: ready -->
  <sect1 id="language.oop5.reflection">
   <title>Reflexão</title>
   <sect2 id="language.oop5.reflection.introduction">
@@ -111,6 +111,15 @@ Class [ <internal> class Exception ] {
    </para>
   </sect2>
 
+  <sect2 id="language.oop5.reflection.reflectionexception">
+    <title><classname>ReflectionException</classname></title>
+    <para>
+     <classname>ReflectionException</classname> herda da classe de exceção padrão <link
+     linkend="language.exceptions">Exception</link> e é disparada pela API de
+     Reflecção. Nenhum método ou propriedade específicos são introduzidos.
+    </para>
+  </sect2>
+
   <sect2 id="language.oop5.reflection.reflectionfunction">
    <title><classname>ReflectionFunction</classname></title>
    <para>
@@ -147,12 +156,14 @@ class ReflectionFunction implements Reflector
     </programlisting>
    </informalexample>
    <note>
-    <simpara>
-     <function>invokeArgs</function> foi acrescentado no PHP 5.1.0.
+     <simpara>
+     <function>getNumberOfParameters</function> e
+     <function>getNumberOfRequiredParameters</function> foram adicionados no PHP
+     5.0.3, e <function>invokeArgs</function> foi adicionado no PHP 5.1.0.
     </simpara>
    </note>
    <para>
-    Para introspectar uma função, você primeiro terá que criar uma instância 
+    Para introspectar uma função, você primeiro terá que criar uma instância
     da classe <classname>ReflectionFunction</classname>. Você pode, então, chamar
     qualquer um dos métodos acima nessa instância.
    </para>
@@ -166,7 +177,7 @@ class ReflectionFunction implements Reflector
  *
  * @return    int
  */
-function counter() 
+function counter()
 {
     static $c = 0;
     return $c++;
@@ -236,6 +247,7 @@ class ReflectionParameter implements Reflector
     public string getName()
     public bool isPassedByReference()
     public ReflectionClass getClass()
+    public bool isArray()
     public bool allowsNull()
     public bool isOptional()
     public bool isDefaultValueAvailable()
@@ -249,7 +261,8 @@ class ReflectionParameter implements Reflector
     <para>
      <function>getDefaultValue</function>,
      <function>isDefaultValueAvailable</function>,
-     <function>isOptional</function> were added in PHP 5.1.0.
+     <function>isOptional</function> foram adicionados no PHP 5.0.3,
+     e <function>isArray</function> foi adicionado no PHP 5.1.0.
     </para>
    </note>
    <para>
@@ -269,7 +282,7 @@ function baz(ReflectionFunction $a, $b = 1, $c = null) { }
 function abc() { }
 
 // Crie uma instância de ReflectionFunction com o
-// parâmetro dado da linha de comando.   
+// parâmetro dado da linha de comando.
 $reflect = new ReflectionFunction($argv[1]);
 
 echo $reflect;
@@ -282,7 +295,7 @@ foreach ($reflect->getParameters() as $i => $param) {
         "   Passed to by reference: %s\n".
         "   Is optional?: %s\n".
         "}\n",
-        $i, 
+        $i,
         $param->getName(),
         var_export($param->getClass(), 1),
         var_export($param->allowsNull(), 1),
@@ -316,7 +329,9 @@ class ReflectionClass implements Reflector
     public bool isInternal()
     public bool isUserDefined()
     public bool isInstantiable()
+    public bool hasConstant(string name)
     public bool hasMethod(string name)
+    public bool hasProperty(string name)
     public string getFileName()
     public int getStartLine()
     public int getEndLine()
@@ -338,6 +353,8 @@ class ReflectionClass implements Reflector
     public ReflectionClass getParentClass()
     public bool isSubclassOf(ReflectionClass class)
     public array getStaticProperties()
+    public mixed getStaticPropertyValue(string name [, mixed default])
+    public void setStaticPropertyValue(string name, mixed value)
     public array getDefaultProperties()
     public bool isIterateable()
     public bool implementsInterface(string name)
@@ -350,7 +367,9 @@ class ReflectionClass implements Reflector
    </informalexample>
    <note>
     <simpara>
-     <function>hasMethod</function> was added in PHP 5.1.0.
+     <function>hasConstant</function>, <function>hasMethod</function>,
+     <function>hasProperty</function>, <function>getStaticPropertyValue</function>
+     e <function>setStaticPropertyValue</function> foram adicionados no PHP 5.1.0.
     </simpara>
    </note>
    <para>
@@ -376,7 +395,7 @@ class Object
 /**
  * Uma classe contadora
  */
-class Counter extends Object implements Serializable 
+class Counter extends Object implements Serializable
 {
     const START = 0;
     private static $c = Counter::START;
@@ -433,7 +452,7 @@ printf("---> Methods: %s\n", var_export($class->getMethods(), 1));
 if ($class->isInstantiable()) {
     $counter = $class->newInstance();
 
-    echo '---> $counter is instance? '; 
+    echo '---> $counter is instance? ';
     echo $class->isInstance($counter) ? 'yes' : 'no';
 
     echo "\n---> new Object() is instance? ";
@@ -453,7 +472,7 @@ if ($class->isInstantiable()) {
    <note>
     <simpara>
      <literal>$class = new ReflectionClass('Foo'); $class-&gt;isInstance($arg)</literal>
-     é equivalente a<literal>$arg instanceof Foo</literal> ou 
+     é equivalente a<literal>$arg instanceof Foo</literal> ou
      <literal>is_a($arg, 'Foo')</literal>.
     </simpara>
    </note>
@@ -583,7 +602,7 @@ var_dump($method->invoke(NULL));
    </note>
    <note>
     <simpara>
-     Para métodos estáticos como visto acima, você deve passar NULL como o 
+     Para métodos estáticos como visto acima, você deve passar NULL como o
      primeiro argumento para <function>invoke</function>. Para métodos não-estáticos,
      passe uma instância da classe.
     </simpara>
@@ -616,11 +635,17 @@ class ReflectionProperty implements Reflector
     public mixed getValue(stdclass object)
     public void setValue(stdclass object, mixed value)
     public ReflectionClass getDeclaringClass()
+    public string getDocComment()
 }
 ?>
 ]]>
     </programlisting>
    </informalexample>
+   <note>
+    <simpara>
+     <function>getDocComment</function> foi adicionado no PHP 5.1.0.
+    </simpara>
+   </note>
    <para>
     Para introspectar um método, você tem que primeiro criar uma instância
     da classe <classname>ReflectionProperty</classname>. Você pode, então,
@@ -808,7 +833,7 @@ var_dump(new My_Reflection_Method('U', 'x'));
    </note>
   </sect2>
  </sect1>
- 
+
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

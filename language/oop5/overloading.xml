@@ -1,17 +1,24 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.6 Maintainer: narigone Status: ready -->
+<!-- EN-Revision: 1.11 Maintainer: narigone Status: ready -->
  <sect1 id="language.oop5.overloading">
   <title>Sobrecarga</title>
 
   <para>
    Tanto chamada de métodos e acesso a membros podem ser sobrecarregados pelos métodos
-   __call, __get e __set. Esses métodos só serão disparados quando
-   seu objeto ou o objeto herdado não contiver o
+   __call, __get e __set. Esses métodos só serão
+   disparados quando seu objeto ou o objeto herdado não contiver o
    membro ou método que você está tentando acessar.
+   Todos os métodos sobrecarregados devem ser definidos
+   <link linkend="language.oop5.visibility">estáticos</link>.
+  </para>
+  <para>
+    A partir do PHP 5.1.0 também é possível sobrecarregar as
+    funções <function>isset</function> and <function>unset</function> através
+    dos métodos __isset e __unset respectivamente.
   </para>
 
   <sect2 id="language.oop5.overloading.members">
-   <title>Sobrecarga de método</title>
+   <title>Sobrecarga de membros</title>
 
    <methodsynopsis>
     <type>void</type><methodname>__set</methodname>
@@ -19,20 +26,28 @@
     <methodparam><type>mixed</type><parameter>value</parameter></methodparam>
    </methodsynopsis>
    <methodsynopsis>
-    <type>void</type><methodname>__get</methodname>
-    <methodparam><type>mixed</type><parameter>name</parameter></methodparam>
+    <type>mixed</type><methodname>__get</methodname>
+    <methodparam><type>string</type><parameter>name</parameter></methodparam>
+   </methodsynopsis>
+   <methodsynopsis>
+    <type>bool</type><methodname>__isset</methodname>
+    <methodparam><type>string</type><parameter>name</parameter></methodparam>
+   </methodsynopsis>
+   <methodsynopsis>
+    <type>void</type><methodname>__unset</methodname>
+    <methodparam><type>string</type><parameter>name</parameter></methodparam>
    </methodsynopsis>
 
    <para>
-    Membros de classes podem ser sobrecarregados para executar código específico definido 
-    na sua classe definindo esses métodos especialmente nomeados. O parâmetro <varname>$name</varname> 
+    Membros de classes podem ser sobrecarregados para executar código específico definido
+    na sua classe definindo esses métodos especialmente nomeados. O parâmetro <varname>$name</varname>
     usado é o nome da variável que deve ser configurada ou recuperada.
     O parâmetro <varname>$value</varname> do método __set() especifica o
     valor que o objeto deve atribuir à variável <varname>$name</varname>.
    </para>
 
    <example>
-    <title>Exemplo de sobrecarga com __get e __set</title>
+    <title>Exemplo de sobrecarga com __get, __set, __isset e __unset</title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -41,29 +56,43 @@ class Setter
     public $n;
     private $x = array("a" => 1, "b" => 2, "c" => 3);
 
-    function __get($nm)
+    private function __get($nm)
     {
-        print "Pegando [$nm]\n";
+        echo "Getting [$nm]\n";
 
         if (isset($this->x[$nm])) {
             $r = $this->x[$nm];
-            print "Retornando: $r\n";
+            print "Returning: $r\n";
             return $r;
         } else {
-            echo "Nada!\n";
+        echo "Nothing!\n";
         }
     }
 
-    function __set($nm, $val)
+    private function __set($nm, $val)
     {
-        print "Atribuindo à [$nm] o valor $val\n";
+        echo "Setting [$nm] to $val\n";
 
         if (isset($this->x[$nm])) {
             $this->x[$nm] = $val;
             echo "OK!\n";
         } else {
-            echo "Não funcionou\n";
+            echo "Not OK!\n";
         }
+    }
+
+    private function __isset($nm)
+    {
+        echo "Checking if $nm is set\n";
+
+        return isset($this->x[$nm]);
+    }
+
+    private function __unset($nm)
+    {
+        echo "Unsetting $nm\n";
+
+        unset($this->x[$nm]);
     }
 }
 
@@ -72,32 +101,45 @@ $foo->n = 1;
 $foo->a = 100;
 $foo->a++;
 $foo->z++;
+
+var_dump(isset($foo->a)); //true
+unset($foo->a);
+var_dump(isset($foo->a)); //false
+
+// Isso não passa pelo método __isset()
+// porque 'n' é uma proriedade pública
+var_dump(isset($foo->n));
+
 var_dump($foo);
 ?>
 ]]>
     </programlisting>
-    <para>
-     Terá a seguinte saída:
-    </para>
+    &example.outputs;
     <screen role="php">
 <![CDATA[
-Atribuindo à [a] o valor 100
+Setting [a] to 100
 OK!
-Pegando [a]
-Retornando: 100
-Atribuindo à [a] o valor 101
+Getting [a]
+Returning: 100
+Setting [a] to 101
 OK!
-Pegando [z]
-Nada!
-Atribuindo à [z] o valor 1
-Não funcionou!
+Getting [z]
+Nothing!
+Setting [z] to 1
+Not OK!
+
+Checking if a is set
+bool(true)
+Unsetting a
+Checking if a is set
+bool(false)
+bool(true)
+
 object(Setter)#1 (2) {
   ["n"]=>
   int(1)
   ["x:private"]=>
-  array(3) {
-    ["a"]=>
-    int(101)
+  array(2) {
     ["b"]=>
     int(2)
     ["c"]=>
@@ -120,7 +162,7 @@ object(Setter)#1 (2) {
    </methodsynopsis>
 
    <para>
-    Membros de classes podem ser sobrecarregados para executar código específico definido 
+    Membros de classes podem ser sobrecarregados para executar código específico definido
     na sua classe definindo esses métodos especialmente nomeados. O parâmetro
     <varname>$name</varname> usado é o nome da função que foi requerida
     a ser usada. Os argumentos que foram passado na função serão definidos
@@ -152,9 +194,7 @@ var_dump($a);
 ?>
 ]]>
     </programlisting>
-    <para>
-     Terá a seguinte saída:
-    </para>
+    &example.outputs;
     <screen role="php">
 <![CDATA[
 
@@ -184,7 +224,7 @@ array(3) {
   </sect2>
 
  </sect1>
- 
+
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
