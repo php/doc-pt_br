@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: 1.3 Maintainer: narigone Status: ready -->
+<sect1 id="install.unix.debian">
+ <title>Notas de Instalação para o Debian GNU/Linux</title>
+ <para>
+  Essa seção contem notas e dicas específicas para a instalação do
+  PHP no <ulink url="&url.debian;">Debian GNU/Linux</ulink>.
+ </para>
+ <sect2 id="install.unix.debian.apt">
+  <title>Usando APT</title>
+   <simpara>
+    Embora você possa apenas baixar o fonte do PHP e compilar por conta própria,
+    usar o sistema de pacotes do Debian e o método mais simples e
+    mais limpo de instalar o PHP. Se você não está familiarizado com compilar
+    software no Linux, essa é maneira de se instalar.
+   </simpara>
+   <simpara>
+    A primeira decisão que você precisa fazer é se você quer instalar
+    o Apache 1.3.x ou o Apache 2.x. Os pacotes correspondentes do PHP são,
+    respectivamente, libapache-mod-php* e libapache2-mod-php*.
+    Os passos abaixo usarão o Apache 1.3.x.
+    Por favor, perceba que, até o fechamento desse documento, não há nenhum
+    pacote oficial do Debian para o PHP 5. Então, o procedimento instalará o PHP4.
+   </simpara>
+   <simpara>
+    O PHP está disponível no Debian como CGI ou CLI também, pelos pacotes
+    php4-cgi e php4-cli. Se você precisar deles, só terá que reproduzia os
+    passos a seguir com o pacote desejado.
+    Outro pacote especial que você pode querer instalar é o php4-pear. Ele contem um
+    instalação PEAR mínima e a ferramenta de linha de comando
+    <command>pear</command>.
+   </simpara>
+   <simpara>
+    Se você precisa de pacotes do PHP mais recentes que os do Debian stable
+    ou se alguns módulos do PHP não se encontram no repositório oficial do Debian,
+    talvez você deva procurar em <ulink url="&url.apt-get;">http://www.apt-get.org/</ulink>.
+    Um dos resultados encontrados deve ser
+    <ulink url="http://www.dotdeb.org/">Dotdeb</ulink>. Esse repositório não-oficial
+    é mantido por <ulink url="mailto:gui@php.net">Guillaume Plessis</ulink>
+    e contem pacotes Debian das versões mais recentes do PHP 4 e 5.
+    Para usá-lo, apenas adiciona as seguintes linhas ao seu arquivo
+    <filename>/etc/apt/sources.lists</filename> e execute <command>apt-get
+    update</command> :
+   </simpara>
+   <example>
+    <title>Adicionando o repositório Dotdeb</title>
+    <programlisting role="shell">
+<![CDATA[
+deb http://packages.dotdeb.org stable all
+deb-src http://packages.dotdeb.org stable all
+]]>
+    </programlisting>
+   </example>
+   <simpara>
+    A última coisa a ser considade é se sua lista de pacotes está atualizada.
+    Se você não atualizou recentemente, você precisa executar <command>apt-get update</command>
+    antes de qualquer coisa. Dessa forma, você estará usando a versão estável
+    mais recente dos pacotes do Apache e do PHP.
+   </simpara>
+   <simpara>
+    Agora que está tudo no lugar, você pode usar o seguinte exemplo
+    para instalar o Apache e o PHP:
+   </simpara>
+   <example id="install.unix.debian.apt.example">
+    <title>Exemplo de Instalação no Debian com o Apache 1.3</title>
+    <programlisting role="shell">
+<![CDATA[
+# apt-get install libapache-mod-php4
+]]>
+    </programlisting>
+   </example>
+   <simpara>
+    O APT instalará o módulo do PHP 4 para o Apache 1.3 automaticamente, e todas
+    as suas dependências e então ativá-lo. Se o programa não pedir para reiniciar o
+    Apache durante a instalação, você terá que fazê-lo manualmente:
+   </simpara>
+   <example id="install.unix.debian.apt.example2">
+    <title>Parando e iniciando o Apache depois que o PHP estiver instalado</title>
+    <programlisting role="shell">
+<![CDATA[
+# /etc/init.d/apache stop
+# /etc/init.d/apache start
+]]>
+    </programlisting>
+   </example>
+ </sect2>
+ <sect2 id="install.unix.debian.config">
+  <title>Maior controle sobre a configuração</title>
+   <simpara>
+    Na seção anterior, o PHP foi instalado apenas com os módulos principais.
+    Isso pode não ser o que você quer e você discobrirá em breve que você precisa
+    de mais módulos ativados, como MySQL, cURL, GD, etc.
+   </simpara>
+   <simpara>
+    Quando você compila o PHP do fonte, você precisa ativar os módulos através
+    do comando <command>configure</command>. Com o APT, você só precisa
+    instalar os pacotes adicionais. Todos eles tem o nome 'php4-*' (ou 'php5-*' se
+    você instalou o PHP 5 de um repositório não-oficial).
+   </simpara>
+   <example id="install.unix.debian.config.example">
+    <title>Pegando a lista de pacotes adicionais do PHP</title>
+    <programlisting role="shell">
+<![CDATA[
+# dpkg -l 'php4-*'
+]]>
+    </programlisting>
+   </example>
+   <simpara>
+    Como você pode ver na saída do comando, existem vários módulos do PHP que
+    você pode instalar (tirando os pacotes especiais php4-cgi, php4-cli ou
+    php4-pear).
+    Olhe com bastante atenção e escolha os que você precisar. Se você escolher um módulo e
+    você não tiver as bibliotecas necessárias, o APT instalará todas as dependências
+    automaticamente para você.
+   </simpara>
+   <simpara>
+    Se você escolher adicionar os módulos do MySQL, cURL e GD, o comando
+    parecerá com esse:
+   </simpara>
+   <example id="install.unix.debian.config.example2">
+    <title>Instalar o PHP com MySQL, cURL e GD</title>
+    <programlisting role="shell">
+<![CDATA[
+# apt-get install php4-mysql php4-curl php4-gd
+]]>
+    </programlisting>
+   </example>
+   <simpara>
+    O APT editará o seu arquivo &php.ini; (<filename>/etc/php4/apache/php.ini</filename>,
+    <filename>/etc/php4/cgi/php.ini</filename>, etc) para dar suporte
+    aos módulos novos.
+   </simpara>
+   <example id="install.unix.debian.config.example3">
+    <title>Essas linhas ativam o MySQL, cURL e GD no PHP</title>
+    <programlisting role="shell">
+<![CDATA[
+extension=mysql.so
+extension=curl.so
+extension=gd.so
+]]>
+    </programlisting>
+   </example>
+   <simpara>
+    Você só terá que parar/iniciar o Apache como antes para ativar os módulos.
+   </simpara>
+ </sect2>
+ <sect2 id="install.unix.debian.faq">
+  <title>Problemas Comuns</title>
+  <itemizedlist>
+   <listitem>
+    <simpara>
+     Se você ver o código fonte do seus script ao invés do resultado que eles
+     deveriam produzir, o APT provavelmente não incluiu
+     <filename>/etc/apache/conf.d/php4</filename> na configuração do
+     Apache. Verifique se a linha está presente no arquivo
+     <filename>/etc/apache/httpd.conf</filename> e então reinicie o Apache:
+    </simpara>
+   <example id="install.unix.debian.faq.example">
+    <title>Essa linha ativa o PHP 4 no Apache</title>
+    <programlisting role="shell">
+<![CDATA[
+# Include /etc/apache/conf.d/
+]]>
+    </programlisting>
+   </example>
+   </listitem>
+   <listitem>
+    <simpara>
+     Se você instalou um módulo adicional e se as funções desse módulo não
+     estiverem disponíveis nos scripts, verifique que a linha apropriada está presente
+     no seu arquivo &php.ini;, como visto antes. O APT pode falhar durante a instalação
+     de módulos adicionais, devido a uma configuração confusa do debconf.
+    </simpara>
+   </listitem>
+  </itemizedlist>
+ </sect2>
+</sect1>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"../../manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
