@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: 1.4 Maintainer: narigone Status: ready -->
+<!-- splitted from ./index.xml, last change in rev 1.66 -->
+  <chapter id="security.cgi-bin">
+   <title>Instalando como binário CGI</title>
+
+   <sect1 id="security.cgi-bin.attacks">
+    <title>Ataque Possível</title>
+    <simpara>
+     Usando o PHP como binário <acronym>CGI</acronym> é uma opção de
+     instalação que por alguma razão não deseja integrar o PHP como um
+     módulo no servidor (como o Apache), ou usará o PHP com
+     tipos diferentes de CGI wrappers para criar ambientes chroot e
+     setuid seguros para os scripts. Esse tipo de instalação normalmente involve
+     copiar o binário executável para o diretório cgi-bin do servidor web. CERT
+     advisory <ulink url="&url.cert;">CA-96.11</ulink> recomenda não
+     colocar qualquer interpretador nesse diretório. Mesmo se o binário do
+     PHP pode ser usado como um interpretador autônomo, o PHP foi desenhado
+     para previnir os ataques que essa forma de instalação torna possível:
+    </simpara>
+    <itemizedlist>
+     <listitem>
+      <simpara>
+       Acessar arquivos de sistema: <filename
+       role="url">http://my.host/cgi-bin/php?/etc/passwd</filename>
+      </simpara>
+      <simpara>
+       A informação de consulta em uma URML depois da interrogração (?) é
+       passada como argumentos de linha de comando para o interpretador pea
+       interface CGI. Normalmente os interpretadores abrem e executam o arquivo
+       especificado como primeiro argumento na linha de comando.
+      </simpara>
+      <simpara>
+       Quando invocado como binárgio CGI, o PHP se recusa a interpretar os
+       argumentos de linha de comando.
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       Acessar qualquer domento web no servidor: <filename
+       role="url">http://my.host/cgi-bin/php/secret/doc.html</filename>
+      </simpara>
+      <simpara>
+       A parte de informação de caminho da URL depois do nome do binário do PHP,
+       <filename role="uri">/secret/doc.html</filename> é
+       convencionalmente usada para especificar o nome do arquivo a ser
+       aberto e interpretado pelo programa <acronym>CGI</acronym>
+       Normalmente algumas diretivas de configuração do servidor web (Apache:
+       Action) são usadas para redirecionar requisições para documentos como
+       <filename
+       role="url">http://my.host/secret/script.php</filename> para o
+       interpretados do PHP.  Dessa maneira, o servidor web primeiro checa
+       as permissões de acesso ao diretório <filename
+       role="uri">/secret</filename>, e depois cria a
+       requisição redirecionada <filename
+       role="url">http://my.host/cgi-bin/php/secret/script.php</filename>.
+       Infelizmente, se a requisição é dada originalmente nessa forma,
+       a checagem de permissão não é feita para o arquivo <filename
+       role="uri">/secret/script.php</filename>, mas apenas para o arquivo
+       <filename role="uri">/cgi-bin/php</filename>.  Dessa maneira
+       qualquer usuário que pode acessar <filename
+       role="uri">/cgi-bin/php</filename> pode acessar quaisquer
+       documentos protegidos no servidor web.
+      </simpara>
+      <simpara>
+       No PHP, a opção de configuração em tempo de compilação <link
+       linkend="configure.enable-force-cgi-redirect">--enable-force-cgi-redirect</link>
+       e as diretivas de configuração de tempo de execução <link
+       linkend="ini.doc-root">doc_root</link> e <link
+       linkend="ini.user-dir">user_dir</link> podem ser usadas para previnir
+       esse ataque, se a árvore de documentos do servidor tiver qualquer diretório
+       com restrições de acesso. Veja abaixo para uma explicação completa
+       de combinações diferentes.
+      </simpara>
+     </listitem>
+    </itemizedlist>
+   </sect1>
+
+   <sect1 id="security.cgi-bin.default">
+    <title>Caso 1: apenas arquivos públicos são disponibilizados</title>
+
+    <simpara>
+     Se o seu servidor não tiver qualquer conteúdo que não é restringido
+     por senha ou por IP, não há necessidade para essas opções de
+     configuração. Se seu servidor web não permitir que você faça
+     redirecionamento, ou o servidor não tem uma maneira de
+     comunicar ao binário PHP que a requisição é uma redirecionada
+     de maneira segura, você pode especificar a opção <link
+     linkend="configure.enable-force-cgi-redirect">--enable-force-cgi-redirect</link>
+     no script configure. Você ainda tem que assegura que o seus scripts
+     PHP não confiem com uma ou outra maneira de chamar o script,
+     nem diretamente <filename
+     role="php">http://my.host/cgi-bin/php/dir/script.php</filename>
+     nem por redirecionamento <filename
+     role="php">http://my.host/dir/script.php</filename>.
+    </simpara>
+    <simpara>
+     Redirecionamento pode ser configurado no Apache usando AddHandler
+     e diretivas Action (veja abaixo).
+    </simpara>
+   </sect1>
+
+   <sect1 id="security.cgi-bin.force-redirect">
+    <title>Caso 2: usando --enable-force-cgi-redirect</title>
+    <simpara>
+     Essa opção em tempo de compilação previne que qualquer usuário chame
+     o PHP diretamente com uma URL como <filename
+     role="php">http://my.host/cgi-bin/php/secretdir/script.php</filename>.
+     Ao invés disso, o PHP só executará nesse mode se passar por uma
+     regra de redirecionamento do servidor.
+    </simpara>
+    <simpara>
+     Normalmente o redirecionamento na configuração do Apache é feita com
+     as seguintes diretivas:
+    </simpara>
+    <programlisting role="apache-conf">
+<![CDATA[
+Action php-script /cgi-bin/php
+AddHandler php-script .php
+]]>
+    </programlisting>
+    <simpara>
+     Essa opção só foi testada com o servidor Apache, e confia
+     no Apache para configura a variável de ambiente não-padrão do CGI
+     <envar>REDIRECT_STATUS</envar> em requisições redirecionadas. Se seu
+     servidor web não suporta nenhuma maneira de dizer se a requisição é
+     direta ou rediracionada, você não pode usar essa opção e você deve usar
+     uma das outras maneira de executar a versão do CGI documentada
+     aqui.
+    </simpara>
+   </sect1>
+
+   <sect1 id="security.cgi-bin.doc-root">
+    <title>Caso 3: configurando doc_root ou user_dir</title>
+    <simpara>
+     Para incluir conteúdo ativo, como script e executáveis, nos
+     diretórios de documentos do servidor é algumas vezes consideread uma
+     prática insegura. Se, por conta de um erro de configuração, os scripts
+     não são executados mas mostrados como documentos HTML normais, isso
+     pode resultar em vazamento de propriedade intelectual ou informação
+     de segurança, como senhas. Portanto, muitos administradores preferirão
+     configura outra estrutura de diretório para scripts que são acessíveis
+     apenas pelo CGI do PHP, e, portanto, sempre
+     interpretados e não enviado ao navegador.
+    </simpara>
+    <simpara>
+     Além disso, se o método para assegura que as requisições não são
+     redirecionadas, como descrito na seção anterior, não estiver
+     disponível, é necessário configura um doc_root para os script que
+     é diferente do doc_root do servidor web.
+    </simpara>
+    <simpara>
+     Você pode configura a raiz de documentos dos scripts PHP pela
+     diretiva de configuração <link linkend="ini.doc-root">doc_root</link> no
+     <link linkend="configuration.file">arquivo de configuração</link>, ou
+     você pode criar a variável de ambiente
+     <envar>PHP_DOCUMENT_ROOT</envar>.  Se ela existir, a versão CGI
+     do PHP sempre construirá o nome de arquivo para ser aberto com esse
+     <parameter>doc_root</parameter> e a informação de caminho na
+     requisição, para assegurar que nenhum script é executado fora desse
+     diretório (exceto por <parameter>user_dir</parameter>
+     abaixo).
+    </simpara>
+    <simpara>
+     Outra opção utilizável é <link
+     linkend="ini.user-dir">user_dir</link>.  Quando user_dir não existir,
+     a única coisa controlando o nome do arquivo aberto é
+     <parameter>doc_root</parameter>. Abrir uma URL como <filename
+     role="url">http://my.host/~user/doc.php</filename> não resulta
+     em abrir um arquivo no diretório home de users, mas um arquivo
+     chamado <filename role="uri">~user/doc.php</filename> dentro de
+     doc_root (sim, um nome de diretório começando com til
+     [<literal>~</literal>]).
+    </simpara>
+    <simpara>
+     Se user_dir existir e tiver valor de, por exemplo, <filename
+     role="dir">public_php</filename>, uma requisição como <filename
+     role="url">http://my.host/~user/doc.php</filename> abrirá
+     o arquivo chamado <filename>doc.php</filename> no diretório
+     chamado <filename role="dir">public_php</filename> dentro do diretório
+     home do usuário.  Se o home do usuário é <filename
+     role="dir">/home/user</filename>, o arquivo executado é
+     <filename>/home/user/public_php/doc.php</filename>.
+    </simpara>
+    <simpara>
+     A expansão de <parameter>user_dir</parameter> acontece independente da
+     configuração de <parameter>doc_root</parameter>, para que você possa controlar
+     a raiz de documentos e de acesso de diretório do usuário
+     separadamente.
+    </simpara>
+   </sect1>
+
+   <sect1 id="security.cgi-bin.shell">
+    <title>Caso 4: Interpretador do PHP fora da árvore de diretórios do servidor web</title>
+    <para>
+     Uma maneira muito segura é colocar o interpretador do PHP em algum lugar
+     longe dos arquivos da árvore de diretórios do servidor. Em <filename
+     role="dir">/usr/local/bin</filename>, por exemplo. A única desvantagem
+     real para essa opção é que você terá que colocar uma linha
+     similar à:
+     <informalexample>
+      <programlisting>
+<![CDATA[
+#!/usr/local/bin/php
+]]>
+      </programlisting>
+     </informalexample>
+     como a primeira linha de qualquer arquivo contento tags do PHP. Você também
+     terá que tornar o arquivo executável. Isso é, tratá-lo exatamente como
+     você trataria qualquer script CGI escrito em Perl ou sh ou qualquer
+     outra linguagem de script comum que usa o
+     mecanismo de escape de shell <literal>#!</literal> para ser
+     executado.
+    </para>
+    <para>
+     Para fazer o PHP tratar as informações de <envar>PATH_INFO</envar> e
+     <envar>PATH_TRANSLATED</envar> corretamente com essa
+     configuração, o interpretador do PHP deve ser compilado com a
+     opção de configure <link
+     linkend="configure.enable-discard-path">--enable-discard-path</link>.
+    </para>
+   </sect1>
+
+  </chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"../../manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
