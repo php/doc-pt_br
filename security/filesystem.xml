@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: 1.3 Maintainer: narigone Status: ready -->
+<!-- splitted from ./index.xml, last change in rev 1.66 -->
+  <chapter id="security.filesystem">
+   <title>Segurança do Sistema de Arquivos</title>
+   <simpara>
+    O PHP está sujeito à segurança encontrada na maioria dos sistemas de servidor
+    com respeito à permissões de arquivos e diretórios. Isso permite que
+    você controle quais arquivos no sistema podem ser lidos e por quem. É preciso
+    ter cuidado com quaisquer arquivos que são lidos por todos para assegurar
+    que eles podem ser lidos por todos os usuários que tem acesso ao
+    sistema de arquivos.
+   </simpara>
+   <simpara>
+    Já que o PHP foi desenhado para permitir acesso em nível de usuário ao sistema
+    de aruqivos, é possível escrever um script PHP que permitirá
+    ler arquivos do sistema com /etc/passwd, modificar suas conexões
+    de ethernet, enviar trabalhos de impressão gigantes, etc. Isso tem
+    algumas implicações óbvias, já que você precisa ter certeza que os arquivos
+    que você lê e escreve são apropriados.
+   </simpara>
+   <simpara>
+    Considere o seguinte script, onde um usuário indica que ele quer
+    apagar um arquivo no seu diretório home. Isso presume uma situação
+    onde uma interface web PHP é usada regularmente para controle
+    de arquivos, então o usuário do Apache tem permissão de apagar arquivos
+    nos diretórios home dos usuários.
+   </simpara>
+   <para>
+    <example>
+     <title>Checagem fraca de variáveis resulta em....</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+// remove um arquivo do diretório home do usuário
+$username = $_POST['user_submitted_name'];
+$homedir = "/home/$username";
+$file_to_delete = "$userfile";
+unlink ("$homedir/$userfile");
+echo "$file_to_delete foi apagado!";
+?>
+]]>
+     </programlisting>
+    </example>
+   Já que o nome do usuário é enviado de um formulário do usuário, eles podem enviar
+   um nome de usuário e um arquivo pertencente a outra pessoa e apagar os arquivos.
+   Nesse caso, você desejaria ter alguma outra forma de autenticação.
+   Considere o que poderia acontecer se as variáveis enviadas forem
+   "../etc/" and "passwd". O código então leria efetivamente:
+    <example>
+     <title>... um ataque ao sistema de arquivos</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+// remove um arquivo em qualquer lugar do disco rígido no qual
+// o usuário do PHP tem acesso. Se o PHP tiver acesso de administrador (root):
+$username = "../etc/";
+$homedir = "/home/../etc/";
+$file_to_delete = "passwd";
+unlink ("/home/../etc/passwd");
+echo "/home/../etc/passwd foi apagado!";
+?>
+]]>
+     </programlisting>
+    </example>
+    Existem duas medidas importantes que você deve tomar para previnir
+    esses problemas.
+    <itemizedlist>
+     <listitem>
+      <simpara>
+       Só dar permissões limitadas ao usuário executando o binário do PHP.
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       Checar todas as variáveis que são enviadas.
+      </simpara>
+     </listitem>
+    </itemizedlist>
+    Aqui temos um script melhorado:
+    <example>
+     <title>Checagem mais segura do nome do arquivo</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+// remove um arquivo do disco rígido que
+// o usuário do PHP tem acesso:
+$username = $_SERVER['REMOTE_USER']; // usando um mecanismo de autenticação
+
+$homedir = "/home/$username";
+
+$file_to_delete = basename("$userfile"); // retira caminhos
+unlink ($homedir/$file_to_delete);
+
+$fp = fopen("/home/logging/filedelete.log","+a"); // registra a remoção
+$logstring = "$username $homedir $file_to_delete";
+fwrite ($fp, $logstring);
+fclose($fp);
+
+echo "$file_to_delete foi apagado!";
+?>
+]]>
+     </programlisting>
+    </example>
+    No entanto, ele ainda possui falhas. Se seu sistema de autenticação
+    permitir que os usuários criem seu próprios logins, e um usuário
+    escolher o login "../etc/", o sistema está novamente exposto. Por
+    essa razão, você pode preferir escrever uma checagem mais específica:
+    <example>
+     <title>Checagem mais segura do nome do arquivo</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+$username = $_SERVER['REMOTE_USER']; // usando um mecanismo de autenticação
+$homedir = "/home/$username";
+
+if (!ereg('^[^./][^/]*$', $userfile))
+     die('nome de arquivo inválido'); // morre, não processa
+
+if (!ereg('^[^./][^/]*$', $username))
+     die('nome de arquivo inválido'); //morre, não processa
+//etc...
+?>
+]]>
+     </programlisting>
+    </example>
+   </para>
+   <para>
+    Dependendo do seu sistema operacional, existe uma variedade enorme de arquivos
+    que você tem que se preocupar, incluindo dispositivos  (/dev/
+    or COM1), arquivos de configuração (arquivos /etc/ e .ini),
+    áres de armazenamento conhecidas (/home/, My Documents), etc. Por essa
+    razão, normalmente é mais fácil criar uma política onde você proibe
+    tudo exceto aquilo que for explicitamente permitido.
+   </para>
+  </chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"../../manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
