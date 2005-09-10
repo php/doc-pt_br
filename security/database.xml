@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: 1.11 Maintainer: narigone Status: ready -->
+<!-- splitted from ./index.xml, last change in rev 1.66 -->
+  <chapter id="security.database">
+   <title>Segurança de Bancos de Dados</title>
+
+   <simpara>
+    Hoje em dia, bancos de dados são componentes cardinais de qualquer aplicação web
+    permitindo que websites forneçam conteúdo dinâmico variável. uma ves que informação muito
+    sensível e/ou secreta pode ser guardada em um banco de dados, proteger seus
+    bancos de dados é essencial.
+   </simpara>
+   <simpara>
+    Para retirar ou guardar qualquer informação, você precisa conectar-se ao banco
+    de dados, enviar uma consulta (query) legítima, puxar o resultado e fechar a conexão.
+    Atualmente, a linguagem mais usada para consulta nessa interação é a
+    Structured Query Language (SQL). Veja como um atacante pode <link
+    linkend="security.database.sql-injection">manipular uma consulta SQL</link>.
+   </simpara>
+   <simpara>
+    Como você pode perceber, o PHP não pode proteger seu banco de dados sozinho. As
+    seções a seguir tentam ser uma introdução básica em relação a como
+    acessa e manipular banco de dados a partir de scripts PHP.
+   </simpara>
+   <simpara>
+    Mantenha em mente essa regra simples: defesa em profundidade. Quanto mais lugares
+    você faz ações para aumentar a proteção do seu banco, menor a probabilidade
+    de um atacante ter suceso em expor ou abusar de qualquer informação
+    guardada. Bom desenho do esquema (schema) de banco de dados e da aplicação
+    lida com seus maiores medos.
+   </simpara>
+
+   <sect1 id="security.database.design">
+    <title>Desenhando Bancos de Dados</title>
+     <simpara>
+      O primeiro passo é sempre criar o banco de dados, a não ser que você queira
+      usar um de terceiros. Quando um banco de dados é criado, ele é
+      atribuído a um dono, que executou os comandos de criação. Normalmente, só
+      o dono (ou um superusuário) pode faz algo com os objetos naquele
+      banco de dados, e para permitir que outros usuários usem, privilégios devem
+      ser concedidos.
+     </simpara>
+     <simpara>
+      Aplicações nunca devem conecta ao banco de dados como seu dono ou um
+      superusuário, porque esses usuários podem executar qualquer consulta que
+      quiserem, por exemplo, modificar o esquema (ex.: destruindo tabelas) ou
+      removendo seu conteúdo completamente.
+     </simpara>
+     <simpara>
+      Você pode criar usuários de bancos de dados diferentes para cada aspecto
+      da sua aplicação com direitos muito limitados aos objetos do banco de dados.
+      Apenas os privilégios mais necessários devem ser concedidos, e evitar que o
+      mesmo usuário possa interagir com o banco de dados em casos de uso diferentes. Isso
+      significa que se invasores conseguirem acessar seu bando usando credenciais da sua
+      aplicação, eles só podem afetar o banco tanto quanto sua aplicação.
+     </simpara>
+     <simpara>
+      Encorajamos não implementar toda a lógica de negócio na aplicação
+      web (ex.: seu script). Ao invés disso, faça parte no esquema do banco,
+      usando view, triggers ou rules. Se o sistema evoluir, crescerá a vontade de
+      criar novas maneiras de usar o banco, e você terá que reimplementar a lógica
+      em cada cliente separado do banco. Além disso, triggers podem ser usados
+      para lidar com certos campos de maneira automática e transparente, o que
+      permite dar informações quando depurar problemas com sua aplicação ou
+      rastreando transações.
+     </simpara>
+   </sect1>
+
+   <sect1 id="security.database.connection">
+    <title>Conectando com o Banco de Dados</title>
+    <simpara>
+     Você pode querer estabelecer as conexões sobre SSL para criptografar
+     comunicações cliente/servidor para aumentar a segurança, ou você pode usar ssh
+     para criptografar a conexão de rede entre clientes e o servidor de banco de dados.
+     Se uma dessa opções for usada, monitoramento do seu tráfego e obtenção
+     de informação sobre seu banco de dados serão dificultados por um atacante.
+    </simpara>
+    <!--simpara>
+     If your database server has native SSL support, consider using <link
+     linkend="ref.openssl">OpenSSL functions</link> in communication between
+     PHP and database via SSL.
+    </simpara-->
+   </sect1>
+
+   <sect1 id="security.database.storage">
+    <title>Modelo de Armazenamento Criptografado</title>
+    <simpara>
+     SSL/SSH protege dados transitando de um cliente para o servidor, mas
+     não protege os dados guardados em um banco de dados. SSL é um
+     protocolo on-the-wire.
+    </simpara>
+    <simpara>
+     Uma vez que o atacante ganha acesso direto ao seu banco de dados(desviando do
+     servidor web), os dados armazenados podem ser expostos ou sofre uso nocivo, a não ser
+     que a informação seja protegida pelo banco em si. Criptografa os dados é
+     uma boa maneira de diminuir essa ameaça, mas poucos bancos de dados oferecem
+     esse tipo de criptografia de dados.
+    </simpara>
+    <simpara>
+     A maneira mais fácil de contornar esse problema é primeiro criar seu próprio
+     pacote de criptografia, e então usá-lo no seus scripts PHP. O PHP pode
+     ajudá-lo com várias extensões, tais como <link
+     linkend="ref.mcrypt">Mcrypt</link> e <link
+     linkend="ref.mhash">Mhash</link>, cobrindo uma grande variedade de algoritmos
+     de criptografia. O script criptografa os dados antes de inserí-los no banco de dados e
+     descriptografa quando os recupera. Veja as referência para outros exemplos de como
+     criptografia funciona.
+    </simpara>
+    <simpara>
+     No caso de dados realmente escondidos, se sua representação crua não é necessária
+     (ex.: não será mostrada), usar uma função de hash pode ser levada em consideração.
+     Um exemplo bem conhecido disso é guardar o hash MD5 de uma
+     senha no banco de dados ao invés da senha em si. Veja também
+     <function>crypt</function> e <function>md5</function>.
+    </simpara>
+    <example>
+     <title>Usando campo de senha hasheado</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+
+// guardando hash da senha
+$query  = sprintf("INSERT INTO users(name,pwd) VALUES('%s','%s');",
+            addslashes($username), md5($password));
+$result = pg_query($connection, $query);
+
+// consultando se o usuário enviou a senha correta
+$query = sprintf("SELECT 1 FROM users WHERE name='%s' AND pwd='%s';",
+            addslashes($username), md5($password));
+$result = pg_query($connection, $query);
+
+if (pg_num_rows($result) > 0) {
+    echo 'Welcome, $username!';
+} else {
+    echo 'Authentication failed for $username.';
+}
+
+?>
+]]>
+     </programlisting>
+    </example>
+   </sect1>
+
+   <sect1 id="security.database.sql-injection">
+    <title>Injeção de SQL</title>
+    <simpara>
+     Muitos desenvolvedores web não sabem de como consultas SQL podem ser manipuladas,
+     e presumem que uma consulta de SQL é um comando confiável. Significa que consultas
+     SQL são capazes de passar indetectado por controles de acesso, portanto desviando
+     da autenticação padrão e teestes de autorização, e algumas vezes consultas SQL podem
+     permitir acesso à comando em nível do sistema operacional do servidor.
+    </simpara>
+    <simpara>
+     Injeção direta de comandos SQL é uma técnica onde um atacante cria ou
+     alterar comandos SQL existentes para expor dados escondidos, ou sobrescrever
+     dados valiosos, ou ainda executar comandos de sistema perigosos no servidor.
+     Isso é possível se a aplicação pegar a entrada do usuário e combinar
+     com parâmetros estáticos para montar uma consulta SQL. Os exemplos
+     a seguir são baseados em estórias verdadeiras, infelizmente.
+    </simpara>
+    <para>
+     Devido a faulta de validação de entrada e conectar ao banco de dados
+     usando o super-usuário ou um usuário que pode criar usuário, o atacante
+     pode criar um super-usuário no seu banco de dados.
+     <example>
+      <title>
+       Dividinto o result set em páginas ... e criando super-usuários
+       (PostgreSQL)
+      </title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+
+$offset = $argv[0]; // Cuidado, sem validação de entrada!
+$query  = "SELECT id, name FROM products ORDER BY name LIMIT 20 OFFSET $offset;";
+$result = pg_query($conn, $query);
+
+?>
+]]>
+      </programlisting>
+     </example>
+      Usuário normais clicam nos links 'próxima' e 'anterior' onde <varname>$offset</varname>
+      é codificado na URL. O script espera que o valor de
+      <varname>$offset</varname> seja um número decimal. No entanto, e se alguém tentar
+      invadir acrescentando a forma codificada por <function>urlencode</function> da
+      URL seguinte:
+      <informalexample>
+       <programlisting role="sql">
+<![CDATA[
+0;
+insert into pg_shadow(usename,usesysid,usesuper,usecatupd,passwd)
+    select 'crack', usesysid, 't','t','crack'
+    from pg_shadow where usename='postgres';
+--
+]]>
+       </programlisting>
+      </informalexample>
+      Se isso acontecesse, então o script daria de presente acesso de super-usuário ao
+      atacante. Pareceba que <literal>0;</literal> é para fornecer uma deslocamento válido
+      para a consulta original e terminá-la.
+    </para>
+    <note>
+     <para>
+      É uma técnica comum forçar o avaliador de SQL ignorar o resto da consulta
+      escrita pelo desenvolvedor com <literal>--</literal>, que é o sinal de
+      comentário no SQL.
+     </para>
+    </note>
+    <para>
+     Uma maneira de ganhar senha é desviar suas páginas de resultado de busca.
+     A única coisa que o atacante precisa fazer é ver se alguma variável enviada
+     é usada em um comando SQL que não é tratado corretamente. Esses filtros podem ser
+     configurados de forma a personalizar cláusulas <literal>WHERE, ORDER BY,
+     LIMIT</literal> e <literal>OFFSET</literal> em comandos <literal>SELECT</literal>
+     Se seu banco de dados suporta a funcionalidade <literal>UNION</literal>,
+     o atacante pode tentar adicionar uma consulta inteira à consulta original para
+     listar senhas de uma tabela arbitrária. Uso de campos de senha criptografados é
+     fortemente incentivado.
+     <example>
+      <title>
+       Listando artigos ... e algumas senhas (qualquer banco de dados)
+      </title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+
+$query  = "SELECT id, name, inserted, size FROM products
+                  WHERE size = '$size'
+                  ORDER BY $order LIMIT $limit, $offset;";
+$result = odbc_exec($conn, $query);
+
+?>
+]]>
+      </programlisting>
+     </example>
+     A parte estática da consulta pode ser combinada com outro comando
+     <literal>SELECT</literal> que revela todas as senhas:
+     <informalexample>
+      <programlisting role="sql">
+<![CDATA[
+'
+union select '1', concat(uname||'-'||passwd) as name, '1971-01-01', '0' from usertable;
+--
+]]>
+      </programlisting>
+     </informalexample>
+     Se essa consulta (brincando com <literal>'</literal> e
+     <literal>--</literal>) for atribuída para uma das variáveis usadas em
+     <varname>$query</varname>, a besta da consulta acorda.
+    </para>
+    <para>
+     Comandos de UPDATE também são suscetíveis à ataques. Essas consultas também
+     são ameaçadas por cortes e acréscimos de uma nova consulta. Mas o
+     atacante pode brincar com a cláusula <literal>SET</literal>. Nesse caso
+     ele precisa estar de posse de alguma informação sobre o esquema para manipular a
+     consulta com sucesso. Isso pode ser conseguido examinando so nomes das variáveis do
+     formulário, ou simplesmente por força bruta. Não existem muitas convensões para
+     campos guardando senhas ou nomes de usuários.
+     <example>
+     <title>
+      De reinicializando uma senha ... para ganhando mais privilégios (qualquer banco de dados)
+     </title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+$query = "UPDATE usertable SET pwd='$pwd' WHERE uid='$uid';";
+?>
+]]>
+      </programlisting>
+     </example>
+     Mas um usuário malicioso envia o valor
+     <literal>' or uid like'%admin%'; --</literal> para <varname>$uid</varname> para
+     mudar a senha do administrador, ou simplesmente configura <varname>$pwd</varname> para
+     <literal>"hehehe', admin='yes', trusted=100 "</literal> (com um espaço
+     sobrando) para ganha mais privilégios. Então, a consulta ficará torta:
+     <informalexample>
+      <programlisting role="php">
+<![CDATA[
+<?php
+
+// $uid == ' or uid like'%admin%'; --
+$query = "UPDATE usertable SET pwd='...' WHERE uid='' or uid like '%admin%'; --";
+
+// $pwd == "hehehe', admin='yes', trusted=100 "
+$query = "UPDATE usertable SET pwd='hehehe', admin='yes', trusted=100 WHERE
+...;";
+
+?>
+]]>
+      </programlisting>
+     </informalexample>
+    </para>
+    <para>
+     Um exemplo assustado de como comandos do sistema operacional podem ser acessados
+     em alguns bancos de dados.
+     <example>
+     <title>Atacando o sistema operacional do servidor (MSSQL Server)</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+
+$query  = "SELECT * FROM products WHERE id LIKE '%$prod%'";
+$result = mssql_query($query);
+
+?>
+]]>
+      </programlisting>
+     </example>
+     Se o atacante enviar o valor
+     <literal>a%' exec master..xp_cmdshell 'net user test testpass /ADD' --</literal>
+     para <varname>$prod</varname>, então <varname>$query</varname> terá o valor:
+     <informalexample>
+      <programlisting role="php">
+<![CDATA[
+<?php
+
+$query  = "SELECT * FROM products
+                    WHERE id LIKE '%a%'
+                    exec master..xp_cmdshell 'net user test testpass /ADD'--";
+$result = mssql_query($query);
+
+?>
+]]>
+      </programlisting>
+     </informalexample>
+     MSSQL Server executa os comandos SQL em um em um lote, incluindo um comando
+     para adicionar um novo usuário para o banco de dados de contas locais. Se essa aplicação
+     estiver sendo executada como <literal>sa</literal> e o serviço MSSQLSERVER estiver
+     sendo executado com privilégios suficientes, o atacante teria agora uma
+     conta com a qual poderia acessar essa máquina.
+    </para>
+    <note>
+     <para>
+      Alguns dos exemplos acima estão ligados à bancos específicos. Isso não
+      significa que um ataque similar é impossível contra outros produtos.
+      Seu servidor de banco de dados pode ter uma vulnerabilidade similar de outa maneira.
+     </para>
+    </note>
+
+    <sect2 id="security.database.avoiding">
+     <title>Técnicas para Evitar Ataques</title>
+     <simpara>
+      Você pode dizer que o atacante precisa possuir um pouco de informação
+      sobre o esquema de banco de dados na maioria dos exemplo. Você tem razão, mas
+      você nunca sabe quando e como isso pode ser obtido e, se acontecer, seu
+      banco de dados pode ficar exposto. Se você estiver usando um pacote
+      open source publicamente disponível para lidar com banco de deados, que pode pertencer
+      a um sistema de controle de conteúdo ou forum, os invasores facilmente produzem
+      uma cópia de parte de seu código. Também pode ser um risco de segurança se
+      este for for mal desenhado.
+     </simpara>
+     <simpara>
+      Esses ataques se baseam principalmente em explorar falhas no código escrito
+      sem se preocupar com segurança. Nunca confie em nenhum tipo de entrada, especialmente
+      aquela que vem do lado do cliente, mesmo que venha de um combobox,
+      um campo de entrada escondido (hidden) ou um cookie. O primeiro exemplo mostra
+      como uma consulta inocente pode causar desastres.
+     </simpara>
+
+     <itemizedlist>
+      <listitem>
+       <simpara>
+        Nunca conecte ao banco de dados como um super-usuário ou como o dono do banco
+        de dados. Sem use usuários personalidados com privilégios bem limitados.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Verifique se uma entrada qualquer tem o tipo de dados experado. O PHP tem
+        um grande número de funções de validação de entrada, desde as mais simples
+        encontrada em <link linkend="ref.var">Funções de Variáveis</link> e
+        em <link linkend="ref.ctype">Funções de Tipo de Caracteres</link>
+        (ex.: <function>is_numeric</function>, <function>ctype_digit</function>
+        respectivamente) além de usar
+        o suporte à
+        <link linkend="ref.pcre">Expressões Regulares Compatível com Perl</link>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <para>
+        Se a aplicação espera por entradas numéricas, considere verificar os dados
+        com a função <function>is_numeric</function>, ou silenciosamente mudar o seu
+        tipo usando <function>settype</function>, ou usar a representação númeria
+        usando a função <function>sprintf</function>.
+        <example>
+         <title>Uma maneira mais segura para compor consultas de paginação</title>
+         <programlisting role="php">
+<![CDATA[
+<?php
+
+settype($offset, 'integer');
+$query = "SELECT id, name FROM products ORDER BY name LIMIT 20 OFFSET $offset;";
+
+// por favor perceba o %d na string de formato, usando %s seria inútil
+$query = sprintf("SELECT id, name FROM products ORDER BY name LIMIT 20 OFFSET %d;",
+                 $offset);
+
+?>
+]]>
+         </programlisting>
+        </example>
+       </para>
+      </listitem>
+      <listitem>
+       <simpara>
+        Adicione aspas para cada valor não numérico especificado pelo usuário que
+        será passado para o banco de dados com as funções de caracteres de escape (ex.:
+        <function>mysql_escape_string</function>,
+        <function>sql_escape_string</function>, etc.). Se um mecanismo de
+        escape de caracter específico par ao seu banco de dados não for disponível, as
+        funções <function>addslashes</function> e <function>str_replace</function>
+        podem ser úteis (dependendo do tipo de banco de dados).
+        Veja o <link linkend="security.database.storage">o primeiro exemplo</link>.
+        Como o exemplo mostra, adicionar aspas para a parte estática da consulta
+        não é suficiente, fazendo com que a consulta seja facilmente atacada.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Não imprima qualquer informação específica do banco de dados, especialmente
+        sobre o esquema, custe o que custar. Veja também <link
+        linkend="security.errors">Relatório de Erros</link> e <link
+        linkend="ref.errorfunc">Funções de Tratamento e Relatório de Erros</link>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        Você pode usar stored procedures e cursores previamente definidas para abstrair
+        acesso aos dados para que os usuário não acessem tabelas ou view diretamente, mas
+        essa solução pode ter outros impactos.
+       </simpara>
+      </listitem>
+     </itemizedlist>
+
+     <simpara>
+      Além disso, você ganha em relatar consultas ou dentro do script
+      ou no próprio banco de dados, se esse suportar. Obviamente, o relatório é
+      para previnir qualquer tentativa danosa, mas pode ser útil para ajudar a rastrar
+      qual aplicação foi atacada. O resitro não é útil em si, mas
+      atráves da informação que ele contem. Mais detalhes geralmente é melhor que menos.
+     </simpara>
+    </sect2>
+   </sect1>
+  </chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"../../manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
