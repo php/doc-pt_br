@@ -1,38 +1,93 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.7 Maintainer: fernandoc Status: ready -->
-  <refentry id="function.ftp-nb-fget">
-   <refnamediv>
-    <refname>ftp_nb_fget</refname>
-    <refpurpose>Obtém um arquivo de um servidor FTP e escreve para um ponteiro de arquivo (sem bloquear)</refpurpose>
-   </refnamediv>
-   <refsect1>
-    <title>Descrição</title>
-     <methodsynopsis>
-      <type>int</type><methodname>ftp_nb_fget</methodname>
-      <methodparam><type>resource</type><parameter>ftp_stream</parameter></methodparam>
-      <methodparam><type>resource</type><parameter>handle</parameter></methodparam>
-      <methodparam><type>string</type><parameter>arquivo_remoto</parameter></methodparam>
-      <methodparam><type>int</type><parameter>modo</parameter></methodparam>
-      <methodparam choice="opt"><type>int</type><parameter>resumepos</parameter></methodparam>
-     </methodsynopsis>
-    <para>
-     A função <function>ftp_nb_fget</function> obtém <parameter>arquivo_remoto</parameter>
-     apartir de um servidor FTP, e o escreve para o ponteiro de arquivo indicado,
-     <parameter>handle</parameter>. O <parameter>modo</parameter>
-     de transferência deve ser <constant>FTP_ASCII</constant> ou
-     <constant>FTP_BINARY</constant>. A diferença entre esta função e a função
-     <function>ftp_fget</function> é que esta função obtém o arquivo sem
-     sincronia, então o seu programa pode realizar outras operações
-     enquando o arquivo esta sendo obtido.
-    </para>
-    <para>
-     <example>
-      <title>Exemplo <function>ftp_nb_fget</function></title>
-      <programlisting role="php">
+<!-- EN-Revision: 1.9 Maintainer: fernandoc Status: ready -->
+<refentry id="function.ftp-nb-fget">
+ <refnamediv>
+  <refname>ftp_nb_fget</refname>
+  <refpurpose>Obtém um arquivo de um servidor FTP e escreve-o para um arquivo aberto(sem bloquear)</refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>int</type><methodname>ftp_nb_fget</methodname>
+   <methodparam><type>resource</type><parameter>ftp_stream</parameter></methodparam>
+   <methodparam><type>resource</type><parameter>handle</parameter></methodparam>
+   <methodparam><type>string</type><parameter>remote_file</parameter></methodparam>
+   <methodparam><type>int</type><parameter>mode</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>resumepos</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   <function>ftp_nb_fget</function> obtém um arquivo remoto do
+   servidor FTP.
+  </para>
+  <para>
+   A diferença entre esta função e <function>ftp_fget</function> é 
+   que esta função obtém o arquivo de forma assincronoma, assim seu programa
+   pode realizar outras operações enquanto o arquivo esta sendo copiado.
+  </para>
+ </refsect1>
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>ftp_stream</parameter></term>
+     <listitem>
+      <para>
+       O identificador com a conexão FTP.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>handle</parameter></term>
+     <listitem>
+      <para>
+       Um ponteiro de arquivo aberto para o qual nós guardamos os dados.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>remote_file</parameter></term>
+     <listitem>
+      <para>
+       O caminho para o arquivo remoto.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>mode</parameter></term>
+     <listitem>
+      <para>
+       O modo de transferência. Deve ser <constant>FTP_ASCII</constant> ou
+       <constant>FTP_BINARY</constant>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>resumepos</parameter></term>
+     <listitem>
+      <para></para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna <constant>FTP_FAILED</constant> ou <constant>FTP_FINISHED</constant>
+   ou <constant>FTP_MOREDATA</constant>.
+  </para>
+ </refsect1>
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo <function>ftp_nb_fget</function></title>
+    <programlisting role="php">
 <![CDATA[
 <?php
 
-// abre algum arquivo para leitura
+// open some file for reading
 $file = 'index.php';
 $fp = fopen($file, 'w');
 
@@ -40,39 +95,41 @@ $conn_id = ftp_connect($ftp_server);
 
 $login_result = ftp_login($conn_id, $ftp_user_name, $ftp_user_pass);
 
-// começa o download
+// Initate the download
 $ret = ftp_nb_fget($conn_id, $fp, $file, FTP_BINARY);
 while ($ret == FTP_MOREDATA) {
 
-   // faça o que você quiser
+   // Do whatever you want
    echo ".";
 
-   // continue baixando...
+   // Continue downloading...
    $ret = ftp_nb_continue($conn_id);
 }
 if ($ret != FTP_FINISHED) {
-   echo "Houve um erro ao baixar o arquivo...";
+   echo "There was an error downloading the file...";
    exit(1);
 }
 
-// fecha o ponteiro do arquivo
+// close filepointer
 fclose($fp);
 ?>
 ]]>
-      </programlisting>
-     </example>
-    </para>
-    <para>
-     Retorna <constant>FTP_FAILED</constant>, <constant>FTP_FINISHED</constant>,
-     ou <constant>FTP_MOREDATA</constant>.
-    </para>
-    <para>
-     Veja também <function>ftp_nb_get</function>,
-     <function>ftp_nb_continue</function>, <function>ftp_fget</function> e
-     <function>ftp_get</function>.
-    </para>
-   </refsect1>
-  </refentry>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>ftp_nb_get</function></member>
+    <member><function>ftp_nb_continue</function></member>
+    <member><function>ftp_fget</function></member>
+    <member><function>ftp_get</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
 
 <!-- Keep this comment at the end of the file
 Local variables:

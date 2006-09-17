@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.4 Maintainer: fernandoc Status: ready -->
+<!-- EN-Revision: 1.7 Maintainer: fernandoc Status: ready -->
 <!-- splitted from ./en/functions/ibase.xml, last change in rev 1.39 -->
   <refentry id='function.ibase-blob-import'>
    <refnamediv>
@@ -12,7 +12,11 @@
     <title>Descrição</title>
      <methodsynopsis>
       <type>string</type><methodname>ibase_blob_import</methodname>
-      <methodparam choice="opt"><type>resource</type><parameter>link_identifier</parameter></methodparam>
+      <methodparam><type>resource</type><parameter>link_identifier</parameter></methodparam>
+      <methodparam><type>resource</type><parameter>file_handle</parameter></methodparam>
+     </methodsynopsis>
+     <methodsynopsis>
+      <type>string</type><methodname>ibase_blob_import</methodname>
       <methodparam><type>resource</type><parameter>file_handle</parameter></methodparam>
      </methodsynopsis>
     <para>
@@ -20,6 +24,38 @@
      retorna o id do BLOB. O parâmetro <parameter>file_handle</parameter> é um 
      ponteiro de arquivo aberto com <function>fopen</function>.
      Retorna &false; em caso de falha.
+    </para>
+    <para>
+     <example>
+      <title><function>ibase_blob_import</function> example</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+$dbh = ibase_connect($host, $username, $password);
+$filename = '/tmp/bar';
+      
+$fd = fopen($filename, 'r');
+if ($fd) {
+    
+    $blob = ibase_blob_import($dbh, $fd);
+    fclose($fd);
+        
+    if (!is_string($blob)) {
+        // import failed
+    } else {
+        $query = "INSERT INTO foo (name, data) VALUES ('$filename', ?)";
+        $prepared = ibase_prepare($dbh, $query);
+        if (!ibase_execute($prepared, $blob)) {
+            // record insertion failed
+        }
+    }
+} else {
+    // unable to open the data file
+}
+?>
+]]>
+      </programlisting>
+     </example>
     </para>
     <para>
      Veja também
