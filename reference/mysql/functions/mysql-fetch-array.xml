@@ -1,77 +1,86 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.14 Maintainer: fernandoc Status: ready -->
-<!-- splitted from ./en/functions/mysql.xml, last change in rev 1.27 -->
-  <refentry id="function.mysql-fetch-array">
-   <refnamediv>
-    <refname>mysql_fetch_array</refname>
-    <refpurpose>
-     Busca o resultado de uma linha e o coloca como uma matriz associativa, matriz numérica ou ambas.
-    </refpurpose>
-   </refnamediv>
-   <refsect1>
-    <title>Descrição</title>
-     <methodsynopsis>
-      <type>array</type><methodname>mysql_fetch_array</methodname>
-      <methodparam><type>resource</type><parameter>result</parameter></methodparam>
-      <methodparam choice="opt"><type>int</type><parameter>
-        result_type
-       </parameter></methodparam>
-     </methodsynopsis>
-    <para>
-     Retorna uma matriz que corresponde a linha buscada, ou &false; 
-     se não houverem mais linhas.</para>
-    <para>
-     <function>mysql_fetch_array</function> é uma versão estendida de
-     <function>mysql_fetch_row</function>. Além de guardar os dados em um índice numérico na matriz,
-     também guarda os dados em índices associativos, usando o nome do campo como chave.
-    </para>
-    <para>
-     Se duas ou mais colunas do resultado tiverem o mesmo nome do campo,
-     a ultima coluna terá precedência. Para acessar as outras coluna(s) com o mesmo nome,
-     você deve usar o índice numérico da coluna ou 
-     fazer um apelido para a coluna. Para colunas com apelido, você não pode 
-     acessar os conteúdos com o nome original da coluna (usando
-     <literal>'field'</literal> neste exemplo).
-     <example>
-      <title>Query com nomes de campo duplicados</title>
-      <programlisting role="sql">
+<!-- EN-Revision: 1.24 Maintainer: fernandoc Status: ready -->
+<refentry id="function.mysql-fetch-array">
+ <refnamediv>
+  <refname>mysql_fetch_array</refname>
+  <refpurpose>Obtém uma linha como uma matriz associativa, uma matriz numérica, ou ambas</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>array</type><methodname>mysql_fetch_array</methodname>
+   <methodparam><type>resource</type><parameter>result</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>result_type</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Retorna uma matriz que corresponde a linha obtida
+   e move o ponteiro interno dos dados adiante.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    &mysql.result.description;
+    <varlistentry>
+     <term><parameter>result_type</parameter></term>
+     <listitem>
+      <para>
+       O tipo de array que deve ser obtida. é uma constante e pode
+       ter os seguintes valores: <constant>MYSQL_ASSOC</constant>, 
+       <constant>MYSQL_NUM</constant>, e o valor padrão de  
+       <constant>MYSQL_BOTH</constant>.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+ 
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna uma array que corresponde a linha obtida, ou &false;
+   se não houver mais linhas. O tipo da array retornada depende de
+   como <parameter>result_type</parameter> esta definido. Usando 
+   <constant>MYSQL_BOTH</constant> (padrão), você terá um array com ambos os
+   índices, numérico e associativo. Usando <constant>MYSQL_ASSOC</constant>, você
+   tem apenas os índices associativos (como <function>mysql_fetch_assoc</function> 
+   funciona), usando <constant>MYSQL_NUM</constant>, você tem apenas os índices numéricos 
+   (como <function>mysql_fetch_row</function> funciona).
+  </para>
+  <para>
+   Se duas ou mais colunas do resultado tiverem os mesmos nomes de campos,
+   a ultima coluna terá precedencia. Para acessar a(s) outra(s) coluna(s)
+   com o mesmo nome, você deverá usar o índice numérico da coluna ou fazer
+   um alias para a coluna. Para colunas com alias, você não pode acessar
+   os conteúdos com o nome original da coluna.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Consulta com nomes de campos duplicados usando alias</title>
+    <programlisting role="sql">
 <![CDATA[
 SELECT table1.field AS foo, table2.field AS bar FROM table1, table2
 ]]>
-      </programlisting>
-     </example>
-    </para>
-    <para>
-     Uma coisa importante para notar é que usar
-     <function>mysql_fetch_array</function> <emphasis>não é 
-     significativamente</emphasis> mais lenta do que usar
-     <function>mysql_fetch_row</function>, enquanto que produz um resultado 
-     melhor de se usar.
-    </para>
-    <para>
-     O segundo argumento, que é opcional, <parameter>result_type</parameter>
-     em <function>mysql_fetch_array</function> é uma constante que pode ter 
-     os seguintes valores: MYSQL_ASSOC, MYSQL_NUM, e
-     MYSQL_BOTH. Isto foi adicionado no PHP 3.0.7. MYSQL_BOTH
-     é o padrão para este argumento.
-    </para>
-    <para>
-     Usando MYSQL_BOTH, você terá uma matriz com os índices associativos e numéricos. 
-     Usando MYSQL_ASSOC, você terá apenas os índices associativos 
-     (como funciona <function>mysql_fetch_assoc</function>),
-     usando MYSQL_NUM, você terá apenas os índices numéricos (como
-     funciona <function>mysql_fetch_row</function>).
-    </para>
-    &database.field-case;
-    <para>
-    <example>
-     <title>mysql_fetch_array com MYSQL_NUM</title>
-     <programlisting role="php">
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title><function>mysql_fetch_array</function> com <constant>MYSQL_NUM</constant></title>
+    <programlisting role="php">
 <![CDATA[
 <?php
 mysql_connect("localhost", "mysql_user", "mysql_password") or
-    die("Não pude conectar: " . mysql_error());
- mysql_select_db("mydb");
+    die("Não foi possível conectar: " . mysql_error());
+mysql_select_db("mydb");
 
 $result = mysql_query("SELECT id, name FROM mytable");
 
@@ -82,35 +91,39 @@ while ($row = mysql_fetch_array($result, MYSQL_NUM)) {
 mysql_free_result($result);
 ?>
 ]]>
-     </programlisting>
-    </example>
-    <example>
-     <title>mysql_fetch_array com MYSQL_ASSOC</title>
-     <programlisting role="php">
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title><function>mysql_fetch_array</function> com <constant>MYSQL_ASSOC</constant></title>
+    <programlisting role="php">
 <![CDATA[
 <?php
 mysql_connect("localhost", "mysql_user", "mysql_password") or
-    die("Não pude conectar: " . mysql_error());
+    die("Não foi possível conectar: " . mysql_error());
 mysql_select_db("mydb");
 
 $result = mysql_query("SELECT id, name FROM mytable");
 
 while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
-    printf ("ID: %s  Name: %s", $row["id"], $row["name"]);
+    printf("ID: %s  Name: %s", $row["id"], $row["name"]);
 }
 
 mysql_free_result($result);
 ?>
 ]]>
-     </programlisting>
-    </example>
-    <example>
-     <title>mysql_fetch_array com MYSQL_BOTH</title>
-     <programlisting role="php">
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title><function>mysql_fetch_array</function> com <constant>MYSQL_BOTH</constant></title>
+    <programlisting role="php">
 <![CDATA[
 <?php
 mysql_connect("localhost", "mysql_user", "mysql_password") or
-    die("Não pude conectar: " . mysql_error());
+    die("Não foi possível conectar: " . mysql_error());
 mysql_select_db("mydb");
 
 $result = mysql_query("SELECT id, name FROM mytable");
@@ -118,20 +131,43 @@ $result = mysql_query("SELECT id, name FROM mytable");
 while ($row = mysql_fetch_array($result, MYSQL_BOTH)) {
     printf ("ID: %s  Name: %s", $row[0], $row["name"]);
 }
-   
+
 mysql_free_result($result);
 ?>
 ]]>
-     </programlisting>
-    </example>
-    </para>
-    <para>
-     Veja também
-     <function>mysql_fetch_row</function> e
-     <function>mysql_fetch_assoc</function>.
-    </para>
-   </refsect1>
-  </refentry>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <title>Performance</title>
+   <para>
+    Uma coisa importante para notar que usar 
+    <function>mysql_fetch_array</function> <emphasis>não 
+    é significativamente</emphasis> mais lento do que usar
+    <function>mysql_fetch_row</function>, enquanto provê
+    um valor agregado significante.
+   </para>
+  </note>
+  &database.field-case;
+  &database.fetch-null;
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>mysql_fetch_row</function></member>
+    <member><function>mysql_fetch_assoc</function></member>
+    <member><function>mysql_data_seek</function></member>
+    <member><function>mysql_query</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
 
 <!-- Keep this comment at the end of the file
 Local variables:

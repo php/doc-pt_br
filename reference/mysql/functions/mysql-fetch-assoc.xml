@@ -1,58 +1,68 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.9 Maintainer: fernandoc Status: ready -->
-<!-- splitted from ./en/functions/mysql.xml, last change in rev 1.45 -->
-  <refentry id="function.mysql-fetch-assoc">
-   <refnamediv>
-    <refname>mysql_fetch_assoc</refname>
-    <refpurpose>
-     Busca o resultado de uma linha e o coloca numa matriz associativa
-    </refpurpose>
-   </refnamediv>
-   <refsect1>
-    <title>Descrição</title>
-     <methodsynopsis>
-      <type>array</type><methodname>mysql_fetch_assoc</methodname>
-      <methodparam><type>resource</type><parameter>result</parameter></methodparam>
-     </methodsynopsis>
-    <para>
-     Retorna uma matriz associativa que corresponde a linha 
-     ou &false; se não houverem mais linhas.</para>
-    <para>
-     <function>mysql_fetch_assoc</function> é equivalente a chamar
-     <function>mysql_fetch_array</function> com MYSQL_ASSOC para o segundo
-     parâmetro, que é opcional. Somente retorna uma matriz associativa.
-     Este é o  jeito que <function>mysql_fetch_array</function> funcionava 
-     originalmente. Se você precisa dos índices numéricos assim como o 
-     associativo, use <function>mysql_fetch_array</function>.
-    </para>
-    <para>Se duas ou mais colunas do resultado tiverem o mesmo nome do campo,
-     a ultima coluna terá precedência. Para acessar as outras coluna(s) com o mesmo nome, 
-     você deve usar o índice numérico da coluna usando <function>mysql_fetch_row</function> ou 
-     fazer um apelido para a coluna.
-     Veja o exemplo em <function>mysql_fetch_array</function>
-     uma descrição para apelidos.
-    </para>
-    <para>
-     Uma coisa importante para notar é que usar
-     <function>mysql_fetch_assoc</function> <emphasis>não é 
-     significativamente</emphasis> mais lenta do que usar
-     <function>mysql_fetch_row</function>, enquanto produz um resultado melhor de usar.
-    </para>
-    &database.field-case;
-    <para>
-    <example>
-     <title><function>mysql_fetch_assoc</function></title>
-     <programlisting role="php">
+<!-- EN-Revision: 1.15 Maintainer: fernandoc Status: ready -->
+<refentry id="function.mysql-fetch-assoc">
+ <refnamediv>
+  <refname>mysql_fetch_assoc</refname>
+  <refpurpose>Obtém um linha do resultado como uma matriz associativa</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>array</type><methodname>mysql_fetch_assoc</methodname>
+   <methodparam><type>resource</type><parameter>result</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Retorna uma matriz associativa que corresponde a linha obtida
+   e move o ponteiro interno dos dados adiante.
+   <function>mysql_fetch_assoc</function> é equivalente a utilizar
+   <function>mysql_fetch_array</function> com MYSQL_ASSOC para o
+   segunto parâmetro, que é opcional. Ela apenas retorna a matriz associativa.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    &mysql.result.description;
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna uma matriz associativa que corresponde a linha obtida, ou 
+   &false; se não houverem mais linhas.
+  </para>
+  <para>
+   Se duas ou mais colunas do resultado tiverem o mesmo nome de campo,
+   a ultima coluna terá precedencia. Para acessar as outras 
+   coluna(s) com o mesmo nome, você precisa acessar os
+   outros resultados usando índices numéricos usando
+   <function>mysql_fetch_row</function> ou adicionar nomes alias.
+   Veja o exemplo em <function>mysql_fetch_array</function>
+   para uma descrição sobre alias.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Um exemplo expandido de <function>mysql_fetch_assoc</function></title>
+    <programlisting role="php">
 <![CDATA[
-<<?php
+<?php
 
 $conn = mysql_connect("localhost", "mysql_user", "mysql_password");
 
 if (!$conn) {
-    echo "Não foi possível conectar com o banco de dados: " . mysql_error();
+    echo "Não foi possível conectar ao banco de dados: " . mysql_error();
     exit;
 }
-    
+  
 if (!mysql_select_db("mydbname")) {
     echo "Não foi possível selecionar mydbname: " . mysql_error();
     exit;
@@ -65,19 +75,19 @@ $sql = "SELECT id as userid, fullname, userstatus
 $result = mysql_query($sql);
 
 if (!$result) {
-    echo "Não foi possível executar a consulta ($sql) apartir do banco de dados: " . mysql_error();
+    echo "Não foi possível executar a consulta ($sql) no banco de dados: " . mysql_error();
     exit;
 }
 
 if (mysql_num_rows($result) == 0) {
-    echo "Não foram encontradas linhas, nada para mostrar, então estou saindo";
+    echo "Não foram encontradas linhas, nada para mostrar, assim eu estou saindo";
     exit;
 }
 
-// Enquanto existir uma linha de dados, coloca esta linha em $row como uma matriz associativa
-// Nota: Se você esta esperando apenas uma linha, nõa é necessário usar um loop
-// Note: Se você colocar extract($row); dentro do loop a seguir, você então 
-//       criará $userid, $fullname, e $userstatus
+// Enquanto uma linha de dados existir, coloca esta linha em $row como uma matriz associativa
+// Nota: se você esta esperando apenas uma linha, não é necessário usar um loop
+// Nota: se você colocar extract($row); dentro do loop, você então
+//     irá criar $userid, $fullname, e $userstatus
 while ($row = mysql_fetch_assoc($result)) {
     echo $row["userid"];
     echo $row["fullname"];
@@ -88,17 +98,40 @@ mysql_free_result($result);
 
 ?>
 ]]>
-     </programlisting>
-    </example>
-    </para>
-    <para>
-     Veja também
-     <function>mysql_fetch_row</function>,
-     <function>mysql_fetch_array</function> e
-     <function>mysql_query</function>.
-    </para>
-   </refsect1>
-  </refentry>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <title>Performance</title>
+   <para>
+    Uma coisa importante para notar é que usar 
+    <function>mysql_fetch_assoc</function> <emphasis>não
+    é significativamente</emphasis> mais lento do que usar
+    <function>mysql_fetch_row</function>, enquanto provê
+    um valor agregado significante.
+   </para>
+  </note>
+  &database.field-case;
+  &database.fetch-null;
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>mysql_fetch_row</function></member>
+    <member><function>mysql_fetch_array</function></member>
+    <member><function>mysql_data_seek</function></member>
+    <member><function>mysql_query</function></member>
+    <member><function>mysql_error</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
 
 <!-- Keep this comment at the end of the file
 Local variables:

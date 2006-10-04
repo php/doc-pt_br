@@ -1,63 +1,83 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.11 Maintainer: fernandoc Status: ready -->
-  <refentry id="function.mysql-data-seek">
-   <refnamediv>
-    <refname>mysql_data_seek</refname>
-    <refpurpose>Move o ponteiro interno do resultado</refpurpose>
-   </refnamediv>
-   <refsect1>
-    <title>Descrição</title>
-     <methodsynopsis>
-      <type>bool</type><methodname>mysql_data_seek</methodname>
-      <methodparam><type>resource</type><parameter>result_identifier</parameter></methodparam>
-      <methodparam><type>int</type><parameter>row_number</parameter></methodparam>
-     </methodsynopsis>
-    <para>
-     &return.success;
-    </para>
-    <para>
-     <function>mysql_data_seek</function> move o ponteiro interno
-     do resultado MySQL associado ao identificador de resultado
-     (result_identifier) especificado para apontar a linha identificada. A próxima chamada
-     a <function>mysql_fetch_row</function> irá retornar esta linha.
-    </para>
-    <para>
-     O parâmetro <parameter>row_number</parameter> (número de linha) começa no 0. O<parameter>
-     row_number</parameter> deve ser um valor entre 0 e
-     mysql_num_rows - 1. Entretanto, se o conjunto de resultados for vazio (mysql_num_rows == 
-     0), movimentar o ponteiro para 0 irá falhar com um <link linkend="e-warning">E_WARNING 
-     </link> e <function>mysql_data_seek</function> irá retornar &false;. 
-    </para>
-    <note>
-     <para>
-      A função <function>mysql_data_seek</function> pode ser usada somente em conjunto com
-      <function>mysql_query</function>, não com
-      <function>mysql_unbuffered_query</function>.
-     </para>
-    </note>
-    <para>
-    <example>
-     <title>Exemplo MySQL data seek</title>
-     <programlisting role="php">
+<!-- EN-Revision: 1.18 Maintainer: fernandoc Status: ready -->
+<refentry id="function.mysql-data-seek">
+ <refnamediv>
+  <refname>mysql_data_seek</refname>
+  <refpurpose>Move o ponteiro interno do resultado</refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>bool</type><methodname>mysql_data_seek</methodname>
+   <methodparam><type>resource</type><parameter>result</parameter></methodparam>
+   <methodparam><type>int</type><parameter>row_number</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   <function>mysql_data_seek</function> move o ponteiro interno
+   das linhas de um resultado MySQL associado ao identificador de resultado dado
+   para o número da linha especificado. A próxima chamada a
+   uma função MySQL que retorne resultado, como <function>mysql_fetch_assoc</function>,
+   irá retornar esta linha.
+  </para>
+  <para>
+   <parameter>row_number</parameter> começa em 0. O 
+   <parameter>row_number</parameter> deve ser um valor no intervalo de 0 a
+   <function>mysql_num_rows</function> - 1. Entretanto, se o conjunto de reseultados
+   for vazio (<function>mysql_num_rows</function> == 0), uma busca para 0 
+   irá falhar com um <link linkend="e-warning">E_WARNING</link> e 
+   <function>mysql_data_seek</function> iá retornar &false;.
+  </para>
+ </refsect1>
+ 
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    &mysql.result.description;
+    <varlistentry>
+     <term><parameter>row_number</parameter></term>
+     <listitem>
+      <para>
+       O número de linha desejado para o ponteiro de resultado.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.success;
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo <function>mysql_data_seek</function></title>
+    <programlisting role="php">
 <![CDATA[
 <?php
 $link = mysql_connect('localhost', 'mysql_user', 'mysql_password');
 if (!$link) {
-    die('Não pude conectar: ' . mysql_error());
+    die('Não foi possível conectar: ' . mysql_error());
 }
 $db_selected = mysql_select_db('sample_db');
 if (!$db_selected) {
-    die('Não pude selecionar o banco de dados: ' . mysql_error());
+    die('Não foi possível selecionar o banco de dados: ' . mysql_error());
 }
 $query = 'SELECT last_name, first_name FROM friends';
 $result = mysql_query($query);
 if (!$result) {
     die('A consulta falhou: ' . mysql_error());
 }
-/* Obtém linhas na ordem reversa */
+/* obtém as linhas em ordem reversa */
 for ($i = mysql_num_rows($result) - 1; $i >= 0; $i--) {
     if (!mysql_data_seek($result, $i)) {
-        echo "Não pude mover para a linha $i: " . mysql_error() . "\n";
+        echo "Não foi possível mover para a linha $i: " . mysql_error() . "\n";
         continue;
     }
 
@@ -71,15 +91,36 @@ for ($i = mysql_num_rows($result) - 1; $i >= 0; $i--) {
 mysql_free_result($result);
 ?>
 ]]>
-     </programlisting>
-    </example>
-    </para>
-    <para>
-     Veja também: <function>mysql_query</function> e
-               <function>mysql_num_rows</function>.
-    </para>
-   </refsect1>
-  </refentry>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    A função <function>mysql_data_seek</function> pode ser usada apenas
+    em conjunto com a função <function>mysql_query</function>, não com
+    <function>mysql_unbuffered_query</function>. 
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>mysql_query</function></member>
+    <member><function>mysql_num_rows</function></member>
+    <member><function>mysql_fetch_row</function></member>
+    <member><function>mysql_fetch_assoc</function></member>
+    <member><function>mysql_fetch_array</function></member>
+    <member><function>mysql_fetch_object</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
 
 <!-- Keep this comment at the end of the file
 Local variables:
