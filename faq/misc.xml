@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.15 Maintainer: fernandoc Status: ready -->
+<!-- EN-Revision: 1.27 Maintainer: fernandoc Status: ready -->
  <chapter id="faq.misc">
   <title>Questões Diversas</title>
   <titleabbrev>Questões Diversas</titleabbrev>
@@ -27,12 +27,12 @@
       <ulink url="&url.stuffit;">Stuffit Expander</ulink>,
       <ulink url="&url.ultimatezip;">UltimateZip</ulink>,
       <ulink url="&url.7zip;">7-Zip</ulink>, ou
-      <ulink url="&url.quickzip;">Quick Zip</ulink>. Se você tiver 
+      <ulink url="&url.quickzip;">Quick Zip</ulink>. Se você tiver
       ferramentas como <ulink url="&url.winrar;">WinRAR</ulink> ou
-      <ulink url="&url.powerarchiver;">Power Archiver</ulink>, você pode 
+      <ulink url="&url.powerarchiver;">Power Archiver</ulink>, você pode
       facilmente descomprimir arquivos bz2 com elas.
       Se você usa o Total Commander,
-      (anteriormente Windows Commander), 
+      (anteriormente Windows Commander),
       um plugin para o bz2 esta disponível gratuitamente em
       <ulink url="&url.wincmd;">Total Commander</ulink>.
      </para>
@@ -42,7 +42,7 @@
      <para>
       Usuários Win2k Sp2 obtenha a versão 1.0.2, todos os
       outros usuários de windows a versão 1.00. Após o download
-      renomeie o executável para bzip2.exe. Para sua conveniencia, coloque em um diretório 
+      renomeie o executável para bzip2.exe. Para sua conveniencia, coloque em um diretório
       que esteja no seu path, ex. C:\Windows aonde C representra o drive que você
       instalou o Windows.
       drive.
@@ -77,7 +77,7 @@
      </para>
     </answer>
    </qandaentry>
-   
+
    <qandaentry id="faq.misc.arguments.references">
     <question>
      <para>
@@ -96,6 +96,105 @@
      </para>
     </answer>
 
+   </qandaentry>
+      <qandaentry id="faq.misc.registerglobals">
+    <question>
+     <para>
+      Como eu lido com <literal>register_globals</literal>?
+     </para>
+    </question>
+    <answer>
+     <para>
+      Para informações sobre as implicações de segurança de
+      <literal>register_globals</literal>, leia o capitulo de segurança em
+      <link linkend="security.globals">Using register_globals</link>.
+     </para>
+     <para>
+      É preferível usar
+      <link linkend="language.variables.superglobals">superglobals</link>,
+      do que depender de <literal>register_globals</literal> estar ativo.
+     </para>
+     <para>
+      Se você esta em um servidor compartilhado com <literal>register_globals</literal>
+      desativado e você precisa usar alguma aplicação de legado, a qual requira que esta opção
+      esteja ativada, ou você esta em algum servidor de hospedagem, aonde isto
+      esteja ativo, mas você quer eliminar os riscos de segurança, você
+      pode precisar emular a definição contrária com o PHP. É sempre uma boa idéia
+      primeiro perguntar se seria possível mudar a opção de configuração do PHP de alguma maneira,
+      mas se não for possível, então você pode usar estes
+      trechos de código para compatibilidade.
+     </para>
+     <para>
+      <example>
+       <title>Emulando Register Globals</title>
+        <para>
+        Isto irá emular register_globals On. Se você alterou a sua diretiva
+        <link linkend="ini.variables-order">variables_order</link>,
+        considere mudar <varname>$superglobals</varname> de acordo.
+       </para>
+       <programlisting role="php">
+<![CDATA[
+<?php
+// Emular register_globals on
+if (!ini_get('register_globals')) {
+    $superglobals = array($_SERVER, $_ENV,
+        $_FILES, $_COOKIE, $_POST, $_GET);
+    if (isset($_SESSION)) {
+        array_unshift($superglobals, $_SESSION);
+    }
+    foreach ($superglobals as $superglobal) {
+        extract($superglobal, EXTR_SKIP);
+    }
+}
+?>
+]]>
+       </programlisting>
+       <para>
+        Isto irá emular register_globals Off. Tenha em mente que este código deve ser chamado
+        bem no início do seu script, ou após
+        <function>session_start</function> se você o usa para iniciar a sua sessão.
+       </para>
+       <programlisting role="php">
+<![CDATA[
+<?php
+// Emula register_globals off
+function unregister_GLOBALS()
+{
+    if (!ini_get('register_globals')) {
+        return;
+    }
+
+    // Might want to change this perhaps to a nicer error
+    if (isset($_REQUEST['GLOBALS']) || isset($_FILES['GLOBALS'])) {
+        die('GLOBALS overwrite attempt detected');
+    }
+
+    // Variables that shouldn't be unset
+    $noUnset = array('GLOBALS',  '_GET',
+                     '_POST',    '_COOKIE',
+                     '_REQUEST', '_SERVER',
+                     '_ENV',     '_FILES');
+
+    $input = array_merge($_GET,    $_POST,
+                         $_COOKIE, $_SERVER,
+                         $_ENV,    $_FILES,
+                         isset($_SESSION) && is_array($_SESSION) ? $_SESSION : array());
+
+    foreach ($input as $k => $v) {
+        if (!in_array($k, $noUnset) && isset($GLOBALS[$k])) {
+            unset($GLOBALS[$k]);
+        }
+    }
+}
+
+unregister_GLOBALS();
+
+?>
+]]>
+       </programlisting>
+      </example>
+     </para>
+    </answer>
    </qandaentry>
   </qandaset>
  </chapter>
