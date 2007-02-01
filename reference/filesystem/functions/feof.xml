@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.4 Maintainer: rarruda Status: ready -->
+<!-- EN-Revision: 1.12 Maintainer: rarruda Status: ready -->
 <!-- splitted from ./pt_BR/functions/filesystem.xml, last change in rev 1.5 -->
   <refentry id="function.feof">
    <refnamediv>
@@ -14,13 +14,41 @@
      </methodsynopsis>
     <para>
      Retorna &true; se o ponteiro estiver no fim do arquivo
-     (eof) ou um erro ocorrer. Caso contrário retorna &false;.
+     (eof) ou um erro ocorrer (incluindo um limite de tempo de socket). Caso contrário retorna &false;.
     </para>
-    <para>
-     O ponteiro para o arquivo tem que ser válido e tem que apontar para
-     um arquivo aberto com sucesso por <function>fopen</function>,
-     <function>popen</function> ou <function>fsockopen</function>.
+     <warning>
+      <simpara>
+       Se uma conexão aberta por <function>fsockopen</function> não foi
+       fechada pelo servidor, <function>feof</function> irá esperar até que seja atingido o limite
+       de tempo para retornar &true;. O limite de tempo padrão é 60 segundos.
+       Você pode usar <function>stream_set_timeout</function> para mudar
+       este valor.
+      </simpara>
+     </warning>
+     &fs.validfp.all;
+    <warning>
+     <para>
+      Se o ponteiro de arquivo passado não for valido você pode ter um loop infinito, porque
+      EOF irá falhar em retornar TRUE.
+      <example>
+       <title>Exemplo de <function>feof</function> com um ponteiro de arquivo inválido</title>
+       <programlisting role="php">
+<![CDATA[
+<?php
+// se o arquivo não pode ser lido ou nao existe a função fopen retorna FALSE
+$file = @fopen("no_such_file", "r");
+
+// FALSE a partir do fopen irá causar um warning(aviso) e resultar em um loop infinito aqui
+while (!feof($file)) {
+}
+
+fclose($file);
+?>
+]]>
+      </programlisting>
+     </example>
     </para>
+    </warning>
    </refsect1>
   </refentry>
 

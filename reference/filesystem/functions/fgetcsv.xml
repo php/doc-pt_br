@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.8 Maintainer: ae Status: ready --><!-- CREDITS: rarruda -->
+<!-- EN-Revision: 1.20 Maintainer: ae Status: ready --><!-- CREDITS: rarruda -->
 <!-- splitted from ./pt_BR/functions/filesystem.xml, last change in rev 1.5 -->
   <refentry id="function.fgetcsv">
    <refnamediv>
@@ -11,33 +11,57 @@
      <methodsynopsis>
       <type>array</type><methodname>fgetcsv</methodname>
       <methodparam><type>resource</type><parameter>handle</parameter></methodparam>
-      <methodparam><type>int</type><parameter>length</parameter></methodparam>
+      <methodparam choice="opt"><type>int</type><parameter>length</parameter></methodparam>
       <methodparam choice="opt"><type>string</type><parameter>delimiter</parameter></methodparam>
       <methodparam choice="opt"><type>string</type><parameter>enclosure</parameter></methodparam>
      </methodsynopsis>
+     
+     <para>
+      <variablelist>
+       <varlistentry>
+        <term><parameter>handle</parameter></term>
+        <listitem>
+         <simpara>
+          Um ponteiro de arquivo válido para um arquivo aberto com sucesso por <function>fopen</function>,
+          <function>popen</function> ou <function>fsockopen</function>.
+         </simpara>
+        </listitem>
+       </varlistentry>
+       <varlistentry>
+        <term><parameter>length</parameter> (Opcional)</term>
+        <listitem>
+         <simpara>
+          Deve ser maior do que a maior linha (em caracteres) a ser encontrada no arquivo CSV
+          (permitindo caracteres de fim-de-linha). Se tornou opcional no PHP 5. Omitir
+          este parâmetro (ou defini-lo como 0 no PHP 5.0.4 e posterior) o limite máximo de tamanho da linha
+          não é limitado, o que é levemente mais lento.
+         </simpara>
+        </listitem>
+       </varlistentry>
+       <varlistentry>
+        <term><parameter>delimiter</parameter> (Opcional)</term>
+        <listitem>
+         <simpara>
+          Define o delimitador de campo (somente um caractere). O padrão é uma vírgula.
+         </simpara>
+        </listitem>
+       </varlistentry>
+       <varlistentry>
+        <term><parameter>enclosure</parameter> (Opcional)</term>
+        <listitem>
+         <simpara>
+          Define o caractere que contém um campo (somente um caractere). O padrão é aspas duplas. Adicionado no PHP 4.3.0.
+         </simpara>
+        </listitem>
+       </varlistentry>
+      </variablelist>
+    </para>
+    
     <simpara>
-     Similar à <function>fgets</function> exceto que
+     Similar a <function>fgets</function> exceto que
      <function>fgetcsv</function> interpreta a linha que lê por campos
-     no formato <acronym>CSV</acronym> e retorna um vetor (array)
-     contendo os campos lidos. O terceiro parâmetro <parameter>delimiter</parameter>
-     (opcional) tem como padrão a vígula, e o também opcional <parameter>enclosure</parameter>
-     tem como padrão aspas. Tanto <parameter>delimiter</parameter>
-     como <parameter>enclosure</parameter> só podem ter um caracter. Se
-     qualquer um deles tiver mais que um caracter, somente o primeiro deles serão utilizados.
-    </simpara>
-    <note>
-     <simpara>
-      O parâmetro <parameter>enclosure</parameter> foi acrescentado no PHP 4.3.0.
-     </simpara>
-    </note>
-    <simpara>
-     O parâmetro <parameter>handle</parameter> tem que ser um ponteiro de arquivo
-     válido para um arquivo aberto com sucesso por <function>fopen</function>,
-     <function>popen</function> ou <function>fsockopen</function>.
-    </simpara>
-    <simpara>
-     <parameter>length</parameter> tem que ser maior do que a maior linha a ser encontrada
-     no arquivo CSV (incluindo caracteres de terminação de linha).
+     no formato <acronym>CSV</acronym> (campos separados por vírgula)
+     e retorna um array contendo os camos lidos.
     </simpara>
     <simpara>
      <function>fgetcsv</function> retorna &false; ao encontrar um erro,
@@ -58,12 +82,12 @@
 <?php
 $row = 1;
 $handle = fopen ("test.csv","r");
-while ($data = fgetcsv ($handle, 1000, ",")) {
+while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
     $num = count ($data);
-    print "<p> $num campos na linha $row: <br>";
+    echo "<p> $num fields in line $row: <br /></p>\n";
     $row++;
     for ($c=0; $c < $num; $c++) {
-        print $data[$c] . "<br>";
+        echo $data[$c] . "<br />\n";
     }
 }
 fclose ($handle);
@@ -72,6 +96,17 @@ fclose ($handle);
       </programlisting>
      </example>
     </para>
+    <para>
+     <function>fgetcsv</function> é seguro para binários desde PHP 4.3.5
+    </para>
+    <note>
+     <simpara>
+      A definição do local é levada em conta por esta função. Se
+      <varname>LANG</varname> é e.g. <literal>en_US.UTF-8</literal>, arquivos
+      em codificação de um byte(ex iso-8859-1) são lidos de maneira errada por esta função.
+     </simpara>
+    </note>
+     &note.line-endings;
     <para>
      Veja também <function>explode</function>, <function>file</function>
      e <function>pack</function>
