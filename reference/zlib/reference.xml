@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.11 Maintainer: ernani Status: ready -->
+<!-- EN-Revision: 1.16 Maintainer: ernani Status: ready -->
+<!-- Purpose: compression -->
+<!-- Membership: bundled -->
  <reference id="ref.zlib">
   <title>Zlib - Funções de Compressão </title>
   <titleabbrev>Zlib</titleabbrev>
@@ -16,21 +18,22 @@
     </para>
     <note>
      <para>
-      A Versão 4.0.4 introduziu a função fopen-wrapper para arquivos .gz, então
-      você pode usar o prefixo 'zlib:' especial para acessar arquivos comprimidos
-      transparentemente usando as funções normais de acesso a arquivos f*() se
-      você concatenar o nome do arquivo e ou seu caminho com o prefixo 'zlib:' quando usar a função
-      <function>fopen</function>.
+      A versão 4.0.4 introduziu um fopen-wrapper para arquivos .gz, assim você
+      pode usar uma URL especial <filename>zlib:</filename> para acessar
+      arquivos comprimidos transparentemente usando as funções f*() normais
+      de acessos a arquivos se você colocar como prefixo no nome ou caminho
+      <filename>zlib:</filename> ao chamar <function>fopen</function>. Isto
+      requer que você use uma biblioteca C em tempo de execução que
+      tenha a função <literal>fopencookie()</literal>. Até agora apenas a GNU libc
+      parace ser a única biblioteca que tenha este recurso.
      </para>
      <para>
-      Na versão 4.3.0, este prefixo especial foi mudado para 'zlib://'
-      para previnir ambiguidades com nome de arquivos contendo ':'.
-     </para>
-     <para>
-      Esta facilidade requer uma biblioteca em tempo de execução que provê a função
-      <literal>fopencookie()</literal>. Em meu conhecimento atual
-      a GNU libc é a única bliblioteca que provê
-      esta facilidade.
+      No PHP 4.3.0, <filename>zlib:</filename> foi modificado para
+      <filename>compress.zlib://</filename> para previnir ambiguidades com
+      nomes de arquivos contendo caracteres ':'. A função
+      <literal>fopencookie()</literal> não é mais requerida.
+      Maiores informações estão disponíveis em uma sessão sobre
+      <xref linkend="wrappers.compression" />.
      </para>
     </note>
    </section>
@@ -66,7 +69,7 @@
 <?php
 
 $filename = tempnam ('/tmp', 'zlibteste').'.gz';
-print "<html>\n<head></head>\n<body>\n<pre>\n";
+echo "<html>\n<head></head>\n<body>\n<pre>\n";
 $s = "Somente um teste, teste, teste, teste, teste, teste, teste, teste!\n";
 
 // abre o arquivo para gerar ele com a compressão máxima
@@ -82,19 +85,20 @@ gzclose($zp);
 $zp = gzopen($filename, "r");
 
 // lê 3 caracteres
-print gzread($zp, 3);
+echo gzread($zp, 3);
 
 // mostra o conteúdo até o fim do arquivo e o fecha.
 gzpassthru($zp);
+gzclose($zp);
 
-print "\n";
+echo "\n";
 
 // abre o arquivo e imprime o conteúdo dele (pela segunda vez).
 if (readgzfile($filename) != strlen($s)) {
         echo "Erro com as funções zlib!";
 }
 unlink($filename);
-print "</pre>\n</h1></body>\n</html>\n";
+echo "</pre>\n</body>\n</html>\n";
 
 ?>
 ]]>

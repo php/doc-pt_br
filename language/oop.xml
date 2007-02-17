@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.49 Maintainer: ae Status: ready -->
+<!-- EN-Revision: 1.66 Maintainer: ae Status: ready -->
  <chapter id="language.oop">
-  <title>Classes e Objetos</title>
+  <title>Classes e Objetos(PHP 4)</title>
 
   <sect1 id="keyword.class">
    <title><literal>class</literal></title>
@@ -29,6 +29,9 @@ class CarrinhoDeCompras {
         if ($this->items[$artnr] > $num) {
             $this->items[$artnr] -= $num;
             return true;
+        } elseif ($this->items[$artnr] == $num) {
+            unset($this->items[$artnr]);
+            return true;
         } else {
             return false;
         }
@@ -49,7 +52,9 @@ class CarrinhoDeCompras {
    <warning>
     <simpara>
      Você <emphasis>NÃO</emphasis> pode quebrar uma definição de classe em
-     vários arquivos, ou vários blocos PHP. O exemplo seguinte não funciona:
+     múltiplos arquivos. Você <emphasis>NÃO</emphasis> pode também quebrar a definição
+     de uma classe em múltiplos blocos PHP, a menos que a quebra esteja dentro de uma
+     declaração de método. O seguinte não irá funcionar:
     </simpara>
     <para>
      <informalexample>
@@ -60,6 +65,26 @@ class test {
 ?>
 <?php
     function test() {
+        print 'OK';
+    }
+}
+?>
+]]>
+      </programlisting>
+     </informalexample>
+    </para>
+    <simpara>
+     Entretanto, o seguinte é permitido:
+    </simpara>
+    <para>
+     <informalexample>
+      <programlisting role="php">
+<![CDATA[
+<?php
+class test {
+    function test() {
+?>
+<?php
         print 'OK';
     }
 }
@@ -167,20 +192,20 @@ $outro_carrinho->add_item("0815", 3);
    </para>
 
    <para>
-    Ambos, <varname>$carrinho</varname> e <varname>$outro_carrinho</varname>, tem 
-    as funções add_item(), remove_item() e a variável itens. Elas são 
+    Ambos, <varname>$carrinho</varname> e <varname>$outro_carrinho</varname>, tem
+    as funções add_item(), remove_item() e a variável itens. Elas são
     funções e variáveis distintas entre si. Você pode pensar no objetos como
-    os diretórios de um sistema de arquivos. Num disco você pode 
-    ter dois arquivos diferentes README.TXT, partindo de que eles estão em diretórios 
+    os diretórios de um sistema de arquivos. Num disco você pode
+    ter dois arquivos diferentes <filename>README.TXT</filename>, partindo de que eles estão em diretórios
     diferentes. Da mesma forma que você teria de especificar o
     caminho completo para acessar cada arquivo a partir do diretório principal, você
     também tem de especificar o nome completo do objeto e função que você quer chamar. No PHP
-    o diretório principal pode ser o escopo global de nomes, e o 
+    o diretório principal pode ser o escopo global de nomes, e o
     separador de diretórios <literal>-&gt;</literal>. Portanto, os nomes
     <varname>$carrinho-&gt;items</varname> e
     <varname>$outro_carrinho-&gt;items</varname>
     são duas variáveis diferentes. Note que a variável é chamada <varname>$carrinho-&gt;items</varname>, não
-    <varname>$carrinho-&gt;$items</varname>, mesmo porque, um nome de variável em PHP tem 
+    <varname>$carrinho-&gt;$items</varname>, mesmo porque, um nome de variável em PHP tem
     apenas um único sinal de cifrão.
    </para>
 
@@ -206,14 +231,14 @@ $carrinho->$myvar = array("10" => 1);
    <para>
     Quando definindo uma classe, você não pode saber com que nome os objetos
     serão acessados em seus programas: enquanto escrevia a classe CarrinhoDeCompras,
-    é impossível saber se o objeto criado a partir dela será chamado 
-    <varname>$carrinho</varname> ou <varname>$outro_carrinho</varname> (ou ainda ambos). Assim, 
-    você não pode escrever <varname>$carrinho&gt;items</varname> dentro da própria classe 
-    CarrinhoDeCompras. Entretanto, para poder acessar suas próprias funções e 
-    variáveis de dentro da classe, pode-se utilizar a pseudo-variável 
-    <varname>$this</varname>, que pode ser lida como 'eu mesmo' ou 'objeto 
+    é impossível saber se o objeto criado a partir dela será chamado
+    <varname>$carrinho</varname> ou <varname>$outro_carrinho</varname> (ou ainda ambos). Assim,
+    você não pode escrever <varname>$carrinho&gt;items</varname> dentro da própria classe
+    CarrinhoDeCompras. Entretanto, para poder acessar suas próprias funções e
+    variáveis de dentro da classe, pode-se utilizar a pseudo-variável
+    <varname>$this</varname>, que pode ser lida como 'eu mesmo' ou 'objeto
     atual'. Dessa forma, <varname>'$this-&gt;items[$artnr]</varname> +=
-    <varname>$num'</varname> pode  ser lido como 'acrescente <varname>$num</varname> para 
+    <varname>$num'</varname> pode  ser lido como 'acrescente <varname>$num</varname> para
     o contador <varname>$artnr</varname> do meu array items' ou 'acrescente
     <varname>$num</varname> para o contador <varname>$artnr</varname> do array
     items do objeto atual'.
@@ -221,6 +246,61 @@ $carrinho->$myvar = array("10" => 1);
 
    <note>
     <para>
+     A pseudo-variável <varname>$this</varname> não é normalmente
+     definida em um método que seja chamado estaticamente. Isto não é,
+     entretanto, uma regra estrita: <varname>$this</varname> é definido se um método
+     é chamado estaticamente a partir de outro objeto. Neste caso, o valor de
+     <varname>$this</varname> será do objeto que o chamou. Isto é
+     ilustrado no exemplo a seguir:
+      <informalexample>
+       <programlisting role="php">
+<![CDATA[
+<?php
+class A
+{
+    function foo()
+    {
+        if (isset($this)) {
+            echo '$this is defined (';
+            echo get_class($this);
+            echo ")\n";
+        } else {
+            echo "\$this is not defined.\n";
+        }
+    }
+}
+
+class B
+{
+    function bar()
+    {
+        A::foo();
+    }
+}
+
+$a = new A();
+$a->foo();
+A::foo();
+$b = new B();
+$b->bar();
+B::bar();
+?>
+]]>
+     </programlisting>
+      &example.outputs;
+      <screen>
+<![CDATA[
+$this is defined (a)
+$this is not defined.
+$this is defined (b)
+$this is not defined.
+]]>
+       </screen>
+      </informalexample>
+     </para>
+    </note>
+  <note>
+   <para>
     Há funções muito boas para manipulação de classes e objetos. Dê uma
     olhada em <link linkend="ref.classobj">Funções de
     Classes e Objetos</link>
@@ -306,30 +386,21 @@ $ncart->add_item("10", 1);  // (funcionalidade herdade do CarrinhoDeCompras)
   </sect1>
 
   <sect1 id="language.oop.constructor">
-   <title><literal>Construtores</literal></title>
-
-   <caution>
-    <simpara>
-     Os construtores se comportam diferentemente entre o PHP 3 e o PHP 4.
-     A semântica do PHP 4 é atualmente preferencial.
-    </simpara>
-   </caution>
+   <title>Construtores</title>
 
    <para>
     Construtores são funções numa classe que são automaticamente
     chamados quando você cria uma nova instância da classe com
-    <literal>new</literal>. No PHP 3, uma
-    função se torna um construtor quando ele tem o mesmo nome
-    da classe. No PHP 4, uma função se torna um construtor quando
-    ele tem o mesmo nome da classe onde ela foi definida (a
-    diferença é sutil, mas crucial --- veja abaixo).
+    <literal>new</literal>. Uma função se torna um construtor quando ele tem o mesmo nome
+    da classe Se uma classe.
+    não tiver um construtor, o construtor da classe base será
+    chamado, se existir.
    </para>
 
    <informalexample>
     <programlisting role="php">
 <![CDATA[
 <?php
-// Funciona no PHP 3 e 4
 class CarrinhoDeComprasAutomatico extends CarrinhoDeCompras {
     function CarrinhoDeComprasAutomatico() {
         $this->add_item ("10", 1);
@@ -354,7 +425,6 @@ class CarrinhoDeComprasAutomatico extends CarrinhoDeCompras {
     <programlisting role="php">
 <![CDATA[
 <?php
-// Funciona no PHP 3 e 4
 class CarrinhoDeComprasComConstrutor extends CarrinhoDeCompras {
     function CarrinhoDeComprasComConstrutor($item = "10", $num = 1) {
         $this->add_item ($item, $num);
@@ -362,11 +432,9 @@ class CarrinhoDeComprasComConstrutor extends CarrinhoDeCompras {
 }
 
 // Fazendo compras do mesmo modo antigo
-
 $carrinho_default = new CarrinhoDeComprasComConstrutor;
 
 // Fazendo compres de verdade
-
 $carrinhho_diferente = new CarrinhoDeComprasComConstrutor("20", 17);
 ?>
 ]]>
@@ -377,51 +445,6 @@ $carrinhho_diferente = new CarrinhoDeComprasComConstrutor("20", 17);
     Você pode usar o operador <literal>@</literal> para
     <emphasis>esconder</emphasis> erros gerados no construtor do objeto,
     por exemplo: <literal>@new</literal>.
-   </para>
-
-   <caution>
-    <simpara>
-     No PHP 3, classes derivadas e construtores tem uma série de
-     limitações. Os exemplo seguintes precisam ser lidos cuidadosamente
-     para que você entenda essas limitações.
-    </simpara>
-   </caution>
-
-   <informalexample>
-    <programlisting role="php">
-<![CDATA[
-<?php
-class A {
-    function A() {
-      echo "Eu sou o construtor de A.<br />\n";
-    }
-}
-
-class B extends A {
-    function C() {
-        echo "Eu sou uma função normal.<br />\n";
-    }
-}
-
-// nenhum construtor é chamado no PHP 3
-$b = new B;
-?>
-]]>
-    </programlisting>
-   </informalexample>
-
-   <para>
-    No PHP 3, nenhum construtor é chamado no exemplo acima.
-    A regra no PHP 3 é: 'Um construtor é uma função com o mesmo
-    nome da classe'. O nome da classe é B, e não há
-    nenhuma função chamada B() na classe B. Nada ocorre.
-   </para>
-
-   <para>
-    Isto foi corrigido no PHP 4 pela instrução de outra regra: Se uma classe
-    não tem construtor, o construtor da classe base é
-    chamado, se existir. O exemplo acima teriam impresso
-    'Eu sou o construtor de A.&lt;br /&gt;' no PHP 4.
    </para>
 
    <informalexample>
@@ -444,10 +467,6 @@ class A
 
 class B extends A
 {
-    function C()
-    {
-        echo "Eu sou uma função normal.<br />\n";
-    }
 }
 
 // Isto irá chamar B() como um construtor.
@@ -458,43 +477,27 @@ $b = new B;
    </informalexample>
 
    <para>
-    No PHP 3, a função B() na classe A se tornará silenciosamente um
+    A função B() na classe A se tornará silenciosamente um
     construtor na classe B, mesmo que isso nunca tenha sido planejado.
-    A regra no PHP 3 é: 'Um construtor é uma função com o mesmo
-    nome da classe'. PHP 3 não se preocupa se a função
+    O PHP 4 não se importa se a função
     foi definida na classe B, ou se ela foi herdada.
-   </para>
-
-   <para>
-    Isto foi corrigido no PHP 4 pela modificação da regra para: 'Um construtor
-    é uma função com o mesmo nome da classe onde ela é definida.'.
-    Assim, no PHP 4, como a classe B não tem nenhuma função construtora
-    definida nela mesma então o construtor da classe base será
-    chamado, imprimindo 'Eu sou o construtor de A.&lt;br /&gt;'.
    </para>
 
    <caution>
     <simpara>
-     Nem o PHP 3 ou o 4 chamam automaticamente os construtores da
+     O PHP 4 não chama automaticamente os construtores da
      classe base a partir do construtor da classe derivada. É de sua
      responsabilidade propagar a chamada dos construtores
      herança acima, onde apropriado.
     </simpara>
    </caution>
 
-   <note>
-    <simpara>
-     Não existem destrutores no PHP 3 ou 4. Mas você pode usar
-     <function>register_shutdown_function</function>
-     para simular a maioria dos efeitos de destrutores.
-    </simpara>
-   </note>
-
    <para>
     Destrutores são funções que são chamadas automaticamente
     quando um objeto é destruído, ou pela utilização de <function>unset</function>
     ou pela simples saída do escopo. Não existem destrutores
-    no PHP.
+    no PHP. Você pode usar <function>register_shutdown_function</function>
+    ao invés para simular a maioria dos efeitos dos destruidores.
    </para>
   </sect1>
 
@@ -647,7 +650,7 @@ $b->exemplo();
 
   <caution>
    <simpara>
-    As informações seguintes se aplicam somente ao PHP 4.
+    As informações seguintes se aplicam ao PHP &gt; 4.
    </simpara>
   </caution>
 
@@ -663,13 +666,13 @@ $b->exemplo();
 
   <para>
    Para ser possível fazer o <function>unserialize</function> de um objeto, a
-   classe do objeto precisa estar definida. Ou seja, se você tem um objeto 
-   <varname>$a</varname> da classe A em page1.php e o serializa, você 
-   consegue uma string que se refere a classe A e contém todos os valores de variáveis 
-   contidos em <varname>$a</varname>. Se você precisa desserializa-la 
-   em page2.php, recriando <varname>$a</varname> da classe A, a 
-   definição da classe A precisa estar presente na page2.php. Isto pode por ser feito, por 
-   exemplo, armazenando a definição da classe A em um arquivo separado, 
+   classe do objeto precisa estar definida. Ou seja, se você tem um objeto
+   <varname>$a</varname> da classe A em page1.php e o serializa, você
+   consegue uma string que se refere a classe A e contém todos os valores de variáveis
+   contidos em <varname>$a</varname>. Se você precisa desserializa-la
+   em page2.php, recriando <varname>$a</varname> da classe A, a
+   definição da classe A precisa estar presente na page2.php. Isto pode por ser feito, por
+   exemplo, armazenando a definição da classe A em um arquivo separado,
    incluindo este arquivo e ambos os arquivos page1.php e page2.php.
   </para>
 
@@ -695,7 +698,7 @@ $b->exemplo();
   $s = serialize($a);
   // armazena $s em algum lugar que page2,php possa encontra-la
   $fp = fopen("armazenamento", "w");
-  fputs($fp, $s);
+  fwrite($fp, $s);
   fclose($fp);
 
 // page2.php:
@@ -734,7 +737,7 @@ $b->exemplo();
   </para>
 
   <para>
-   Assim, se no exemplo acima <varname>$a</varname> se tornar parte de uma sessão 
+   Assim, se no exemplo acima <varname>$a</varname> se tornar parte de uma sessão
    pela utilização de <literal>session_register("a")</literal>, você precisa incluir
    o arquivo <literal>classe_a.inc.php</literal> em todos as suas páginas, não somente em page1.php
    e page2.php.
@@ -947,9 +950,7 @@ $a->c->echoValue();
 ?>
 ]]>
      </programlisting>
-     <para>
-      Esse exemplo deverá exibir:
-     </para>
+     &example.outputs;
      <screen>
 <![CDATA[
 classe A: 10
@@ -964,8 +965,8 @@ classe B: 11
    </para>
   </sect1>
 
-  <sect1 id="language.oop.object-comparison-php4">
-   <title>Comparação de objetos no PHP 4</title>
+  <sect1 id="language.oop.object-comparison">
+   <title>Comparando Objetos</title>
   <para>
    No PHP 4, objetos são comparados de uma maneira bem simples: Duas instâncias
    de objetos são iguais se eles tem os mesmos atributos e valores, e se
@@ -1030,9 +1031,9 @@ compareObjects($o, $r);
 ?>
 ]]>
     </programlisting>
-   </example>
-   Nós teremos:
+    &example.outputs;
    <screen>
+<![CDATA[
 Comparando instâncias criadas com os mesmo parâmetros
 o1 == o2 : TRUE
 o1 != o2 : FALSE
@@ -1050,7 +1051,9 @@ o1 == o2 : FALSE
 o1 != o2 : TRUE
 o1 === o2 : FALSE
 o1 !== o2 : TRUE
+]]>
    </screen>
+  </example>
    Que é o resultado que esperava-mos obter pelas regras de comparação
    acima. Somente instâncias com os mesmos valores de seus atributos e da mesma
    classe são considerados iguais e/ou idênticos.
@@ -1097,9 +1100,9 @@ compareObjects($u, $w);
 ?>
 ]]>
     </programlisting>
-   </example>
-   Que nos traz ao seguinte resultado:
+    &example.outputs;
    <screen>
+<![CDATA[
 Comparando objetos compostos u(o,p) e v(q,p)
 o1 == o2 : TRUE
 o1 != o2 : FALSE
@@ -1111,104 +1114,9 @@ o1 == o2 : FALSE
 o1 != o2 : TRUE
 o1 === o2 : FALSE
 o1 !== o2 : TRUE
-   </screen>
-  </para>
- </sect1>
-
-  <sect1 id="language.oop.object-comparison-php5">
-   <title>Comparação de objetos no PHP 5</title>
-   &warn.experimental;
-   <para>
-    No PHP 5, a comparação de objetos é uma pouco mais complicada que no PHP 4 e mais
-    de acordo do que se espera de uma Linguagem Orientada a Objetos
-    (mesmo que o PHP 5 não o seja).
-   </para>
-   <para>
-    Quando utilizando o operador igualdade (<literal>==</literal>),
-    variáveis de objeto são comparados de maneira direta: Duas instâncias de
-    objetos são iguais se eles tem os mesmos atributos e valores, e se
-    instâncias da mesma classe.
-   </para>
-   <para>
-    Mas de outra forma, quando utilizando o operador idêntico (<literal>===</literal>),
-    variáveis objetos são idênticas somente se elas se referem à mesma
-    instância da mesma classe.
-   </para>
-   <para>
-    Um exemplo irá clarear essas regras.
-    <example>
-     <title>Exemplo de comparação de objetos no PHP 5</title>
-     <programlisting role='php'>
-<![CDATA[
-<?php
-function bool2str($bool) {
-    if ($bool === false) {
-            return 'FALSE';
-    } else {
-            return 'TRUE';
-    }
-}
-
-function compareObjects(&$o1, &$o2) {
-    echo 'o1 == o2 : '.bool2str($o1 == $o2)."\n";
-    echo 'o1 != o2 : '.bool2str($o1 != $o2)."\n";
-    echo 'o1 === o2 : '.bool2str($o1 === $o2)."\n";
-    echo 'o1 !== o2 : '.bool2str($o1 !== $o2)."\n";
-}
-
-class Flag {
-    var $flag;
-
-    function Flag($flag=true) {
-            $this->flag = $flag;
-    }
-}
-
-class OtherFlag {
-    var $flag;
-
-    function OtherFlag($flag=true) {
-            $this->flag = $flag;
-    }
-}
-
-$o = new Flag();
-$p = new Flag();
-$q = $o;
-$r = new OtherFlag();
-
-echo "Duas instâncias da mesma classe\n";
-compareObjects($o, $p);
-
-echo "\nDuas referências da mesma instância\n";
-compareObjects($o, $q);
-
-echo "\nInstâncias de duas classes diferentes\n";
-compareObjects($o, $r);
-?>
 ]]>
-     </programlisting>
-    </example>
-    Este exemplo terá os seguintes resultados:
-    <screen>
-Duas instâncias da mesma classe
-o1 == o2 : TRUE
-o1 != o2 : FALSE
-o1 === o2 : FALSE
-o1 !== o2 : TRUE
-
-Duas referências da mesma instância
-o1 == o2 : TRUE
-o1 != o2 : FALSE
-o1 === o2 : TRUE
-o1 !== o2 : FALSE
-
-Instâncias de duas classes diferentes
-o1 == o2 : FALSE
-o1 != o2 : TRUE
-o1 === o2 : FALSE
-o1 !== o2 : TRUE
     </screen>
+    </example>
    </para>
   </sect1>
  </chapter>
