@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.44 Maintainer: narigone Status: ready -->
+<!-- EN-Revision: 1.49 Maintainer: narigone Status: ready -->
  <chapter id="features.http-auth">
   <title>Autenticação HTTP com PHP</title>
 
@@ -24,7 +24,7 @@
   <note>
    <title>Nota de Versão do PHP</title>
    <para>
-    <link linkend="language.variables.superglobals">Autoglobais</link>,
+    <link linkend="language.variables.superglobals">Superglobais</link>,
     como o <link linkend="reserved.variables.server">$_SERVER</link>, tornaram-se
     disponíveis no PHP <ulink url="&url.php.release4.1.0;">4.1.0</ulink>.
     <varname>$HTTP_SERVER_VARS</varname> está disponível desde o PHP 3.
@@ -76,7 +76,7 @@
         if (empty($_SERVER['PHP_AUTH_DIGEST'])) {
             header('HTTP/1.1 401 Unauthorized');
             header('WWW-Authenticate: Digest realm="'.$realm.
-            '" qop="auth" nonce="'.uniqid().'" opaque="'.md5($realm).'"');
+            '",qop="auth",nonce="'.uniqid().'",opaque="'.md5($realm).'"');
 
             die('Text to send if user hits Cancel button');
         }
@@ -107,10 +107,10 @@
             $needed_parts = array('nonce'=>1, 'nc'=>1, 'cnonce'=>1, 'qop'=>1, 'username'=>1, 'uri'=>1, 'response'=>1);
             $data = array();
 
-            preg_match_all('@(\w+)=([\'"]?)([a-zA-Z0-9=./\_-]+)\2@', $txt, $matches, PREG_SET_ORDER);
+            preg_match_all('@(\w+)=(?:([\'"])([^\2]+)\2|([^\s,]+))@', $txt, $matches, PREG_SET_ORDER);
 
             foreach ($matches as $m) {
-                $data[$m[1]] = $m[3];
+                $data[$m[1]] = $m[3] ? $m[3] : $m[4];
                 unset($needed_parts[$m[1]]);
             }
 
@@ -129,7 +129,8 @@
     compatibilidade máxima com todos os clientes, a palavra chave "Basic" deve ser escrita com
     "B" maiúsculo, deve se usar aspas duplas (não simples) em volta da string realm,
     e exatamente um espaço deve preceder o código <emphasis>401</emphasis> na
-    linha do cabeçalho <emphasis>HTTP/1.0 401</emphasis>.
+    linha do cabeçalho <emphasis>HTTP/1.0 401</emphasis>. Parâmetros de autenticação devem
+    ser separados por vírgula, como visto no exemplo acima.
    </para>
   </note>
 
@@ -196,8 +197,7 @@
   if (!isset($_SERVER['PHP_AUTH_USER']) ||
       ($_POST['SeenBefore'] == 1 && $_POST['OldAuth'] == $_SERVER['PHP_AUTH_USER'])) {
    authenticate();
-  }
-  else {
+  } else {
    echo "<p>Bem vindo: {$_SERVER['PHP_AUTH_USER']}<br />";
    echo "Login antigo: {$_REQUEST['OldAuth']}";
    echo "<form action='{$_SERVER['PHP_SELF']}' METHOD='post'>\n";

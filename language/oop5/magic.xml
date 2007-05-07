@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.12 Maintainer: narigone Status: ready  -->
+<!-- EN-Revision: 1.14 Maintainer: narigone Status: ready  -->
  <sect1 id="language.oop5.magic">
   <title>Métodos Mágicos</title>
   <para>
@@ -40,14 +40,18 @@
     o nome mágico <literal>__sleep</literal>. Se tiver, a função é
     executa antes de qualqer serialização. Ela pode limpar o objeto
     e deve retornar um array com os nomes de todas as variáveis
-    do objeto que devem ser serializadas.
+    do objeto que devem ser serializadas. Se o método não retornar nada,
+    então &null; é serializada e um E_NOTICE é disparado.
    </para>
    <para>
-    O intuito do método <literal>__sleep</literal> é fechar qualquer
-    conexão com bancos de dados que o objeto possa ter, enviando dados
+    O intuito do método <literal>__sleep</literal> enviar dados
     pendentes ou realizar tarefas similares de limpeza. Além disso, a função é
     útil se você tiver objetos muito grandes que não precisarão ser
     salvos completamente.
+   </para>
+   <para>
+    O método <literal>__sleep</literal> deve retornar o valor a ser serializado
+    (normalmente <literal>$this</literal>). Caso contrário, &null; é serializado.
    </para>
    <para>
     Inversamente, <function>unserialize</function> checa pela
@@ -87,7 +91,7 @@ class Connection {
 
     public function __sleep()
     {
-        mysql_close($this->link);
+        return array('server', 'username', 'password', 'db');
     }
 
     public function __wakeup()
@@ -139,33 +143,10 @@ Olá
     </screen>
    </example>
    <para>
-    Vale lembrar que o método <literal>__toString</literal>
-    só será chamado quando diretamente combinado com
+    Vale lembrar que antes do PHP 5.2.0 o método <literal>__toString</literal>
+    só era chamado quando diretamente combinado com
     <function>echo</function> ou <function>print</function>.
    </para>
-   <example>
-    <title>Casos onde <literal>__toString</literal> é chamado</title>
-    <programlisting role="php">
-<![CDATA[
-<?php
-// __toString chamado
-echo $classe;
-
-// __toString chamado (ainda um parâmetro normal para o echo)
-echo 'texto', $classe;
-
-// __toString não é chamado (operador de concatenação usado primeiro)
-echo 'text' . $class;
-
-// __toString não é chamado (converte para string primeiro)
-echo (string) $class;
-
-// __toString não é chamado (converte para string primeiro)
-echo "text $class";
-?>
-]]>
-    </programlisting>
-   </example>
   </sect2>
 
   <sect2 id="language.oop5.magic.set-state">

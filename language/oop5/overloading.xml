@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.11 Maintainer: narigone Status: ready -->
+<!-- EN-Revision: 1.17 Maintainer: narigone Status: ready -->
  <sect1 id="language.oop5.overloading">
   <title>Sobrecarga</title>
 
@@ -10,11 +10,14 @@
    membro ou método que você está tentando acessar.
    Todos os métodos sobrecarregados devem ser definidos
    <link linkend="language.oop5.visibility">estáticos</link>.
+   Todos os métodos sobrecarregados devem ser definidos
+   <link linkend="language.oop5.visibility">public</link>.
   </para>
   <para>
     A partir do PHP 5.1.0 também é possível sobrecarregar as
     funções <function>isset</function> and <function>unset</function> através
     dos métodos __isset e __unset respectivamente.
+    O método __isset também é chamado com a função <function>empty</function>.
   </para>
 
   <sect2 id="language.oop5.overloading.members">
@@ -56,7 +59,7 @@ class Setter
     public $n;
     private $x = array("a" => 1, "b" => 2, "c" => 3);
 
-    private function __get($nm)
+    public function __get($nm)
     {
         echo "Getting [$nm]\n";
 
@@ -69,7 +72,7 @@ class Setter
         }
     }
 
-    private function __set($nm, $val)
+    public function __set($nm, $val)
     {
         echo "Setting [$nm] to $val\n";
 
@@ -81,14 +84,14 @@ class Setter
         }
     }
 
-    private function __isset($nm)
+    public function __isset($nm)
     {
         echo "Checking if $nm is set\n";
 
         return isset($this->x[$nm]);
     }
 
-    private function __unset($nm)
+    public function __unset($nm)
     {
         echo "Unsetting $nm\n";
 
@@ -162,13 +165,13 @@ object(Setter)#1 (2) {
    </methodsynopsis>
 
    <para>
-    Membros de classes podem ser sobrecarregados para executar código específico definido
-    na sua classe definindo esses métodos especialmente nomeados. O parâmetro
-    <varname>$name</varname> usado é o nome da função que foi requerida
-    a ser usada. Os argumentos que foram passado na função serão definidos
-    como um array no parâmetro <varname>$arguments</varname>.
-    O valor retorna do método __call() será retornado ao
-    chamador do método.
+    O método mágico __call() permite captura a invocação de métodos não
+    existentes. Dessa forma, __call() pode ser usado para implementar tratamento
+    de métodos definidos pelo usuário que dependem do nome do próprio método ser chamado. 
+    Isso é útil para implementações proxy, por exemplo. Os argumentos que são
+    passados na função serão definidos como um array no 
+    parâmetro <varname>$arguments</varname>. O valor retornado do 
+    método __call() será retornado ao chamador do método.
    </para>
 
    <example>

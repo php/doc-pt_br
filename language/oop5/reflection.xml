@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.17 Maintainer: narigone Status: ready -->
+<!-- EN-Revision: 1.20 Maintainer: narigone Status: ready -->
  <sect1 id="language.oop5.reflection">
   <title>Reflexão</title>
   <sect2 id="language.oop5.reflection.introduction">
@@ -21,9 +21,9 @@
 class Reflection { }
 interface Reflector { }
 class ReflectionException extends Exception { }
-class ReflectionFunction implements Reflector { }
+class ReflectionFunction extends ReflectionFunctionAbstract implements Reflector { }
 class ReflectionParameter implements Reflector { }
-class ReflectionMethod extends ReflectionFunction { }
+class ReflectionMethod extends ReflectionFunctionAbstract implements Reflector { }
 class ReflectionClass implements Reflector { }
 class ReflectionObject extends ReflectionClass { }
 class ReflectionProperty implements Reflector { }
@@ -130,7 +130,7 @@ Class [ <internal> class Exception ] {
     <programlisting role="php">
 <![CDATA[
 <?php
-class ReflectionFunction implements Reflector
+class ReflectionFunction extends ReflectionFunctionAbstract implements Reflector
 {
     final private __clone()
     public object __construct(string name)
@@ -243,12 +243,16 @@ class ReflectionParameter implements Reflector
     final private __clone()
     public object __construct(string name)
     public string __toString()
-    public static string export(mixed class, bool return)
+    public static string export(mixed function, mixed parameter, bool return)
     public string getName()
     public bool isPassedByReference()
+    public ReflectionFunction getDeclaringFunction()
+    public ReflectionClass getDeclaringClass()
     public ReflectionClass getClass()
     public bool isArray()
     public bool allowsNull()
+    public bool isPassedByReference()
+    public bool getPosition()
     public bool isOptional()
     public bool isDefaultValueAvailable()
     public mixed getDefaultValue()
@@ -263,6 +267,8 @@ class ReflectionParameter implements Reflector
      <function>isDefaultValueAvailable</function>,
      <function>isOptional</function> foram adicionados no PHP 5.0.3,
      e <function>isArray</function> foi adicionado no PHP 5.1.0.
+     <function>getDeclaringFunction</function> e
+     <function>getPosition</function> foram adicionados no PHP 5.1.3.
     </para>
    </note>
    <para>
@@ -350,6 +356,7 @@ class ReflectionClass implements Reflector
     public int getModifiers()
     public bool isInstance(stdclass object)
     public stdclass newInstance(mixed args)
+    public stdclass newInstanceArgs(array args)
     public ReflectionClass getParentClass()
     public bool isSubclassOf(ReflectionClass class)
     public array getStaticProperties()
@@ -369,7 +376,8 @@ class ReflectionClass implements Reflector
     <simpara>
      <function>hasConstant</function>, <function>hasMethod</function>,
      <function>hasProperty</function>, <function>getStaticPropertyValue</function>
-     e <function>setStaticPropertyValue</function> foram adicionados no PHP 5.1.0.
+     e <function>setStaticPropertyValue</function> foram adicionados no PHP 5.1.0, enquanto
+     <function>newInstanceArgs</function> foi adicionado no PHP 5.1.3.
     </simpara>
    </note>
    <para>
@@ -511,7 +519,7 @@ class ReflectionObject extends ReflectionClass
     <programlisting role="php">
 <![CDATA[
 <?php
-class ReflectionMethod extends ReflectionFunction
+class ReflectionMethod extends ReflectionFunctionAbstract implements Reflector
 {
     public __construct(mixed class, string name)
     public string __toString()
