@@ -1,11 +1,34 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.5 Maintainer: narigone Status: ready -->
+<!-- EN-Revision: 1.11 Maintainer: narigone Status: ready -->
 <section id="apc.configuration">
  &reftitle.runtime;
  &extension.runtime;
  <para>
   Embora as configurações padrões do APC são suficientes para muitas instalações,
   usuários sérios devem considerar alterar os seguintes parâmetros.
+ </para> <para>
+  São duas decisões principais que você deve fazer. A primeira, a quantidade de
+  memória compartilhada que você quer alocar para o APC, e a segunda, se você quer que o APC
+  verifique se um arquivo foi modificado em cada requisição. As duas diretivas do 
+  arquivo php.ini involvidas aqui são <literal>apc.shm_size</literal> e 
+  <literal>apc.stat</literal>.  Leia as seções sobre essas duas diretivas
+  com muita atenção.
+ </para>
+ <para>
+  Uma vez que você tiver um servidor operando, você deve copiar o
+  script <literal>apc.php</literal> que vem com a extensão para 
+  algum lugar no seu DocumentRoot e carregue-o no seu navegador. Ele fornece
+  uma visão detalhada sobre o que está acontecendo com o cache. Se você tiver
+  a extensão GD habilitada no PHP, ele até gerará gráficos bonitinhos. Primeira coisa
+  a ser verificada é se ele está de fato cacheando arquivos. Presumindo que está 
+  funcionando, você deve prestar atenção para o número <literal>Cache full
+  count</literal> na esquerda. Isso te diz o número de vezes que o cache foi
+  preenchido e precisou limpar à força todas as entradas que não foram
+  acessados nos últimos segundos. O tempo varia dependendo da diretiva <literal>apc.ttl</literal>. 
+  Você deve configurar seu cache para minimizar esse número. Se você estiver com o
+  cache cheio constantemente, o resultado disso afetará a performance.
+  Você deve ou alocar mais memória para o APC ou usar os filtros 
+  (<literal>apc.filters</literal>) para cachear menos scripts.
  </para>
  <para>
   <table>
@@ -23,8 +46,8 @@
      <row>
       <entry>apc.enabled</entry>
       <entry>"1"</entry>
-      <entry>PHP_INI_ALL</entry>
-      <entry></entry>
+      <entry>PHP_INI_SYSTEM</entry>
+      <entry>PHP_INI_ALL no APC &lt;= 3.0.12p2</entry>
      </row>
      <row>
       <entry>apc.shm_segments</entry>
@@ -51,7 +74,19 @@
       <entry></entry>
      </row>
      <row>
+      <entry>apc.user_entries_hint</entry>
+      <entry>"4096"</entry>
+      <entry>PHP_INI_SYSTEM</entry>
+      <entry></entry>
+     </row>
+     <row>
       <entry>apc.ttl</entry>
+      <entry>"0"</entry>
+      <entry>PHP_INI_SYSTEM</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry>apc.user_ttl</entry>
       <entry>"0"</entry>
       <entry>PHP_INI_SYSTEM</entry>
       <entry></entry>
@@ -65,8 +100,8 @@
      <row>
       <entry>apc.cache_by_default</entry>
       <entry>"1"</entry>
-      <entry>PHP_INI_SYSTEM</entry>
-      <entry></entry>
+      <entry>PHP_INI_ALL</entry>
+      <entry>PHP_INI_SYSTEM no APC &lt;= 3.0.12p2</entry>
      </row>
      <row>
       <entry>apc.filters</entry>
@@ -97,6 +132,54 @@
       <entry>"0"</entry>
       <entry>PHP_INI_SYSTEM</entry>
       <entry>&gt; APC 3.0.6</entry>
+     </row>
+     <row>
+      <entry>apc.max_file_size</entry>
+      <entry>"1M"</entry>
+      <entry>PHP_INI_SYSTEM</entry>
+      <entry>&gt; APC 3.0.6</entry>
+     </row>
+     <row>
+      <entry>apc.stat</entry>
+      <entry>"1"</entry>
+      <entry>PHP_INI_SYSTEM</entry>
+      <entry>&gt; APC 3.0.9</entry>
+     </row>
+     <row>
+      <entry>apc.write_lock</entry>
+      <entry>"1"</entry>
+      <entry>PHP_INI_SYSTEM</entry>
+      <entry>&gt;= APC 3.0.11</entry>
+     </row>
+     <row>
+      <entry>apc.report_autofilter</entry>
+      <entry>"0"</entry>
+      <entry>PHP_INI_SYSTEM</entry>
+      <entry>&gt;= APC 3.0.11</entry>
+     </row>
+     <row>
+      <entry>apc.include_once_override</entry>
+      <entry>"0"</entry>
+      <entry>PHP_INI_SYSTEM</entry>
+      <entry>&gt;= APC 3.0.12</entry>
+     </row>
+     <row>
+      <entry>apc.rfc1867</entry>
+      <entry>"0"</entry>
+      <entry>PHP_INI_SYSTEM</entry>
+      <entry>&gt;= APC 3.0.13</entry>
+     </row>
+     <row>
+      <entry>apc.localcache</entry>
+      <entry>"0"</entry>
+      <entry>PHP_INI_SYSTEM</entry>
+      <entry>&gt;= APC 3.0.14</entry>
+     </row>
+     <row>
+      <entry>apc.localcache.size</entry>
+      <entry>"512"</entry>
+      <entry>PHP_INI_SYSTEM</entry>
+      <entry>&gt;= APC 3.0.14</entry>
      </row>
     </tbody>
    </tgroup>
@@ -181,6 +264,19 @@
      </para>
     </listitem>
    </varlistentry>
+   <varlistentry id="ini.apc.user-entries-hint">
+    <term>
+     <parameter>apc.user_entries_hint</parameter>
+     <type>integer</type>
+    </term>
+    <listitem>
+     <para>
+      Assim como <link linkend="ini.apc.num-files-hint">apc.num_files_hint</link>,
+      dá uma "dica" sobre o número de variáveis de usuários distintos são armazenados.
+      Dê o valor zero ou omit se não tiver certeza.
+     </para>
+    </listitem>
+   </varlistentry>
    <varlistentry id="ini.apc.ttl">
     <term>
      <parameter>apc.ttl</parameter>
@@ -194,6 +290,20 @@
       significa que o cache pode potencialmente encher de
       entradas paradas enquanto novas entradas não serão
       guardadas.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry id="ini.apc.user-ttl">
+    <term>
+     <parameter>apc.user_ttl</parameter>
+     <type>integer</type>
+    </term>
+    <listitem>
+     <para>
+      O número de segundos que uma entrada de cache do usuário fica ociosa em cache 
+      se a posição que ele está ocupando for necessária. Atribuir zero significa que
+      seu cache pode, potencialmente, ficar cheio de entradas não usadas
+      enquanto novas entradas não serão guardadas.
      </para>
     </listitem>
    </varlistentry>
@@ -334,6 +444,163 @@
       popular e destrui o cache do APC a cada requisição CLI,
       mas em vários cenários de teste isso é muito útil ser
       capaz de habilitar APC para a versão CLI facilmente.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry id="ini.apc.max_file_size">
+    <term>
+     <parameter>apc.max_file_size</parameter>
+     <type>integer</type>
+    </term>
+    <listitem>
+     <para>
+      Previne que arquivos maiores que esse valor sejam cacheados. O padrão é
+      1M. 
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry id="ini.apc.stat">
+    <term>
+     <parameter>apc.stat</parameter>
+     <type>integer</type>
+    </term>
+    <listitem>
+     <para>
+      Tenha cuidado ao mudar essa configuração. O padrão para ela é On (ligado)
+      o que significa que APC verificará o script em cada requisição para certificar-se
+      que ele não foi modificado. Se ele foi modificado, ele recompilará e cacheará a
+      nova versão. Se você desligar essa configuração, essa verificação não será feita.
+      Isso significa que para que mudanças sejam ativadas, você precisará reiniciar o
+      seu servidor web. Em um servidor de produção, onde você raramente
+      modifica o código, desligar essa configuração pode significar um aumento
+      de performance.
+     </para>
+     <para>
+      Essa opção aplica-se também para arquivos requeridos ou incluídos, mas perceba que
+      se você estiver usando caminhos relativos para os includes (qualquer caminho que não
+      começa com / no Unix ), o APC precisa chegar para indentificar univocamente o arquivo.
+      Se você usar o caminho absoluto, o APC pode pular o teste e usar o 
+      caminho absoluto como identificador único do arquivo.
+     </para>
+    </listitem>
+   </varlistentry>
+   
+   <varlistentry id="ini.apc.write-lock">
+    <term>
+     <parameter>apc.write_lock</parameter>
+     <type>boolean</type>
+    </term>
+    <listitem>
+     <para>
+      Em servidores muito ocupados, quando você inicializa o servidor, ou quando muitos arquivos
+      são modificados, você pode acabar com todos os processos tentando compilar e 
+      cachear os mesmos arquivos. Com write_lock habilitado, apenas um processo por vez
+      tentará compilar um script não cacheado enquanto os outros processos
+      executarão sem cache, ao invés de esperar por sua vez para poder escrever o arquivo.
+     </para>
+    </listitem>
+   </varlistentry>
+   
+   <varlistentry id="ini.apc.report-autofilter">
+    <term>
+     <parameter>apc.report_autofilter</parameter>
+     <type>boolean</type>
+    </term>
+    <listitem>
+     <para>
+      Registra qualquer script que são excluídos automaticamente do cache por
+      problemas de binding prévio ou tardio.
+     </para>
+    </listitem>
+   </varlistentry>
+   
+   <varlistentry id="ini.apc.include-once-override">
+    <term>
+     <parameter>apc.include_once_override</parameter>
+     <type>boolean</type>
+    </term>
+    <listitem>
+     <para>
+      Otimiza chamadas à <function>include_once</function> e <function>require_once</function>
+      e evita o custo das chamadas de sistema usadas.
+     </para>
+    </listitem>
+   </varlistentry>
+   
+   <varlistentry id="ini.apc.rfc1867">
+    <term>
+     <parameter>apc.rfc1867</parameter>
+     <type>boolean</type>
+    </term>
+    <listitem>
+     <para>
+      RFC1867 File Upload Progress só está disponível se você compilou o
+      APC com o PHP 5.2.0 ou posterior. Quando habilitado, qualquer upload de arquivo que
+      inclui um campo chamado <literal>APC_UPLOAD_PROGRESS</literal>
+      antes do campo arquivo em um formulário de upload fará com que o APC
+      crie uma entrada no cache upload_<emphasis>key</emphasis> onde 
+      <emphasis>key</emphasis> é o valor da entrada 
+      <literal>APC_UPLOAD_PROGRESS</literal> do formulário.
+     </para>
+     <para>
+      Perceba que o rastrear uploads de arquivos não é threadsafe até agora, então
+      novos uploads que acontecem enquanto um anterior ainda está sendo executado 
+      desabilitará o rastreamento do anterior.
+     </para>
+     <para>
+      <example>
+       <title>An apc.rfc1867 example</title>
+       <programlisting role="php">
+<![CDATA[
+<?php
+print_r(apc_fetch("upload_$_POST[APC_UPLOAD_PROGRESS]"));
+?>
+]]>
+       </programlisting>
+       &example.outputs.similar;
+       <screen>
+<![CDATA[
+Array
+(
+    [total] => 1142543
+    [current] => 1142543
+    [rate] => 1828068.8
+    [filename] => test
+    [name] => file
+    [temp_filename] => /tmp/php8F
+    [cancel_upload] => 0
+    [done] => 1
+)
+]]>
+       </screen>
+      </example>
+     </para>
+    </listitem>
+   </varlistentry>
+   
+   <varlistentry id="ini.apc.localcache">
+    <term>
+     <parameter>apc.localcache</parameter>
+     <type>boolean</type>
+    </term>
+    <listitem>
+     <para>
+      Isso permite um shadow-cache sem lock no processo local que reduz contenção
+      de locks quando o cache está sendo escrito.
+     </para>
+    </listitem>
+   </varlistentry>
+   
+   <varlistentry id="ini.apc.localcache.size">
+    <term>
+     <parameter>apc.localcache.size</parameter>
+     <type>integer</type>
+    </term>
+    <listitem>
+     <para>
+      O tamanho do shadow-cache do processo local, deve ser um valor
+      suficientemente grande, aproximadamente metade de
+      <link linkend="ini.apc.num-files-hint">apc.num_files_hint</link>.
      </para>
     </listitem>
    </varlistentry>
