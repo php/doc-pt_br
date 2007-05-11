@@ -1,105 +1,121 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.21 Maintainer: fernandoc Status: ready -->
+<!-- EN-Revision: 1.32 Maintainer: fernandoc Status: ready -->
 <section id="errorfunc.configuration">
  &reftitle.runtime;
  &extension.runtime;
  <para>
   <table>
    <title>Opções de configurações de erros e log</title>
-   <tgroup cols="3">
+   <tgroup cols="4">
     <thead>
      <row>
       <entry>Nome</entry>
       <entry>Padrão</entry>
       <entry>Modificável</entry>
+      <entry>Changelog</entry>
      </row>
     </thead>
     <tbody>
     <row>
      <entry>error_reporting</entry>
-     <entry>E_ALL &amp; ~E_NOTICE</entry>
+     <entry>NULL</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry></entry>
     </row>
     <row>
      <entry>display_errors</entry>
      <entry>"1"</entry>
      <entry>PHP_INI_ALL</entry>
+      <entry></entry>
     </row>
     <row>
      <entry>display_startup_errors</entry>
      <entry>"0"</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry>Disponível desde PHP 4.0.3.</entry>
     </row>
     <row>
      <entry>log_errors</entry>
      <entry>"0"</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry></entry>
     </row>
     <row>
      <entry>log_errors_max_len</entry>
      <entry>"1024"</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry>Disponível desde PHP 4.3.0.</entry>
     </row>
     <row>
      <entry>ignore_repeated_errors</entry>
      <entry>"0"</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry>Disponível desde PHP 4.3.0.</entry>
     </row>
     <row>
      <entry>ignore_repeated_source</entry>
      <entry>"0"</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry>Disponível desde PHP 4.3.0.</entry>
     </row>
     <row>
      <entry>report_memleaks</entry>
      <entry>"1"</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry>Disponível desde PHP 4.3.0.</entry>
     </row>
     <row>
      <entry>track_errors</entry>
      <entry>"0"</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry></entry>
     </row>
     <row>
      <entry>html_errors</entry>
      <entry>"1"</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry>PHP_INI_SYSTEM no PHP &lt;= 4.2.3. Disponível desde PHP 4.0.2.</entry>
     </row>
     <row>
      <entry>docref_root</entry>
      <entry>""</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry>Disponível desde PHP 4.3.0.</entry>
     </row>
     <row>
      <entry>docref_ext</entry>
      <entry>""</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry>Disponível desde PHP 4.3.0.</entry>
     </row>
     <row>
      <entry>error_prepend_string</entry>
      <entry>NULL</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry></entry>
     </row>
     <row>
      <entry>error_append_string</entry>
      <entry>NULL</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry></entry>
     </row>
     <row>
      <entry>error_log</entry>
      <entry>NULL</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry></entry>
     </row>
     <row>
      <entry>warn_plus_overloading</entry>
      <entry>NULL</entry>
      <entry>PHP_INI??</entry>
+     <entry></entry>
     </row>
     </tbody>
    </tgroup>
   </table>
-  Para maiores detalhes e definição das constantes do PHP_INI_* veja
-  <function>ini_set</function>.
+  &ini.php.constants;
  </para>
 
  &ini.descriptions.title;
@@ -147,6 +163,19 @@
        mais recente de codificação, por exemplo, avisar você sobre funções obsoletas.
       </para>
      </note>
+     
+     <note>
+      <title>Constantes do PHP fora do PHP</title>
+      <para>
+       Usar constantes PHP fora do PHP, como no <filename>httpd.conf</filename>,
+       não terá sentido útiil assim nestes casos os valores <type>integer</type>
+       são requeridos. E já que níveis de erros serão adicionados com o passar do tempo, o 
+       valor máximo (para <constant>E_ALL</constant>) irá provavelmente mudar. Assim no lugar de
+       <constant>E_ALL</constant> considere usar um grande valor para cobrir todos os
+       valores de agora assim como no futuro, um valor numérico como
+       <literal>2147483647</literal>.
+      </para>
+     </note>
      <para>
       No PHP 3, a definição padrão é
       <literal>(E_ERROR | E_WARNING | E_PARSE)</literal>,
@@ -171,6 +200,13 @@
       <para>
       Isto serve para suportar o seu desenvolvimento e nunca deve
       ser usado em sistemas de produção (ex. sistemas conectados a internet).
+      </para>
+     </note>
+     <note>
+      <para>
+       Mesmo podendo ser display_errors definido em tempo de execução (com <function>ini_set</function>),
+       ele não terá qualquer efeito se o script tiver erro fatal.
+       Isto é porque a ação desejada em tempo de execução não é executada.
       </para>
      </note>
     </listitem>
@@ -221,7 +257,12 @@
       <link linkend="ini.error-log">error_log</link> é adicionada informação
       sobre a fonte. O padrão é 1024 e 0 permite que não seja
       estabelecido nenhum limite.
+      Este tamanho é aplicado aos erros logados, erros exibidos e também a
+      <link linkend="reserved.variables.phperrormsg">$php_errormsg</link>.
      </para>
+     
+     &ini.shorthandbytes;
+     
     </listitem>
    </varlistentry>
 
@@ -380,12 +421,16 @@
     </term>
     <listitem>
      <para>
-      O nome do arquivo onde os erros do script serão logados. Se o
+      O nome do arquivo onde os erros do script serão logados. O arquivo
+      deve poder ser escrito pelo usuário do servidor web. Se o
       valor especial <literal>syslog</literal> é usado, os erros
       são enviados para o log do sistema. No Unix, isto indica
       syslog(3) e no Windows NT isto indica o log do evento. O log
       de sistema não é suportado no Windows 95. Veja também:
       <function>syslog</function>.
+      Se esta diretiva não for definida, os erros são enviados para o log de erros do SAPI.
+      Por exemplo, é para o log de erros do Apache ou <literal>stderr</literal>
+      para o CLI.
      </para>
     </listitem>
    </varlistentry>
@@ -402,6 +447,7 @@
       Isto é para tornar mais fácil encontrar scripts que precisam
       ser rescritos usando o operador de concatenação
       (<literal>.</literal>).
+      Esta opção não existe no PHP 4.
      </para>
     </listitem>
    </varlistentry>
