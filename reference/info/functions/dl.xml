@@ -1,35 +1,20 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.18 Maintainer: fernandoc Status: ready -->
-<!-- splitted from ./en/functions/info.xml, last change in rev 1.29 -->
+<!-- EN-Revision: 1.26 Maintainer: fernandoc Status: ready -->
   <refentry id="function.dl">
    <refnamediv>
     <refname>dl</refname>
     <refpurpose>Carrega uma extensão do PHP durante a execução</refpurpose>
    </refnamediv>
-   <refsect1>
-    <title>Descrição</title>
+
+   <refsect1 role="description">
+    &reftitle.description;
     <methodsynopsis>
      <type>int</type><methodname>dl</methodname>
      <methodparam><type>string</type><parameter>library</parameter></methodparam>
     </methodsynopsis>
     <para>
      Carrega a extensão do PHP indicada pelo parâmetro
-     <parameter>library</parameter>. O parâmetro <parameter>library</parameter>
-     é <emphasis>somente</emphasis> o nome do arquivo da extensão para carregar
-     o qual depende da sua plataforma. Por exemplo, a extensão <link
-     linkend="ref.sockets">sockets</link> (se compilada como módulo compartilhado,
-     o que não é o padrão) deve ser chamado como <filename>sockets.so</filename>
-     em plataformas Unix enquanto é chamado
-     <filename>php_sockets.dll</filename> em plataformas Windows.
-    </para>
-    <para>
-     &return.success; Se o funcionamento de carregar módulos não estiver disponível
-     (veja a nota) ou for desabilitado (ou por colocar em off
-     <literal>enable_dl</literal> ou ativando o &safemode;
-     no &php.ini;) um <constant>E_ERROR</constant> é emitido
-     e a execução é encerrada. Se <function>dl</function> falhar porque a biblioteca especificada
-     não puder ser carregada, em adição ao &false; uma mensagem
-     <constant>E_WARNING</constant> é emitida.
+     <parameter>library</parameter>. 
     </para>
     <para>
      Use <function>extension_loaded</function> para testar se uma extensão esta
@@ -37,29 +22,23 @@
      dinamicamente (através do &php.ini;
      ou da função <function>dl</function>).
     </para>
-    <example>
-     <title>Exemplos <function>dl</function></title>
-     <programlisting role="php">
-<![CDATA[
-<?php
-// Exemplo de carregar uma extensão baseada no sistema operacional
-if (!extension_loaded('sqlite')) {
-    if (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')) {
-        dl('php_sqlite.dll');
-    } else {
-        dl('sqlite.so');
-    }
-}
-
-// ou usando a constante PHP_SHLIB_SUFFIX disponível a partir do  PHP 4.3.0
-if (!extension_loaded('sqlite')) {
-    $prefix = (PHP_SHLIB_SUFFIX == 'dll') ? 'php_' : '';
-    dl($prefix . 'sqlite.' . PHP_SHLIB_SUFFIX);
-}
-?>
-]]>
-     </programlisting>
-    </example>
+   </refsect1>
+  
+   <refsect1 role="parameters">
+    &reftitle.parameters;
+    <para>
+     <variablelist>
+      <varlistentry>
+       <term><parameter>library</parameter></term>
+       <listitem>
+        <para>
+         Este parâmetro é <emphasis>somente</emphasis> o nome do arquivo da
+         exdtensão a carregar o qual também depende da sua plataforma. Por exemplo,
+         a extensão <link linkend="ref.sockets">sockets</link> (se compilada
+         como módulo compartilhado, não o padrão!) seria chamada
+         <filename>sockets.so</filename> em plataformas Unix enquanto é chamada
+         <filename>php_sockets.dll</filename> na plataforma Windows.
+        </para>
     <para>
      O diretório a partir do qual a extensão é carregada depende da sua plataforma:
     </para>
@@ -97,6 +76,56 @@ if (!extension_loaded('sqlite')) {
      or
      <filename>/usr/local/php/lib/php/extensions/no-debug-zts-20010901</filename>.
     </para>
+    </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+    <refsect1 role="returnvalues">
+     &reftitle.returnvalues;
+     <para>
+      &return.success; Se a funcionalidade de carregar os módulos não estiver disponível
+      (veja a nota) ou foi desabilitada (ou por desativar
+      <literal>enable_dl</literal> ou por ativar &safemode;
+      no &php.ini;) um <constant>E_ERROR</constant> é emitido
+      e a execução é parada. Se <function>dl</function> falhar porque a
+      bliblioteca especificada mão puder ser carregada, em adição a &false; uma
+      mensagem <constant>E_WARNING</constant> é emitida.
+     </para>
+    </refsect1>
+    
+    <refsect1 role="examples">
+     &reftitle.examples;
+     <para>
+      <example>
+       <title>Exemplos<function>dl</function></title>
+        <programlisting role="php">
+<![CDATA[
+<?php
+// Example loading an extension based on OS
+if (!extension_loaded('sqlite')) {
+    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+        dl('php_sqlite.dll');
+    } else {
+        dl('sqlite.so');
+    }
+}
+
+// Or, the PHP_SHLIB_SUFFIX constant is available as of PHP 4.3.0
+if (!extension_loaded('sqlite')) {
+    $prefix = (PHP_SHLIB_SUFFIX === 'dll') ? 'php_' : '';
+    dl($prefix . 'sqlite.' . PHP_SHLIB_SUFFIX);
+}
+?>
+]]>
+       </programlisting>
+      </example>
+     </para>
+    </refsect1>
+  
+    <refsect1 role="notes">
+    &reftitle.notes;
     <note>
      <para>
       <function>dl</function> <emphasis>não</emphasis> e suportado em
@@ -108,14 +137,33 @@ if (!extension_loaded('sqlite')) {
     </note>
     <note>
      <para>
+      A partir do PHP 5, a função <function>dl</function> esta obsoleta em todas as 
+      SAPI <emphasis>exceto</emphasis> <acronym>CLI</acronym>.
+      Use o método de <link linkend="ini.extension">Diretivas para Carregar Extensões</link>
+      ao invés.
+     </para>
+    </note>
+    <note>
+     <para>
+      Desde o PHP 6 esta função esta desabilitada em todas as SAPIs, exceto CLI, CGI e
+      embutida.
+     </para>
+    </note>
+    <note>
+     <para>
       <function>dl</function> diferencia maiúsculas e minúsculas em plataformas Unix.
      </para>
     </note>
     &note.sm.disabled;
+   </refsect1>
+  
+   <refsect1 role="seealso">
+    &reftitle.seealso;
     <para>
-     Veja também
-     <link linkend="ini.extension">Extension Loading Directives</link>
-     e <function>extension_loaded</function>.
+     <simplelist>
+      <member><link linkend="ini.extension">Diretivas para Carregar Extensões</link></member>
+      <member><function>extension_loaded</function></member>
+     </simplelist>
     </para>
    </refsect1>
   </refentry>
