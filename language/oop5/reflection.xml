@@ -1,7 +1,23 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.20 Maintainer: narigone Status: ready -->
+<!-- EN-Revision: 1.32 Maintainer: felipe Status: ready --><!-- CREDITS: narigone -->
  <sect1 xml:id="language.oop5.reflection" xmlns="http://docbook.org/ns/docbook">
   <title>Reflexão</title>
+  <sect2 xml:id="language.oop5.reflection.toc">
+   <title>Table of Contents</title>
+   <simplelist>
+    <member><link linkend="language.oop5.reflection.introduction">Introduction</link></member>
+    <member><link linkend="language.oop5.reflection.reflector">A interface Reflector</link></member>
+    <member><link linkend="language.oop5.reflection.reflectionexception">A classe ReflectionException</link></member>
+    <member><link linkend="language.oop5.reflection.reflectionfunction">A classe ReflectionFunction</link></member>
+    <member><link linkend="language.oop5.reflection.reflectionparameter">A classe ReflectionParameter</link></member>
+    <member><link linkend="language.oop5.reflection.reflectionclass">A classe ReflectionClass</link></member>
+    <member><link linkend="language.oop5.reflection.reflectionobject">A classe ReflectionObject</link></member>
+    <member><link linkend="language.oop5.reflection.reflectionmethod">A classe ReflectionMethod</link></member>
+    <member><link linkend="language.oop5.reflection.reflectionproperty">A classe ReflectionProperty</link></member>
+    <member><link linkend="language.oop5.reflection.reflectionextension">A classe ReflectionExtension</link></member>
+    <member><link linkend="language.oop5.reflection.extending">Estendendo as classes reflection</link></member>
+   </simplelist>
+  </sect2>
   <sect2 xml:id="language.oop5.reflection.introduction">
    <title>Introdução</title>
    <para>
@@ -111,6 +127,27 @@ Class [ <internal> class Exception ] {
    </para>
   </sect2>
 
+  <sect2 xml:id="language.oop5.reflection.reflector">
+   <title><classname>Reflector</classname></title>
+   <para>
+    <classname>Reflector</classname> é uma interface implementada por todas
+    classes Reflection exportáveis.
+   </para>
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+interface Reflector
+{
+    public string __toString()
+    public static string export()
+}
+?>
+]]>
+    </programlisting>
+   </informalexample>
+  </sect2>
+
   <sect2 xml:id="language.oop5.reflection.reflectionexception">
     <title><classname>ReflectionException</classname></title>
     <para>
@@ -133,18 +170,19 @@ Class [ <internal> class Exception ] {
 class ReflectionFunction extends ReflectionFunctionAbstract implements Reflector
 {
     final private __clone()
-    public object __construct(string name)
+    public void __construct(string name)
     public string __toString()
     public static string export(string name, bool return)
     public string getName()
     public bool isInternal()
+    public bool isDisabled()
     public bool isUserDefined()
     public string getFileName()
     public int getStartLine()
     public int getEndLine()
     public string getDocComment()
     public array getStaticVariables()
-    public mixed invoke(mixed args)
+    public mixed invoke([mixed args [, ...]])
     public mixed invokeArgs(array args)
     public bool returnsReference()
     public ReflectionParameter[] getParameters()
@@ -155,6 +193,12 @@ class ReflectionFunction extends ReflectionFunctionAbstract implements Reflector
 ]]>
     </programlisting>
    </informalexample>
+   <para>
+    Parent class <classname>ReflectionFunctionAbstract</classname> has the
+    same methods except <function>invoke</function>,
+    <function>invokeArgs</function>, <function>export</function> and
+    <function>isDisabled</function>.
+   </para>
    <note>
      <simpara>
      <function>getNumberOfParameters</function> e
@@ -241,18 +285,16 @@ echo ReflectionFunction::export('counter');
 class ReflectionParameter implements Reflector
 {
     final private __clone()
-    public object __construct(string name)
+    public void __construct(string name)
     public string __toString()
     public static string export(mixed function, mixed parameter, bool return)
     public string getName()
     public bool isPassedByReference()
-    public ReflectionFunction getDeclaringFunction()
     public ReflectionClass getDeclaringClass()
     public ReflectionClass getClass()
     public bool isArray()
     public bool allowsNull()
     public bool isPassedByReference()
-    public bool getPosition()
     public bool isOptional()
     public bool isDefaultValueAvailable()
     public mixed getDefaultValue()
@@ -268,7 +310,7 @@ class ReflectionParameter implements Reflector
      <function>isOptional</function> foram adicionados no PHP 5.0.3,
      e <function>isArray</function> foi adicionado no PHP 5.1.0.
      <function>getDeclaringFunction</function> e
-     <function>getPosition</function> foram adicionados no PHP 5.1.3.
+     <function>getPosition</function> foram adicionados no PHP 5.2.3.
     </para>
    </note>
    <para>
@@ -328,7 +370,7 @@ foreach ($reflect->getParameters() as $i => $param) {
 class ReflectionClass implements Reflector
 {
     final private __clone()
-    public object __construct(string name)
+    public void __construct(string name)
     public string __toString()
     public static string export()
     public string getName()
@@ -499,7 +541,7 @@ if ($class->isInstantiable()) {
 class ReflectionObject extends ReflectionClass
 {
     final private __clone()
-    public object __construct(mixed object)
+    public void __construct(mixed object)
     public string __toString()
     public static string export(mixed object, bool return)
 }
@@ -521,10 +563,10 @@ class ReflectionObject extends ReflectionClass
 <?php
 class ReflectionMethod extends ReflectionFunctionAbstract implements Reflector
 {
-    public __construct(mixed class, string name)
+    public void __construct(mixed class, string name)
     public string __toString()
     public static string export(mixed class, string name, bool return)
-    public mixed invoke(stdclass object, mixed args)
+    public mixed invoke(stdclass object [, mixed args [, ...]])
     public moxed invokeArgs(stdclass object, array args)
     public bool isFinal()
     public bool isAbstract()
@@ -537,7 +579,7 @@ class ReflectionMethod extends ReflectionFunctionAbstract implements Reflector
     public int getModifiers()
     public ReflectionClass getDeclaringClass()
 
-    // Herdado de ReflectionFunction
+    // Herdado de ReflectionFunctionAbstract
     final private __clone()
     public string getName()
     public bool isInternal()
@@ -653,7 +695,7 @@ var_dump($method->invoke(NULL));
 class ReflectionProperty implements Reflector
 {
     final private __clone()
-    public __construct(mixed class, string name)
+    public void __construct(mixed class, string name)
     public string __toString()
     public static string export(mixed class, string name, bool return)
     public string getName()
@@ -747,7 +789,7 @@ var_dump($obj);
 <?php
 class ReflectionExtension implements Reflector {
     final private __clone()
-    public __construct(string name)
+    public void __construct(string name)
     public string __toString()
     public static string export(string name, bool return)
     public string getName()
@@ -757,6 +799,7 @@ class ReflectionExtension implements Reflector {
     public array getINIEntries()
     public ReflectionClass[] getClasses()
     public array getClassNames()
+    public string info()
 }
 ?>
 ]]>
@@ -821,7 +864,7 @@ printf(
  */
 class My_Reflection_Method extends ReflectionMethod
 {
-    public $visibility = '';
+    public $visibility = array();
 
     public function __construct($o, $m)
     {
