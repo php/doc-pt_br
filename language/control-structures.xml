@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.137 Maintainer: ae Status: ready -->
+<!-- EN-Revision: 1.150 Maintainer: felipe Status: ready --><!-- CREDITS: ae -->
 <chapter xml:id="language.control-structures" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Estruturas de Controle</title>
 
@@ -277,7 +277,7 @@ while (expressao):
    </para>
    <para>
     Os exemplos a seguir são idênticos, e ambos imprimem números de
-    1 to 10:
+    1 até 10:
     <informalexample>
      <programlisting role="php">
 <![CDATA[
@@ -427,7 +427,7 @@ for (expr1; expr2; expr3)
    </simpara>
    <para>
     Considere os seguintes exemplos. Todos eles mostram números de
-    1 a 10:
+    1 até 10:
     <informalexample>
      <programlisting role="php">
 <![CDATA[
@@ -563,13 +563,21 @@ foreach ($arr as &$value) {
     $value = $value * 2;
 }
 // $arr is now array(2, 4, 6, 8)
+unset($value); // quebra a referência com o último elemento
 ?>
 ]]>
      </programlisting>
     </informalexample>
-    Isto é possível apenas se a matriz iterada puder ser referência
-    (ex. é variável).
+    Isto é possível apenas se a matriz iterada puder ser referenciada
+    (isto é, uma variável).
    </para>
+   <warning>
+    <para>
+     Reference of a <literal>$value</literal> and the last array element
+     remain even after the <literal>foreach</literal> loop. It is recommended
+     to destroy it by <function>unset</function>.
+   </para>
+  </warning>
    <para>
     <note>
      <para>
@@ -843,6 +851,12 @@ while ($i++ < 5) {
      loop, use <literal>continue 2</literal>.
     </simpara>
    </note>
+   <note>
+    <para>
+     Note que switch/case fazem
+     <link linkend="types.comparisions-loose">comparações soltas</link>.
+    </para>
+   </note>
    <para>
     Os exemplos seguintes mostram duas maneiras diferentes de escrever a
     mesma coisa, uma utilizando uma série de <literal>if</literal>s e
@@ -968,8 +982,7 @@ switch ($i) {
    </para>
    <para>
     Um case especial é o <literal>default</literal>. Esse case é executado quando
-    nenhum outro case combina. Ele precisa ser a última
-    instrução <literal>case</literal>. Por exemplo:
+    nenhum outro case combina. Por exemplo:
     <informalexample>
      <programlisting role="php">
 <![CDATA[
@@ -1088,7 +1101,7 @@ declare(ticks=1);
     <varname>N</varname> níveis de instruções executados
     pelo interpretador com o bloco <literal>declare</literal>.
     O valor para <varname>N</varname> é especificado
-    utilizando <literal>ticks=N</literal>
+    utilizando <code>ticks=<varname>N</varname></code>
     nos blocos <literal>declare</literal> das
     seções <literal>diretiva</literal>.
    </para>
@@ -1224,8 +1237,8 @@ print_r(profile (TRUE));
    <simpara>
      <function>require</function> e <function>include</function>
      são idênticos em todas as formas exceto pela manipulação de erros.
-     Ambas produzem um <link linkend="internal.e-warning">Warning</link>, mas
-     <function>require</function> resultará em um  <link linkend="internal.e-error">
+     Ambas produzem um <link linkend="errorfunc.constants.errorlevels.e-warning">Warning</link>, mas
+     <function>require</function> resultará em um  <link linkend="errorfunc.constants.errorlevels.e-error">
      Fatal Error</link>. Em outras palavras, não hesite em utilizar
      <function>require</function> se na falta de um arquivo quiser parar o processamento
      da página. <function>include</function> não se comporta da mesma maneira, e o
@@ -1290,8 +1303,8 @@ require ('somefile.txt');
    <simpara>
      A documentação a seguir se aplica também a <function>require</function>.
      Esses dois construtores são idênticos a exceção de como eles manipulam
-     erros. Ambas produzem um <link linkend="internal.e-warning">Warning</link> mas <function>require</function>
-     resultará em um <link linkend="internal.e-error">Fatal Error</link>.
+     erros. Ambas produzem um <link linkend="errorfunc.constants.errorlevels.e-warning">Warning</link> mas <function>require</function>
+     resultará em um <link linkend="errorfunc.constants.errorlevels.e-error">Fatal Error</link>.
      Em outras palavras, utilize <function>require</function> se você deseja
      que um arquivo faltando interrompa o processamento da página. <function>include</function>
      não se comporta da mesma maneira, permitindo que o script continue nessas situações. Em todo caso,
@@ -1300,14 +1313,14 @@ require ('somefile.txt');
      processamento em versões do PHP anteriores a PHP 4.3.5. A partir desta versão, causa.
    </simpara>
    <simpara>
-    Arquivos a incluir são procurados primeiramente no include_path relativo ao diretório atual de trabalho
-    e depois no include_path relativo ao diretório atual do script. Por exemplo, se seu incluide_path
-    é <literal>.</literal>, o diretório atual é <filename class="directory">/www/</filename>,
+    Arquivos a incluir são procurados primeiramente no include_path relativo ao diretório atual de trabalho,
+    e então no diretório atual do script. Por exemplo, se seu include_path
+    é <literal>libraries</literal>, o diretório atual é <filename class="directory">/www/</filename>,
     se você incluiu <filename>include/a.php</filename> e há um <filename>b.php</filename>
-    nesse arquivo, <filename>b.php</filename> será procurado primeiro em <filename class="directory">/www/</filename>
-    e somente depois em <filename class="directory">/www/include/</filename>.
+    nesse arquivo, <filename>b.php</filename> será procurado primeiro em <filename class="directory">/www/libraries/</filename>
+    e somente depois em <filename class="directory">/www/include/</filename>.0
     Se o nome do arquivo começa com <literal>./</literal> ou <literal>../</literal>, ele
-    é procurado apenas no include_path relativo ao diretório de rabalho atual.
+    é procurado apenas no diretório atual.
    </simpara>
    <simpara>
      Quando um arquivo é incluído, seu código entra no
@@ -1350,6 +1363,9 @@ echo "Uma $fruta $cor"; // Uma maçã verde
      então todo o código incluído será executado como
      se ele tivesse sido definido dentro daquela função. Da mesma forma,
      ele seguirá o escopo de variáveis da função.
+     Uma exceção para esta regra são as <link
+     linkend="language.constants.predefined">constantes mágicas</link> que são
+     avaliadas pelo parser antes dos includes ocorrerem.
    </simpara>
    <para>
      <example>
@@ -1640,8 +1656,8 @@ function get_include_contents($filename) {
        <programlisting role="php">
 <![CDATA[
 <?php
-require_once("a.php"); // isto irá incluir a.php
-require_once("A.php"); // isto irá incluir a.php novamente no Windows! (Apenas PHP 4)
+require_once "a.php"; // isto irá incluir a.php
+require_once "A.php"; // isto irá incluir a.php novamente no Windows! (Apenas PHP 4)
 ?>
 ]]>
         </programlisting>
@@ -1703,8 +1719,8 @@ require_once("A.php"); // isto irá incluir a.php novamente no Windows! (Apenas P
        <programlisting role="php">
 <![CDATA[
 <?php
-include_once("a.php"); // isto irá incluir a.php
-include_once("A.php"); // isto irá incluir a.php novamente no Windows! (Apenas PHP 4)
+include_once "a.php"; // isto irá incluir a.php
+include_once "A.php"; // isto irá incluir a.php novamente no Windows! (Apenas PHP 4)
 ?>
 ]]>
        </programlisting>
