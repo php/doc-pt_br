@@ -1,82 +1,236 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.10 Maintainer: ae Status: ready --><!-- CREDITS: rarruda -->
-<!-- splitted from ./pt_BR/functions/filesystem.xml, last change in rev 1.5 -->
+<!-- EN-Revision: 1.25 Maintainer: diogo Status: ready --><!-- CREDITS: rarruda, ae -->
   <refentry xml:id="function.file" xmlns="http://docbook.org/ns/docbook">
    <refnamediv>
     <refname>file</refname>
-    <refpurpose>Le um arquivo inteiro para um array</refpurpose>
+    <refpurpose>Lê todo o arquivo para um array</refpurpose>
    </refnamediv>
-   <refsect1>
-    <title>Descrição</title>
+   <refsect1 role="description">
+    &reftitle.description;
      <methodsynopsis>
       <type>array</type><methodname>file</methodname>
       <methodparam><type>string</type><parameter>filename</parameter></methodparam>
-      <methodparam choice="opt"><type>int</type><parameter>use_include_path</parameter></methodparam>
-      <methodparam choice="opt"><type>int</type><parameter>use_include_path</parameter></methodparam>
+      <methodparam choice="opt"><type>int</type><parameter>flags</parameter></methodparam>
+      <methodparam choice="opt"><type>resource</type><parameter>context</parameter></methodparam>
      </methodsynopsis>
     <para>
-     Idêntico a <function>readfile</function>, exceto que
-     <function>file</function> retorna o arquivo em um array. Cada
-     elemento do array corresponde a uma linha no arquivo, inclusive
-     com o caracter de nova linha. Em caso de falha, <function>file</function>
-     retorna &false;.
+     Carrega todo um arquivo em um array.
     </para>
+    <note>
+     <para>
+      Você pode utilizar <function>file_get_contents</function> para ler
+      o conteúdo de um arquivo como string.
+     </para>
+    </note>
+   </refsect1>
+
+   <refsect1 role="parameters">
+    &reftitle.parameters;
     <para>
-     Você pode usar o parâmetro opcional <parameter>use_include_path</parameter>
-     como "1", se você deseja procurar o arquivo no <link
-     linkend="ini.include-path">include_path</link> também.
+     <variablelist>
+      <varlistentry>
+       <term><parameter>filename</parameter></term>
+       <listitem>
+        <para>
+         Caminho até o arquivo
+        </para>
+        &tip.fopen-wrapper;
+       </listitem>
+      </varlistentry>
+      <varlistentry>
+       <term><parameter>flags</parameter></term>
+       <listitem>
+        <para>
+         O parâmetro opcional <parameter>flags</parameter> pode ser uma ou
+         mais das seguintes constantes:
+         <variablelist>
+          <varlistentry>
+           <term>
+            <constant>FILE_USE_INCLUDE_PATH</constant>
+           </term>
+           <listitem>
+            <simpara>
+             Procurar pelo arquivo no <link 
+             linkend="ini.include-path">include_path</link>.
+            </simpara>
+           </listitem>
+          </varlistentry>
+          <varlistentry>
+           <term>
+            <constant>FILE_IGNORE_NEW_LINES</constant>
+           </term>
+           <listitem>
+            <simpara>
+             Não acrescentar a quebra de linha no final de cada elemento do
+             array
+            </simpara>
+           </listitem>
+          </varlistentry>
+          <varlistentry>
+           <term>
+            <constant>FILE_SKIP_EMPTY_LINES</constant>
+           </term>
+           <listitem>
+            <simpara>
+             Ignorar linhas vazias
+            </simpara>
+           </listitem>
+          </varlistentry>
+          <varlistentry>
+           <term>
+            <constant>FILE_TEXT</constant>
+           </term>
+           <listitem>
+            <simpara>
+             O arquivo é retornado na codificação UTF-8. Você pode especificar
+             uma codificação diferente criando um contexto personalizado.
+             Esta constante não pode ser utilizada com
+             <constant>FILE_BINARY</constant>. Esta flag está disponível
+             apenas a partir do PHP 6.
+            </simpara>
+           </listitem>
+          </varlistentry>
+          <varlistentry>
+           <term>
+            <constant>FILE_BINARY</constant>
+           </term>
+           <listitem>
+            <simpara>
+             O conteúdo é lido como binário. Esta é a opção padrão e
+             não pode ser utilizada com <constant>FILE_TEXT</constant>. Esta
+             flag está disponível apenas a partir do PHP 6.
+            </simpara>
+           </listitem>
+          </varlistentry>
+         </variablelist>
+        </para>
+       </listitem>
+      </varlistentry>
+      <varlistentry>
+       <term><parameter>context</parameter></term>
+       <listitem>
+        <para>
+         Um recurso de contexto criado com a função
+         <function>stream_context_create</function>.
+        </para>
+        <para>
+         &note.context-support;
+        </para>
+       </listitem>
+      </varlistentry>
+     </variablelist>
     </para>
+   </refsect1>
+
+   <refsect1 role="returnvalues">
+    &reftitle.returnvalues;
     <para>
-     <informalexample>
+     Retorna o arquivo em um array. Cada elemento do array corresponde a uma
+     linha no arquivo, ainda com a quebra de linha. Em caso de falha,
+     <function>file</function> retorna &false;
+    </para>
+    <note>
+     <para>
+      Cada linha no array incluirá a quebra de linha, a não ser que
+      <constant>FILE_IGNORE_NEW_LINES</constant> seja usado, então você ainda
+      deve usar <function>rtrim</function> se não desejar ter as quebras de
+      linha presentes.
+     </para>
+    </note>
+    &note.line-endings;
+   </refsect1>
+  
+   <refsect1 role="changelog">
+    &reftitle.changelog;
+    <para>
+     <informaltable>
+      <tgroup cols="2">
+       <thead>
+        <row>
+         <entry>&Version;</entry>
+         <entry>&Description;</entry>
+        </row>
+       </thead>
+       <tbody>
+        <row>
+         <entry>6.0.0</entry>
+         <entry>
+          Adicionado suporte às flags <constant>FILE_TEXT</constant> e
+          <constant>FILE_BINARY</constant>.
+         </entry>
+        </row>
+        <row>
+         <entry>5.0.0</entry>
+         <entry>
+          O parâmetro <parameter>context</parameter> foi adicionado
+         </entry>
+        </row>
+        <row>
+         <entry>5.0.0</entry>
+         <entry>
+          Até o PHP 5.0.0, o parâmetro <parameter>flags</parameter> suportava
+          apenas <link linkend="ini.include-path">include_path</link> e era
+          habilitado com 1
+         </entry>
+        </row>
+        <row>
+         <entry>4.3.0</entry>
+         <entry>
+          <function>file</function> tornou-se segura para binários
+         </entry>
+        </row>
+       </tbody>
+      </tgroup>
+     </informaltable>
+    </para>
+   </refsect1>
+
+   <refsect1 role="examples">
+    &reftitle.examples;
+    <para>
+     <example>
+      <title>Exemplo de <function>file</function></title>
       <programlisting role="php">
 <![CDATA[
 <?php
-// Le um arquivo em um array. Nesse exemplo você pode obter via HTTP para obter
-// o código fonte HTML de uma URL.
-$lines = file ('http://www.exemplo.com/');
+// Lê um arquivo em um array.  Nesse exemplo nós obteremos o código fonte de
+// uma URL via HTTP
+$lines = file ('http://www.example.com/');
 
-// Roda através do array, mostrando o fonte HTML com numeração de linhas.
+// Percorre o array, mostrando o fonte HTML com numeração de linhas.
 foreach ($lines as $line_num => $line) {
     echo "Linha #<b>{$line_num}</b> : " . htmlspecialchars($line) . "<br>\n";
 }
 
 // Outro exemplo, onde obtemos a página web inteira como uma string. Veja também file_get_contents().
-$html = implode ('', file ('http://www.exemplo.com/'));
+$html = implode ('', file ('http://www.example.com/'));
 ?>
 ]]>
       </programlisting>
-     </informalexample>
-    </para>
-    &tip.fopen-wrapper;
-    <note>
-     <para>
-      Cada linha do array resultante terá os caracteres de fim de linha, então você
-      precisa utilizar <function>trim</function> se não quiser esses
-      caracteres presentes.
-     </para>
-    </note>
-    &note.line-endings;
-    <note>
-     <para>
-      A partir do PHP 4.3.0, você pode utilizar <function>file_get_contents</function> para
-      retornar o conteúdo de um arquivo como uma string.
-     </para>
-     <para>
-      No PHP 4.3.0 <function>file</function> se tornou segura para arquivos binários.
-     </para>
-    </note>
-    <note>
-     <simpara>
-      O suporte ao contexto foi acrescentado no <literal>PHP 5.0.0</literal>
-     </simpara>
-    </note>
-    <para>
-     Veja também <function>readfile</function>,
-     <function>fopen</function>, <function>fsockopen</function>, 
-     <function>popen</function>, <function>file_get_contents</function>
-     e <function>include</function>.
+     </example>
     </para>
    </refsect1>
+
+   <refsect1 role="roles">
+    &reftitle.notes;
+    &warn.ssl-non-standard;
+   </refsect1>
+
+   <refsect1 role="seealso">
+    &reftitle.seealso;
+    <para>
+     <simplelist>
+      <member><function>readfile</function></member>
+      <member><function>fopen</function></member>
+      <member><function>fsockopen</function></member>
+      <member><function>popen</function></member>
+      <member><function>file_get_contents</function></member>
+      <member><function>include</function></member>
+      <member><function>stream_context_create</function></member>
+     </simplelist>
+    </para>
+   </refsect1>
+
   </refentry>
 
 <!-- Keep this comment at the end of the file
