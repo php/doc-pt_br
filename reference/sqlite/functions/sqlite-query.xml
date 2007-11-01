@@ -1,37 +1,94 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.6 Maintainer: fernandoc Status: ready -->
+<!-- EN-Revision: 1.16 Maintainer: fernandoc Status: ready -->
 <refentry xml:id="function.sqlite-query" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>sqlite_query</refname>
-  <refpurpose>
-   Executa uma query em um banco de dados e retorna um conjunto de resultados.
-  </refpurpose>
+  <refpurpose>Executa uma query em um banco de dados e retorna o manipulador de resultados.</refpurpose>
  </refnamediv>
- <refsect1>
-  <title>Descrição</title>
+ 
+ <refsect1 role="description">
+  &reftitle.description;
   <methodsynopsis>
    <type>resource</type><methodname>sqlite_query</methodname>
    <methodparam><type>resource</type><parameter>dbhandle</parameter></methodparam>
    <methodparam><type>string</type><parameter>query</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>result_type</parameter></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter role="reference">error_msg</parameter></methodparam>
   </methodsynopsis>
   <methodsynopsis>
    <type>resource</type><methodname>sqlite_query</methodname>
    <methodparam><type>string</type><parameter>query</parameter></methodparam>
    <methodparam><type>resource</type><parameter>dbhandle</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>result_type</parameter></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter role="reference">error_msg</parameter></methodparam>
   </methodsynopsis>
+  <para>Modo orientado a objeto (método):</para>
+  <classsynopsis>
+   <ooclass><classname>SQLiteDatabase</classname></ooclass>
+   <methodsynopsis>
+    <type>SQLiteResult</type><methodname>query</methodname>
+    <methodparam><type>string</type><parameter>query</parameter></methodparam>
+    <methodparam choice="opt"><type>int</type><parameter>result_type</parameter></methodparam>
+    <methodparam choice="opt"><type>string</type><parameter role="reference">error_msg</parameter></methodparam>
+   </methodsynopsis>
+  </classsynopsis>
   <para>
    Executa uma SQL indicada pelo parâmetro <parameter>query</parameter> com
-   um banco de dados (especificado pelo parâmetro <parameter>dbhandle</parameter>).
+   um banco de dados.
   </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
   <para>
-   Para query que retornam linhas, esta função irá retornar um result handle
-   que pode ser usado em funções como
-   <function>sqlite_fetch_array</function> e
+   <variablelist>
+    <varlistentry>
+     <term><parameter>dbhandle</parameter></term>
+     <listitem>
+      <para>
+       O resource do banco de dados SQLite; retornado da
+       <function>sqlite_open</function> quando usado no modo procedural. Este parâmetro
+       não é requerido quando usado o método no modo orientado a objeto.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>query</parameter></term>
+     <listitem>
+      <para>
+       A query a ser executada.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>result_type</parameter></term>
+     <listitem>
+      &sqlite.result-type;
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>error_msg</parameter></term>
+     <listitem>
+      <para>
+       A especificada variável que será preenchida se um erro ocorrer. Isto é
+       especialmente importante porque a os erros de sintaxe SQL não podem ser obtidos usando
+       a função <function>sqlite_last_error</function>.
+      </para>
+     </listitem>
+    </varlistentry>
+
+   </variablelist>
+  </para>
+  &sqlite.param-compat;
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Esta função irá retornar um manipulador de resultado ou &false; em falha.
+   Para queries que retornam linhas, o manipulador de resultado pode então ser usado com
+   funções como <function>sqlite_fetch_array</function> e
    <function>sqlite_seek</function>.
-  </para>
-  <para>
-   Para outros tipos de query, esta função irá retornar um resultado booleano;
-   &true; para sucesso ou &false; para falha.
   </para>
   <para>
    Qualquer que seja o tipo da query, esta função irá retornar &false; se
@@ -45,13 +102,34 @@
    sequencial aos dados, é recomendado que você use ao invés a função
    <function>sqlite_unbuffered_query</function> que é muito mais rapida.
   </para>
-  <note>
-   <simpara>
-    Duas maneiras alternativas são suportadas para compatibilidade com outros bancos de 
-    dados(como o MySQL). A forma preferida é a primeira, aonde o parâmetro
-    <parameter>db</parameter> é o primeiro na função.
-   </simpara>
-  </note>
+ </refsect1>
+
+<refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>5.1.0</entry>
+       <entry>
+        Adicionado o parâmetro <parameter>error_msg</parameter>
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
   <warning>
    <simpara>
     SQLite <emphasis>irá</emphasis> executar multiplas query separadas por
@@ -68,9 +146,15 @@
     &true; para sucesso ou retornar um conjunto de resultados).
    </simpara>
   </warning>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
   <para>
-   Veja também <function>sqlite_unbuffered_query</function> e
-   <function>sqlite_array_query</function>.
+   <simplelist>
+    <member><function>sqlite_unbuffered_query</function></member>
+    <member><function>sqlite_array_query</function></member>
+   </simplelist>
   </para>
  </refsect1>
 </refentry>
