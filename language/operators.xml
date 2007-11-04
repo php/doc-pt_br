@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.61 Maintainer: ae Status: ready -->
+<!-- EN-Revision: 1.118 Maintainer: felipe Status: ready -->
  <chapter xml:id="language.operators" xmlns="http://docbook.org/ns/docbook">
   <title>Operadores</title>
   <simpara>
@@ -34,11 +34,13 @@
     tem prioridade de precedência que o operador de adição ("+").
     Parênteses podem ser utilizados para forçar a precedência, se necessário.
     Assim, <literal>(1 + 5) * 3</literal> é avaliado como
-    <literal>18</literal>.
+    <literal>18</literal>. Se a precedência do operador é igual, a associatividade
+    da esquerda para direita é usada.
    </para>
    <para>
     A tabela seguinte mostra a precedência dos operadores, da maior
-    precedência para a menor.
+    precedência no começo. Operadores com a mesma precedência estão na mesma linha,
+    no caso a associatividade deles decidide qual ordem eles são avaliados.
     <table>
      <title>Precedência dos operadores</title>
      <tgroup cols="2">
@@ -226,10 +228,10 @@ $a = $b += 3; // $a = ($b += 3) -> $a = 5, $b = 5
    </para>
    <note>
     <para>
-     Mesmo tendo <literal>!</literal> maior precedência que
-     <literal>=</literal>, o PHP ainda permitirá expressões
+     Mesmo tendo <literal>=</literal> menor precedência que
+     que outros operadores, o PHP ainda permitirá expressões
      similares à seguinte: <literal>if (!$a = foo())</literal>,
-     que no caso terá como resultado que <literal>foo()</literal> é
+     que no caso o retorno de <literal>foo()</literal> é
      recebido em <varname>$a</varname>.
     </para>
    </note>
@@ -252,6 +254,11 @@ $a = $b += 3; // $a = ($b += 3) -> $a = 5, $b = 5
       </row>
      </thead>
      <tbody>
+      <row>
+       <entry>-$a</entry>
+       <entry>Negação</entry>
+       <entry>Oposto de $a.</entry>
+      </row>
       <row>
        <entry>$a + $b</entry>
        <entry>Adição</entry>
@@ -282,12 +289,12 @@ $a = $b += 3; // $a = ($b += 3) -> $a = 5, $b = 5
    </table>
     <simpara>
     O operador de divisão ("/") sempre retorna um valor com ponto flutuante,
-    mesmo que os dois operandos sejam inteiros (ou strings
-    convetidos para inteiros).
+    a não ser que os dois operados seja inteiros (ou strings que são convertidas para inteiros)
+    e numéros inteiramente divisíveis, em outro caso um inteiro é retornado.
    </simpara>
    <simpara>
-     Operandos de módulos são convertidos para inteiros (removendo a parte
-     decima) antes de processar.
+    Operandos de módulo são convertidos para inteiros (removendo a parte decimal) 
+    antes de processar.
    </simpara>
    <note>
     <simpara>
@@ -328,7 +335,7 @@ $a = ($b = 4) + 5; // $a é igual a 9 agora e $b foi configurado como 4.
    <para>
     Além do operador básico de atribuição, há "operadores
     combinados" para todos os <link linkend="language.operators">operadores
-    aritméticos</link> e de string, que permitem a você pegar um valor de uma
+    aritméticos</link>, de array e string que permitem a você pegar um valor de uma
     expressão e então usar seu próprio valor para o resultado daquela expressão. Por
     exemplo:
     <informalexample>
@@ -350,13 +357,15 @@ $b .= "Dia!"; // configura $b para "Bom Dia!", como em $b = $b . "Dia!";
     Note que a atribuição copia a variável original para a nova
     (atribuição por valor), assim a mudança de uma não afeta a
     outra. Isto pode ter relevância se você precisa copiar algo
-    como uma grande matriz dentro de um loop longo. O PHP 4 suporta atribuições
+    como uma grande matriz dentro de um loop longo. Desde o PHP 4, atribuições
     por referência, usando a sintaxe <computeroutput>$var =
     &amp;$outra_var;</computeroutput>, mas isto não é possível
     no PHP3. 'Atribuição por referência' significa que ambas as variáveis
     acabam apontando para os mesmos dados, e nada é copiado para lugar nenhum.
     Para aprender mais sobre referências, leia <link
-    linkend="language.references">Referências explicadas</link>.
+    linkend="language.references">Referências explicadas</link>. No 
+    PHP 5, objetos são atribuídos por referência a menos que explícitamente feito
+    o contrário com a nova palavra chave <link linkend="language.oop5.cloning">clone</link>.
    </para>
   </sect1>
 
@@ -365,8 +374,7 @@ $b .= "Dia!"; // configura $b para "Bom Dia!", como em $b = $b . "Dia!";
    <simpara>
     Operadores bit-a-bit permitem que você acione ou desligue bits específicos dentro
     de um inteiro. Se ambos os parâmetros da esquerda e da direita forem
-    strings, esses operadores irão trabalhar nos caracteres dessa
-    string.
+    strings, esses operadores irão trabalhar nos valores ASCII dos caracteres.
    </simpara>
    <para>
     <informalexample>
@@ -550,88 +558,67 @@ case "a": // nunca é alcançado porque "a" já foi combinado com 0
    </para>
 
    <para>
-    Outro operador condicional é o operador "?:" (ou trinário),
-    que opera como no C e em muitas outras linguagens.
-    <informalexample>
-     <programlisting role="php">
-<![CDATA[
-<?php
-// Exemplo de uso do operador trinário
-$action = (empty($_POST['action'])) ? 'default' : $_POST['action'];
-
-// A instrucao assima eh identica a seguinte instrucao if/else
-if (empty($_POST['action'])) {
-    $action = 'default';
-} else {
-    $action = $_POST['action'];
-}
-?>
-]]>
-     </programlisting>
-    </informalexample>
-   </para>
-   <para>
-    For various types, comparison is done according to the following
-    table (in order).
+    Para vários tipos, comparações são feitas de acordo com a seguinte
+    tabela (em ordem).
    </para>
    <table xml:id="language.operators.comparison.types">
-    <title>Comparison with Various Types</title>
+    <title>Comparação com vários tipos</title>
     <tgroup cols="3">
      <thead>
       <row>
-       <entry>Type of Operand 1</entry>
-       <entry>Type of Operand 2</entry>
-       <entry>Result</entry>
+       <entry>Tipo do 1º operando</entry>
+       <entry>Tipo do 2º operando</entry>
+       <entry>Resultado</entry>
       </row>
      </thead>
      <tbody>
       <row>
-       <entry><type>null</type> or <type>string</type></entry>
+       <entry><type>null</type> ou <type>string</type></entry>
        <entry><type>string</type></entry>
-       <entry>Convert &null; to "", numerical or lexical comparison</entry>
+       <entry>Converte &null; para "", numérico ou comparação léxica</entry>
       </row>
       <row>
        <entry><type>bool</type> or <type>null</type></entry>
-       <entry>anything</entry>
-       <entry>Convert to <type>bool</type>, &false; &lt; &true;</entry>
+       <entry>qualquer</entry>
+       <entry>Converte para <type>bool</type>, &false; &lt; &true;</entry>
       </row>
       <row>
        <entry><type>object</type></entry>
        <entry><type>object</type></entry>
-       <entry>Built-in classes can define its own comparison, different classes
-        are uncomparable, same class - compare properties the same way as
-        arrays (PHP 4), PHP 5 has its own <link
-        linkend="language.oop5.object-comparison">explanation</link>
+       <entry>Classes nativas podem definir como são comparadas, classes diferentes
+       são incomparáveis, mesma classe - compara propriedades igual faz arrays (PHP 4),
+       PHP 5 tem sua <link
+        linkend="language.oop5.object-comparison">explicação</link>
        </entry>
       </row>
       <row>
-       <entry><type>string</type>, <type>resource</type> or <type>number</type></entry>
-       <entry><type>string</type>, <type>resource</type> or <type>number</type></entry>
-       <entry>Translate strings and resources to numbers, usual math</entry>
+       <entry><type>string</type>, <type>resource</type> ou <type>number</type></entry>
+       <entry><type>string</type>, <type>resource</type> ou <type>number</type></entry>
+       <entry>Transforma strings e resources para números</entry>
       </row>
       <row>
        <entry><type>array</type></entry>
        <entry><type>array</type></entry>
-       <entry>Array with fewer members is smaller, if key from operand 1 is not
-        found in operand 2 then arrays are uncomparable, otherwise - compare
-        value by value (see following example)</entry>
+       <entry>Array com menos membros é menor, se a chave do operando 1 não é
+        encontrada no operando 2, então os arrays são incomparáveis, caso contrário - compara
+        valor por valor (veja o seguinte exemplo)</entry>
       </row>
       <row>
        <entry><type>array</type></entry>
-       <entry>anything</entry>
-       <entry><type>array</type> is always greater</entry>
+       <entry>qualquer</entry>
+       <entry><type>array</type> é sempre maior</entry>
       </row>
       <row>
        <entry><type>object</type></entry>
-       <entry>anything</entry>
-       <entry><type>object</type> is always greater</entry>
+       <entry>qualquer</entry>
+       <entry><type>object</type> é sempre maior</entry>
       </row>
      </tbody>
     </tgroup>
    </table>
    <para>
     <example>
-     <title>Transcription of standard array comparison</title>
+     <title>Transcrição do padrão de comparação de array</title>
      <programlisting role="php">
 <![CDATA[
 <?php
@@ -659,12 +646,7 @@ function standard_array_compare($op1, $op2)
      </programlisting>
     </example>
    </para>
-   <!--
-   <para>
 
-
-   </para>
-   -->
    <para>
     Veja também <function>strcasecmp</function>,
     <function>strcmp</function>,
@@ -752,7 +734,7 @@ echo ((true ? 'true' : 'false') ? 't' : 'f');
     gerada por aquela expressão será ignorada.
    </simpara>
    <simpara>
-    Se o recurso <link linkend="ini.track-errors">track_errors</link>
+    Se o recurso <link linkend="ini.track-errors"><option>track_errors</option></link>
     estiver habilitado, qualquer mensagem de erro gerada pela expressão
     será gravada na variável global
     <link linkend="reserved.variables.phperrormsg">$php_errormsg</link>.
@@ -852,6 +834,13 @@ echo "<pre>$output</pre>";
     O PHP suporta operadores de pré e pós-incremento e decremento
     no estilo C.
    </para>
+   <note>
+    <simpara>
+     Os operadores incremento/decremento não afetam valores booleanos.
+     Decrementando valores &null; não há efeito também, mas incrementando resulta
+     em <literal>1</literal>.
+    </simpara>
+   </note>
    <table>
     <title>Operadores de Incremento/Decremento</title>
     <tgroup cols="3">
@@ -920,14 +909,15 @@ echo "Deve ser 4: " . $a . "<br />\n";
     O PHP segue a convenção Perl quando tratando operações aritmétricas
     em variavéis caracter em vez da convenção C. Por exemplo, em Perl 'Z'+1 se torna
     'AA', enquanto que no C 'Z'+1 se torna '[' ( ord('Z') == 90, ord('[') == 91 ).
-    Note que variáveis caracter podem ser incrementadas mas não decrementadas.
+    Note que variáveis caracter podem ser incrementadas mas não decrementadas e
+    somente caracteres plain ASCII (a-z e A-Z) são suportados.
     <example>
      <title>Operações aritmétricas em variáveis caractere</title>
      <programlisting role="php">
 <![CDATA[
 <?php
 $i = 'W';
-for($n=0; $n<6; $n++) {
+for ($n=0; $n<6; $n++) {
   echo ++$i . "\n";
 }
 ?>
@@ -1094,12 +1084,13 @@ $a .= "mundo!";     // agora $a contém "Olá mundo!"
       <row>
        <entry>$a == $b</entry>
        <entry>Igualdade</entry>
-       <entry>&true; se $a e $b tem os mesmos elementos.</entry>
+       <entry>&true; se $a e $b tem os mesmos pares de chave/valor.</entry>
       </row>
       <row>
        <entry>$a === $b</entry>
        <entry>Identidade</entry>
-       <entry>&true; se $a e $b tem os mesmos elementos na mesma ordem.</entry>
+       <entry>&true; se $a e $b tem os mesmos pares de chave/valor 
+           na mesma ordem e do mesmo tipo.</entry>
       </row>
       <row>
        <entry>$a != $b</entry>
@@ -1121,7 +1112,7 @@ $a .= "mundo!";     // agora $a contém "Olá mundo!"
    </table>
    <para>
     O operador <literal>+</literal>
-    acrescenta o array da direita no array da esquerda, contudo,
+    acrescenta os elementos da direita no array da esquerda, contudo,
     chaves duplicadas NÃO são sobrescritas.
    </para>
    <para>
