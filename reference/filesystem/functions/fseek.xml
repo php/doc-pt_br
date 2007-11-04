@@ -1,46 +1,85 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.6 Maintainer: ae Status: ready --><!-- CREDITS: rarruda -->
-<!-- splitted from ./pt_BR/functions/filesystem.xml, last change in rev 1.5 -->
-  <refentry xml:id="function.fseek" xmlns="http://docbook.org/ns/docbook">
-   <refnamediv>
-    <refname>fseek</refname>
-    <refpurpose>Procura (seeks) em um ponteiro de arquivo</refpurpose>
-   </refnamediv>
-   <refsect1>
-    <title>Descrição</title>
-     <methodsynopsis>
-      <type>int</type><methodname>fseek</methodname>
-      <methodparam><type>int</type><parameter>handle</parameter></methodparam>
-      <methodparam><type>int</type><parameter>offset</parameter></methodparam>
-      <methodparam choice="opt"><type>int</type><parameter>whence</parameter></methodparam>
-     </methodsynopsis>
-    <para>
-     Modifica o indicador de posição do arquivo referenciado por
-     <parameter>handle</parameter>. A nova posição é obtida, medindo em
-     bytes do início do arquivo, é obtida ao adicionar
-     <parameter>offset</parameter> a posição especificada por
-     <parameter>whence</parameter>, cujo valor é definido como
-     se segue:
-     <simplelist>
-       <member><constant>SEEK_SET</constant> - Use a posição igual à <parameter>offset</parameter> bytes.</member>
-      <member><constant>SEEK_CUR</constant> - Use a posição para a localização atual mais <parameter>offset</parameter>.</member>
-      <member><constant>SEEK_END</constant> - Use a posição para o fim do arquivo (eof) mais <parameter>offset</parameter>.
-      (Para mover para uma posição anterior ao fim de arquivo, você precisa passar um valor
-      negativo em <parameter>offset</parameter>.)</member>
-     </simplelist>
-    </para>
-    <para>
-     Se <parameter>whence</parameter> não é especificado é
-     presumido ser <constant>SEEK_SET</constant>.
-    </para>
-    <para>
-     Em caso de sucesso, retorna 0; caso contrário, retorna -1. Note
-     que fazer um seek depois do fim do arquivo (eof) é considerado um erro.
-    </para>
-    <para>
-     <example>
-      <title>Exemplo de <function>fseek</function></title>
-      <programlisting role="php">
+<!-- EN-Revision: 1.14 Maintainer: diogo Status: ready --><!-- CREDITS: rarruda,ae -->
+<refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.fseek">
+ <refnamediv>
+  <refname>fseek</refname>
+  <refpurpose>Procura (seeks) em um ponteiro de arquivo</refpurpose>
+ </refnamediv>
+ 
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>int</type><methodname>fseek</methodname>
+   <methodparam><type>resource</type><parameter>handle</parameter></methodparam>
+   <methodparam><type>int</type><parameter>offset</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>whence</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Modifica o indicador de posição do arquivo referenciado por
+   <parameter>handle</parameter>. A nova posição, medida em bytes a partir
+   do início do arquivo, é obtida ao adicionar
+   <parameter>offset</parameter> à posição especificada por
+   <parameter>whence</parameter>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>handle</parameter></term>
+     <listitem>
+      &fs.file.pointer;
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>offset</parameter></term>
+     <listitem>
+      <para>
+       A posição.
+      </para>
+      <para>
+	   Para mover até uma posição anterior ao final do arquivo, você precisa passar
+	   um valor negativo no <parameter>offset</parameter>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>whence</parameter></term>
+     <listitem>
+      <para>
+       Valores de <parameter>whence</parameter> são:
+       <simplelist>
+        <member><constant>SEEK_SET</constant> - Define a posição igual ao <parameter>offset</parameter> bytes.</member>
+        <member><constant>SEEK_CUR</constant> - Define a posição para a atual localização mais <parameter>offset</parameter>.</member>
+        <member><constant>SEEK_END</constant> - Define a posição para o final do arquivo mais <parameter>offset</parameter>.</member>
+       </simplelist>
+      </para>
+      <para>
+	   Se <parameter>whence</parameter> não for especificado, é assumido que seja
+       <constant>SEEK_SET</constant>.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Em caso de sucesso, retorna 0; caso contrário, retorna -1. Observe
+   que fazer um seek depois do fim do arquivo (EOF) não é considerado um erro.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>fseek</function></title>
+    <programlisting role="php">
 <![CDATA[
 <?php
 
@@ -55,25 +94,41 @@ fseek($fp, 0);
 
 ?>
 ]]>
-      </programlisting>
-     </example>
-    </para>
-    <para>
-     Não pode ser usado em ponteiros de arquivo retornados por
-     <function>fopen</function> se for usado o formato "http://"
-     ou "ftp://".
-    </para>
-    <note>
-     <para>
-      O argumento <parameter>whence</parameter> foi adicionado depois do PHP 4.0.0.
-     </para>
-    </note>
-    <para>
-     Veja também <function>ftell</function> e
-     <function>rewind</function>.
-    </para>
-   </refsect1>
-  </refentry>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    Se você abriu o arquivo em modo de adição ("a" ou "a+"), quaisquer dados que
+	você escreva no arquivo serão sempre acrescentados ao final, independente da
+	posição do arquivo.
+   </para>
+  </note>
+  <note>
+   <para>
+    Não pode ser usado em ponteiros de arquivo retornados por
+	<function>fopen</function> se eles usarem os formatos "http://" ou "ftp://".
+	<function>fseek</function> dá resultados indefinidos se usados em streams
+	de somente adição (abertos com a flag "a").
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>ftell</function></member>
+    <member><function>rewind</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
 
 <!-- Keep this comment at the end of the file
 Local variables:

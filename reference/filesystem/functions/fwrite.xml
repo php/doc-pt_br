@@ -1,91 +1,153 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.7 Maintainer: ae Status: ready --><!-- CREDITS: rarruda -->
-<!-- splitted from ./pt_BR/functions/filesystem.xml, last change in rev 1.5 -->
-  <refentry xml:id="function.fwrite" xmlns="http://docbook.org/ns/docbook">
-   <refnamediv>
-    <refname>fwrite</refname>
-    <refpurpose>Gravação em arquivos binary-safe</refpurpose>
-   </refnamediv>
-   <refsect1>
-    <title>Descrição</title>
-     <methodsynopsis>
-      <type>int</type><methodname>fwrite</methodname>
-      <methodparam><type>resource</type><parameter>handle</parameter></methodparam>
-      <methodparam><type>string</type><parameter>string</parameter></methodparam>
-      <methodparam choice="opt"><type>int</type><parameter>comprimento</parameter></methodparam>
-     </methodsynopsis>
-    <simpara>
-     <function>fwrite</function> grava os conteúdos de
-     <parameter>string</parameter> para o stream de arquivo apontado
-     por <parameter>handle</parameter>. Se o argumento
-     <parameter>comprimento</parameter> é dado, a gravação irá parar
-     depois de que <parameter>comprimento</parameter> bytes foram
-     escritos ou o fim da <parameter>string</parameter> é alcançada,
-     o que ocorrer primeiro.
-    </simpara>
-    <simpara>
-     <function>fwrite</function> retorna o número de bytes
-     gravados, ou &false; em caso de erro.
-    </simpara>
-    <simpara>
-     Note que se o argumento <parameter>comprimento</parameter> é dado,
-     então a opção de configuração <link
-     linkend="ini.magic-quotes-runtime">magic_quotes_runtime</link>
-     será ignorada e nenhuma barra será retirada do
-     <parameter>string</parameter>.
-    </simpara>
-    <note>
-     <para>
-      Em sistemas que diferenciam entre arquivos binários e texto
-      (por exemplo Windows) o arquivo tem que ser aberto com 'b'
-      incluído no parametro mode do <function>fopen</function>.
-     </para>
-    </note>
-    <para>
-     <example>
-      <title>Exemplo fwrite</title>
-      <programlisting role="php">
+<!-- EN-Revision: 1.17 Maintainer: diogo Status: ready --><!-- CREDITS: rarruda,ae -->
+<refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.fwrite">
+ <refnamediv>
+  <refname>fwrite</refname>
+  <refpurpose>Escrita binary-safe em arquivos</refpurpose>
+ </refnamediv>
+ 
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>int</type><methodname>fwrite</methodname>
+   <methodparam><type>resource</type><parameter>handle</parameter></methodparam>
+   <methodparam><type>string</type><parameter>string</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>comprimento</parameter></methodparam>
+  </methodsynopsis>
+  <simpara>
+   <function>fwrite</function> escreve o conteúdo da 
+   <parameter>string</parameter> para o stream de arquivo apontado por
+   <parameter>handle</parameter>. 
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>handle</parameter></term>
+     <listitem>
+      &fs.file.pointer;
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>string</parameter></term>
+     <listitem>
+      <para>
+       A string a ser escrita.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>length</parameter></term>
+     <listitem>
+      <para>
+	   Se o argumento <parameter>comprimento</parameter> for dado, a escrita irá
+	   parar depois que <parameter>comprimento</parameter> bytes tenham sido escritos ou
+	   o final da <parameter>string</parameter> seja alcançado, o que vier
+	   primeiro.
+      </para>
+      <para>
+	   Observe que se o argumento <parameter>comprimento<parameter> for dado,
+	   a opção de configuração <link
+	   linkend="ini.magic-quotes-runtime">magic_quotes_runtime</link>
+	   será ignorada e nenhuma barra será removida da <parameter>string</parameters>.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <simpara>
+   <function>fwrite</function> retorna o número de bytes
+   escritos, ou &false; em caso de erro.
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    Em sistemas que diferenciam entre arquivos binários e texto
+    (por exemplo Windows) o arquivo tem que ser aberto com 'b'
+    incluído no parâmetro 'mode' na <function>fopen</function>.
+   </para>
+  </note>
+  <note>
+   <para>
+	Se o <parameter>handle</parameter> foi aberto com <function>fopen</function>
+	em modo de adição, escritas com <function>fwrite</function> são atômicas
+	(a não ser que o tamanho da <parameter>string</parameter> exceda o tamanho
+	de bloco do sistema de arquivos, em algumas plataformas, e contanto que o
+	arquivo esteja em um sistema de arquivos local). Sendo assim,
+	não há necessidade de bloquear um recurso com <function>flock</function> antes
+	de chamar <function>fwrite</function>; todos os dados serão escritos sem
+	interrupção.
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Um simples exemplo de <function>fwrite</function></title>
+    <programlisting role="php">
 <![CDATA[
 <?php
 $filename = 'teste.txt';
-$somecontent = "Acrescentando isto no arquivo\n";
+$conteudo = "Acrescentar isso ao arquivo\n";
 
-// Tendo certeza que o arquivo existe e que há permissão de escrita primeiro.
+// Primeiro vamos ter certeza de que o arquivo existe e pode ser alterado
 if (is_writable($filename)) {
 
-    // Em nosso exemplo, nós estamos abrindo $filename em modo de append (acréscimo).
-    // O ponteiro do arquivo estará no final dele desde
-    // que será aqui que $somecontent será escrito com fwrite().
+	// Em nosso exemplo, nós vamos abrir o arquivo $filename
+	// em modo de adição. O ponteiro do arquivo estará no final
+	// do arquivo, e é pra lá que $conteudo irá quando o 
+	// escrevermos com fwrite().
     if (!$handle = fopen($filename, 'a')) {
-         print "Erro abrindo arquivo ($filename)";
+         echo "Não foi possível abrir o arquivo ($filename)";
          exit;
     }
 
-    // Escrevendo $somecontent para o arquivo aberto.
-    if (!fwrite($handle, $somecontent)) {
-        print "Erro escrevendo no arquivo ($filename)";
+    // Escreve $conteudo no nosso arquivo aberto.
+    if (fwrite($handle, $conteudo) === FALSE) {
+        echo "Não foi possível escrever no arquivo ($filename)";
         exit;
     }
 
-    print "Sucesso: escrito ($somecontent) no arquivo ($filename)";
+    echo "Sucesso: Escrito ($conteudo) no arquivo ($filename)";
 
-    fclose($);
+    fclose($handle);
 
 } else {
-    print "The file $filename is not writable";
+    echo "O arquivo $filename não pode ser alterado";
 }
 ?>
 ]]>
-      </programlisting>
-     </example>
-    </para>
-    <simpara>
-     Veja também <function>fread</function>, <function>fopen</function>,
-     <function>fsockopen</function>, <function>popen</function> e
-     <function>fputs</function>.
-    </simpara>
-   </refsect1>
-  </refentry>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>fread</function></member>
+    <member><function>fopen</function></member>
+    <member><function>fsockopen</function></member>
+    <member><function>popen</function></member>
+    <member><function>file_get_contents</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
 
 <!-- Keep this comment at the end of the file
 Local variables:
