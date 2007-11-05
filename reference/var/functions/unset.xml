@@ -1,47 +1,22 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.6 Maintainer: kappu Status: ready -->
+<!-- EN-Revision: 1.18 Maintainer: felipe Status: ready -->
 <!-- splitted from ./en/functions/var.xml, last change in rev 1.2 -->
   <refentry xml:id="function.unset" xmlns="http://docbook.org/ns/docbook">
    <refnamediv>
     <refname>unset</refname>
     <refpurpose>Destrói a variável especificada</refpurpose>
    </refnamediv>
-   <refsect1>
-    <title>Descrição</title>
+ 
+ <refsect1 role="description">
+  &reftitle.description;
      <methodsynopsis>
       <type>void</type><methodname>unset</methodname>
       <methodparam><type>mixed</type><parameter>var</parameter></methodparam>
       <methodparam choice="opt"><type>mixed</type><parameter>var</parameter></methodparam>
-      <methodparam choice="opt"><parameter>...</parameter></methodparam>
+      <methodparam choice="opt"><type>mixed</type><parameter>...</parameter></methodparam>
      </methodsynopsis>
-
     <para>
-     <function>unset</function> destrói a variável especificada. Lembrando que
-     no PHP 3, <function>unset</function> sempre retornará &true;
-     (atualmente, o valor inteiro 1). No PHP 4, porém,
-     <function>unset</function> não é uma função verdadeira: agora é um
-     construtor da linguagem. Como tal, nenhum valor é retornado, se tentar pegar
-     o valor de <function>unset</function> um erro de sintaxe (parse error)
-     irá acontecer.
-    </para>
-    <para>
-     <example>
-      <title>Exemplo de <function>unset</function></title>
-      <programlisting role="php">
-<![CDATA[
-<?php
-// destrói uma única variável
-unset ($foo);
-
-// destrói um único elemento de uma matriz
-unset ($bar['quux']);
-
-// destrói mais de uma variável
-unset ($foo1, $foo2, $foo3);
-?>
-]]>
-      </programlisting>
-     </example>
+     <function>unset</function> destrói a variável especificada.
     </para>
     <para>
      O comportamento de <function>unset</function> pode variar dentro de
@@ -57,7 +32,8 @@ unset ($foo1, $foo2, $foo3);
       <programlisting role="php">
 <![CDATA[
 <?php
-function destroy_foo() {
+function destroy_foo()
+{
     global $foo;
     unset($foo);
 }
@@ -69,7 +45,9 @@ echo $foo;
 ]]>
       </programlisting>
      </informalexample>
-     O exemplo acima deve mostrar:
+    </para>
+          &example.outputs;
+      <para>
      <informalexample>
       <screen>
 <![CDATA[
@@ -79,6 +57,26 @@ bar
      </informalexample>
     </para>
     <para>
+   Se você quer usar <function>unset</function> na variável global
+   dentro de uma função, você pode usar
+   o array <varname>$GLOBALS</varname>, veja então:
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+function foo() 
+{
+    unset($GLOBALS['bar']);
+}
+
+$bar = "something";
+foo();
+?>
+]]>
+    </programlisting>
+   </informalexample>
+  </para>
+  <para>
      Se a variável for passada por referencia e a função
      <function>unset</function> estiver dentro de uma função, apenas a variável
      local será destruída. A variável no ambiente que chamou a função onde esta
@@ -88,7 +86,8 @@ bar
       <programlisting role="php">
 <![CDATA[
 <?php
-function foo(&$bar) {
+function foo(&$bar)
+{
     unset($bar);
     $bar = "blah";
 }
@@ -102,7 +101,9 @@ echo "$bar\n";
 ]]>
       </programlisting>
      </informalexample>
-     O exemplo acima deve mostrar:
+      </para>
+   &example.outputs;
+      <para>
      <informalexample>
       <screen>
 <![CDATA[
@@ -114,17 +115,22 @@ something
     </para>
     <para>
      Se for utilizado <function>unset</function> com uma variável estática
-     dentro de uma função, <function>unset</function> destrói a variável e
-     todas as suas referencias.
+     dentro de uma função, <function>unset</function> destrói a variável somente
+     no contexto do resto da função. Chamada seguintes irão restaurar o 
+     valor anterior da variável.
+     todas as suas referências.
      <informalexample>
       <programlisting role="php">
 <![CDATA[
 <?php
-function foo() {
-    static $a;
-    $a++;
-    echo "$a\n";
-    unset($a);
+function foo()
+{
+    static $bar;
+    $bar++;
+    echo "Before unset: $bar, ";
+    unset($bar);
+    $bar = 23;
+    echo "after unset: $bar\n";
 }
 
 foo();
@@ -134,45 +140,135 @@ foo();
 ]]>
       </programlisting>
      </informalexample>
-    O exemplo acima deve mostrar:
+      </para>
+   &example.outputs;
+  <para>
      <informalexample>
       <screen>
 <![CDATA[
-1
-2
-3
+Before unset: 1, after unset: 23
+Before unset: 2, after unset: 23
+Before unset: 3, after unset: 23
 ]]>
       </screen>
      </informalexample>
     </para>
+ </refsect1>
+  
+ <refsect1 role="parameters">
+  &reftitle.parameters;
     <para>
-     Se você quiser usar a função <function>unset</function> com uma variável
-     global dentro de uma função, você poderá usar a matriz 
-     <varname>$GLOBALS</varname> para faze-lo:
-     <informalexample>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>var</parameter></term>
+     <listitem>
+      <para>
+       The variable to be unset.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>var</parameter></term>
+     <listitem>
+      <para>
+       Another variable ..
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>...</parameter></term>
+     <listitem>
+      <para>
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.void;
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>4.0.0</entry>
+       <entry>
+        <function>unset</function> tornou-se uma expressão. (No PHP 3,
+        <function>unset</function> sempre retorna 1).
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo da <function>unset</function></title>
       <programlisting role="php">
 <![CDATA[
 <?php
-function foo() {
-    unset($GLOBALS['bar']);
-}
+// destroy a single variable
+unset($foo);
 
-$bar = "something";
-foo();
+// destroy a single element of an array
+unset($bar['quux']);
+
+// destroy more than one variable
+unset($foo1, $foo2, $foo3);
 ?>
 ]]>
       </programlisting>
-     </informalexample>
+     </example>
     </para>
+ </refsect1>
 
+ <refsect1 role="notes">
+  &reftitle.notes;
     &note.language-construct;
+  <note>
+   <para>
+    É possível usar unset em propriedades de objetos visíveis no contexto atual.
+   </para>
+  </note>
+  <note>
+   <para>
+    Não é possível usar unset em <literal>$this</literal> dentro de um método
+    de objeto desde o PHP 5.
+   </para>
+  </note>
+ </refsect1>
+ 
+ <refsect1 role="seealso">
+  &reftitle.seealso;
 
     <para>
-     Veja mais em <function>isset</function>,
-     <function>empty</function> e
-     <function>array_splice</function>.
+   <simplelist>
+    <member><function>isset</function></member>
+    <member><function>empty</function></member>
+    <member><function>array_splice</function></member>
+   </simplelist>
     </para>
    </refsect1>
+   
   </refentry>
 
 <!-- Keep this comment at the end of the file
