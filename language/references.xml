@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.27 Maintainer: ae Status: ready -->
+<!-- EN-Revision: 1.49 Maintainer: felipe Status: ready --><!-- CREDITS: ae -->
  <chapter xml:id="language.references" xmlns="http://docbook.org/ns/docbook">
   <title>Referências</title>
 
@@ -7,7 +7,7 @@
    <title>O que são referências</title>
    <simpara>
     Referências, em PHP, significa acessar o mesmo conteúdo de variável
-    através de vários nomes. Isto não é parecido como os ponteiros em C: aqui temos apelidos
+    através de vários nomes. Isto não é parecido como os ponteiros em C; ao invés, aqui temos apelidos
     numa tabela simbólica. Note que no PHP nomes de variáveis e conteúdo de variável
     são tratados diferentemente, então um mesmo conteúdo pode ter nomes diferentes.
     A analogia mais próxima é a dos arquivos e seus nomes em sistemas UNIX:
@@ -26,13 +26,13 @@
      <programlisting role="php">
 <![CDATA[
 <?php
-$a =& $b
+$a =& $b;
 ?>
 ]]>
      </programlisting>
     </informalexample>
     aqui <varname>$a</varname> e <varname>$b</varname>
-    apontam para a mesma variável.
+    apontam para o mesmo conteúdo.
     <note>
      <para>
       <varname>$a</varname> e <varname>$b</varname> são completamente
@@ -43,6 +43,38 @@ $a =& $b
      </para>
     </note>
    </para>
+   <note>
+    <para>
+     If array with references is copied, its values are not dereferenced.
+     This is valid also for arrays passed by value to functions.
+    </para>
+   </note>
+   <note>
+    <para>
+    Se você atribuir, passar ou retornar um variável indefinida por referência, 
+    ela irá ser criada.
+     <example>
+      <title>Usando referência com variáveis indefinidas</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+function foo(&$var) { }
+
+foo($a); // $a is "created" and assigned to null
+
+$b = array();
+foo($b['b']);
+var_dump(array_key_exists('b', $b)); // bool(true)
+
+$c = new StdClass;
+foo($c->d);
+var_dump(property_exists($c, 'd')); // bool(true)
+?>
+]]>
+      </programlisting>
+     </example>
+    </para>
+   </note>
    <para>
    A mesma sintaxe pode ser utilizada com funções, que retornem referências,
    e com o operador <literal>new</literal> (a partir do PHP 4.0.4):
@@ -56,6 +88,9 @@ $foo =& find_var ($bar);
 ]]>
     </programlisting>
     </informalexample>
+    Desde o PHP 5, <link linkend="language.oop5.basic.new">new</link> returna
+    referência automaticamente, então usando <literal>=&amp;</literal> neste
+    contexto é obsoleto e produz mensagem de nível E_STRICT.
     </para>
     <note>
      <para>
@@ -74,6 +109,64 @@ $foo =& find_var ($bar);
       instrução <literal>&amp;new</literal>. Esta é uma limitação da Zend
       Engine e irá gerar um erro de interpretação (parser error).
      </para>
+   </note>
+   <warning>
+    <para>
+     Se você atribuir uma referência para uma variável declarada <literal>global</literal>
+     dentro da função, a referência irá ser visível somente dentro da função.
+     Você pode evitar isto usando o array <varname>$GLOBALS</varname>.
+     <example>
+      <title>Referenciando variáveis globais de dentro de funções</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+$var1 = "Example variable";
+$var2 = "";
+
+function global_references($use_globals)
+{
+    global $var1, $var2;
+    if (!$use_globals) {
+        $var2 =& $var1; // visible only inside the function
+    } else {
+        $GLOBALS["var2"] =& $var1; // visible also in global context
+    }
+}
+
+global_references(false);
+echo "var2 is set to '$var2'\n"; // var2 is set to ''
+global_references(true);
+echo "var2 is set to '$var2'\n"; // var2 is set to 'Example variable'
+?>
+]]>
+      </programlisting>
+     </example>
+     Veja <literal>global $var;</literal> como shortcut para <literal>$var
+     =&amp; $GLOBALS['var'];</literal>. Assim atribuindo outra referência
+     para <literal>$var</literal> somente modifica a variável de referência local.
+    </para>
+   </warning>
+   <note>
+    <para>
+     Se você atribuir um valor para uma variável com referência no comando <link
+     linkend="control-structures.foreach">foreach</link>,
+     a referência é modificada também.
+     <example>
+      <title>Referências e o comando foreach</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+$ref = 0;
+$row =& $ref;
+foreach (array(1, 2, 3) as $row) {
+    // do something
+}
+echo $ref; // 3 - last element of the iterated array
+?>
+]]>
+      </programlisting>
+     </example>
+    </para>
    </note>
    <para>
     A segunda coisa que referências permitem é passar variáveis
@@ -136,6 +229,8 @@ foo($bar);
     <varname>$var</varname>, mas <varname>$var</varname> somente tem
     o conteúdo da variável e não um relacionamento nome para valor na
     tabela simbólica).
+    Você pode <link linkend="language.references.return">retornar
+    referências</link> para referênciar variáveis selecionadas por função.
    </simpara>
   </sect1>
 
@@ -162,7 +257,9 @@ foo ($a);
     </informalexample>
   Note que não há o sinal de referência na chamada da função, somente
   na definição da função. A marcação na definição da função sozinha é suficiente para
-  configurar corretamente a passagem de argumentos por referência.
+  configurar corretamente a passagem de argumentos por referência. Em versões recentes do PHP
+  você irá ter um aviso dizendo "Call-time pass-by-reference" é
+  obsoleto quando usa um &amp; em <literal>foo(&amp;$a);</literal>.
   </para>
   <para>
   As coisas a seguir podem ser passadas por referência:
@@ -229,8 +326,11 @@ foo(5);      // Constante, não é variável
    <title>Retornando referências</title>
    <para>
     Retorno por referência é útil quando você precisa utilizar uma função
-    para localizar variável cuja referência precisa ser obtida. Para
-    retornar referências, utilize esta sintaxe:
+    para localizar variável cuja referência precisa ser obtida. 
+    <emphasis>Não</emphasis> use retorno por referência para aumentar performance, a
+    engine é esperta o bastante para otimizar isto para você. Somente retorne referências
+    quando você tem uma razão técnica para isso! Para
+    retornar referências, use a sintaxe:
     <informalexample>
      <programlisting role="php">
 <![CDATA[
@@ -260,6 +360,16 @@ $foo->x = 2;
      explícita.
     </simpara>
    </note>
+    <simpara>
+     Se você tentar retornar uma referência de uma função com a sintaxe:
+     <literal>return ($found_var);</literal> isto <emphasis>não</emphasis> irá
+     funcionar como você espera, para retornar o resultado de uma
+     <emphasis>expressão</emphasis>, e não uma variável, por referência. Você pode
+     somente retornar variáveis por referência para uma função - nada além.
+     Erro <constant>E_NOTICE</constant> é emitido desde o PHP 4.4.0 e PHP
+     5.1.0 se o código tenta retornar uma expressão dinâmica ou um resultado do operador
+     <literal>new</literal>.
+    </simpara>
   </sect1>
 
   <sect1 xml:id="language.references.unset">
@@ -322,8 +432,8 @@ $var =& $GLOBALS["var"];
    <sect2 xml:id="references.this">
     <title><literal>$this</literal></title>
     <simpara>
-     Num método de objeto, <varname>$this</varname> sempre referencia
-     o instância atual.
+     Num método de objeto, <varname>$this</varname> sempre uma referência
+     a instância atual.
     </simpara>
    </sect2>
   </sect1>
