@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.75 Maintainer: ae Status: ready -->
+<!-- EN-Revision: 1.75 Maintainer: felipe Status: ready --><!-- CREDITS: ae -->
  <chapter xml:id="language.variables" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Variáveis</title>
 
@@ -26,13 +26,20 @@
     </simpara>
    </note>
 
+   &tip.userlandnaming;
+
+   <para>
+    Para informação sobre funções relacionadas a variáveis, veja a
+    <link linkend="ref.var">Referência de funções para variáveis</link>.
+   </para>
+
    <para>
     <informalexample>
      <programlisting role="php">
 <![CDATA[
 <?php
-$var = "Bob";
-$Var = "Joe";
+$var = 'Bob';
+$Var = 'Joe';
 echo "$var, $Var";      // exibe "Bob, Joe"
 
 $4site = 'not yet';     // inválido; começa com um número
@@ -55,16 +62,11 @@ $täyte = 'mansikka';    // válido; 'ä' é um caracter ASCII (extendido) 228
     linkend="language.expressions">Expressões</link>.
    </para>
    <para>
-    O PHP 4 oferece um outro meio de atribuir valores a variáveis: a
+    No PHP 4, PHP oferece um outro meio de atribuir valores a variáveis:
     <link linkend="language.references">atribuição por referência</link>.
     Isto significa que a nova variável simplesmente referencia (em outras palavras,
     "torna-se um apelido para" ou "aponta para") a variável original.
     Alterações na nova variável afetam a original e vice versa.
-    Isto significa também que nenhuma cópia é realizada, de modo que a atribuição
-    ocorre mais rapidamente. Entretanto, qualquer aumento de velocidade só será realmente notado
-    em *loops* complexos ou em atribuições de grandes
-    <link linkend="language.types.array">arrays</link> ou
-    <link linkend="language.types.object">objetos</link>.
    </para>
    <para>
     Para atribuir por referência, simplesmente adicione um e-comercial (&amp;)
@@ -109,6 +111,38 @@ $bar = &test();    // Inválido.
      </programlisting>
     </informalexample>
    </para>
+   
+   <para>
+    Não é necessário variáveis inicializadas no PHP, contudo é uma ótima
+    prática. Variáveis não inicializadas tem um valor padrão do tipo dela
+    - &false;, zero, string vazia ou um array vazio.
+   </para>
+   <para>
+    <example>
+     <title>Valores padrões de variáveis não inicializadas</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+echo ($unset_bool ? "true" : "false"); // false
+$unset_int += 25; // 0 + 25 => 25
+echo $unset_string . "abc"; // "" . "abc" => "abc"
+$unset_array[3] = "def"; // array() + array(3 => "def") => array(3 => "def")
+?>
+]]>
+     </programlisting>
+    </example>
+   </para>
+   <para>
+    Confiar no valor padrão de uma variável não inicializada é problemático
+    no caso de incluir um arquivo em outro que usa variável com mesmo
+    nome. E também um principal <link
+    linkend="security.globals">risco de segurança</link> com <link
+    linkend="ini.register-globals">register_globals</link> estando on. Erros <link
+    linkend="errorfunc.constants.errorlevels.e-notice">E_NOTICE</link> são emitidos no caso de
+    ter variáveis não inicializadas, contudo não no caso de adicionar
+    elementos para um array não inicializado. O construtor da linguagem <function>isset</function>
+    pode ser usado para detectar se uma variável não foi inicializada.
+   </para>
   </sect1>
 
   <sect1 xml:id="language.variables.predefined">
@@ -142,7 +176,7 @@ $bar = &test();    // Inválido.
     <simpara>
      Para informações relacionadas desta modificação, veja detalhes da diretiva
      <link linkend="ini.register-globals">register_globals</link>, no capítulo de
-     segurança em <link linkend="security.registerglobals">Usando register_globals
+     segurança em <link linkend="security.globals">Usando register_globals
      </link>, assim como o detalhamento de lançamento das versões do PHP
      <link xlink:href="&url.php.release4.1.0;">4.1.0</link> e
      <link xlink:href="&url.php.release4.2.0;">4.2.0</link>.
@@ -160,7 +194,7 @@ $bar = &test();    // Inválido.
     variáveis ambiente e as entradas do usuário. Esses novos arrays são especiais
     pelo motivo que são automaticamente globais (significa que são automaticamente
     disponíveis em qualquer escopo. Por causa disso, são também conhecidas como
-    'autoglobais' ou 'superglobais' (Não há um mecanismo no PHP para
+    'superglobais' (Não há um mecanismo no PHP para
     superglobais definidas pelo usuário) As superglobais são listadas abaixo.
     Entretanto, para uma explicação de seu conteúdo e detalhes sobre
     as variáveis pré-definidas do PHP e sua natureza, veja a seção
@@ -175,10 +209,18 @@ $bar = &test();    // Inválido.
     <title>Variáveis variáveis</title>
     <para>
      Superglobais não podem ser utilizadas como
-     <link linkend="language.variables.variable">variáveis variáveis</link>.
+     <link linkend="language.variables.variable">variáveis variáveis</link>
+     dentro de funções ou métodos de classe.
     </para>
    </note>
 
+   <note>
+    <para>
+     Mesmo que superglobal e HTTP_*_VARS existam;
+     elas não são idênticas, então modificando uma não irá alterar a outra.
+    </para>
+   </note>
+   
    <para>
     Se todos os indicadores não estiverem configurados no <link
     linkend="ini.variables-order">variables_order</link>, seus
@@ -213,7 +255,7 @@ $bar = &test();    // Inválido.
      <term><link linkend="reserved.variables.get">$_GET</link></term>
      <listitem>
       <simpara>
-       Variáveis postadas para o script via método HTTP GET. Análogo ao
+       Variáveis postadas para o script via query string na URL. Análogo ao
        antigo array <varname>$HTTP_GET_VARS</varname> (que
        ainda continua disponível, mas em decadência).
       </simpara>
@@ -322,7 +364,7 @@ $bar = &test();    // Inválido.
 <![CDATA[
 <?php
 $a = 1;
-include "b.inc";
+include 'b.inc';
 ?>
 ]]>
     </programlisting>
@@ -418,7 +460,7 @@ $b = 2;
 
 function Soma()
 {
-    $GLOBALS["b"] = $GLOBALS["a"] + $GLOBALS["b"];
+    $GLOBALS['b'] = $GLOBALS['a'] + $GLOBALS['b'];
 }
 
 Soma();
@@ -454,7 +496,8 @@ function test_global()
 
     // Superglobais são disponiveis em qualquer escopo e
     // nao precisam de 'global'. Superglobais existem
-    // desde o PHP 4.1.0
+    // desde o PHP 4.1.0, e HTTP_POST_VARS é agora
+    // tida como obsoleta.
     echo $_POST['name'];
 }
 ?>
@@ -639,7 +682,7 @@ object(stdClass)(0) {
 function &get_instance_ref() {
     static $obj;
 
-    echo "Objeto estatico: ";
+    echo 'Objeto estatico: ';
     var_dump($obj);
     if (!isset($obj)) {
         // Assimila uma referencia a variavel estatica
@@ -708,7 +751,7 @@ Objeto estatico: object(stdClass)(1) {
     <programlisting role="php">
 <![CDATA[
 <?php
-$a = "hello";
+$a = 'hello';
 ?>
 ]]>
     </programlisting>
@@ -780,11 +823,8 @@ echo "$a $hello";
    <warning>
     <simpara>
      Verifique que variáveis variáveis não podem ser utilizadas com os novos
-     <link linkend="language.variables.superglobals">arrays superglobais</link>.
-     Isto significa que você não pode fazer coisas como <varname>${$_GET}</varname>. Se você está
-     procurando uma maneira de manipular as superglobais como as antigas
-     <varname>HTTP_*_VARS</varname>, você deve tentar
-     <link linkend="language.references">referenciá-las</link>.
+     <link linkend="language.variables.superglobals">arrays superglobais</link>
+     dentro de funções ou métodos de classe.
     </simpara>
    </warning>
 
@@ -904,15 +944,13 @@ echo "$a $hello";
       <programlisting role="php">
 <![CDATA[
 <?php
-if (isset($_POST['action']) && $_POST['action'] == 'submitted') {
+if ($_POST) {
     echo '<pre>';
-    print_r($_POST);
-    echo '<a href="'. $_SERVER['PHP_SELF'] .'">Tente de novo</a>';
-
+    echo htmlspecialchars(print_r($_POST, true));
     echo '</pre>';
 } else {
 ?>
-<form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
+<form action="" method="post">
     Nome:  <input type="text" name="personal[name]" /><br />
     Email: <input type="text" name="personal[email]" /><br />
     Cerveja: <br />
@@ -921,12 +959,8 @@ if (isset($_POST['action']) && $_POST['action'] == 'submitted') {
         <option value="brahma">Brahma</option>
         <option value="skol">Skol</option>
     </select><br />
-    <input type="hidden" name="action" value="submitted" />
-    <input type="submit" name="submit" value="Enviar dados!" />
+    <input type="submit" value="Enviar dados!" />
 </form>
-<?php
-}
-?>
 ]]>
       </programlisting>
      </example>
@@ -994,8 +1028,8 @@ if (isset($_POST['action']) && $_POST['action'] == 'submitted') {
      <programlisting role="php">
 <![CDATA[
 <?php
-  setcookie("MeuCookie[foo]", "Testando 1", time()+3600);
-  setcookie("MeuCookie[bar]", "Testando 2", time()+3600);
+  setcookie("MeuCookie[foo]", 'Testando 1', time()+3600);
+  setcookie("MeuCookie[bar]", 'Testando 2', time()+3600);
 ?>
 ]]>
      </programlisting>
@@ -1025,7 +1059,7 @@ if (isset($_COOKIE['count'])) {
 } else {
     $count = 1;
 }
-setcookie("count", $count, time()+3600);
+setcookie('count', $count, time()+3600);
 setcookie("Cart[$count]", $item, time()+3600);
 ?>
 ]]>
