@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.3 Maintainer: machado Status: ready -->
+<!-- EN-Revision: 1.10 Maintainer: felipe Status: ready --><!-- CREDITS: machado -->
 <sect1 xml:id="language.oop5.patterns" xmlns="http://docbook.org/ns/docbook">
  <title>Patterns</title>
  <para>
@@ -12,16 +12,18 @@
   <para>
    O padrão Factory permite a instanciação de objetos em tempo de execução.
    É chamado de Factory uma vez que é responsável por "produzir" um objeto.
+   O Factory parametrizado recebe como argumento o nome da classe para 
+   instanciar.
   </para>
   <example>
-   <title>Factory Method</title>
+   <title>Método Factory Parametrizado</title>
    <programlisting role="php">
 <![CDATA[
 <?php
 class Exemplo
 {
-    // Factory method
-    function &factory($type)
+    // Método Factory parametrizado
+    public static function factory($type)
     {
         if (include_once 'Drivers/' . $type . '.php') {
             $classname = 'Driver_' . $type;
@@ -72,16 +74,16 @@ $sqlite = Exemplo::factory('SQLite');
 class Exemplo
 {
     // Guarda uma instância da classe
-    static private $instance;
+    private static $instance;
     
-    // Um construtor privado
+    // Um construtor privado; previne a criação direta do objeto
     private function __construct() 
     {
         echo 'Sou um construtor';
     }
 
     // O método singleton 
-    static public function singleton() 
+    public static function singleton()
     {
         if (!isset(self::$instance)) {
             $c = __CLASS__;
@@ -96,6 +98,13 @@ class Exemplo
     {
         echo 'Au!';
     }
+
+    // Previne que o usuário clone a instância
+    public function __clone()
+    {
+        trigger_error('Clone is not allowed.', E_USER_ERROR);
+    }
+
 }
 
 ?>
@@ -114,6 +123,9 @@ $test = new Exemplo;
 // Isso sempre vai recuperar uma instância da classe
 $test = Exemplo::singleton();
 $test->latir();
+
+// Isso irá emitir um E_USER_ERROR.
+$test_clone = clone $test;
 
 ?>
 ]]>
