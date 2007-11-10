@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.8 Maintainer: fernandoc Status: ready -->
+<!-- EN-Revision: 1.21 Maintainer: fernandoc Status: ready -->
 <section xml:id="info.configuration" xmlns="http://docbook.org/ns/docbook">
  &reftitle.runtime;
  &extension.runtime;
  <para>
   <table>
    <title>PHP opções e informações de configuração</title>
-   <tgroup cols="3">
+   <tgroup cols="4">
     <thead>
      <row>
       <entry>Nome</entry>
       <entry>Padrão</entry>
       <entry>Modificável</entry>
+      <entry>Changelog</entry>
      </row>
     </thead>
     <tbody>
@@ -19,57 +20,72 @@
      <entry>assert.active</entry>
      <entry>"1"</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry></entry>
     </row>
     <row>
      <entry>assert.bail</entry>
      <entry>"0"</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry></entry>
     </row>
     <row>
      <entry>assert.warning</entry>
      <entry>"1"</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry></entry>
     </row>
     <row>
      <entry>assert.callback</entry>
      <entry>NULL</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry></entry>
     </row>
     <row>
      <entry>assert.quiet_eval</entry>
      <entry>"0"</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry></entry>
     </row>
     <row>
      <entry>enable_dl</entry>
      <entry>"1"</entry>
      <entry>PHP_INI_SYSTEM</entry>
+     <entry></entry>
     </row>
     <row>
      <entry>max_execution_time</entry>
      <entry>"30"</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry></entry>
     </row>
     <row>
      <entry>max_input_time</entry>
-     <entry>"60"</entry>
-     <entry>PHP_INI_ALL</entry>
+     <entry>"-1"</entry>
+     <entry>PHP_INI_PERDIR</entry>
+     <entry>Disponível desde o PHP 4.3.0.</entry>
+    </row>
+    <row>
+     <entry>max_input_nesting_level</entry>
+     <entry>"64"</entry>
+     <entry>PHP_INI_PERDIR</entry>
+     <entry>Disponível desde o PHP 4.4.8. Removido no PHP 5.0.0.</entry>
     </row>
     <row>
      <entry>magic_quotes_gpc</entry>
      <entry>"1"</entry>
-     <entry>PHP_INI_PERDIR|PHP_INI_SYSTEM</entry>
+     <entry>PHP_INI_PERDIR</entry>
+     <entry>PHP_INI_ALL em PHP &lt;= 4.2.3. Removido no PHP 6.0.0.</entry>
     </row>
     <row>
      <entry>magic_quotes_runtime</entry>
      <entry>"0"</entry>
      <entry>PHP_INI_ALL</entry>
+     <entry>Removido no PHP 6.0.0.</entry>
     </row>
     </tbody>
    </tgroup>
   </table>
-  Para maiores detalhes e definição das constantes PHP_INI_* veja 
-  <function>ini_set</function>.
+  &ini.php.constants;
  </para>
 
  &ini.descriptions.title;
@@ -107,7 +123,7 @@
     </term>
     <listitem>
      <para>
-      Mostra um aviso <literal>PHP</literal> para cada afirmação(assert) que falhar.
+      Mostra um aviso PHP para cada afirmação(assert) que falhar.
      </para>
     </listitem>
    </varlistentry>
@@ -146,8 +162,8 @@
     </term>
     <listitem>
      <para>
-      Esta diretiva somente é realmente útil na versão do <literal>PHP</literal> como módulo do apache.
-      Você pode mudar o carregamento dinâmico de extensões do <literal>PHP</literal> com
+      Esta diretiva somente é realmente útil na versão do PHP como módulo do Apache.
+      Você pode mudar o carregamento dinâmico de extensões do PHP com
       <function>dl</function> on e off para cada servidor virtual ou por diretório.
      </para>
      <para>
@@ -182,9 +198,14 @@
       estiver executando em &safemode;. O único meio de contornar é desativar o &safemode; ou
       mudar o limite de tempo no &php.ini;.
      </para>
+     <para>
+      Seu web server pode ter outros timeouts. E.g. Apache possui a diretiva
+      <literal>Timeout</literal>, IIS tem função de timeout CGI, ambos
+      com padrão 300 segundos. Veja a documentação do web server para entender isso.
+     </para>
     </listitem>
    </varlistentry>
-  	 
+       
    <varlistentry xml:id="ini.max-input-time">
     <term>
      <parameter>max_input_time</parameter>
@@ -192,9 +213,23 @@
     </term>
     <listitem>
     <para>
-     Isto define o tempo máximo em segundos que é permitido ao
-     script receber dados de entradas como POST, GET e carregamento de arquivos. A definição
-     padrão é <literal>60</literal>.
+     Isto define o tempo máximo em segundos que é permitido para
+     analisar dados de entrada, como POST, GET e upload de arquivos.
+     </para>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="ini.max-input-nesting-level">
+    <term>
+     <parameter>max_input_nesting_level</parameter>
+     <type>integer</type>
+    </term>
+    <listitem>
+     <para>
+      Define a profundidade máxima aninhada de 
+      <link linkend="language.variables.external">variáveis de entrada</link> (i.e.
+      <link linkend="reserved.variables.get"><varname>$_GET</varname></link>,
+      <link linkend="reserved.variables.post"><varname>$_POST</varname></link>..)
      </para>
     </listitem>
    </varlistentry>
@@ -205,12 +240,20 @@
      <type>boolean</type>
     </term>
      <listitem>
+     &warn.deprecated.removed-6-0-0;
      <para>
       Define o estado para as aspas mágicas para operações GPC (Get/Post/Cookie).
       Quando as aspas mágicas estiverem em on, todas ' (aspas simples),
       &quot; (aspas duplas), \ (barras invertidas) e NULL's são escapados
       com uma barra invertida automaticamente.
      </para>
+     <note>
+      <para>
+       No PHP 4, variáveis <link
+       linkend="reserved.variables.environment"><varname>$_ENV</varname></link>
+       também são escapadas.
+      </para>
+     </note>
      <note>
       <para>
        Se a diretiva <link linkend="ini.magic-quotes-sybase">
@@ -233,6 +276,7 @@
      <type>boolean</type>
     </term>
     <listitem>
+    &warn.deprecated.removed-6-0-0;
      <para>
       Se <parameter>magic_quotes_runtime</parameter> estiver ativado,
       a maioria das funções que retornarem dados de qualquer fonte externa incluindo banco 
@@ -268,4 +312,3 @@ vim600: syn=xml fen fdm=syntax fdl=2 si
 vim: et tw=78 syn=sgml
 vi: ts=1 sw=1
 -->
-
