@@ -1,40 +1,147 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.4 Maintainer: marcelo Status: ready -->
-<!-- splitted from ./en/functions/oracle.xml, last change in rev 1.2 -->
+<!-- EN-Revision: 1.9 Maintainer: felipe Status: ready -->
   <refentry xml:id="function.ora-bind" xmlns="http://docbook.org/ns/docbook">
    <refnamediv>
     <refname>ora_bind</refname>
     <refpurpose>Passa uma variável PHP para um parâmetro do Oracle</refpurpose>
    </refnamediv>
-   <refsect1>
-    <title>Descrição</title>
+ 
+ <refsect1 role="description">
+  &reftitle.description;
      <methodsynopsis>
       <type>bool</type><methodname>ora_bind</methodname>
       <methodparam><type>resource</type><parameter>cursor</parameter></methodparam>
-      <methodparam><type>string</type><parameter>PHP_variable_name</parameter></methodparam>
-      <methodparam><type>string</type><parameter>SQL_parameter_name</parameter></methodparam>
+      <methodparam><type>string</type><parameter>phpvar</parameter></methodparam>
+      <methodparam><type>string</type><parameter>sqlparam</parameter></methodparam>
       <methodparam><type>int</type><parameter>length</parameter></methodparam>
       <methodparam choice="opt"><type>int</type><parameter>type</parameter></methodparam>
      </methodsynopsis>
     <para>
-     Essa função passa variáveis nomeadas do PHP com um parâmetro SQL.
-     O parâmetro SQL deve ser no formato ":name". Com o parâmetro
-     type opcional, você pode definir se o parâmetro SQL são  
-     in/out (0, default), in (1) ou out (2). Usando PHP
-     3.0.1, você pode usar as constantes ORA_BIND_INOUT, ORA_BIND_IN e
-     ORA_BIND_OUT ao invés dos números.
+     Passa variáveis nomeadas do PHP com um parâmetro SQL.
     </para>
+    <para>
+   <function>ora_bind</function> precisa ser chamada depois de
+   <function>ora_parse</function> e antes de <function>ora_exec</function>.
+   Valores de entrada podem ser dados por atribuição para determinar variáveis PHP, depois
+   chamando <function>ora_exec</function> as variáveis passadas conterão os
+   valores de saída se disponível.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>cursor</parameter></term>
+     <listitem>
+      <para>
+       Um cursor Oracle, abre com <function>ora_open</function>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>phpvar</parameter></term>
+     <listitem>
+      <para>
+       A variável PHP a ser determinada.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>sqlparam</parameter></term>
+     <listitem>
+      <para>
+       O parâmetro SQL. Precisa ser na forma <literal>:name</literal>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>length</parameter></term>
+     <listitem>
+      <para>
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>type</parameter></term>
+     <listitem>
+      <para>
+       Define o tipo do parâmetro. O padrão é
+       <constant>ORA_BIND_INOUT</constant>. Possíveis valores são listados abaixo:
+       <informaltable>
+        <tgroup cols="2">
+         <thead>
+          <row>
+           <entry>Constant</entry>
+           <entry>Value</entry>
+          </row>
+         </thead>
+         <tbody>
+          <row>
+           <entry><constant>ORA_BIND_INOUT</constant></entry>
+           <entry>0</entry>
+          </row>
+          <row>
+           <entry><constant>ORA_BIND_IN</constant></entry>
+           <entry>1</entry>
+          </row>
+          <row>
+           <entry><constant>ORA_BIND_OUT</constant></entry>
+           <entry>2</entry>
+          </row>
+         </tbody>
+        </tgroup>
+       </informaltable>
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
     <para>
      &return.success; Detalhes sobre erros podem ser retornados usando as funções
-     <function>ora_error</function> e <function>ora_errorcode</function>.
-     
+     <function>ora_error</function> e <function>ora_errorcode</function>.     
     </para>
-    <para>
-     <function>ora_bind</function> deve ser chamado após <function>ora_parse</function>
-     e antes de <function>ora_exec</function>. Dados inseridos podem ser dados
-     por tarefa para variáveis PHP, após chamada de 
-     <function>ora_exec</function> as variáveis PHP irão conter os valores se disponíveis.
+ </refsect1>
 
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>5.1.0</entry>
+       <entry>
+        &oracle.deprecated;
+       </entry>
+      </row>
+      <row>
+       <entry>3.0.1</entry>
+       <entry>
+        A constantes para <parameter>type</parameter> foram adicionadas.
+        Em versões anteriores, você tinha que usar valores numéricos.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+    <para>
      <example>
       <title>Exemplo <function>ora_bind</function></title>
       <programlisting role="php">
@@ -46,13 +153,25 @@
   ora_bind($curs, "output", ":out", 5, 2);
   $input = 765;
   ora_exec($curs);
-  echo "Result: $result<BR>Out: $output<BR>In: $input";
+  echo "Result: $result<br />Out: $output<br />In: $input";
 ?>
 ]]>
       </programlisting>
      </example>
     </para>
    </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+   <para>
+    &oracle.replacement.desc;
+    <simplelist>
+     <member><function>oci_bind_by_name</function></member>
+     <member><function>oci_bind_array_by_name</function></member>
+    </simplelist>
+   </para>
+ </refsect1>
+ 
   </refentry>
 
 <!-- Keep this comment at the end of the file
