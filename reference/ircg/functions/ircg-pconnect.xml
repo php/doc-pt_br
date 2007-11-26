@@ -1,67 +1,125 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.3 Maintainer: marcelo Status: ready $ -->
-<!-- splitted from ./en/functions/ircg.xml, last change in rev 1.1 -->
-  <refentry xml:id="function.ircg-pconnect" xmlns="http://docbook.org/ns/docbook">
-   <refnamediv>
-    <refname>ircg_pconnect</refname>
-    <refpurpose>
-     Conecta à um servidor de IRC
-    </refpurpose>
-   </refnamediv>
-   <refsect1>
-    <title>Descrição</title>
-     <methodsynopsis>
-      <type>resource</type><methodname>ircg_pconnect</methodname>
-      <methodparam><type>string</type><parameter>username</parameter></methodparam>
-      <methodparam choice="opt"><type>string</type><parameter>server_ip</parameter></methodparam>
-      <methodparam choice="opt"><type>int</type><parameter>server_port</parameter></methodparam>
-      <methodparam choice="opt"><type>string</type><parameter>msg_format</parameter></methodparam>
-      <methodparam choice="opt"><type>array</type><parameter>ctcp_messages</parameter></methodparam>
-      <methodparam choice="opt"><type>array</type><parameter>user_settings</parameter></methodparam>
-     </methodsynopsis>
-    <para>
-     <function>ircg_pconnect</function> irá tentar estabelecer
-     conexão com um servidor IRC e retornar o manuseador deste recurso para uso.
-    </para>
-    <para>
-     O parâmetro obrigatório é <parameter>username</parameter>,
-     isso irá setar seu nickname inicial no servidor.
-     <parameter>server_ip</parameter> e
-     <parameter>server_port</parameter> são opcionais e o padrão é
-     <literal>127.0.0.1</literal> e <literal>6667</literal>.
-     <note>
+<!-- EN-Revision: 1.7 Maintainer: felipe Status: ready -->
+<refentry xml:id="function.ircg-pconnect" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>ircg_pconnect</refname>
+  <refpurpose>Conecta em um servidor IRC</refpurpose>
+ </refnamediv>
+ 
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>resource</type><methodname>ircg_pconnect</methodname>
+   <methodparam><type>string</type><parameter>username</parameter></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>server_ip</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>server_port</parameter></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>msg_format</parameter></methodparam>
+   <methodparam choice="opt"><type>array</type><parameter>ctcp_messages</parameter></methodparam>
+   <methodparam choice="opt"><type>array</type><parameter>user_settings</parameter></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>bailout_on_trivial</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   <function>ircg_pconnect</function> irá tentar estabilizar uma conexão com um
+   servidor de IRC.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>username</parameter></term>
+     <listitem>
       <para>
-       Agora para o parâmetro <parameter>server_ip</parameter> não irá fazer
-       checagem alguma de hostname e irá somente aceitar endereços IP em formato numérico.
-       DNS lookups são caros e devem ser feitos com o contexto da IRCG.
+       O nickname inicial no servidor.
       </para>
-     </note>
-    </para>
-    <para>
-     Você pode customizar a saída das mensagens de IRC e eventos selecionando
-     um formato de mensagem previamente criado com
-     <function>ircg_register_format_messages</function> para especificar
-     as configurações do nome em <parameter>msg_format</parameter>.
-    </para>
-    <para>
-     Se você quer trabalhar com mensagens CTCP bem como ACTION (/me), você precisa
-     definir um mapeamento para tipos CTCP  (e.g. ACTION) para customizar um formato de texto.
-     Faça isso passando um array associativo como
-     <parameter>ctcp_messages</parameter>. As chaves do array 
-     são os tipos de CTCP e os respectivos valores são o formato da mensagem.
-    </para>
-    <para>
-     Você pode definir "ident", "password", e "realname" tokens que
-     serão enviados para o servidor IRC pelas configurações destes arrays associativos.
-     Passe este array como <parameter>user_settings</parameter>.
-    </para>
-    <para>
-     Veja também: <function>ircg_disconnect</function>,
-     <function>ircg_is_conn_alive</function>,
-     <function>ircg_register_format_messages</function>.
-    </para>
-   </refsect1>
-  </refentry>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>server_ip</parameter></term>
+     <listitem>
+      <para>
+       O endereço do servidor IRC.
+      </para>
+      <para>
+       <parameter>server_ip</parameter> precisa ser um endereço IP na forma
+       numérica. DNS lookups é custoso e deve ser feito no contexto do
+       IRCG. O padrão é <literal>127.0.0.1</literal>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>server_port</parameter></term>
+     <listitem>
+      <para>
+       O número da porta do servidor. O padrão é 6667.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>msg_format</parameter></term>
+     <listitem>
+      <para>
+       Você pode customizar a saída de mensagens do IRC e eventos selecionando um
+       formato de mensagem previamente criado com
+       <function>ircg_register_format_messages</function> especificando
+       o conjunto de nomes em <parameter>msg_format</parameter>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>ctcp_messages</parameter></term>
+     <listitem>
+      <para>
+       Se você quer manusear mensagens CTCP como ACTION (/me), você precisa
+       definir um mapeador do tipo CTCP (e.g. ACTION) para uma string de formato
+       customizado. Faça isto passando um array associativo com
+       <parameter>ctcp_messages</parameter>. As chaves do array
+       são os tipos CTCP e o respectivo valor é o formato da mensagem.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>user_settings</parameter></term>
+     <listitem>
+      <para>
+       Você pode definir os tokens "ident", "password", e "realname" que
+       são enviados para o servidor IRC definido estes no array associativo.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>bailout_on_trivial</parameter></term>
+     <listitem>
+      <para>
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna um resource manipulador de conexão para uso em outras funções, ou
+   &false; em erro.
+  </para>
+ </refsect1>
+ 
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>ircg_disconnect</function></member>
+    <member><function>ircg_is_conn_alive</function></member>
+    <member><function>ircg_register_format_messages</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
 
 <!-- Keep this comment at the end of the file
 Local variables:
