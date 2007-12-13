@@ -1,26 +1,29 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.9 Maintainer: fernandoc Status: ready -->
+<!-- EN-Revision: 1.26 Maintainer: fernandoc Status: ready -->
+<!-- Purpose: database.vendors -->
+<!-- Membership: bundled -->
+
  <reference xml:id="ref.sqlite" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <title>SQLite</title>
+  <title>Funções SQLite</title>
   <titleabbrev>SQLite</titleabbrev>
 
   <partintro>
    <section xml:id="sqlite.intro">
     &reftitle.intro;
     <para>
-     Esta é uma extensão para SQLite Embeddable SQL Database Engine.
-     SQLite é uma biblioteca C que implementa um banco de dados SQL embutido.
-     Programas que usam a biblioteca SQLite podem ter acesso a banco de dados SQL 
-     sem executar um processo RDBMS separado.
+     Esta é uma extensão para a Ferramenta de Banco de Dados Embutível SQL.   
+     SQLite é uma biblioteca em C que implementa um banco de dados embutível SQL.
+     Programas que são ligados com a biblioteca SQLite podem ter acesso SQL a um
+     banco de dados SQL sem executar um processo RDBMS separado.
     </para>
     <para>
-     SQLite não é uma biblioteca de cliente usada para conectar com um grande servidor de banco de dados.
-     SQLite é o servidor. A biblioteca SQLite lê e escreve diretamente para e do arquivo
-     do banco de dados no disco.
+     SQLite não é uma biblioteca de cliente usado para conectar em um grande servidor de banco de dados.
+     SQLite é o servidor. A biblioteca SQLite lê e escreve diretamente
+     para e de os arquivos do banco de dados no disco.
     </para>
     <note>
      <para>
-      Para maiores informações veja o Website do SQLite.
+      Para maiores informações veja o website do SQLite 
       (<link xlink:href="&url.sqlite;">&url.sqlite;</link>).
      </para>
     </note>
@@ -29,38 +32,259 @@
    <section xml:id="sqlite.install">
     <title>Instalação</title>
     <para>
-     Leia o arquivo INSTALL, o qual vem com o pacote. Ou use o instalador PEAR
-     com "pear install sqlite".
-     O SQLite em si esta incluído, você não precisa instalar nenhum programa adicional.
+     Leia o arquivo INSTALL, o qual vem com o pacote. Ou apenas use o instalador 
+     PEAR com <command>pecl install sqlite</command>.
+     SQLite em sí já esta incluído. Você não precisa instalar qualquer
+     software adicional.
     </para>
     <para>
-     Usuários do Windows devem baixar a versão DLL da extensão SQLite aqui:
+     Usuários do Windows devem copiar a versão em DLL da extensão SQLite aqui:
      (<link xlink:href="&url.pecl.get.win;php_sqlite.dll">php_sqlite.dll</link>).
     </para>
     <para>
-     No PHP 5, a extensão SQLite e a engine são distribuidas
-     juntos e é compilado por padrão. 
+     No PHP 5, a extensão SQLite e a engine em sí são embutidos
+     e compilados por padrão. Entretanto, desde PHP 5.1.0 você precisa ativar
+     manualmente a extensão no &php.ini; (porque agora é embutido
+     como compartilhado). Entretanto, desde o PHP 5.1.0 o SQLite depende de <link
+     linkend="ref.pdo">PDO</link>, ele deve ser ativado também, adicionando as
+     seguintes linhas no &php.ini; (em ordem):
+     <informalexample>
+      <programlisting role="ini">
+<![CDATA[
+extension=php_pdo.dll
+extension=php_sqlite.dll
+]]>
+      </programlisting>
+     </informalexample>
+     Em sistemas operacionais Linux ou Unix, se você fizer o PDO como uma extensão
+     compartilhada, você deve fazer o SQLite como uma extensão compartilhada
+     usando a opção de configuração <command>--with-sqlite=shared</command>.
     </para>
+    <para>
+     SQLite 3 é suportado atráves de <link
+     linkend="ref.pdo-sqlite">PDO SQLite</link>.
+    </para>
+    <note>
+     <title>Instalação em Windows para contas sem privilégio</title>
+     <para>
+      Em sistemas operacionais Windows, contas sem privilégios não tem a 
+      variável de ambiente <varname>TMP</varname> definida pro padrão. Isto irá
+      fazer o SQLite criar arquivos temporários no diretório do windows, o que
+      não é desejável. Assim, você deve definir a variável de ambiente <varname>TMP</varname>
+      para o servidor web ou para a conta de usuário sobre a qual o servidor
+      web esta sendo utilizado. Se o Apache for o seu servidor WEB, você pode fazer isto
+      com uma diretiva <command>SetEnv</command> no seu arquivo &httpd.conf;.
+      Por exemplo:
+      <informalexample>
+       <programlisting role="apache-conf">
+<![CDATA[
+SetEnv TMP c:/temp
+]]>
+       </programlisting>
+      </informalexample>
+      Se você não pode fazer isto definindo a nível de servidor,
+      você pode implementar isso no seu script:
+      <informalexample>
+       <programlisting role="php">
+<![CDATA[
+putenv('TMP=C:/temp');
+]]>
+       </programlisting>
+      </informalexample>
+      Esta configuração deve se referir a um diretório que o servidor web
+      tem permissão para criar arquivos e subsequentemente escrever
+      e excluir arquivos que criou.
+      Se não, você vai receber o seguinte mensagem de erro:
+      <computeroutput>
+       malformed database schema -
+       unable to open a temporary database file for storing temporary tables
+      </computeroutput>
+     </para>
+    </note>
    </section>
-
    <section xml:id="sqlite.requirements">
     &reftitle.required;
     <para>
-     Para ter estas funções disponíveis, você deve compilar o PHP
-     com suporte ao SQLite, ou carregar a extenção SQLite dinamicamente do seu &php.ini;.
+     Para poder ter estas funções disponíveis, você deve compilar o PHP com
+     suporte SQLite, ou carregar a extensão SQLite dinamicamente no seu
+     &php.ini;.
     </para>
    </section>
-
+   
    <section xml:id="sqlite.resources">
     &reftitle.resources;
     <para>
-     Exitem dois recursos usados no SQLite. O primeiro é a conexão
-     com o banco de dados e o segundo é o conjunto de resultados.
+     Existem dois recursos usados na Interface SQLite. O primeiro é a
+     conexão com banco de dados, o segundo é um conjunto de resultados. 
     </para>
    </section>
 
-  	&reference.sqlite.constants;
-  	&reference.sqlite.ini;
+   &reference.sqlite.constants;
+
+   <section xml:id="sqlite.classes">
+    &reftitle.classes;
+
+    <section xml:id="sqlite.class.sqlitedatabase">
+     <title><classname>SQLiteDatabase</classname></title>
+     <para>
+      Representa um banco de dados SQLite aberto.
+     </para>
+     <section xml:id='sqlite.class.sqlitedatabase.constructor'>
+      &reftitle.constructor;
+      <itemizedlist>
+       <listitem>
+        <para><link linkend='function.sqlite-open'>__construct</link> - controi um novo objeto SQLiteDatabase</para>
+       </listitem>
+      </itemizedlist>
+     </section>
+     <section xml:id='sqlite.class.sqlitedatabase.methods'>
+      &reftitle.methods;
+      <itemizedlist>
+       <listitem>
+        <para><link linkend='function.sqlite-query'>query</link> - Executa uma consulta</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-exec'>queryExec</link> - Executa uma consulta sem resultado</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-array-query'>arrayQuery</link> - Executa uma consulta e retorna o resultado como um array</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-single-query'>singleQuery</link> - Executa uma consulta e retorna ou um array para uma coluna ou o valor da primeira linha</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-unbuffered-query'>unbufferedQuery</link> - Executa uma consulta sem buffer</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-last-insert-rowid'>lastInsertRowid</link> - Retorna o rowid o da linha mais recentemente inclusa</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-changes'>changes</link> - Retorna o número de linhas modificadas pelo comando mais recente</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-create-aggregate'>createAggregate</link> - Registra uma função UDF agregada para usar em comandos SQL</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-create-function'>createFunction</link> - Registra uma função UDF para usar em comandos SQL</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-busy-timeout'>busyTimeout</link> - Define ou desativa o limite de tempo de ocupado</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-last-error'>lastError</link> - Retorna o código de erro mais recente do erro mais recente encontrado</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-fetch-column-types'>fetchColumnTypes</link> - Retorna um array dos tipos das colunas de uma tabela em particular</para>
+       </listitem>
+      </itemizedlist>
+     </section>
+    </section>
+
+    <section xml:id="sqlite.class.sqliteresult">
+     <title><classname>SQLiteResult</classname></title>
+     <para>
+      Representa um conjunto de resultados guardado em buffer.
+     </para>
+     <section xml:id='sqlite.class.sqliteresult.methods'>
+      &reftitle.methods;
+      <itemizedlist>
+       <listitem>
+        <para><link linkend='function.sqlite-fetch-array'>fetch</link> - Obtém a próxima linha de um conjunto de resultados em uma matriz</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-fetch-object'>fetchObject</link> - Obtém a próxima linha de um conjunto de resultados como um objeto</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-fetch-single'>fetchSingle</link> - Obtém a primeira coluna do conjunto de resultados como uma string</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-fetch-all'>fetchAll</link> - Obtém todas as linhas de um conjunto de resultados como um array de arrays</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-column'>column</link> - Obtém uma coluna da linha atual do conjunto de resultados</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-num-fields'>numFields</link> - Retorna o número de campos no conjunto de resultadost</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-field-name'>fieldName</link> - Retorna o nome de um campo em particular do conjunto de resultados</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-current'>current</link> - Obtém a linha atual do conjunto de resultados como um array</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-key'>key</link> - Retorna o índice da linha atual</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-next'>next</link> - Vai para o próximo número de linha</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-valid'>valid</link> - Retorna quando mais linhas estão disponíveis</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-rewind'>rewind</link> - Vai para a primeira linha do conjunto de resultados</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-prev'>prev</link> - Vai para a linha anterior do conjunto de resultados</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-has-prev'>hasPrev</link> - Retorna quando a linha anterior no conjunto de resultados é valida</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-num-rows'>numRows</link> - Retorna o número de linhas no conjunto de resultados</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-seek'>seek</link> - Vai para uma linha em particular</para>
+       </listitem>
+      </itemizedlist>
+     </section>
+    </section>
+
+    <section xml:id="sqlite.class.sqliteunbuffered">
+     <title><classname>SQLiteUnbuffered</classname></title>
+     <para>
+      Representa uma conjunto de resultados de uma consulta SQLite não salva em buffer. Conjuntos de resultados não salvos em buffer são sequenciais, apenas para a frente.
+     </para>
+     <section xml:id='sqlite.class.sqliteunbuffered.methods'>
+      &reftitle.methods;
+      <itemizedlist>
+       <listitem>
+        <para><link linkend='function.sqlite-fetch-array'>fetch</link> - Obtém a próxima linha do conjunto de resultados como um array</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-fetch-object'>fetchObject</link> - Obtém a próxima linha de um conjuntpo de resultados como um objeto</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-fetch-single'>fetchSingle</link> - Obtém a primeira coluna do conjunto de resultados como uma string</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-fetch-all'>fetchAll</link> - Obtém todoas as linhas do conjunto de resultados como um array de arrays</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-column'>column</link> - Obtém uma coluna da linha atual do conjunto de resultados</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-num-fields'>numFields</link> - Retorna o número de campos do conjunto de resultados</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-field-name'>fieldName</link> - Retorna o nome de um campo em particular no conjunto de resultados</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-current'>current</link> - Obtém a linha atual do conjunto de resultados como um array</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-next'>next</link> - Vai para a próxima linha</para>
+       </listitem>
+       <listitem>
+        <para><link linkend='function.sqlite-valid'>valid</link> - Retorna se tem mais linhas disponíveis</para>
+       </listitem>
+      </itemizedlist>
+     </section>
+    </section>
+
+   </section>
+
+   &reference.sqlite.ini;
   </partintro>
 
   &reference.sqlite.entities.functions;
