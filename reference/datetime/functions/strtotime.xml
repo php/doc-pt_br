@@ -1,37 +1,114 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.7 Maintainer: surfmax Status: ready -->
-<!-- splitted from ./en/functions/datetime.xml, last change in rev 1.8 -->
-  <refentry xml:id="function.strtotime" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
-   <refnamediv>
-    <refname>strtotime</refname>
-    <refpurpose>
-     Analisa qualquer descrição em texto em inglês de data hora em timestamp 
-	 Unix
-    </refpurpose>
-   </refnamediv>
-   <refsect1>
-    <title>Descrição</title>
-     <methodsynopsis>
-      <type>int</type><methodname>strtotime</methodname>
-      <methodparam><type>string</type><parameter>time</parameter></methodparam>
-      <methodparam choice="opt"><type>int</type><parameter>now</parameter></methodparam>
-     </methodsynopsis>
-    <simpara>
-     A função espera que seja dado uma string contendo um formato
-	 de data em inglês e tentará analisar esse formato dentro 
-	 de um timestamp Unix relativo ao timestamp dado em <parameter>now</parameter>, ou a hora atual se nada é fornecido.
-     Se fracassa, <literal>-1</literal> é retornado.
-    </simpara>
-    <simpara>
-     Porque <function>strtotime</function> comporta-se de acordo com a sintaxe 
-     de data GNU, procure na página do manual GNU
-     <link xlink:href="&url.gnu.man.date-input;">Formatos de entrada de datas</link>.
-     Lá está descrito a sintaxe válida para o parâmetro <parameter>time</parameter>. 
-     </simpara>
-    <para>
-     <example>
-      <title><function>strtotime</function> exemplos</title>
-      <programlisting role="php">
+<!-- EN-Revision: 1.25 Maintainer: felipe Status: ready --><!-- CREDITS: surfmax -->
+<refentry xml:id="function.strtotime" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>strtotime</refname>
+  <refpurpose>Analisa qualquer descrição em texto em inglês de data hora em timestamp Unix</refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>int</type><methodname>strtotime</methodname>
+   <methodparam><type>string</type><parameter>time</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>now</parameter></methodparam>
+  </methodsynopsis>
+  <simpara>
+   A função espera que seja dado uma string contendo um formato de data em inglês US
+   e tentará analisar esse formato dentro de um timestamp Unix (o número de segundos
+   desde January 1 1970 00:00:00 GMT), relativo ao timestamp dado em 
+   <parameter>now</parameter>, ou a hora atual se <parameter>now</parameter> não
+   é fornecido.
+  </simpara>
+  <para>
+   Esta função usará a variável de ambiente <envar>TZ</envar> (se disponível)
+   para calcular o timestamp. Desde o PHP 5.1.0 há forma fácil para definir o
+   timezone que é usada em todas as funções de data/hora.
+   Este processo é explicado na página da função
+   <function>date_default_timezone_get</function>.
+  </para>
+  <note>
+   <para>
+    Se o número do ano é especificado no formato de dois dígitos, o valor
+    entre 00-69 é mapeado para 2000-2069 e 70-99 para 1970-1999.
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>time</parameter></term>
+     <listitem>
+      <para>
+       A string para analisar, de acordo com a sintaxe GNU de <link
+        xlink:href="&url.gnu.man.date-input;">Formato de Entrada de Data</link>.
+       Antes do PHP 5.0.0, microsegundos não eram permitidos na hora, desde o
+       PHP 5.0.0 eles são permitidos mas ignorados.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>now</parameter></term>
+     <listitem>
+      <para>
+       O timestamp usado para calcular o valor retornado.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna um timestamp em sucesso, &false; caso contrário. Antes do PHP 5.1.0,
+   esta função podia retornar <literal>-1</literal> em falha.
+  </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+   
+   &date.timezone.errors.description;
+ 
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>5.1.0</entry>
+       <entry>
+        Ela agora retorna &false; em falha, ao invés de <literal>-1</literal>.
+       </entry>
+      </row>
+
+      &date.timezone.errors.changelog;
+
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo da <function>strtotime</function></title>
+    <programlisting role="php">
 <![CDATA[
 <?php
 echo strtotime("now"), "\n";
@@ -53,30 +130,59 @@ echo strtotime("last Monday"), "\n";
 <![CDATA[
 <?php
 $str = 'Not Good';
-if (($timestamp = strtotime($str)) === -1) {
+
+// previous to PHP 5.1.0 you would compare with -1, instead of false
+if (($timestamp = strtotime($str)) === false) {
     echo "The string ($str) is bogus";
 } else {
-    echo "$str == " . date('l dS of F Y h:i:s A', $timestamp);
-} 	
+    echo "$str == " . date('l dS \o\f F Y h:i:s A', $timestamp);
 }
 ?>
 ]]>
-      </programlisting>
-     </example>
-    </para>
-    <note>
-     <para>
-      O intervalo válido de um timestamp é tipicamente de Fri, 13 Dec
-      1901 20:45:54 GMT até Tue, 19 Jan 2038 03:14:07 GMT. (Estas são datas que 
-      correspondem aos valores máximos e mínimos para um inteiro assinado de 32-bit.)
-      Adicionalmente, nem todas as plataformas suportam timestamps negativos, então a faixa de
-      sua data pode ser limitada antes de chegar na Era Unix. Isto significa que ex. datas antes
-      de Jan 1, 1970 não trabalharão no Windows, nem em algumas distribuições do Linux, e num grupo
-      de outros sistemas operacionais.
-     </para>
-    </note>
-   </refsect1>
-  </refentry>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <warning>
+   <para>
+    Em PHP 5 superior a 5.0.2, <literal>"now"</literal> e outros tempo relativos
+    são erradamente computados para meia-noite do dia. Diferente de outras
+    versões onde ele é corretamente computado da hora atual.
+   </para>
+  </warning>
+  <warning>
+   <para>
+    Nas versões do PHP menor que 4.4.0, <literal>"next"</literal> é incorretamente
+    computado como +2. Uma solução típica para isso é usar
+    <literal>"+1"</literal>.
+   </para>
+  </warning>
+  <note>
+   <para>
+    O intervalo válido de um timestamp é tipicamente de Fri, 13 Dec
+    1901 20:45:54 GMT até Tue, 19 Jan 2038 03:14:07 GMT. (Estas são datas que 
+    correspondem aos valores máximos e mínimos para um inteiro assinado de 32-bit.)
+    Adicionalmente, nem todas as plataformas suportam timestamps negativos, então 
+    a faixa de    sua data pode ser limitada antes de chegar na Era Unix. Isto 
+    significa que ex. datas antes de Jan 1, 1970 não trabalharão no Windows, nem 
+    em algumas distribuições do Linux, e num grupo de outros sistemas operacionais.
+    PHP 5.1.0 e mais recentes versões superaram esta limitação, no entanto.
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>strptime</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
 
 <!-- Keep this comment at the end of the file
 Local variables:
