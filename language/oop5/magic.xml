@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.19 Maintainer: felipe Status: ready  --><!-- CREDITS: narigone -->
+<!-- EN-Revision: 1.20 Maintainer: felipe Status: ready --><!-- CREDITS: narigone -->
  <sect1 xml:id="language.oop5.magic" xmlns="http://docbook.org/ns/docbook">
   <title>Métodos Mágicos</title>
   <para>
@@ -8,6 +8,7 @@
    <literal>__destruct</literal>
    (veja <link linkend="language.oop5.decon">Construtores e Destrutores</link>),
    <literal>__call</literal>,
+   <literal>__callStatic</literal>,
    <literal>__get</literal>,
    <literal>__set</literal>,
    <literal>__isset</literal>,
@@ -159,6 +160,51 @@ Olá
     O único parâmetro para esse método é um array contendo propriedades
     exportadas no formato <literal>array('property' => value, ...)</literal>.
    </para>
+   <example>
+    <title>Usando <literal>__set_state</literal> (desde o PHP 5.1.0)</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+class A
+{
+    public $var1;
+    public $var2;
+
+    public static function __set_state($an_array) // As of PHP 5.1.0
+    {
+        $obj = new A;
+        $obj->var1 = $an_array['var1'];
+        $obj->var2 = $an_array['var2'];
+        return $obj;
+    }
+}
+
+$a = new A;
+$a->var1 = 5;
+$a->var2 = 'foo';
+
+eval('$b = ' . var_export($a, true) . ';'); // $b = A::__set_state(array(
+                                            //    'var1' => 5,
+                                            //    'var2' => 'foo',
+                                            // ));
+var_dump($b);
+
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+object(A)#2 (2) {
+  ["var1"]=>
+  int(5)
+  ["var2"]=>
+  string(3) "foo"
+}
+]]>
+    </screen>
+   </example>
   </sect2>
  </sect1>
 
