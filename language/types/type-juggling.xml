@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: 1.2 Maintainer: felipe Status: ready -->
+<sect1 xml:id="language.types.type-juggling">
+ <title>Manipulação de tipos</title>
+
+ <simpara>
+  O PHP não requer (ou suporta) a definição de tipo explícita na
+  declaração de variáveis: o tipo de uma variável é determinado pelo
+  contexto em que a variável é utilizada. Isto significa que, se você
+  assimila um valor string para a variável <parameter>$var</parameter>,
+  <parameter>$var</parameter> se torna uma string. Se você então assimila um
+  valor inteiro para <parameter>$var</parameter>, ela se torna
+  um inteiro.
+ </simpara>
+ <para>
+  Um exemplo da conversão automática do PHP é o operador de
+  adição '+'. Se qualquer um dos operadores for float, então todos
+  os operadores são avaliados como floats, e o resultado será um
+  float. De outra forma, se os operadores forem interpretados como inteiros
+  então o resultado será um inteiro. Note que isso NÃO
+  muda os tipos dos operadores: apenas muda em como
+  esses operadores são avaliados.
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$foo = "0";  // $foo é string (ASCII 48)
+$foo += 2;   // $foo é agora um interio (2)
+$foo = $foo + 1.3;  // $foo é agora um float (3.3)
+$foo = 5 + "10 pequenos porcos";   // $foo é inteiro (15)
+$foo = 5 + "10 minúsculos porcos"; // $foo é inteiro (15)
+?>
+]]>
+<!-- bad example, no real operator (must be used with variable, modifies it too)
+$foo++;      // $foo is the string "1" (ASCII 49)
+
+TODO: explain ++/- - behaviour with strings
+
+examples:
+
+++'001' = '002'
+++'abc' = 'abd'
+++'xyz' = 'xza'
+++'9.9' = '9.0'
+++'-3'  = '-4'
+- -'9'   = 8 (integer!)
+- -'5.5' = '5.5'
+- -'-9'  = -10 (integer)
+- -'09'  = 8 (integer)
+- -'abc' = 'abc'
+
+-->
+   </programlisting>
+  </informalexample>
+ </para>
+ <simpara>
+  Se os últimos dois exemplos lhe parecerem estranhos, veja <link
+  linkend="language.types.string.conversion">Conversão de
+  strings para números</link>.
+ </simpara>
+ <simpara>
+  Se você deseja forçar uma variável para ser avaliada como um certo tipo,
+  veja a seção <link linkend="language.types.typecasting">Moldando o
+  tipo (casting)</link>. Se você deseja mudar o tipo de uma variável, veja
+  <function>settype</function>.
+ </simpara>
+ <para>
+  Se quiser testar qualquer um dos exemplo desta seção, você pode
+  usar a função <function>var_dump</function>.
+ </para>
+ <note>
+  <para>
+   O comportamento de uma conversão automática para array é atualmente
+   indefinida.
+  </para>
+  <para>
+   Também, pelo PHP suporta indexação em strings via índice usando a
+   mesma sintaxe de array, o seguinte exemplo é válido
+   para todas versões do PHP:
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$a    = 'car'; // $a is a string
+$a[0] = 'b';   // $a is still a string
+echo $a;       // bar
+?>
+]]>
+    </programlisting>
+   </informalexample>
+  </para>
+  <para>
+   Veja a seção entitulada <link linkend="language.types.string.substr">Acessando
+   caracteres da string</link> para mais informações.
+  </para>
+ </note>
+
+ <sect2 xml:id="language.types.typecasting">
+  <title>Conversão de Tipos - Type Casting</title>
+
+  <para>
+   A conversão de tipos no PHP funciona como no C: o nome de um
+   tipo desejado é escrito entre parênteses antes da variável em
+   que se deseja a moldagem.
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$foo = 10;             // $foo é um inteiro
+$bar = (boolean) $foo; // $bar é um booleano
+?>
+]]>
+    </programlisting>
+   </informalexample>
+  </para>
+  <para>
+   As moldagens permitidas são:
+   <itemizedlist>
+    <listitem>
+     <simpara>(int), (integer) - molde para inteiro</simpara>
+    </listitem>
+    <listitem>
+     <simpara>(bool), (boolean) - converte para booleano</simpara>
+    </listitem>
+    <listitem>
+     <simpara>(float), (double), (real) - converte para número de ponto flutuante</simpara>
+    </listitem>
+    <listitem>
+     <simpara>(string) - converte para string</simpara>
+    </listitem>
+    <listitem>
+     <simpara>(binary) - converte para string binária (PHP 6)</simpara>
+    </listitem>
+    <listitem>
+     <simpara>(array) - converte para array</simpara>
+    </listitem>
+    <listitem>
+     <simpara>(object) - converte para objeto</simpara>
+    </listitem>
+   </itemizedlist>
+  </para>
+  <para>
+   (binary) e o prefixo b é foram adicionado no PHP 5.2.1
+  </para>
+  <para>
+   Note que tabulações e espaços são permitidos dentro dos parênteses, então
+   o seguinte são funcionalmente equivalentes:
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$foo = (int) $bar;
+$foo = ( int ) $bar;
+?>
+]]>
+    </programlisting>
+    <para>
+     Convertendo uma string literal e variáveis para strings binárias:
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$binary = (binary)$string;
+$binary = b"binary string";
+?>
+]]>
+    </programlisting>
+   </informalexample>
+  </para>
+  <note>
+   <para>
+    Em vez de converter uma variável para string, você também pode englobar
+    a variável entre aspas duplas.
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$foo = 10;            // $foo é um interio
+$str = "$foo";        // $str é uma string
+$fst = (string) $foo; // $fst tambem é uma string
+
+// Isto imprimirah "eles são o mesmo"
+if ($fst === $str) {
+    echo "eles são o mesmo";
+}
+?>
+]]>
+    </programlisting>
+   </informalexample>
+   </para>
+  </note>
+
+  <para>
+   Pode não ser tão óbvio o que exatamente ocorre quando se converte
+   entre certos tipos. Para mais informações, veja essas seções:
+
+   <itemizedlist>
+    <listitem>
+     <simpara><link linkend="language.types.boolean.casting">Convertendo para
+      booleano</link></simpara>
+    </listitem>
+    <listitem>
+     <simpara><link linkend="language.types.integer.casting">Convertendo para
+      inteiro</link></simpara>
+    </listitem>
+    <listitem>
+     <simpara><link linkend="language.types.float.casting">Convertendo para
+      float</link></simpara>
+    </listitem>
+    <listitem>
+     <simpara><link linkend="language.types.string.casting">Convertendo para
+      string</link></simpara>
+    </listitem>
+    <listitem>
+     <simpara><link linkend="language.types.array.casting">Convertendo para
+      array</link></simpara>
+    </listitem>
+    <listitem>
+     <simpara><link linkend="language.types.object.casting">Convertendo para
+      object</link></simpara>
+    </listitem>
+    <listitem>
+     <simpara><link linkend="language.types.resource.casting">Convertendo para
+      resource</link></simpara>
+    </listitem>
+    <!-- don't exist yet
+    <listitem>
+     <simpara><link linkend="language.types.null.casting">Converting to
+      &null;</link></simpara>
+    </listitem>
+    -->
+    <listitem>
+     <simpara>
+      <link linkend="types.comparisons">Tabela de comparação entre tipos</link>
+     </simpara>
+    </listitem>
+   </itemizedlist>
+  </para>
+ </sect2>
+</sect1>
+ 
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"../../manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
