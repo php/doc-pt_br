@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.2 Maintainer: felipe Status: ready --> <!-- Credits:
+<!-- EN-Revision: 1.16 Maintainer: felipe Status: ready --> <!-- Credits:
 thiago -->
 <sect1 xml:id="language.types.string">
  <title>Strings</title>
 
  <para>
-  Uma <type>string</type> é uma série de caracteres. No PHP,
-  um caracter é o mesmo que um byte, ou seja, há exatamente
+  Uma <type>string</type> é uma série de caracteres. Antes do PHP 6,
+  um caracter é o mesmo que um byte. Ou seja, há exatamente
   256 caracteres diferentes possíveis. Isto implica que o PHP
   não tem suporte nativo ao Unicode. Veja <function>utf8_encode</function>
-  e <function>utf8_decode</function> para suporte ao Unicode.
+  e <function>utf8_decode</function> para algumas funcionalidades básicas
+  de Unicode.
  </para>
  <note>
   <simpara>
-   Não há nenhum problema nas strings se tornarem muito grandes.
-   Não há nenhum limite para o tamanho de
-   strings imposta pelo PHP, então não há razão
-   para se preocupar com strings longas.
+   Não é problema para uma <type>string</type> ser bastante longa. PHP não impõe
+   limite de tamanho de uma <type>string</type>; o único limite é o de memória
+   disponível do computador no qual o PHP está sendo executado.
   </simpara>
  </note>
  <sect2 xml:id="language.types.string.syntax">
   <title>Sintaxe</title>
   <para>
-   Uma string literal pode ser especificada de três formas
+   Uma <type>string</type> literal pode ser especificada de quatro formas
    diferentes.
    <itemizedlist>
 
@@ -41,15 +41,21 @@ thiago -->
       <link linkend="language.types.string.syntax.heredoc">sintaxe heredoc</link>
      </simpara>
     </listitem>
+   <listitem>
+    <simpara>
+     <link linkend="language.types.string.syntax.nowdoc">sintaxe nowdoc</link>
+     (desde o PHP 5.3.0)
+    </simpara>
+   </listitem>
+  </itemizedlist>
 
-   </itemizedlist>
-  </para>
   <sect3 xml:id="language.types.string.syntax.single">
    <title>Apóstrofos</title>
    <para>
-    A maneira mais simples para especificar uma string é
+    A maneira mais simples para especificar uma <type>string</type> é
     delimitá-la entre apóstrofos (o caracter <literal>'</literal>).
    </para>
+   
    <para>
     Para especificar um apóstrofo.
     você precisará "escapá-la" com uma contra barra
@@ -59,19 +65,18 @@ thiago -->
     Note que se você tentar escapar qualquer
     outro caracter, a contra barra também será impressa! Então
     geralmente não é necessário escapar a própria contra barra.
-    <note>
-     <simpara>
-      No PHP 3, um aviso
-      com nível <literal>E_NOTICE</literal> será emitido quando
-      isto acontecer.
-     </simpara>
-    </note>
+	
+    Para especificar um apóstrofo, use escape (<literal>\</literal>).
+	Para especificar uma barra invertida antes de uma apóstrofo, ou no final
+	da <type>string</type>, use-o duas vezes (<literal>\\</literal>).
+	Note que tentando usar escape qualquer outro caractere imprimirá a barra
+	invertida também.
     <note>
      <simpara>
       Diferentemente das duas outras sintaxes, <link
       linkend="language.variables">variables</link> e seqüências de escape
       para caracteres especiais <emphasis>não</emphasis> serão substituídas 
-      quando elas ocorrerem dentro de strings delimitadas por apóstrofes.
+      quando elas ocorrerem dentro de <type>string</type>s delimitadas por apóstrofes.
      </simpara>
     </note>
     <informalexample>
@@ -100,15 +105,14 @@ echo 'Isto não será substituido: \n uma nova linha';
 echo 'Variaveis $também não $expandem';
 ?>
 ]]>
-     </programlisting>
-    </informalexample>
-   </para>
+    </programlisting>
+   </informalexample>
   </sect3>
   <sect3 xml:id="language.types.string.syntax.double">
    <title>Aspas</title>
    <para>
-    Se a string é delimitada entre aspas ("),
-    o PHP entende mais seqüências de escape para caracteres
+    Se a <type>string</type> é delimitada entre aspas ("),
+    o PHP irá interpretar mais seqüências de escape para caracteres
     especiais:
    </para>
    <table>
@@ -171,13 +175,14 @@ echo 'Variaveis $também não $expandem';
     </tgroup>
    </table>
    <para>
-    Novamente se você tentar escapar qualquer outro caracter, a
-    contra barra será impressa também!
-    Antes do PHP 5.1.1, contra barra em <literal>\{$var}</literal> não era
-    exibida.
+	Como em uma <type>string</type> entre apóstrofos, usar escape em qualquer 
+	outro caractere resultará em uma barra invertida sendo mostrada também.
+	Antes do PHP 5.1.1, a barra invertida em <literal>\{$var}</literal> não
+	era mostrada.
    </para>
+
    <para>
-    Mas o mais importante recurso de strings delimitadas por aspas
+    O mais importante recurso de <type>string</type>s delimitadas por aspas
     está no fato de que nome de variáveis serão substituídos.
     Veja <link linkend="language.types.string.parsing">interpretação de
     strings</link> para detalhes.
@@ -186,15 +191,15 @@ echo 'Variaveis $também não $expandem';
 
   <sect3 xml:id="language.types.string.syntax.heredoc">
    <title>Heredoc</title>
-   <simpara>
-    Outra maneira para delimitar strings é utilizando a sintaxe heredoc
-    ("&lt;&lt;&lt;"). É informado um identificador (seguido por nova linha) depois de
-    <literal>&lt;&lt;&lt;</literal>, então a string, e então o
-    mesmo identificador para fechar a delimitação.
+   <simpara>	
+    Uma terceira maneira para delimitar <type>string</type>s é a sintaxe heredoc:
+    <literal>&lt;&lt;&lt;</literal>. Após este operador, um identificador é 
+	fornecido, e após, um newline. Então vem a própria <type>string</type>, e então
+    o mesmo identificador para fechar a string.
    </simpara>
    <simpara>
     O identificador de fechamento <emphasis>precisa</emphasis> começar na
-    primeira coluna da linha. Além, o identificador utilizado precisa seguir
+    primeira coluna da linha. Além, o identificador precisa seguir
     as mesmas regras de nomeação que qualquer outro rótulo no PHP: só pode conter
     caracteres alfanuméricos e sublinhados, e precisa começar com
     um caracter não numérico ou sublinhado.
@@ -210,20 +215,22 @@ echo 'Variaveis $também não $expandem';
      não pode haver nenhum espaço ou tabulações antes ou depois do ponto e vírgula.
      É também importante perceber que o primeiro caracter antes
      do identificador de fechamento precisa ser um caracter de nova linha como esperada por
-     seu sistema operacional. Por exemplo, <literal>\r</literal> em sistemas
-     Macintosh. Fechando delimitador (possivelmente seguido por um ponto e vírgula) precisa
-     ser seguido por newline também.
+     seu sistema operacional. Por exemplo, <literal>\n</literal> em sistemas UNIX,
+	 incluindo Mac OS X. O delimitador de fechamento (possivelmente seguido por um ponto 
+	 e vírgula) precisa também ser seguido por newline.
     </simpara>
+
     <simpara>
      Se essa regra for quebrada e o identificador de fechamento não estiver perfeito,
      então ele não será considerado como identificador de fechamento e o PHP
      irá continuar procurando por um. Se, neste caso, um identificador de fechamento
-     apropriado não for encontrado, então um erro de interpretação (parse) será lançado
-     na linha final do script.
+     apropriado não for encontrado antes do final do arquivo atual,
+	 um erro de interpretação (parse) será lançado na linha final do script.
     </simpara>
     <para>
-     Não é permitido usar sintaxe heredoc na inicialização de membros da classe.
-     Ao inves, use outra sintaxe para strings.
+     Heredocs não podem ser usados para inicializar membros de classes. Use ao 
+	 invés, <link linkend="language.types.string.syntax.nowdoc">nowdocs</link>.
+    </para>
      <example>
       <title>Exemplo inválido</title>
       <programlisting role="php">
@@ -236,21 +243,22 @@ EOT;
 }
 ?>
 ]]>
-      </programlisting>
-     </example>
-    </para>
+     </programlisting>
+    </example>
    </warning>
 
    <para>
-    Textos heredoc se comportam como strings delimitadas por aspas, com
+    Textos heredoc se comportam como <type>string</type> delimitadas por aspas, com
     apenas uma diferença. Você não precisa escapar apóstrofos e aspas
     em seus heredocs, mas você ainda pode continuar utilizando os códigos de escape listados
     acima. Variáveis são substituídas, mas o mesmo cuidado precisa ser tomado
     quando expressando variáveis complexas dentro de heredocs assim como
-    nas strings.
-    <example>
-     <title>Exemplo de delimitação de strings heredoc</title>
-     <programlisting role="php">
+    nas <type>string</type>s.
+   </para>
+
+   <example>
+    <title>Exemplo de delimitação de strings heredoc</title>
+    <programlisting role="php">
 <![CDATA[
 <?php
 $str = <<<EOD
@@ -284,7 +292,32 @@ EOT;
 ]]>
      </programlisting>
     </example>
+   &example.outputs;
+   <screen>
+<![CDATA[
+My name is "MyName". I am printing some Foo.
+Now, I am printing some Bar2.
+This should print a capital 'A': A]]>
+   </screen>
+
+   <para>
+    É também possível usar sintaxe Heredoc para passar dados para argumento de
+    funções:
    </para>
+
+   <example> 
+    <title>Exemplo de Heredoc em argumentos</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+var_dump(array(<<<EOD
+foobar!
+EOD
+));
+?>
+]]>
+    </programlisting>
+   </example>
 
    <note>
     <para>
@@ -293,10 +326,104 @@ EOT;
    </note>
   </sect3>
 
+  </sect3>
+  
+  <sect3 xml:id="language.types.string.syntax.nowdoc">
+   <title>Nowdoc</title>
+   
+   <para>
+    Nowdocs são para apóstrofos o que heredocs são para aspas dupla em
+    strings. Um nowdoc é especificado similarmente a um heredoc, mas <emphasis>
+    nenhuma análise é feito</emphasis> dentro de um nowdoc. A construção é ideal para
+    colocar códigos PHP ou outros blocos grandes de texto sem a necessidade de
+    usar escapes. Ele compartilha algumas características em comum com a construção SGML
+    <literal>&lt;![CDATA[ ]]&gt;</literal>, assim é declarado um bloco de
+    texto onde nada será analisado.
+   </para>
+   
+   <para>
+    Um nowdoc é identificado com a mesma seqüência <literal>&lt;&lt;&lt;</literal>
+    usada para heredocs, mas o identificador precisa ficar entre aspas simples,
+    e.g. <literal>&lt;&lt;&lt;'EOT'</literal>. Todas as regras para identificadores
+    heredoc se aplicam para identificadores nowdoc, especialmente aqueles
+    considerando o identificador de fechamento.
+   </para>
+   
+   <example>
+    <title>Exemplo de string em Nowdoc</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$str = <<<'EOD'
+Example of string
+spanning multiple lines
+using nowdoc syntax.
+EOD;
+
+/* Exemplo mais complexo, com variáveis. */
+class foo
+{
+    public $foo;
+    public $bar;
+
+    function foo()
+    {
+        $this->foo = 'Foo';
+        $this->bar = array('Bar1', 'Bar2', 'Bar3');
+    }
+}
+
+$foo = new foo();
+$name = 'MyName';
+
+echo <<<'EOT'
+My name is "$name". I am printing some $foo->foo.
+Now, I am printing some {$foo->bar[1]}.
+This should not print a capital 'A': \x41
+EOT;
+?>
+]]>
+    </programlisting>
+   </example>
+   &example.outputs;
+   <screen>
+<![CDATA[
+My name is "$name". I am printing some $foo->foo.
+Now, I am printing some {$foo->bar[1]}.
+This should not print a capital 'A': \x41]]></screen>
+   
+   <note>
+    <para>
+     Diferente de heredocs, nowdocs pode ser usado no contexto de dado estático.
+     O exemplo típico é inicializando membros de classes ou constantes:
+    </para>
+    
+    <example>
+     <title>Exemplo com dado estático</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+class foo {
+    public $bar = <<<'EOT'
+bar
+EOT;
+}
+?>
+]]>
+     </programlisting>
+    </example>
+   </note>
+
+   <note>
+    <para>
+     Suporte a Nowdoc foi adicionado no PHP 5.3.0.
+    </para>
+   </note>
+
   <sect3 xml:id="language.types.string.parsing">
    <title>Interpretação de variáveis</title>
    <simpara>
-    Quando uma string é especificada dentro de aspas ou
+    Quando uma <type>string</type> é especificada dentro de aspas ou
     heredoc, <link linkend="language.variables">variáveis</link> são
     interpretadas dentro delas.
    </simpara>
@@ -308,7 +435,7 @@ EOT;
     .
     A sintaxe simples é a mais comum e conveniente, provendo uma maneira de
     interpretar uma variável, um valor de <type>array</type> ou uma propriedade de <type>
-    object</type>.      
+    object</type> em uma <type>string</type> com o menor esforço.      
    </simpara>
    <simpara>
     A sintaxe completa foi introduzida no PHP 4, e pode ser reconhecida
@@ -337,18 +464,10 @@ echo "Ele bebeu algumas {$cerveja}s";   // funciona
      </programlisting>
     </informalexample>
     <simpara>
-     Similarmente, você também pode interpretar um índice de <type>array</type> ou
-     uma propriedade de <type>objeto</type>. Com índices de arrays, o colchete de fechamento
-     (<literal>]</literal>) marca o final do índice. Para
-     propriedades de objetos se aplicam as mesmas regras das variáveis comuns,
-     embora não exista um truque para as propriedades de objetos como
-     para as variáveis.
-
-     <!-- XXX isn't &true; :(, this would be the trick
-     Also, the same trick with curly-braces works if you
-     want to limit the greediness of parsers.
-     -->
-
+     Similarmente, um índice de <type>array</type> ou uma propriedade de <type>object</type>
+	 pode ser analisado. Com índices de array, o fechamento de colchete (<literal>]</literal>)
+	 marca o final do índice. A mesma regra aplica-se para propriedade de objetos
+     como para simples variáveis.
     </simpara>
     <informalexample>
      <programlisting role="php">
@@ -356,9 +475,9 @@ echo "Ele bebeu algumas {$cerveja}s";   // funciona
 <?php
 // Esses exemplos são específicos para utilização de arrays dentro de strings
 // Quando fora de strings, sempre delimite suas chaves de array strings
-// e nao use {colchetes} fora das strings tambem.
+// e não use {colchetes}.
 
-// Vamos ver todos os erros
+// Mostra todos os erros
 error_reporting(E_ALL);
 
 $fruits = array('morango' => 'vermelho', 'banana' => 'amarelo');
@@ -370,7 +489,7 @@ echo "A banana é $fruits[banana].";
 echo "A banana é {$fruits['banana']}.";
 
 // Funciona, mas o PHP procura por uma constante chamada 'banana' antes,
-// como descrito a seguir
+// como descrito a abaixo.
 echo "A banana é {$fruits[banana]}.";
 
 // Nao funciona, use colchetes. Isto lanca um parse error.
@@ -403,22 +522,24 @@ echo "This square is $square->{width}00 centimeters broad.";
     <title>Sintaxe complexa (chaves)</title>
     <simpara>
      Isto não é chamado sintaxe complexa porque a sintaxe em si é complexa,
-     mas porque você pode incluir expressões complexas desta maneira.
-   </simpara>
-   <simpara>
-    De fato, você pode incluir qualquer valor no que esteja no espaço de nomes
-    dentro de strings com esta sintaxe. Você simplesmente escreve a expressão
-    da mesma maneira que faria fora da string, e então incluí-la
-    entre chaves. Desde que você não pode escapar '{', esta sintaxe
-    somente será reconhecida quando o $ é imediatamente seguido de um {.
-    (Utilize "{\$" para obter um literal "{$").
-    Alguns exemplos para tornar isso mais claro:
+     mas porque você pode incluir expressões complexas.
+    </simpara>
+
+    <simpara>
+     De fato, qualquer valor no namespace pode ser incluido em uma
+     <type>string</type> com esta sintaxe. Simplismente escreva a expressão da mesma
+	 forma como apareceria fora da <type>string</type>, e então coloque-o em
+     <literal>{</literal> e <literal>}</literal>. Desde que
+     <literal>{</literal> não pode escapado, esta sintaxe somente mostrará ser
+     reconhecida quando o <literal>$</literal> imediatamente seguir o
+     <literal>{</literal>. Use <literal>{\$</literal> para ter um literal
+     <literal>{$</literal>. Alguns exemplos para fazê-lo claro:
    </simpara>
    <informalexample>
     <programlisting role="php">
 <![CDATA[
 <?php
-// Vamos ver todos os erros
+// Mostra todos os erros
 error_reporting(E_ALL);
 
 $bom = 'fantastico';
@@ -436,20 +557,20 @@ echo "Este quadrado tem {$square->width}00 centímetros de lado.";
 // Funciona
 echo "Isto funciona: {$arr[4][3]}";
 
-// Isto está errado pela mesma razao que $foo[bar] é errado
-// fora de uma string. Em outras palavras, isto ainda funciona MAS
-// porque o PHP primeiro procura pro uma constante nomeada foo, e ele
-// lancara um erro do tipo E_NOTICE (undefined constant).
+// Isto está errado pela mesma razão que $foo[bar] é errado fora de uma string.
+// Em outras palavras, isto ainda funciona MAS porque o PHP primeiro procura pro uma
+// constante nomeada foo; um erro do tipo E_NOTICE (undefined constant) será
+// disparado.
 echo "Isto é errado: {$arr[foo][3]}";
 
-// Funciona. Quanto mexendo com arrays multi dimensionais, sempre use
-// colchetes em volta dos arrays quando detro de strings
+// Funciona. Quanto mexendo com arrays multi dimensionais, sempre use colchetes em volta dos arrays
+// quando detro de strings
 echo "Isto funciona: {$arr['foo'][3]}";
 
 // Funciona
 echo "Isto funciona: " . $arr['foo'][3];
 
-echo "Você pode escrever também {$obj->values[3]->name}";
+echo "Isto funciona também {$obj->values[3]->name}";
 
 echo "Este é o valor da variável chamada $name: {${$name}}";
 
@@ -469,15 +590,7 @@ echo "I'd like to have another {${ strrev('reeb') }}, hips";
     
     <note>
      <para>
-      Chamada de funções e métodos dentro de <literal>{$ }</literal> funcionam desde o PHP 5.
-     </para>
-    </note>
-    <note>
-     <para>
-      Analisando variáveis dentros de strings usa mais memória que concatenação
-      de strings. Quando escrevendo um script PHP no qual uso de memória é 
-      fundamental, considere usar o operador de concatenação (.), pois é 
-      melhor que analisar a string.
+      Chamada de funções e métodos dentro de <literal>{$}</literal> funcionam desde o PHP 5.
      </para>
     </note>
    </sect4>
@@ -486,18 +599,31 @@ echo "I'd like to have another {${ strrev('reeb') }}, hips";
   <sect3 xml:id="language.types.string.substr">
    <title>Acesso e modificação de caracteres da string</title>
    <para>
-    Caracteres nas strings podem ser acessados e modificados apenas especificando o
-    deslocamento baseado em zero do caracter desejado depois da string
-    dentro de colchetes, como um array, <varname>$str[42]</varname> então pense na
-    string como um <type>array</type> de caracteres.
+    Caracteres nas <type>string</type>s podem ser acessados e modificados apenas especificando o
+    deslocamento baseado em zero do caracter desejado depois da <type>string</type>
+    dentro de colchetes, como um <type>array</type>, <varname>$str[42]</varname> então pense na
+    <type>string</type> como um <type>array</type> de caracteres.
    </para>
    <note>
     <simpara>
-     Elas podem também ser acessada usando colchetes, como <varname>$str{42}</varname> 
-     para o mesmo propósito. Contudo, usar colchete é preferível
-     porque {chaves} é obsoleto no PHP 6.
+     <type>String</type>s podem também ser acessada usando colchetes, como <varname>$str{42}</varname> 
+     para o mesmo propósito. Contudo, esta sintaxe está obsoleto a partir do PHP 6.
+     Use colchetes ao invés.
     </simpara>
    </note>
+   
+   <warning>
+    <simpara>
+     Escrevendo em um offset fora do intervalo, preenche a string com espaços.
+     Tipos diferentes de inteiro são convertidos para inteiro.
+     Tipo ilegal de offset emite <constant>E_NOTICE</constant>.
+     Offset negativo emite <constant>E_NOTICE</constant> na escrita mas na leitura
+	 uma string vazia.
+     Somente o primeiro caractere de uma string atribuída é usada.
+     Atribuindo uma string vazia designa NUL byte.
+    </simpara>
+   </warning>
+
    <para>
     <example>
      <title>Alguns exemplos com strings</title>
@@ -519,9 +645,6 @@ $last = $str[strlen($str)-1];
 $str = 'Olhe o mal';
 $str[strlen($str)-1] = 'r';
 
-// Método alternativo usando {} obsoleto no PHP 6
-$third = $str{2};
-
 ?>
 ]]>
      </programlisting>
@@ -529,8 +652,8 @@ $third = $str{2};
    </para>
    <note>
     <para>
-     Acessando por <literal>[]</literal> ou <literal>{}</literal> 
-     variáveis de outro tipo é retornado &null; sem emitir aviso.
+     Acessando variáveis de outros tipos usando <literal>[]</literal> ou <literal>{}</literal> 
+     silenciosamente retorna &null;.
     </para>
    </note>
   </sect3>
@@ -540,20 +663,21 @@ $third = $str{2};
  <sect2 xml:id="language.types.string.useful-funcs">
   <title>Funções e operadores úteis</title>
   <para>
-   Strings podem ser concatenados utilizando o operador '.' (ponto). Note
-   que o operador '+' (adição) não funciona para isso.
+   <type>String</type>s podem ser concatenados utilizando o operador '.' (ponto). Note
+   que o operador '+' (adição) <emphasis>não</emphasis> funciona para isso.
    Veja <link linkend="language.operators.string">operadores de
    string</link> para mais informações.
   </para>
+
   <para>
-   Há uma grande quantidade de funções úteis para modificação de strings.
+   Há bastante funções úteis para modificação de strings.
   </para>
+
   <simpara>
    Veja a seção de <link linkend="ref.strings">funções de string</link>
-   para funções gerais e funções de expressões regulares para
-   busca e substituição avançada.(em dois sabores:
-   <link linkend="ref.pcre">Perl</link> e
-   <link linkend="ref.regex">POSIX estendido</link>).
+   para funções gerais e funções de <link linkend="ref.regex">expressões regulares</link>
+   ou a <link linkend="ref.pcre">funções para expressão regular compatível com Perl</link>
+   para busca avançada &amp; funcionalidade para substituições.
   </simpara>
   <simpara>
    Há também <link linkend="ref.url">funções para strings URL</link> e
@@ -562,8 +686,7 @@ $third = $str{2};
    <link linkend="ref.mhash">mhash</link>).
   </simpara>
   <simpara>
-   Finalmente, se você ainda não encontrar o que está procurando,
-   veja também as <link linkend="ref.ctype">funções de tipos de caracteres</link>.
+   Finalmente, veja também as <link linkend="ref.ctype">funções de tipos de caracteres</link>.
   </simpara>
  </sect2>
 
@@ -571,26 +694,26 @@ $third = $str{2};
   <title>Convertendo para strings</title>
 
   <para>
-   Você pode converter um valor para string utilizando o molde <literal>(string)</literal>,
-   ou a função <function>strval</function>. Conversão para string
+   Você pode converter um valor para <type>string</type> utilizando o molde <literal>(string)</literal>,
+   ou a função <function>strval</function>. Conversão para <type>string</type>
    é automaticamente realizada no escopo de uma expressão para você onde uma
    string é necessária. Isto acontece quando você usa as funções <function>echo</function>
    ou <function>print</function>, ou quando você compara o valor de uma
-   variável com uma string. Lendo as seções do manual sobre <link
+   variável com uma <type>string</type>. Lendo as seções do manual sobre <link
    linkend="language.types">Tipos</link> e <link
    linkend="language.types.type-juggling">Conversão de Tipos</link> tornará o
-   que se segue um pouco mais claro. Veja também <function>settype</function>.
+   que se segue um pouco mais claro. Veja também a função <function>settype</function>.
   </para>
 
   <para>
-   O valor <type>boolean</type> &true; é convertido para a string <literal>"1"</literal>,
-   o valor &false; é representado como <literal>""</literal> (string vazia).
+   O valor <type>boolean</type> &true; é convertido para a <type>string</type> <literal>"1"</literal>,
+   o valor &false; é representado como <literal>""</literal> (uma string vazia).
    Desta forma, você pode converter livremente entre os tipos booleano e string.
   </para>
   <para>
-   Um <type>integer</type> ou número de ponto flutuante (<type>float</type>)
-   é convertido para a representação string do número em dígitos arábicos
-   (incluindo a parte expoente para números de ponto flutuante).
+   Um <type>integer</type> ou um <type>float</type>
+   é convertido para a representação <type>string</type> do número em dígitos arábicos
+   (incluindo a parte expoente para um <type>float</type>).
    Números de ponto flutuante podem ser convertidos usando a notação exponencial
    (<literal>4.1E+6</literal>).
   </para>
@@ -602,23 +725,24 @@ $third = $str{2};
    </para>
   </note>
   <para>
-   Arrays são sempre convertidos para a string <literal>"Array"</literal>,
-   então você não pode exportar o conteúdo de um <type>array</type> com
-   <function>echo</function> ou <function>print</function> para ver o que há dentro
-   dela. Para ver um elemento, você precisa fazer algo como <literal>
-   echo $arr['foo']</literal>. Veja abaixo dicas de como exportar/ver todo
-   seu conteúdo.
+   <type>Array</type>s são sempre convertidos para uma <type>string</type> "Array";
+   por causa disso <function>echo</function> e <function>print</function> não podem
+   por eles mesmo mostrar o conteúdo de um <type>array</type>.
+   Para ver um elemento, use a construção como <literal>echo $arr['foo']</literal>.
+   Veja abaixo dicas de como exportar/ver todo seu conteúdo.
   </para>
+  
   <para>
-   Objetos no PHP 4 são sempre convertidos para a string <literal>"Object"</literal>.
+   <type>Object</type>s no PHP 4 são sempre convertidos para a <type>string</type> <literal>"Object"</literal>.
    Se você quiser imprimir os valores das variáveis membro de um
    <type>object</type> por razão de debug, leia os parágrafos
    abaixo. Se você quiser encontrar o nome da classe do qual o objeto
    é uma instância, use <function>get_class</function>.
-   No PHP 5, o método __toString() é usado se aplicável.
+   No PHP 5, o método <link linkend="language.oop5.magic">__toString</link> é usado se aplicável.
   </para>
+  
   <para>
-   Recursos são sempre convertidos para strings na estrutura
+   <type>Resource</type>s são sempre convertidos para <type>strings</type> na estrutura
    <literal>"Resource id #1"</literal> onde <literal>1</literal> é
    o número único do <type>resource</type> assimilado pelo PHP na execução.
    Se você quiser obter o tipo do recurso, utilize
@@ -686,9 +810,8 @@ $foo = "10.0 pigs " + 1.0;        // $foo é float (11)
    de strtod(3).
   </simpara>
   <para>
-   Se você deseja testar qualquer um dos exemplo dessa seção,
-   você pode copiar e colar os exemplos e inserir as linhas seguintes
-   para ver por si mesmo como isso funciona.
+   Para testar qualquer exemplo nesta seção, copie e cole os exemplos e
+   insira a seguinte linha para ver como funciona:
    <informalexample>
     <programlisting role="php">
 <![CDATA[
@@ -701,9 +824,9 @@ echo "\$foo==$foo; tipo " . gettype ($foo) . "<br />\n";
   </para>
   <para>
    Não espere obter o código de um caracter por convertê-lo
-   para inteiro (como você teria em C, por exemplo). Use as funções
-   <function>ord</function> e <function>chr</function> para converter
-   entre código de caracteres e os próprios caracteres.
+   para inteiro, como é feito em C. Use as funções <function>ord</function> e
+   <function>chr</function> para converter entre código de caracteres e os próprios
+   caracteres.
   </para>
 
  </sect2>
