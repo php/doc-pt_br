@@ -1,24 +1,78 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- EN-Revision: 1.21 Maintainer: narigone Status: ready -->
+<!-- $Revision: 1.34 Maintainer: amandavale Status: ready --><!-- CREDITS:
+narigone -->
  <sect1 xml:id="language.oop5.overloading" xmlns="http://docbook.org/ns/docbook">
   <title>Sobrecarga</title>
 
   <para>
-   Tanto chamada de métodos e acesso a membros podem ser sobrecarregados pelos métodos
-   __call, __get e __set. Esses métodos só serão
-   disparados quando seu objeto ou o objeto herdado não contiver o
-   membro <modifier>public</modifier> ou método que você está tentando acessar.
-   Todos os métodos sobrecarregados devem ser definidos
-   <link linkend="language.oop5.visibility">estáticos</link>.
-   Todos os métodos sobrecarregados devem ser definidos
-   <link linkend="language.oop5.visibility">public</link>.
+   Sobrecarga em PHP provê recursos para <quote>criar</quote>
+   dinamicamente membros e métodos.
+   Estas entidades dinâmicas são processadas via métodos mágicos que podem
+   estabelecer em uma classe para vários tipos de ações.
   </para>
+
   <para>
-    A partir do PHP 5.1.0 também é possível sobrecarregar as
-    funções <function>isset</function> and <function>unset</function> através
-    dos métodos __isset e __unset respectivamente.
-    O método __isset também é chamado com a função <function>empty</function>.
+   Os métodos sobrecarregados são invocados quando interagem com membros ou
+   métodos que não foram declarados ou não são
+   <link linkend="language.oop5.visibility">visíveis</link> no escopo
+   corrente. O resto desta seção usará os termos
+   <quote>membros inacessíveis</quote> e <quote>métodos inacessíveis</quote>
+   para se referirir a esta combinação de declaração e visibilidade.
   </para>
+
+  <para>
+   Todos os métodos sobrecarregados devem ser definidos como <literal>públicos</literal>.
+  </para>
+
+  <note>
+   <para>
+    Nenhum dos argumentos destes métodos mágicos podem ser 
+    <link linkend="functions.arguments.by-reference">passados por referência</link>.
+   </para>
+  </note>
+
+  <note>
+   <para>
+    A interpretação do PHP de <quote>sobrecarga</quote> é diferente da
+    maioria das linguagens orientadas a objeto. Sobrecarga tradicionalmente
+    provê a habilidade de ter múltiplos métodos com o mesmo nome, mas
+    diferentes quantidades e tipos de argumentos.
+   </para>
+  </note>
+
+
+  <sect2 xml:id="language.oop5.overloading.changelog">
+   &reftitle.changelog;
+   <para>
+    <informaltable>
+     <tgroup cols="2">
+      <thead>
+       <row>
+        <entry>&Version;</entry>
+        <entry>&Description;</entry>
+       </row>
+      </thead>
+      <tbody>
+       <row>
+        <entry>5.3.0</entry>
+        <entry>
+         Adicionado <literal>__callStatic()</literal>.
+         Adicionado warning para reforçar a visibilidade pública e a
+         declaração não estática.
+        </entry>
+       </row>
+       <row>
+        <entry>5.1.0</entry>
+        <entry>
+         Adicionados <literal>__isset()</literal> e <literal>__unset()</literal>.
+        </entry>
+       </row>
+      </tbody>
+     </tgroup>
+    </informaltable>
+   </para>
+  </sect2>
+
 
   <sect2 xml:id="language.oop5.overloading.members">
    <title>Sobrecarga de membros</title>
@@ -42,119 +96,141 @@
    </methodsynopsis>
 
    <para>
-    Membros de classes podem ser sobrecarregados para executar código específico definido
-    na sua classe definindo esses métodos especialmente nomeados. O parâmetro <varname>$name</varname>
-    usado é o nome da variável que deve ser configurada ou recuperada.
-    O parâmetro <varname>$value</varname> do método __set() especifica o
-    valor que o objeto deve atribuir à variável <varname>$name</varname>.
+    <literal>__set()</literal> é executado ao se escrever dados para membros
+    inacessíveis.
    </para>
-   
-   <note>
-    <para>
-     O método <literal>__set()</literal> não pode obter argumentos por referência.
-    </para>
-   </note>
+
+   <para>
+    <literal>__get()</literal> é utilizados para ler dados de membros
+    inacessíveis.
+   </para>
+
+   <para>
+    <literal>__isset()</literal> é disparado para chamar
+    <function>isset</function> ou <function>empty</function>
+    em membros inacessíveis.
+   </para>
+
+   <para>
+    <literal>__unset()</literal> é invocado quando
+    <function>unset</function> é usado em membros inacessíveis.
+   </para>
+
+   <para>
+    O argumento <varname>$name</varname> é o nome do membro com o qual se está
+    interagindo. O argumento <varname>$value</varname> do método <literal>__set()</literal>
+    especifica o valor para o qual o membro <varname>$name</varname> deveria
+    ser setado.
+   </para>
+
+   <para>
+    Sobrecarga de membros somente trabalha no contexto de objetos. Estes
+    métodos mágicos não serão disparados no contexto estático. Portanto estes
+    métodos não podem ser declarados <link
+     linkend="language.oop5.static">static</link>.
+   </para>
 
    <example>
-    <title>Exemplo de sobrecarga com __get, __set, __isset e __unset</title>
+    <title>Exemplo de sobrecarga com  __get, __set, __isset and __unset</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-class Setter
-{
-    public $n;
-    private $x = array("a" => 1, "b" => 2, "c" => 3);
+class MemberTest {
+    /**  Local para dado sobrecarregado.  */
+    private $data = array();
 
-    public function __get($nm)
-    {
-        echo "Getting [$nm]\n";
+    /**  Sobrecarga não usada em membros declarados.  */
+    public $declared = 1;
 
-        if (isset($this->x[$nm])) {
-            $r = $this->x[$nm];
-            print "Returning: $r\n";
-            return $r;
-        } else {
-        echo "Nothing!\n";
+    /** Sobrecarga somente utilizada neste quando acessado do lado de fora da
+    classe. */ 
+    private $hidden = 2;
+
+    public function __set($name, $value) {
+        echo "Setando '$name' para '$value'\n";
+        $this->data[$name] = $value;
+    }
+
+    public function __get($name) {
+        echo "Obtendo '$name'\n";
+        if (array_key_exists($name, $this->data)) {
+            return $this->data[$name];
         }
+
+        $trace = debug_backtrace();
+        trigger_error(
+            'Propriedade não definida via __get(): ' . $name .
+            ' em ' . $trace[0]['file'] .
+            ' na linha ' . $trace[0]['line'],
+            E_USER_NOTICE);
+        return null;
     }
 
-    public function __set($nm, $val)
-    {
-        echo "Setting [$nm] to $val\n";
-
-        if (isset($this->x[$nm])) {
-            $this->x[$nm] = $val;
-            echo "OK!\n";
-        } else {
-            echo "Not OK!\n";
-        }
+    /**  Como em PHP 5.1.0  */
+    public function __isset($name) {
+        echo "'$name' está setado?\n";
+        return isset($this->data[$name]);
     }
 
-    public function __isset($nm)
-    {
-        echo "Checking if $nm is set\n";
-
-        return isset($this->x[$nm]);
+    /**  Como em PHP 5.1.0  */
+    public function __unset($name) {
+        echo "Unsetting '$name'\n";
+        unset($this->data[$name]);
     }
 
-    public function __unset($nm)
-    {
-        echo "Unsetting $nm\n";
-
-        unset($this->x[$nm]);
+    /**  Não é um método mágico, apenas está aqui para exemplo.  */
+    public function getHidden() {
+        return $this->hidden;
     }
 }
 
-$foo = new Setter();
-$foo->n = 1;
-$foo->a = 100;
-$foo->a++;
-$foo->z++;
 
-var_dump(isset($foo->a)); //true
-unset($foo->a);
-var_dump(isset($foo->a)); //false
+echo "<pre>\n";
 
-// Isso não passa pelo método __isset()
-// porque 'n' é uma proriedade pública
-var_dump(isset($foo->n));
+$obj = new MemberTest;
 
-var_dump($foo);
+$obj->a = 1;
+echo $obj->a . "\n\n";
+
+var_dump(isset($obj->a));
+unset($obj->a);
+var_dump(isset($obj->a));
+echo "\n";
+
+echo $obj->declared . "\n\n";
+
+echo "Vamos experimentar com a proriedade privada chamada 'hidden':\n";
+echo "Privados são visíveis dentro da classe, então __get() não usado...\n";
+echo $obj->getHidden() . "\n";
+echo "Privados não são vidíveis fora da classe, então __get() é usado...\n";
+echo $obj->hidden . "\n";
 ?>
 ]]>
     </programlisting>
     &example.outputs;
     <screen role="php">
 <![CDATA[
-Setting [a] to 100
-OK!
-Getting [a]
-Returning: 100
-Setting [a] to 101
-OK!
-Getting [z]
-Nothing!
-Setting [z] to 1
-Not OK!
+Setando 'a' para '1'
+Obtendo 'a'
+1
 
-Checking if a is set
+'a' está setado?
 bool(true)
-Unsetting a
-Checking if a is set
+Unsetting 'a'
+'a' está setado?
 bool(false)
-bool(true)
 
-object(Setter)#1 (2) {
-  ["n"]=>
-  int(1)
-  ["x:private"]=>
-  array(2) {
-    ["b"]=>
-    int(2)
-    ["c"]=>
-    int(3)
-  }
-}
+1
+
+Vamos experimentar com a proriedade privada chamada 'hidden':
+Privados são visíveis dentro da classe, então __get() não usado...
+2
+Privados não são visíveis fora da classe, então __get() é usado...
+Obtendo 'hidden'
+
+
+Notice:  Propriedade não definida via __get(): hidden em <file> na linha 70 em
+ <file> na linha 29
 ]]>
     </screen>
 
@@ -169,63 +245,60 @@ object(Setter)#1 (2) {
     <methodparam><type>string</type><parameter>name</parameter></methodparam>
     <methodparam><type>array</type><parameter>arguments</parameter></methodparam>
    </methodsynopsis>
+   <methodsynopsis>
+    <type>mixed</type><methodname>__callStatic</methodname>
+    <methodparam><type>string</type><parameter>name</parameter></methodparam>
+    <methodparam><type>array</type><parameter>arguments</parameter></methodparam>
+   </methodsynopsis>
 
    <para>
-    O método mágico __call() permite captura a invocação de métodos não
-    existentes. Dessa forma, __call() pode ser usado para implementar tratamento
-    de métodos definidos pelo usuário que dependem do nome do próprio método ser chamado. 
-    Isso é útil para implementações proxy, por exemplo. Os argumentos que são
-    passados na função serão definidos como um array no 
-    parâmetro <varname>$arguments</varname>. O valor retornado do 
-    método __call() será retornado ao chamador do método.
+    <literal>__call()</literal> é disparado quando invocando métodos
+    inacessíveis em um contexto de objeto.
+   </para>
+
+   <para>
+    <literal>__callStatic()</literal> é disparado quando invocando métodos
+    inacessíveis em um contexto estático.
+   </para>
+
+   <para>
+    O argumento <varname>$name</varname> é o nome do método sendo chamado. O
+    argumento <varname>$arguments</varname> é um array enumerado contendo os
+    parâmetros passados para o método <varname>$name</varname>.
    </para>
 
    <example>
-    <title>Exemplo de sobrecarga com __call</title>
+    <title>Sobrecarga de métodos instanciados com  __call e __callStatic</title>
     <programlisting role="php">
   <![CDATA[
 <?php
-class Caller
-{
-    private $x = array(1, 2, 3);
+class MethodTest {
+    public function __call($name, $arguments) {
+        // Nota: valor de $name é case sensitive.
+        echo "Chamando método objeto '$name' "
+             . implode(', ', $arguments). "\n";
+    }
 
-    function __call($m, $a)
-    {
-        print "Método $m chamado:\n";
-        var_dump($a);
-        return $this->x;
+    /**  Como em PHP 5.3.0  */
+    public static function __callStatic($name, $arguments) {
+        // Nota: valor de $name é case sensitive
+        echo "Chamando método estático '$name' "
+             . implode(', ', $arguments). "\n";
     }
 }
 
-$foo = new Caller();
-$a = $foo->teste(1, "2", 3.4, true);
-var_dump($a);
+$obj = new MethodTest;
+$obj->runTest('no contexto objeto');
+
+MethodTest::runTest('no contexto estático');  // Como em PHP 5.3.0
 ?>
 ]]>
     </programlisting>
     &example.outputs;
     <screen role="php">
 <![CDATA[
-
-Método teste chamado:
-array(4) {
-  [0]=>
-  int(1)
-  [1]=>
-  string(1) "2"
-  [2]=>
-  float(3.4)
-  [3]=>
-  bool(true)
-}
-array(3) {
-  [0]=>
-  int(1)
-  [1]=>
-  int(2)
-  [2]=>
-  int(3)
-}
+Chamando método objeto 'runTest' no contexto objeto
+Chamando método estático 'runTest' no contexto estático
 ]]>
     </screen>
    </example>
