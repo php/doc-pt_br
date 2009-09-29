@@ -39,7 +39,7 @@
     <programlisting role="php">
      <![CDATA[
 <?php
-    namespace MyProject::DB;
+    namespace MyProject\DB;
     
     const CONNECT_OK = 1;
 
@@ -66,7 +66,7 @@
       Dentro do namespace, todas os nomes de as classes, funções e constantes na definição
       são automaticamente prefixados com o nome do namespace. O nome da classe é sempre o
       nome completo, i.e. no exemplo acima a classe é chamada
-      <classname>MyProject::DB::Connection</classname>.
+      <classname>MyProject\DB\Connection</classname>.
      </simpara>
     </listitem>
     <listitem>
@@ -77,7 +77,7 @@
     </listitem>
     <listitem>
      <para>
-      Nome não qualificado de classe (i.e., nome não contém <literal>::</literal>)
+      Nome não qualificado de classe (i.e., nome não contém <literal>\</literal>)
        são resolvido em runtime seguindo este procedimento:
       <orderedlist>
        <listitem>
@@ -107,7 +107,7 @@
     <listitem>
      <para>
       Nome não qualificado de função (i.e., nome não contém
-      <literal>::</literal>) é verificado em tempo de execução primeiro 
+      <literal>\</literal>) é verificado em tempo de execução primeiro 
       no namespace atual e então no espaço global.
      </para>
     </listitem>
@@ -127,16 +127,16 @@
   <title>Usando namespaces</title>
   <para>
    Cada classe e função em um namespace pode ser referenciado pelo nome completo -
-   e.g. <classname>MyProject::DB::Connection</classname> ou
-   <classname>MyProject::DB::connect</classname> - em algum momento.
+   e.g. <classname>MyProject\DB\Connection</classname> ou
+   <classname>MyProject\DB\connect</classname> - em algum momento.
    <example>
     <title>Usando o nome com namespace</title>
     <programlisting role="php">
      <![CDATA[
 <?php
     require 'MyProject/Db/Connection.php';
-    $x = new MyProject::DB::Connection;
-    MyProject::DB::connect();
+    $x = new MyProject\DB\Connection;
+    MyProject\DB\connect();
 ?>
 ]]>
     </programlisting>
@@ -151,20 +151,20 @@
      <![CDATA[
 <?php
 /* ... */
-use Some::Name as Othername;
+use Some\Name as Othername;
 
 // The simplified form of use:
-use Foo::Bar;
+use Foo\Bar;
 // which is the same as :
-use Foo::Bar as Bar;
+use Foo\Bar as Bar;
 ?>
 ]]>
     </programlisting>
    </informalexample>
    O nome importado funciona da seguinte forma: cada vez que o compilador encontra
    um nome local <literal>Othername</literal> (o nome sozinho ou com
-   prefixo para nome grande separado por <literal>::</literal>) o nome 
-   importado <literal>Some::Name</literal> o substitue.
+   prefixo para nome grande separado por <literal>\</literal>) o nome 
+   importado <literal>Some\Name</literal> o substitue.
   </para>
 
   <para>
@@ -181,13 +181,13 @@ use Foo::Bar as Bar;
      <![CDATA[
 <?php
     require 'MyProject/Db/Connection.php';
-    use MyProject::DB;
-    use MyProject::DB::Connection as DbConnection;
+    use MyProject\DB;
+    use MyProject\DB\Connection as DbConnection;
     
-    $x = new MyProject::DB::Connection();
-    $y = new DB::connection();
+    $x = new MyProject\DB\Connection();
+    $y = new DB\connection();
     $z = new DbConnection();
-    DB::connect();
+    DB\connect();
 ?>
 ]]>
     </programlisting>
@@ -209,19 +209,19 @@ use Foo::Bar as Bar;
   <para>
    Sem definição de namespace, todas as definições de classes e funções são
    colocadas no espaço global - como era feito no PHP antes dos namespaces serem
-   suportado. Prefixando o nome com <literal>::</literal> especificará que 
+   suportado. Prefixando o nome com <literal>\</literal> especificará que 
    o nome é requerido do espaço global até mesmo no contexto do namespace.
    <example>
     <title>Usando a especificação de espaço global</title>
     <programlisting role="php">
      <![CDATA[
 <?php
-    namespace A::B::C;
+    namespace A\B\C;
  
- /* This function is A::B::C::fopen */
+ /* This function is A\B\C\fopen */
     function fopen() { 
          /* ... */
-         $f = ::fopen(...); // call global fopen
+         $f = \fopen(...); // call global fopen
          return $f;
     } 
 ?>
@@ -243,13 +243,13 @@ use Foo::Bar as Bar;
     <programlisting role="php">
      <![CDATA[
 <?php
-namespace A::B::C;
+namespace A\B\C;
          
 function foo() {
 // do stuff
 }
 
-set_error_handler(__NAMESPACE__ . "::foo");
+set_error_handler(__NAMESPACE__ . "\foo");
 ?>
 ]]>
     </programlisting>
@@ -265,16 +265,16 @@ set_error_handler(__NAMESPACE__ . "::foo");
     <listitem>
      <simpara>
       Todos nomes qualificados são traduzidos durante a compilação de acordo com a
-      atual regra do import. Por exemplo, se o namespace A::B::C é importado, uma chamada para
-      <code>C::D::e()</code> é traduzida para <code>A::B::C::D::e()</code>.
+      atual regra do import. Por exemplo, se o namespace A\B\C é importado, uma chamada para
+      <code>C\D\e()</code> é traduzida para <code>A\B\C\D\e()</code>.
      </simpara>
     </listitem>
     <listitem>
      <simpara>
       Nomes não qualificados de classes são traduzidos durante compilação de acordo com a atual
       regra de import (nome completo substituído pelo pequeno nome importado). Por exemplo, se 
-      o namespace <literal>A::B::C</literal> é importado, <code>new C()</code> é
-      traduzido para <code>new A::B::C()</code>.
+      o namespace <literal>A\B\C</literal> é importado, <code>new C()</code> é
+      traduzido para <code>new A\B\C()</code>.
      </simpara>
     </listitem>
     <listitem>
@@ -286,7 +286,7 @@ set_error_handler(__NAMESPACE__ . "::foo");
     </listitem>
     <listitem>
      <simpara>
-      Dentro do namespace (digo A::B), chamadas para funções não qualificadas que não são
+      Dentro do namespace (digo A\B), chamadas para funções não qualificadas que não são
       definidas no atual namespace são resolvidos em tempo de execução. Veja
       como uma chamada para uma função <literal>foo()</literal> é resolvida:
      </simpara>
@@ -294,7 +294,7 @@ set_error_handler(__NAMESPACE__ . "::foo");
        <listitem>
         <simpara>
          Ele procura por uma função do atual namespace:
-         <literal>A::B::foo()</literal>.
+         <literal>A\B\foo()</literal>.
         </simpara>
        </listitem>
        <listitem>
@@ -306,12 +306,12 @@ set_error_handler(__NAMESPACE__ . "::foo");
       </orderedlist>
       <simpara>
       Para chamar a função definida do usuário no namespace global,
-      <literal>::foo()</literal> tem que ser usado.
+      <literal>\foo()</literal> tem que ser usado.
      </simpara>
     </listitem>
     <listitem>
      <simpara>
-      Dentro do namespace (digo <literal>A::B</literal>), chamadas para não 
+      Dentro do namespace (digo <literal>A\B</literal>), chamadas para não 
       qualificados nomes de classes são resolvidos em tempo de execução. 
       Veja como uma chamada para <code>new C()</code> é resolvida:
      </simpara>
@@ -319,7 +319,7 @@ set_error_handler(__NAMESPACE__ . "::foo");
       <listitem>
        <simpara>
         Ele verifica por uma classe do namespace atual:
-        <literal>A::B::C</literal>.
+        <literal>A\B\C</literal>.
        </simpara>
       </listitem>
       <listitem>
@@ -330,30 +330,30 @@ set_error_handler(__NAMESPACE__ . "::foo");
       </listitem>
       <listitem>
        <simpara>
-        Ele tenta fazer autoload <literal>A::B::C</literal>.
+        Ele tenta fazer autoload <literal>A\B\C</literal>.
        </simpara>
       </listitem>
      </orderedlist>
      <simpara>
       Para referenciar a classe definida pelo usuário no namespace global,
-      <code>new ::C()</code> tem que ser usado.
+      <code>new \C()</code> tem que ser usado.
      </simpara>
     </listitem>
     <listitem>
      <simpara>
       Chamadas para qualificadas funções são resolvidas em tempo de execução.
-      Veja como a chamada para <literal>A::B::foo()</literal> é resolvida:
+      Veja como a chamada para <literal>A\B\foo()</literal> é resolvida:
      </simpara>
       <orderedlist>
        <listitem>
         <simpara>
          Ele verifica por uma função <literal>foo()</literal> no namespace
-         <literal>A::B</literal>.
+         <literal>A\B</literal>.
         </simpara>
        </listitem>
        <listitem>
         <simpara>
-         Ele verifica por uma classe <literal>A::B</literal> e chama o método
+         Ele verifica por uma classe <literal>A\B</literal> e chama o método
          estático <literal>foo()</literal>. Irá fazer autoload da class se
          necessário.
         </simpara>
@@ -363,8 +363,8 @@ set_error_handler(__NAMESPACE__ . "::foo");
     <listitem>
      <simpara>
       Qualificados nomes de classes são resolvidos em tempo de compilação como classes
-      correspondentes do namespace. Por exemplo, <code>new A::B::C()</code> refere-se a classe
-      <classname>C</classname> do namespace <literal>A::B</literal>.
+      correspondentes do namespace. Por exemplo, <code>new A\B\C()</code> refere-se a classe
+      <classname>C</classname> do namespace <literal>A\B</literal>.
      </simpara>
     </listitem>
    </orderedlist>
@@ -381,31 +381,31 @@ namespace A;
 foo();      // first tries to call "foo" defined in namespace "A"
             // then calls internal function "foo"
 
-::foo();    // calls function "foo" defined in global scope
+\foo();    // calls function "foo" defined in global scope
 
 // class references
 
 new B();    // first tries to create object of class "B" defined in namespace "A"
             // then creates object of internal class "B"
 
-new ::B();  // creates object of class "B" defined in global scope
+new \B();  // creates object of class "B" defined in global scope
 
 // static methods/namespace functions from another namespace
 
-B::foo();   // first tries to call function "foo" from namespace "A::B"
+B\foo();   // first tries to call function "foo" from namespace "A\B"
             // then calls method "foo" of internal class "B"
 
-::B::foo(); // first tries to call function "foo" from namespace "B"
+\B\foo(); // first tries to call function "foo" from namespace "B"
             // then calls method "foo" of class "B" from global scope
 
 // static methods/namespace functions of current namespace
 
-A::foo();   // first tries to call function "foo" from namespace "A::A"
+A\foo();   // first tries to call function "foo" from namespace "A\A"
             // then tries to call method "foo" of class "A" from namespace "A"
             // then tries to call function "foo" from namespace "A"
             // then calls method "foo" of internal class "A" 
 
-::A::foo(); // first tries to call function "foo" from namespace "A"
+\A\foo(); // first tries to call function "foo" from namespace "A"
             // then calls method "foo" of class "A" from global scope
 ?>
 ]]>
