@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- EN-Revision: af4410a7e15898c3dbe83d6ea38246745ed9c6fb Maintainer: thiago Status: ready -->
+<refentry xml:id="mysqli-stmt.prepare" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>mysqli_stmt::prepare</refname>
+  <refname>mysqli_stmt_prepare</refname>
+  <refpurpose>Prepara uma declaração SQL para execução</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <para>Estilo orientado a objeto (método)</para>
+  <methodsynopsis>
+   <type>mixed</type><methodname>mysqli_stmt::prepare</methodname>
+   <methodparam><type>string</type><parameter>query</parameter></methodparam>
+  </methodsynopsis>
+  <para>Estilo procedural:</para>
+  <methodsynopsis>
+   <type>bool</type><methodname>mysqli_stmt_prepare</methodname>
+   <methodparam><type>mysqli_stmt</type><parameter>stmt</parameter></methodparam>
+   <methodparam><type>string</type><parameter>query</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Prepares the SQL query pointed to by the null-terminated string query. 
+  </para>
+  <para>
+   Os marcadores de parâmetros devem ser ligados as variáveis da aplicação 
+   utilizando-se <function>mysqli_stmt_bind_param</function> e/ou 
+   <function>mysqli_stmt_bind_result</function> antes de executar a declaração
+   ou trazer os resultados.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    &mysqli.stmt.description;
+    <varlistentry>
+     <term><parameter>query</parameter></term>
+     <listitem>
+      <para>
+       A query, como uma string. Deve conter somente uma única declaração SQL.
+      </para>
+      <para>
+       Você pode incluir um ou mais marcadores de parâmetros na declaração SQL
+       colocando a interrogação (<literal>?</literal>) nas posições apropriadas.
+      </para>
+      <note>
+       <para>
+        Você não deve adicionar um ponto-e-virgula ou <literal>\g</literal> 
+        para terminar a declaração
+       </para>
+      </note>
+      <note>
+       <para>
+        Os marcadores são permitidos somente em alguns lugares das declarações SQL.
+        Por exemplo, eles são permitidos na lista VALUES() de um INSERT (para
+        especificar valores das colunas em uma linha), ou na comparação de uma coluna
+        na cláusula WHERE para especificar um valor de comparação.
+       </para>
+       <para>
+        Entretanto, eles não são permitidos em identificadores (como nomes de tabela 
+        e coluna, na lista que nomeia os nomes das colunas a serem retornados por uma
+        declaração SELECT), ou para especificar ambos os operandos de um operador binário
+        como o <literal>=</literal> sinal de igual. A última restrição é necessária pois
+        seria impossível determinar o tipo do parâmetro. No geral, os parâmetros são
+        permitidos somente em declarações de Linguagem de Manipulação de Dados (no 
+        inglês DML), e não em Linguagem Definição de Dados (DDL).
+       </para>
+      </note>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.success;
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Estilo orientado a objeto</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$mysqli = new mysqli("localhost", "my_user", "my_password", "world");
+
+/* verifica coenxão */
+if (mysqli_connect_errno()) {
+    printf("Conexão falhou: %s\n", mysqli_connect_error());
+    exit();
+}
+
+$cidade = "Curitiba";
+
+/* cria uma declaração preparada */
+$stmt =  $mysqli->stmt_init();
+if ($stmt->prepare("SELECT Estado FROM Cidade WHERE Nome=?")) {
+
+    /* atribui os parâmetros aos marcadores */
+    $stmt->bind_param("s", $cidade);
+
+    /* executa a query */
+    $stmt->execute();
+
+    /* atribui as variáveis de resultado */
+    $stmt->bind_result($estado);
+
+    /* busca o valor */
+    $stmt->fetch();
+
+    printf("%s está no estado %s\n", $cidade, $estado);
+
+    /* fecha a declaração */
+    $stmt->close();
+}
+
+/* fecha a conexão */
+$mysqli->close();
+?>
+]]>
+  </programlisting>
+  </example>
+  <example>
+   <title>Estilo procedural</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$link = mysqli_connect("localhost", "my_user", "my_password", "world");
+
+/* verifica coenxão */
+if (mysqli_connect_errno()) {
+    printf("Conexão falhou: %s\n", mysqli_connect_error());
+    exit();
+}
+
+$cidade = "Curitiba";
+
+/* cria uma declaração preparada */
+$stmt = mysqli_stmt_init($link);
+if (mysqli_stmt_prepare($stmt, 'SELECT Estado FROM Cidade WHERE Nome=?')) {
+
+    /* atribui os parâmetros aos marcadores */
+    mysqli_stmt_bind_param($stmt, "s", $cidade);
+
+    /* executa a query */
+    mysqli_stmt_execute($stmt);
+
+    /* atribui as variáveis de resultado */
+    mysqli_stmt_bind_result($stmt, $estado);
+
+    /* busca o valor */
+    mysqli_stmt_fetch($stmt);
+
+    printf("%s está no estado %s\n", $cidade, $estado);
+
+    /* fecha a declaração */
+    mysqli_stmt_close($stmt);
+}
+
+/* fecha a conexão */
+mysqli_close($link);
+?>
+]]>
+   </programlisting>
+  </example>
+  &example.outputs;
+  <screen>
+<![CDATA[
+Curitiba está no estado Paraná
+]]>
+  </screen>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <function>mysqli_stmt_init</function>,
+   <function>mysqli_stmt_execute</function>,
+   <function>mysqli_stmt_fetch</function>,
+   <function>mysqli_stmt_bind_param</function>,
+   <function>mysqli_stmt_bind_result</function>
+   <function>mysqli_stmt_close</function>.
+  </para>
+ </refsect1>
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
