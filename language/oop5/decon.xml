@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!-- EN-Revision: af4410a7e15898c3dbe83d6ea38246745ed9c6fb Maintainer: felipe Status: ready --><!-- CREDITS: narigone -->
  <sect1 xml:id="language.oop5.decon" xmlns="http://docbook.org/ns/docbook">
   <title>Construtores e Destrutores</title>
@@ -8,20 +8,20 @@
    <methodsynopsis>
     <type>void</type><methodname>__construct</methodname>
     <methodparam choice="opt"><type>mixed</type><parameter>args</parameter></methodparam>
-    <methodparam choice="opt"><parameter>...</parameter></methodparam>
+    <methodparam choice="opt"><parameter>...</parameter><initializer>null</initializer></methodparam>
    </methodsynopsis>
    <para>
-    PHP 5 permite que os desenvolvedores declarem métodos construtores para as classes.
-    Classes que tem um método construtor chamam esse método cada vez
-    que um objeto novo é criado, então é apropriado para qualquer inicialização que o
+    PHP 5 permite que os desenvolvedores declarem mÃ©todos construtores para as classes.
+    Classes que tem um mÃ©todo construtor chamam esse mÃ©todo cada vez
+    que um objeto novo Ã© criado, entÃ£o Ã© apropriado para qualquer inicializaÃ§Ã£o que o
     objeto possa vir a precisar antes de ser usado.
    </para>
    <note>
     <simpara>
-     Construtores pais não são chamados implicitamente se a classe filha define
+     Construtores pais nÃ£o sÃ£o chamados implicitamente se a classe filha define
      um construtor. Para executar o construtor da classe pai, uma chamada a
      <function>parent::__construct</function> dentro do construtor da classe filha
-     é necessária.
+     Ã© necessÃ¡ria.
     </simpara>
    </note>
    <example>
@@ -49,13 +49,40 @@ $obj = new SubClasse();
     </programlisting>
    </example>
    <para>
-    Para garantir compatibilidade reversa, se o PHP 5 não conseguir achar uma
-    função <function>__construct</function> para uma determinada classe, ele procurará
-    pela função construtora à moda-antiga, que tenha o mesmo nome da classe.
-    Efetivamente, significa que o único caso que pode gerar problemas de
-    compatibilidade seria se a classe tiver um método chamado
-    <function>__construct</function> que fosse usado para outra finalidade que não inicializar o objeto.
+    Para garantir compatibilidade reversa, se o PHP 5 nÃ£o conseguir achar uma
+    funÃ§Ã£o <function>__construct</function> para uma determinada classe, ele procurarÃ¡
+    pela funÃ§Ã£o construtora Ã  moda-antiga, que tenha o mesmo nome da classe.
+    Efetivamente, significa que o Ãºnico caso que pode gerar problemas de
+    compatibilidade seria se a classe tiver um mÃ©todo chamado
+    <function>__construct</function> que fosse usado para outra finalidade que nÃ£o inicializar o objeto.
    </para>
+   <para>
+    Diferente de outros mÃ©todos, PHP nÃ£o irÃ¡ gerar uma mensagem de erro de nÃ­vel
+    <constant>E_STRICT</constant> quando
+    <function>__construct</function> Ã© sobreescrito com parÃ¢metros diferentes
+    que o mÃ©todo <function>__construct</function> pai foi definido.
+   </para>
+   <para>
+    A partir do PHP 5.3.3, mÃ©todos com o mesmo nome como Ãºltimo elemento de uma
+    classe dentro de namespace nÃ£o serÃ¡ mais tratado como construtor. Esta
+    mudanÃ§a nÃ£o afeta classe fora de namespace.
+   </para>
+   <example>
+    <title>Construtores em classes dentro de namespace</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+namespace Foo;
+class Bar {
+    public function Bar() {
+        // tratado como construtor no PHP 5.3.0-5.3.2
+        // tratado como mÃ©todo comum a partir do PHP 5.3.3
+    }
+}
+?>
+]]>
+    </programlisting>
+   </example>
   </sect2>
 
   <sect2 xml:id="language.oop5.decon.destructor">
@@ -66,9 +93,9 @@ $obj = new SubClasse();
    </methodsynopsis>
    <para>
     PHP 5 introduz um conceito de destrutor similar ao de outras
-    linguagens orientadas a objeto, como o Java. O método destrutor será chamado
-    assim que todas as referências a um objeto particular forem removidas ou quando
-    o objeto for explicitamente destruído ou qualquer ordem na sequência de encerramento.
+    linguagens orientadas a objeto, como o Java. O mÃ©todo destrutor serÃ¡ chamado
+    assim que todas as referÃªncias a um objeto particular forem removidas ou quando
+    o objeto for explicitamente destruÃ­do ou qualquer ordem na sequÃªncia de encerramento.
    </para>
    <example>
     <title>Exemplo de Destrutor</title>
@@ -92,21 +119,26 @@ $obj = new MinhaClasseDestruivel();
     </programlisting>
    </example>
    <para>
-    Como os construtores, destrutores pais não serão chamados implicitamente pelo
+    Como os construtores, destrutores pais nÃ£o serÃ£o chamados implicitamente pelo
     engine. Para executar o destrutor pai, deve-se fazer uma chamada
     explicitamente a <function>parent::__destruct</function> no corpo do
     destrutor.
    </para>
+   <para>
+     Destrutores sÃ£o chamados durante o encerramento do script tendo os
+     cabeÃ§alhos HTTP enviados. No diretÃ³rio atual do script a fase de encerramento 
+     pode ser diferente com algumas SAPIs (e.g. Apache).
+   </para>
    <note>
     <para>
-     Destrutores são chamados durante o encerramento do script tendo os
-     cabeçalhos HTTP enviados. No diretório atual do script a fase de encerramento 
-     pode ser diferente com algumas SAPIs (e.g. Apache).
+     Destrutores chamados durante o encerramento da execuÃ§Ã£o do script tem os cabeÃ§alhos HTTP jÃ¡
+     enviados. O diretÃ³rio atual na fase de encerramento do script pode ser diferente
+     em alguns SAPIs (e.g. Apache).
     </para>
    </note>
    <note>
     <para>
-     Tentar disparar uma exceção em um destrutor (chamado no término do script) causa um erro fatal.
+     Tentar disparar uma exceÃ§Ã£o em um destrutor (chamado no tÃ©rmino do script) causa um erro fatal.
     </para>
    </note>
   </sect2>
