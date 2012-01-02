@@ -5,7 +5,7 @@
    &warn.deprecated.feature-5-3-0.removed-6-0-0;
    <para>
     Magic Quotes é um processo de inserção automática de caracteres de escape (\)
-    em todos os dados indo para o script PHP. É preferível escrever código com
+    em todos os dados indo para o script <acronym>PHP</acronym>. É preferível escrever código com
     essa opção desligada e adicionar esses caracteres manualmente quando necessário.
    </para>
 
@@ -27,8 +27,8 @@
        <link linkend="ini.magic-quotes-gpc">magic_quotes_gpc</link>
       </simpara>
       <simpara>
-       Afeta os dados de requisições HTTP GET, POST, e COOKIE). Não pode ser alterada
-       em tempo de execução e tem o valor padrão <emphasis>on</emphasis> no PHP.
+       Afeta os dados de requisições <acronym>HTTP</acronym> GET, POST, e COOKIE). Não pode ser alterada
+       em tempo de execução e tem o valor padrão <emphasis>on</emphasis> no <acronym>PHP</acronym>.
       </simpara>
       <simpara>
        Veja também <function>get_magic_quotes_gpc</function>.
@@ -75,8 +75,8 @@
      <listitem>
       <simpara>
        Não existe mais razão para usar magic quotes porque não
-       é mais uma parte suportada do PHP. Entretanto, existe e ajudou
-       alguns iniciante a contruir um código melhor(mais seguro).
+       é mais uma parte suportada do <acronym>PHP</acronym>. Entretanto, a função existe e ajuda
+       alguns iniciantes a contruir um código melhor(mais seguro).
        Mas, ao lidar com código que utiliza este recurso
        é melhor atualizar o código do que ativar magic quotes.
       </simpara>
@@ -101,7 +101,6 @@
       </simpara>
       <simpara>
        Presumir que ela está ligada, ou desligada, afeta portabilitade. Use
-       Assuming it to be on, or off, affects portability. Use
        <function>get_magic_quotes_gpc</function> para verificar isso e codifique
        de acordo com a situação.
       </simpara>
@@ -188,24 +187,24 @@ php_flag magic_quotes_gpc Off
     </para>
     <para>
      <example>
-       <title>Disabilitando magic quotes em tempo de execução</title>
+       <title>Desabilitando magic quotes em tempo de execução</title>
       <programlisting role="php">
 <![CDATA[
 <?php
 if (get_magic_quotes_gpc()) {
-    function stripslashes_deep($value)
-    {
-        $value = is_array($value) ?
-                    array_map('stripslashes_deep', $value) :
-                    stripslashes($value);
-
-        return $value;
+    $process = array(&$_GET, &$_POST, &$_COOKIE, &$_REQUEST);
+    while (list($key, $val) = each($process)) {
+        foreach ($val as $k => $v) {
+            unset($process[$key][$k]);
+            if (is_array($v)) {
+                $process[$key][stripslashes($k)] = $v;
+                $process[] = &$process[$key][stripslashes($k)];
+            } else {
+                $process[$key][stripslashes($k)] = stripslashes($v);
+            }
+        }
     }
-
-    $_POST = array_map('stripslashes_deep', $_POST);
-    $_GET = array_map('stripslashes_deep', $_GET);
-    $_COOKIE = array_map('stripslashes_deep', $_COOKIE);
-    $_REQUEST = array_map('stripslashes_deep', $_REQUEST);
+    unset($process);
 }
 ?>
 ]]>
