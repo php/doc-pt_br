@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: thiago Status: ready -->
+<!-- EN-Revision: cddc79d233c1a466713d40c53908dc9fd1b4b5cf Maintainer: thiago Status: ready -->
 <refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.fsockopen">
  <refnamediv>
   <refname>fsockopen</refname>
@@ -11,28 +11,31 @@
   <methodsynopsis>
    <type>resource</type><methodname>fsockopen</methodname>
    <methodparam><type>string</type><parameter>hostname</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>port</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>port</parameter><initializer>-1</initializer></methodparam>
    <methodparam choice="opt"><type>int</type><parameter role="reference">errno</parameter></methodparam>
    <methodparam choice="opt"><type>string</type><parameter role="reference">errstr</parameter></methodparam>
-   <methodparam choice="opt"><type>float</type><parameter>timeout</parameter></methodparam>
+   <methodparam choice="opt"><type>float</type><parameter>timeout</parameter><initializer>ini_get("default_socket_timeout")</initializer></methodparam>
   </methodsynopsis>
-		<para>
-			Inicia uma conexão socket para o recurso especificado em
+  <para>
+   Inicia uma conexão socket para o recurso especificado em
    <parameter>hostname</parameter>.
   </para>
-		<para>
-			O PHP suporta alvos na Internet ou domínios Unix, conforme descrito em
-   <xref linkend="transports"/>.  Uma lista dos transportes suportados pode
-   ser buscada utilizando a função 
-   <function>stream_get_transports</function>.
+  <para>
+   O PHP suporta alvos na Internet ou domínios Unix, conforme descrito em
+   <xref linkend="transports"/>. Uma lista dos transportes suportados pode
+   ser encontrada utilizando a função <function>stream_get_transports</function>.
   </para>
   <para>
    Por padrão o socket será aberto em modo de bloqueio. Você pode mudar para o
    modo desbloqueado utilizando a função 
    <function>stream_set_blocking</function>.
   </para>
+  <para>
+   A função <function>stream_socket_client</function> é similar mas provê um
+   número maior de opções, incluindo conxão não bloqueada e a habilidade de
+   adicionar um contexto de corrente (stream context).
+  </para>
  </refsect1>
-
  <refsect1 role="parameters">
   &reftitle.parameters;
   <para>
@@ -41,10 +44,11 @@
      <term><parameter>hostname</parameter></term>
      <listitem>
       <para>
-       Se você compilou com suporte a OpenSSL, você pode colocar os prefixos 
-       <literal>ssl://</literal> ou <literal>tls://</literal> ao 
-       <parameter>hostname</parameter> para utilizar SSL ou uma conexão cliente
-       TLS sobre TCP/IP para conectar com o host remoto.
+       Se você compilou <link linkend="openssl.installation">com suporte</link>
+       a OpenSSL, você pode colocar os prefixos <literal>ssl://</literal> ou 
+       <literal>tls://</literal> ao <parameter>hostname</parameter> para utilizar 
+       SSL ou uma conexão cliente TLS sobre TCP/IP para conectar com o 
+       host remoto.
       </para>
      </listitem>
     </varlistentry>
@@ -60,8 +64,8 @@
      <term><parameter>errno</parameter></term>
      <listitem>
       <para>
-       Se informado, guarda o número do nível de erro do sistema quando ocorreu
-       a chamada de <literal>connect()</literal> pelo sistema.
+       Se informado, guarda o número do erro do sistema que aconteceu na chamada de
+       <literal>connect()</literal> no nível do sistema.
       </para>
       <para>
        Se o valor retornado em <parameter>errno</parameter> é
@@ -91,8 +95,8 @@
         Se você precisa de um timeout para ler/escrever dados através do
         socket, use <function>stream_set_timeout</function>, já que o
         parâmetro <parameter>timeout</parameter> de
-        <function>fsockopen</function> somente é aplicado na conexão do
-        socket.
+        <function>fsockopen</function> somente é aplicado enquanto o socket
+        está conectando.
        </para>
       </note>
      </listitem>
@@ -100,7 +104,6 @@
    </variablelist>
   </para>
  </refsect1>
-
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
@@ -111,7 +114,13 @@
    <function>feof</function>). Se a chamada falhar, ela retornará &false;.
   </para>
  </refsect1>
-
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <para>
+   Dispara um <constant>E_WARNING</constant> se <parameter>hostname</parameter> não
+   é um domínio válido.
+  </para>
+ </refsect1>
  <refsect1 role="changelog">
   &reftitle.changelog;
   <para>
@@ -137,24 +146,11 @@
         Suporte a SSL e TLS sobre TCP/IP foi adicionado.
        </entry>
       </row>
-      <row>
-       <entry>4.0.0</entry>
-       <entry>
-        Suporte a UDP foi adicionado.
-       </entry>
-      </row>
-      <row>
-       <entry>3.0.9</entry>
-       <entry>
-        O parâmetro <parameter>timeout</parameter> foi adicionado.
-       </entry>
-      </row>
      </tbody>
     </tgroup>
    </informaltable>
   </para>
  </refsect1>
-
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
@@ -170,7 +166,6 @@ if (!$fp) {
     $out = "GET / HTTP/1.1\r\n";
     $out .= "Host: www.example.com\r\n";
     $out .= "Connection: Close\r\n\r\n";
-
     fwrite($fp, $out);
     while (!feof($fp)) {
         echo fgets($fp, 128);
@@ -206,7 +201,6 @@ if (!$fp) {
    </example>
   </para>
  </refsect1>
-
  <refsect1 role="notes">
   &reftitle.notes;
   <note>
@@ -233,6 +227,7 @@ if (!$fp) {
   <para>
    <simplelist>
     <member><function>pfsockopen</function></member>
+    <member><function>stream_socket_client</function></member>
     <member><function>stream_set_blocking</function></member>
     <member><function>stream_set_timeout</function></member>
     <member><function>fgets</function></member>
@@ -240,13 +235,12 @@ if (!$fp) {
     <member><function>fwrite</function></member>
     <member><function>fclose</function></member>
     <member><function>feof</function></member>
+    <member><function>socket_connect</function></member>
     <member>A <link linkend="ref.curl">extensão Curl</link></member>
    </simplelist>
   </para>
  </refsect1>
-
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

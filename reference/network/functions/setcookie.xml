@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: thiago Status: ready -->
+<!-- EN-Revision: 1e0cb85be781aedf9822622e3a654c1a6b8cd2cc Maintainer: thiago Status: ready -->
 <refentry xml:id="function.setcookie" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>setcookie</refname>
@@ -10,13 +10,13 @@
   &reftitle.description;
   <methodsynopsis>
    <type>bool</type><methodname>setcookie</methodname>
-   <methodparam><type>string</type><parameter>nome</parameter></methodparam>
-   <methodparam choice="opt"><type>string</type><parameter>valor</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>expira</parameter></methodparam>
-   <methodparam choice="opt"><type>string</type><parameter>caminho</parameter></methodparam>
-   <methodparam choice="opt"><type>string</type><parameter>domínio</parameter></methodparam>
-   <methodparam choice="opt"><type>bool</type><parameter>seguro</parameter></methodparam>
-   <methodparam choice="opt"><type>bool</type><parameter>somente http</parameter></methodparam>
+   <methodparam><type>string</type><parameter>name</parameter></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>value</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>expire</parameter><initializer>0</initializer></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>path</parameter></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>domain</parameter></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>secure</parameter><initializer>false</initializer></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>httponly</parameter><initializer>false</initializer></methodparam>
   </methodsynopsis>
   <para>
    A função <function>setcookie</function> define um cookie para ser enviado
@@ -28,33 +28,32 @@
    <literal>&lt;head&gt;</literal> e também espaços em branco.
   </para>
   <para>
-   Uma vez que o cookie foi setado, ele pode ser acessado através dos arrays
-   <varname>$_COOKIE</varname> e <varname>$HTTP_COOKIE_VARS</varname>. Note
-   que as <link linkend="language.variables.superglobals">superglobais</link>
-   como <varname>$_COOKIE</varname> ou <varname>$HTTP_COOKIE_VARS</varname>
-   estão disponíveis a partir do PHP 4.1.0.
-   Os valores dos cookies também existem na variável
+   Uma vez que o cookie foi setado, ele pode ser acessado na próxima página 
+   através dos arrays <varname>$_COOKIE</varname> e 
+   <varname>$HTTP_COOKIE_VARS</varname>. Note que as 
+   <link linkend="language.variables.superglobals">superglobais</link>
+   como <varname>$_COOKIE</varname> estão disponíveis a partir do 
+   PHP 4.1.0. Os valores dos cookies também existem na variável 
    <varname>$_REQUEST</varname>.
   </para>
  </refsect1>
-
  <refsect1 role="parameters">
   &reftitle.parameters;
   <para>
-   Todos os argumentos, excento o <parameter>name</parameter>, são opcionais.
+   Todos os argumentos, exceto o <parameter>name</parameter>, são opcionais.
    Você pode também colocar como argumento uma string vazia 
-   (<emphasis>&quot;&quot;</emphasis>) para pular o argumento. Por que o
+   (<emphasis>&quot;&quot;</emphasis>) para pular o argumento. Como o
    argumento <parameter>expire</parameter> é um inteiro, ele não pode ser
    escapado com uma string vazia, por isso utilize um zero
    (<emphasis>0</emphasis>) no lugar.
   </para>
   <para>
-   Veja a <link xlink:href="&spec.cookies;">especificação de cookie do
-    Netscape </link> para ver como cada parâmetro de
-   <function>setcookie</function> funciona.
+   Veja a <link xlink:href="&url.rfc;6265">RFC 6265</link> para ver como 
+   cada parâmetro de <function>setcookie</function> 
+   funciona.
    <variablelist>
     <varlistentry>
-     <term><parameter>nome</parameter></term>
+     <term><parameter>name</parameter></term>
      <listitem>
       <para>
        O nome do cookie.
@@ -62,19 +61,18 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>valor</parameter></term>
+     <term><parameter>value</parameter></term>
      <listitem>
       <para>
        O valor do cookie. Esse valor é guardado no computador do cliente; não
-       guarde informação sensível.
-       Supondo que o <parameter>nome</parameter> é 'nomedocookie', o valor
-       pode ser lido través de
+       guarde informação sensível. Supondo que o <parameter>name</parameter> seja 
+       <literal>'nomedocookie'</literal>, o valor pode ser lido través de
        <varname>$_COOKIE['nomedocookie']</varname>
       </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>expira</parameter></term>
+     <term><parameter>expire</parameter></term>
      <listitem>
       <para>
        O tempo para o cookie expirar. Esse valor é uma timestamp Unix,
@@ -83,79 +81,75 @@
        <function>time</function> mais o número de segundos que você quer que
        ele expire. Ou você pode utilizar a função <function>mktime</function>.
        <literal>time()+60*60*24*30</literal> irá configurar o cookie para
-       expirar daqui a 30 dias. Se configurado para 0, ou omitido, o cookie irá
+       expirar em 30 dias. Se configurado para 0, ou omitido, o cookie irá
        expirar ao fim da sessao (quando o navegador fechar).
       </para>
       <para>
        <note>
         <para>
-         Você pode ver que o parâmetro <parameter>expira</parameter> recebe
+         Você pode ver que o parâmetro <parameter>expire</parameter> recebe
          uma timestamp Unix, ao contrário do formato de data <literal>Wdy,
           DD-Mon-YYYY HH:MM:SS GMT</literal>, isso se dá porque o PHP faz essa
          conversão internamente.
-        </para>
-        <para>
-         <parameter>expira</parameter> é comparado com a hora do computador do
-         cliente, que pode ser diferente da hora do servidor.
         </para>
        </note>
       </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>caminho</parameter></term>
+     <term><parameter>path</parameter></term>
      <listitem>
       <para>
        O caminho no servidor aonde o cookie estará disponível. Se configurado
        para <literal>'/'</literal>, o cookie estará dosponível para todo o
-       domínio. Se configurado para o diretório <literal>'/foo/'</literal>, o
-       cookie estará disponível apenas dentro do diretório
-       <literal>/foo/</literal> e todos os subdiretórios como
-       <literal>/foo/bar</literal> do <parameter>domínio</parameter>. O valor
-       padrão é o diretório atual aonde o cookie está sendo configurado.
+       <parameter>domain</parameter>. Se configurado para o diretório 
+       <literal>'/foo/'</literal>, o cookie estará disponível apenas dentro do 
+       diretório <literal>/foo/</literal> e todos os subdiretórios como
+       <literal>/foo/bar</literal> do <parameter>domain</parameter>. O valor
+       padrão é o diretório atual onde o cookie está sendo configurado.
       </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>domínio</parameter></term>
+     <term><parameter>domain</parameter></term>
      <listitem>
       <para>
-       O domínio para qual o domínio estará disponível.
-       Para fazer com que ele esteja disponível para todos os subdomínios de
-       example.com então você deve configurar ele para
-       <literal>'.example.com'</literal>. O <literal>.</literal> não é
-       obrigatório mas faz com que seja compatível com mais navegadores.
-       Configurando ele para <literal>www.example.com</literal> ele fará com
-       que o cookie esteja disponível somente para o subdomínio
-       <literal>www</literal>. Veja a especificação de <literal>'tail
-        matching'</literal> em <link xlink:href="&spec.cookies;">spec</link>
-       para maiores detalhes.
+       O domínio para qual o cookie estará disponível. Configurando o domínio
+       para <literal>'www.example.com'</literal> fará com que o cookie esteja
+       disponível no subdomínio <literal>www</literal> e nos subdomínios superiores.
+       Cookies disponíveis para um domínio inferior, como 
+       <literal>'example.com'</literal> estarão disponíveis para subdomínios superiores,
+       como <literal>'www.example.com'</literal>.
+       
+       Browsers antigos ainda implementam a 
+       <link xlink:href="&url.rfc;2109">RFC 2109</link> e podem requerer um
+       <literal>.</literal> no início para funcionar com todos os 
+       subdomínios.
       </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>seguro</parameter></term>
+     <term><parameter>secure</parameter></term>
      <listitem>
       <para>
        Indica que o cookie só podera ser transimitido sob uma conexão segura HTTPS do
-       cliente. Quando configurado para &true;. o cookie será enviado somente
-       se uma conexão segura existir. O padrão é &false;. No lado do servidor,
-       fica por conta do programador enviar esse tipo de cookie somente sob
-       uma conexão segura (ex respeitando
-       <varname>$_SERVER["HTTPS"]</varname>).
+       cliente. Quando configurado para &true;, o cookie será enviado somente
+       se uma conexão segura existir. No lado do servidor, fica por conta do 
+       programador enviar esse tipo de cookie somente sob uma conexão segura (ex 
+       respeitando <varname>$_SERVER["HTTPS"]</varname>).
       </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>somente http</parameter></term>
+     <term><parameter>httponly</parameter></term>
      <listitem>
       <para>
        Quando for &true; o cookie será acessível somente sob o protocolo HTTP.
        Isso significa que o cookie não será acessível por linguagens de
-       script, como JavaScript. Essa configuração pode efetivamente ajudar a
-       reduzir ou identificar roubos através de ataques do tipo XSS
-       (entretanto ela não é suportada por todos os browsers). Foi adicionada
-       no PHP 5.2.0.
+       script, como JavaScript. É dito que essa configuração pode ajudar a
+       reduzir ou identificar roubos de identidade através de ataques do tipo XSS
+       (entretanto ela não é suportada por todos os browsers), mas essa informação
+       é constantemente discutida. Foi adicionada no PHP 5.2.0.
        &true; ou &false;
       </para>
      </listitem>
@@ -169,8 +163,8 @@
   <para>
    Se existe saída antes da chamada dessa função,
    <function>setcookie</function> irá falhar e retornará &false;. Se a função
-   <function>setcookie</function> executar com sucesso, ela retornará &true;.
-   Isso não quer dizer que o usuário aceitou o cookie.
+   <function>setcookie</function> for executada com sucesso, ela retornará &true;.
+   Isso não indica que o usuário aceitou o cookie.
   </para>
  </refsect1>
 
@@ -186,7 +180,7 @@
 $value = 'alguma coisa de algum lugar';
 
 setcookie("CookieTeste", $value);
-setcookie("CookieTeste", $value, time()+3600);  /* expire in 1 hour */
+setcookie("CookieTeste", $value, time()+3600);  /* expira em 1 hora */
 setcookie("CookieTeste", $value, time()+3600, "/~rasmus/", ".example.com", 1);
 ?>
 ]]>
@@ -220,7 +214,7 @@ print_r($_COOKIE);
   </para>
   <para>
    <example>
-    <title>Exemplo de <function>setcookie</function> para deletar exemplos</title>
+    <title>Exemplo de <function>setcookie</function> para deletar cookies</title>
     <para>
      Quando estiver deletando um cookie, tenha certeza de que a data de
      expiração dele está no passado, para acionar o mecanismo de remoção do
@@ -241,7 +235,7 @@ setcookie ("CookieTeste", "", time() - 3600, "/~rasmus/", ".example.com", 1);
   </para>
   <para>
    <example>
-    <title>A função <function>setcookie</function> e arrays</title>
+    <title><function>setcookie</function> e arrays</title>
     <para>
      Você pode também enviar cookies de array, utilizando a notação de array
      no nome dele. Isso tem o efeito de enviar tantos cookies quantos
@@ -277,6 +271,8 @@ um : cookieum
   </para>
  </refsect1>
 
+
+ 
  <refsect1 role="changelog">
   &reftitle.changelog;
   <para>
@@ -305,11 +301,10 @@ um : cookieum
   &reftitle.notes;
   <note>
    <para>
-    A partir do PHP 4, você pode utilizar o output buffering para enviar 
-    saída antes de chamar essa função, com o custo (overhead) de toda sua
-    saída ser guardada em buffer até que você a envie. Você pode fazer isso
-    chamando <function>ob_start</function> e <function>ob_end_flush</function>
-    em seu script, ou configurando a diretiva
+    Você pode utilizar o output buffering para enviar saída antes de chamar essa 
+    função, com o custo de toda sua saída ser guardada em buffer até que você a 
+    envie. Você pode fazer isso chamando <function>ob_start</function> e 
+    <function>ob_end_flush</function> em seu script, ou configurando a diretiva
     <literal>output_buffering</literal> no seu &php.ini; ou arquivos de
     configuração do servidor.
    </para>
@@ -344,11 +339,13 @@ um : cookieum
       &false;, e todos os outros argumentos forem iguais a chamada anterior de
       setcookie, então o cookie com o nome especificado será deletado do
       cliente remoto.
+      Internamente isso é feito colocando o valor do cookie para 'deleted' e a
+      data de expiração para um ano no passado.
      </simpara>
     </listitem>
     <listitem>
      <simpara>
-      Quando você configurar um cookie com o valor &false;, ele tentará
+      Quando você configurar um cookie com o valor &false; será tentando
       deletar o cookie. Portanto evite utilizar valores booleanos. No lugar,
       utilize <emphasis>0</emphasis> para &false; e <emphasis>1</emphasis> for
       &true;.
@@ -378,7 +375,7 @@ um : cookieum
    <simplelist>
     <member><function>header</function></member>
     <member><function>setrawcookie</function></member>
-    <member><link linkend="features.cookies">cookies section</link></member>
+    <member><link linkend="features.cookies">Seção de cookies</link></member>
     <member><link xlink:href="&url.rfc;2109">RFC 2109</link></member>
     <member><link xlink:href="&url.rfc;2965">RFC 2965</link></member>
    </simplelist>
