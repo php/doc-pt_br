@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: af4410a7e15898c3dbe83d6ea38246745ed9c6fb Maintainer: felipe Status: ready --><!-- CREDITS: narigone -->
+<!-- EN-Revision: fcddfb2551140fba9a14a4c44dc9fa60004440c8 Maintainer: ae Status: ready --><!-- CREDITS: narigone,felipe -->
  <sect1 xml:id="language.oop5.magic" xmlns="http://docbook.org/ns/docbook">
   <title>Métodos Mágicos</title>
   <para>
@@ -33,17 +33,39 @@
   </caution>
 
   <sect2 xml:id="language.oop5.magic.sleep">
-   <title><literal>__sleep</literal> and <literal>__wakeup</literal></title>
+   <title>
+    <link linkend="object.sleep">__sleep()</link> e
+    <link linkend="object.wakeup">__wakeup()</link>
+   </title>
+
+   <methodsynopsis xml:id="object.sleep">
+    <modifier>public</modifier> <type>array</type><methodname>__sleep</methodname>
+    <void/>
+   </methodsynopsis>
+   <methodsynopsis xml:id="object.wakeup">
+    <type>void</type><methodname>__wakeup</methodname>
+    <void/>
+   </methodsynopsis>
+   
    <para>
     <function>serialize</function> checa se sua classe tem uma função com
-    o nome mágico <literal>__sleep</literal>. Se tiver, a função é
+    o nome mágico <link linkend="object.sleep">__sleep()</link>. Se tiver, a função é
     executa antes de qualquer serialização. Ela pode limpar o objeto
     e deve retornar um array com os nomes de todas as variáveis
     do objeto que devem ser serializadas. Se o método não retornar nada,
-    então &null; é serializada e um E_NOTICE é disparado.
+    então &null; é serializada e um
+    <constant>E_NOTICE</constant> é disparado.
    </para>
+   <note>
+    <para>
+     Não é possível que <link linkend="object.sleep">__sleep()</link> retorne nomes de
+     propriedades privadas da classe ancestral. Isso causará um erro nível
+     <constant>E_NOTICE</constant>. Pode-se ser utilizada a interface
+     <classname>Serializable</classname> se for o caso.
+    </para>
+   </note>
    <para>
-    O intuito do método <literal>__sleep</literal> enviar dados
+    O intuito do método <link linkend="object.sleep">__sleep()</link> enviar dados
     pendentes ou realizar tarefas similares de limpeza. Além disso, a função é
     útil se você tiver objetos muito grandes que não precisarão ser
     salvos completamente.
@@ -51,11 +73,11 @@
    <para>
     Inversamente, <function>unserialize</function> checa pela
     presença da função com o nome mágico
-    <literal>__wakeup</literal>. Se achar, essa função pode
+    <link linkend="object.wakeup">__wakeup()</link>. Se achar, essa função pode
     reconstruir qualquer recursos que o objeto pode ter.
    </para>
    <para>
-    O intuito do método <literal>__wakeup</literal> é
+    O intuito do método <link linkend="object.wakeup">__wakeup()</link> é
     reestabelecer qualquer conexão com banco de dados que podem ter sido perdidas
     durante a serialização e realizar tarefas de
     reinicialização.
@@ -65,10 +87,11 @@
      <programlisting role="php">
 <![CDATA[
 <?php
-class Connection {
+class Connection
+{
     protected $link;
     private $server, $username, $password, $db;
-
+    
     public function __construct($server, $username, $password, $db)
     {
         $this->server = $server;
@@ -77,18 +100,18 @@ class Connection {
         $this->db = $db;
         $this->connect();
     }
-
+    
     private function connect()
     {
         $this->link = mysql_connect($this->server, $this->username, $this->password);
         mysql_select_db($this->db, $this->link);
     }
-
+    
     public function __sleep()
     {
         return array('server', 'username', 'password', 'db');
     }
-
+    
     public function __wakeup()
     {
         $this->connect();
@@ -101,58 +124,71 @@ class Connection {
   </sect2>
 
   <sect2 xml:id="language.oop5.magic.tostring">
-   <title><literal>__toString</literal></title>
+   <title><link linkend="object.tostring">__toString()</link></title>
+   <methodsynopsis xml:id="object.tostring">
+    <modifier>public</modifier> <type>string</type><methodname>__toString</methodname>
+    <void/>
+   </methodsynopsis>
    <para>
-    O método <literal>__toString</literal> permite que uma classe decida
-    como se comportar quando for convertida para uma string.
+    O método <link linkend="object.tostring">__toString()</link> permite que uma classe decida
+    como se comportar quando for convertida para uma string. Por exemplo,
+    o que <literal>echo $obj;</literal> irá imprimir. Este método precisa
+    retornar uma string, senão um erro nível <constant>E_RECOVERABLE_ERROR</constant>
+    é gerado.
    </para>
    <example>
     <title>Exemplo Simples</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-// Declara uma classe simples
-class ClasseTeste
+// Declare a simple class
+class TestClass
 {
     public $foo;
 
-    public function __construct($foo) {
+    public function __construct($foo)
+    {
         $this->foo = $foo;
     }
 
-    public function __toString() {
+    public function __toString()
+    {
         return $this->foo;
     }
 }
 
-$classe = new ClasseTeste('Olá');
-echo $classe;
+$class = new TestClass('Hello');
+echo $class;
 ?>
 ]]>
     </programlisting>
     &example.outputs;
     <screen>
 <![CDATA[
-Olá
+Hello
 ]]>
     </screen>
    </example>
    <para>
-    Vale lembrar que antes do PHP 5.2.0 o método <literal>__toString</literal>
+    Vale lembrar que antes do PHP 5.2.0 o método <link linkend="object.tostring">__toString()</link>
     só era chamado quando diretamente combinado com
     <function>echo</function> ou <function>print</function>.
     Desde o PHP 5.2.0, ele é chamado no contexto de string (e.g. em 
     <function>printf</function> com modificador <literal>%s</literal>) mas não
     em outros tipos de contextos (e.g. como modificador <literal>%d</literal>).
-    Desde o PHP 5.2.0, convertendo objetos sem o método <literal>__toString()</literal>
+    Desde o PHP 5.2.0, convertendo objetos sem o método <link linkend="object.tostring">__toString()</link>
     para string causa <constant>E_RECOVERABLE_ERROR</constant>.
    </para>
   </sect2>
 
   <sect2 xml:id="language.oop5.magic.invoke">
-   <title><literal>__invoke</literal></title>
+   <title><link linkend="object.invoke">__invoke()</link></title>
+   <methodsynopsis xml:id="object.invoke">
+    <type>mixed</type><methodname>__invoke</methodname>
+    <methodparam choice="opt"><parameter>...</parameter></methodparam>
+   </methodsynopsis>
    <para>
-    O método <literal>__invoke</literal> é chamado quando um script tenta
+    O método <link linkend="object.invoke">__invoke()</link> é chamado quando um script tenta
     chamar um objeto como uma função.
    </para>
    <note>
@@ -165,8 +201,10 @@ Olá
     <programlisting role="php">
 <![CDATA[
 <?php
-class CallableClass {
-    function __invoke($x) {
+class CallableClass
+{
+    public function __invoke($x)
+    {
         var_dump($x);
     }
 }
@@ -187,7 +225,11 @@ bool(true)
   </sect2>
   
   <sect2 xml:id="language.oop5.magic.set-state">
-   <title><literal>__set_state</literal></title>
+   <title><link linkend="object.set-state">__set_state()</link></title>
+   <methodsynopsis xml:id="object.set-state">
+    <modifier>static</modifier> <type>object</type><methodname>__set_state</methodname>
+    <methodparam><type>array</type><parameter>properties</parameter></methodparam>
+   </methodsynopsis>
    <para>
     Esse método <link linkend="language.oop5.static">estático</link> é chamado
     para classes exportadas por <function>var_export</function> desde PHP 5.1.0.
@@ -197,7 +239,7 @@ bool(true)
     exportadas no formato <literal>array('property' => value, ...)</literal>.
    </para>
    <example>
-    <title>Usando <literal>__set_state</literal> (desde o PHP 5.1.0)</title>
+    <title>Usando <link linkend="object.set-state">__set_state()</link> (desde o PHP 5.1.0)</title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -243,7 +285,7 @@ object(A)#2 (2) {
    </example>
   </sect2>
  </sect1>
-
+ 
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
