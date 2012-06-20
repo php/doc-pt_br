@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 250af00b37eb8d96cac1945d8461e8503cb1a3a1 Maintainer: felipe Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- $Revision$ -->
 <refentry xml:id="function.curl-multi-init" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>curl_multi_init</refname>
-  <refpurpose>Retorna um novo multi manipulador cURL</refpurpose>
+  <refpurpose>Returns a new cURL multi handle</refpurpose>
  </refnamediv>
-
+ 
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
@@ -13,34 +13,30 @@
    <void />
   </methodsynopsis>
   <para>
-   Permite o processamento de múltiplas manipuladores cURL em paralelo.
+   Allows the processing of multiple cURL handles in parallel.
   </para>
  </refsect1>
 
  <refsect1 role="parameters">
   &reftitle.parameters;
-  <para>
-   <variablelist>
-    &curl.mh.description;
-   </variablelist>
-  </para>
+  &no.function.parameters;
  </refsect1>
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna um manipulador cURL em sucesso, &false; em falha.
+   Returns a cURL multi handle resource on success, &false; on failure.
   </para>
  </refsect1>
-
+ 
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
    <example>
     <title><function>curl_multi_init</function> example</title>
     <para>
-     Este exemplo irá criar dois manipuladores cURL, e adiciona-os ao multi
-     manipulador, e então executá-os em paralelo.
+     This example will create two cURL handles, add them to a multi
+     handle, and then run them in parallel.
     </para>
     <programlisting role="php">
 <![CDATA[
@@ -50,7 +46,7 @@ $ch1 = curl_init();
 $ch2 = curl_init();
 
 // set URL and other appropriate options
-curl_setopt($ch1, CURLOPT_URL, "http://www.example.com/");
+curl_setopt($ch1, CURLOPT_URL, "http://lxr.php.net/");
 curl_setopt($ch1, CURLOPT_HEADER, 0);
 curl_setopt($ch2, CURLOPT_URL, "http://www.php.net/");
 curl_setopt($ch2, CURLOPT_HEADER, 0);
@@ -62,11 +58,19 @@ $mh = curl_multi_init();
 curl_multi_add_handle($mh,$ch1);
 curl_multi_add_handle($mh,$ch2);
 
-$running=null;
+$active = null;
 //execute the handles
 do {
-    curl_multi_exec($mh,$running);
-} while ($running > 0);
+    $mrc = curl_multi_exec($mh, $active);
+} while ($mrc == CURLM_CALL_MULTI_PERFORM);
+
+while ($active && $mrc == CURLM_OK) {
+    if (curl_multi_select($mh) != -1) {
+        do {
+            $mrc = curl_multi_exec($mh, $active);
+        } while ($mrc == CURLM_CALL_MULTI_PERFORM);
+    }
+}
 
 //close the handles
 curl_multi_remove_handle($mh, $ch1);
@@ -79,7 +83,7 @@ curl_multi_close($mh);
    </example>
   </para>
  </refsect1>
-
+ 
  <refsect1 role="seealso">
   &reftitle.seealso;
   <para>
