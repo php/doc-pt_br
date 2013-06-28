@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: felipe Status: ready --><!-- CREDITS: surfmax -->
+<!-- EN-Revision: c9c2740c541285349dd646345b90ca4a79f4a2bf Maintainer: felipe Status: ready --><!-- CREDITS: surfmax -->
 <refentry xml:id="function.mail" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>mail</refname>
@@ -51,8 +51,7 @@
       </para>
       <caution>
        <para>
-        Não deve conter caractere de nova linha, ou o email pode não ser
-        enviado corretamente.
+        Assunto deve satisfazer o <link xlink:href="&url.rfc;2047">RFC 2047</link>.
        </para>
       </caution>
      </listitem>
@@ -71,7 +70,7 @@
        <para>
         (Somente Windows) Quando PHP está usando o servidor SMTP diretamente, e
         uma parada total é encontrada no início de uma linha, ela é removida.
-        Para se defender disto, substitua estas ocorrência com dois pontos seguindos.
+        Para se defender disto, substitua estas ocorrência com dois pontos seguidos.
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -110,8 +109,9 @@ $text = str_replace("\n.", "\n..", $text);
       </note>
       <note>
        <para>
-        Se mensagens não são recebiedas, tente usar somente um LF (\n).
-        Alguns Unix mail transfer agents de má qualidade modificam LF por CRLF
+        Se mensagens não são recebidas, tente usar somente um LF (\n).
+        Alguns Unix mail transfer agents (mais notavelmente 
+        <link xlink:href="&url.qmail;">qmail</link>) modificam LF por CRLF
         automaticamente (que leva a duplicação de CR se CRLF é usado).
         Este deve ser um último recurso, como não está de acordo com
         <link xlink:href="&url.rfc;2822">RFC 2822</link>.
@@ -131,10 +131,9 @@ $text = str_replace("\n.", "\n..", $text);
        <literal>-f</literal>.
       </para>
       <para>
-       Você pode  precisar adicionar o usuário que seu servidor web executa como para sua 
-       configuração de sendmail para evitar que um cabeçalho 'X-Warning' seja
-       adicionado à mensagem quando você define o envelope remetente (-f) usando este 
-       método.
+       O usuário que executa o servidor web deve ser adicionado como trusted user na
+       configuração de sendmail para evitar que um cabeçalho 'X-Warning' seja adicionado
+       à mensagem quando você define o envelope remetente (-f) usando este método.
        Para usuários de sendmail, este arquivo é <filename>/etc/mail/trusted-users</filename>.
       </para>
      </listitem>
@@ -146,11 +145,10 @@ $text = str_replace("\n.", "\n..", $text);
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna &true; se o email foi aceito com sucesso pelo entregado, &false; 
-   caso contrário.
+   Retorna &true; se o email foi aceito com sucesso para entrega, &false; caso contrário.
   </para>
   <para>
-   É importante notar que somente pelo o email ser aceito pelo entregado,
+   É importante notar que somente pelo o email ser aceito para entrega,
    não significa que o email alcancará o destino esperado.
   </para>
  </refsect1>
@@ -247,8 +245,7 @@ mail($to, $subject, $message, $headers);
     <para>
      O parâmetro <parameter>additional_parameters</parameter> pode ser usado
      para passar um parâmetro adicional para o programa configurado
-     para usar quando enviar email usando a definição de configuração  
-     <literal>sendmail_path</literal>.
+     para usar quando enviar email usando a definição de configuração <literal>sendmail_path</literal>.
     </para>
     <programlisting role="php">
 <![CDATA[
@@ -297,10 +294,6 @@ $message = '
 </html>
 ';
 
-/* Atenção se você pretende inserir numa variável uma mensagem html mais
- complexa do que essa sem precisar escapar os carateres 
- necessários pode ser feito o uso da sintaxe heredoc, consulte tipos-string-sintaxe-heredoc */
-
 // To send HTML mail, the Content-type header must be set
 $headers  = 'MIME-Version: 1.0' . "\r\n";
 $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
@@ -316,15 +309,15 @@ mail($to, $subject, $message, $headers);
 ?>
 ]]>
     </programlisting>
-    <para>
-     <note>
-      <para>
-       Se a intenção é enviar email HTML ou outro formato complexo, é recomendado
-       usar o pacote PEAR <link xlink:href="&url.pear.package;Mail_Mime">PEAR::Mail_Mime</link>.
-      </para>
-     </note>
-    </para>
    </example>
+  </para>
+  <para>
+   <note>
+    <para>
+     Se a intenção é enviar email HTML ou outro formato complexo, é recomendado
+     usar o pacote PEAR <link xlink:href="&url.pear.package;Mail_Mime">PEAR::Mail_Mime</link>.
+    </para>
+   </note>
   </para>
  </refsect1>
 
@@ -354,22 +347,14 @@ mail($to, $subject, $message, $headers);
     MTA.
    </para>
   </note>
+  
   <note>
    <para>
-    Email com anexos e tipos especiais de conteúdo (e.g. HTML) 
-    podem ser enviado usando esta função. Isto é
-    melhorado com MIME-encoding - para mais informação, veja este
-    <link xlink:href="&url.email.mime.zend;">artigo da Zend</link> ou as 
-    classes <link xlink:href="&url.pear.package;Mail_Mime">PEAR Mime</link>.
+    É válido notar que a função <function>mail</function> não é
+    apropriada para um grande volume de email em um loop. Esta função abre
+    e fecha um SMTP socket para cada email, o que não é muito eficiente.
    </para>
-  </note>
-  <note>
    <para>
-    Vale a pena notar que a função <function>mail</function> não é
-    apropriada para grande volume de email em um loop. Esta função abre e
-    fecha um socket SMTP para cada email, que não é muito eficiente.
-   </para>
-  <para>
     Para enviar uma grande quantidade de email, veja os pacotes
     <link xlink:href="&url.pear.package;Mail">PEAR::Mail</link>, e
     <link xlink:href="&url.pear.package;Mail_Queue">PEAR::Mail_Queue</link>.
