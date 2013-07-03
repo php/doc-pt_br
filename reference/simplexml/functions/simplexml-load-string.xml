@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: rafael Status: ready -->
+<!-- EN-Revision: 8b2a3534bfb29a674db0015bfff9f5dc34693139 Maintainer: rafa Status: ready -->
 <refentry xml:id='function.simplexml-load-string' xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>simplexml_load_string</refname>
   <refpurpose>
-   Transforma uma string XML em objeto
+   Interpreta uma string XML e a transforma em um objeto
   </refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>object</type><methodname>simplexml_load_string</methodname>
+   <type>SimpleXMLElement</type><methodname>simplexml_load_string</methodname>
    <methodparam><type>string</type><parameter>data</parameter></methodparam>
-   <methodparam choice="opt"><type>string</type><parameter>class_name</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>options</parameter></methodparam>
-   <methodparam choice="opt"><type>string</type><parameter>ns</parameter></methodparam>
-   <methodparam choice="opt"><type>bool</type><parameter>is_prefix</parameter></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>class_name</parameter><initializer>"SimpleXMLElement"</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>options</parameter><initializer>0</initializer></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>ns</parameter><initializer>""</initializer></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>is_prefix</parameter><initializer>false</initializer></methodparam>
   </methodsynopsis>
   <para>
-   Recebe uma string XML bem formada (well-formed) e retorna um objeto.
+   Recebe uma string XML bem-formada e a retorna como um objeto.
   </para>
  </refsect1>
 
@@ -30,7 +30,7 @@
      <term><parameter>data</parameter></term>
      <listitem>
       <para>
-       Uma string XML bem formada
+       Uma string XML bem-formada
       </para>
      </listitem>
     </varlistentry>
@@ -38,9 +38,10 @@
      <term><parameter>class_name</parameter></term>
      <listitem>
       <para>
-       Você pode utilizar o parâmetro opcional <function>simplexml_load_string</function>
-       para retornar um objeto da classe especificada. the specified class. Esta classe deve
-       extender a classe <type>SimpleXMLElement</type>.
+       Você pode utilizar o parâmetro opcional
+       <function>simplexml_load_string</function>
+       para retornar um objeto da classe especificada.
+       Esta classe deve estender <type>SimpleXMLElement</type>.
       </para>
      </listitem>
     </varlistentry>
@@ -48,7 +49,7 @@
      <term><parameter>options</parameter></term>
      <listitem>
       <para>
-       A partir do PHP 5.1.0 e da Libxml 2.6.0, você pode também utilizar o parâmetro
+       Desde o PHP 5.1.0 e da Libxml 2.6.0, você pode também utilizar o parâmetro
        <parameter>options</parameter> para especificar <link
        linkend="libxml.constants">parâmetros adicionais da Libxml</link>.
       </para>
@@ -58,6 +59,7 @@
      <term><parameter>ns</parameter></term>
      <listitem>
       <para>
+       Prefixo ou URI do namespace.
       </para>
      </listitem>
     </varlistentry>
@@ -65,6 +67,8 @@
      <term><parameter>is_prefix</parameter></term>
      <listitem>
       <para>
+       &true; se <parameter>ns</parameter> for um prefixo, &false; se for URI;
+       o padrão é &false;.
       </para>
      </listitem>
     </varlistentry>
@@ -76,16 +80,30 @@
   &reftitle.returnvalues;
   <para>
    Retorna um <type>objeto</type> da classe <type>SimpleXMLElement</type> com
-   propriedades contendo os dados do documento XML. Quando houver erro, irá retornar
-   &false;.
+   propriedades contendo os dados do documento XML,&return.falseforfailure;.
   </para>
  </refsect1>
+
+ <refsect1 role="errors"><!-- {{{ -->
+  &reftitle.errors;
+  <para>
+   Produz uma mensagem de erro <constant>E_WARNING</constant> para cada erro
+   encontrado nos dados XML.
+  </para>
+  <tip>
+   <para>
+    Utilize <function>libxml_use_internal_errors</function> para suprimir todos os
+    erros XML e <function>libxml_get_errors</function> para iterar sobre eles
+    mais tarde.
+   </para>
+  </tip>
+ </refsect1><!-- }}} -->
 
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
    <example>
-    <title>Interpreta uma string XML</title>
+    <title>Interpretar uma string XML</title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -103,7 +121,7 @@ XML;
 
 $xml = simplexml_load_string($string);
 
-var_dump($xml);
+print_r($xml);
 ?>
 ]]>
     </programlisting>
@@ -121,8 +139,8 @@ SimpleXMLElement Object
 ]]>
     </screen>
     <simpara>
-     Nesse ponto você já pode utilizar <literal>$xml->body</literal>
-     para acessar as propriedades.
+     Nesse ponto já é possível utilizar <literal>$xml->body</literal>
+     e quaisquer outros elementos.
     </simpara>
    </example>
   </para>
@@ -132,8 +150,11 @@ SimpleXMLElement Object
   &reftitle.seealso;
   <para>
    <simplelist>
-    <member><xref linkend="function.simplexml-load-file" /></member>
-    <member><xref linkend="simplexmlelement.construct" /></member>
+    <member><function>simplexml_load_file</function></member>
+    <member><methodname>SimpleXMLElement::__construct</methodname></member>
+    <member><xref linkend="simplexml.examples-errors" /></member>
+    <member><function>libxml_use_internal_errors</function></member>
+    <member><xref linkend="simplexml.examples-basic"/></member>
    </simplelist>
   </para>
  </refsect1>
