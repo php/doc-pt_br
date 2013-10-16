@@ -1,0 +1,531 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 2026bba3354c17c14bb187707cae8f4df7f53624 Maintainer: Jefersson Nathan Status: revision -->
+
+  <sect1 xml:id="install.fpm.configuration" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+   <title>Configuração</title>
+   <para>
+    FPM usa a sintaxe do &php.ini; para arquivos de configuração - <filename>php-fpm.conf</filename>.
+   </para>
+   <sect2> 
+    <title>Lista de diretivas globais <filename>php-fpm.conf</filename></title>
+    <variablelist>
+     <varlistentry xml:id="pid">
+      <term>
+       <parameter>pid</parameter>
+       <type>string</type>
+      </term>
+      <listitem>
+       <para> 
+        Caminho para o arquivo PID. Valor padrão: nenhum.
+       </para>
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="error-log">
+      <term>
+       <parameter>error_log</parameter>
+       <type>string</type>
+      </term>
+      <listitem>
+       <para>
+        Caminho para o arquivo de log de error. Valor padrão:
+        <literal>#INSTALL_PREFIX#/log/php-fpm.log</literal>.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="log-level">
+      <term>
+       <parameter>log_level</parameter>
+       <type>string</type>
+      </term>
+      <listitem>
+       <para>
+        Nível de log de erro. Valores possíveis: alert, error, warning, notice,
+        debug. Valor padrão: aviso prévio.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="emergency-restart-threshold">
+      <term>
+       <parameter>emergency_restart_threshold</parameter>
+       <type>int</type>
+      </term>
+      <listitem>
+       <para>
+        Se esse número de processos filho sair com SIGSEGV ou SIGBUS dentro
+        do intervalo de tempo definido pelo <literal>emergency_restart_interval</literal> 
+        então FPM será reiniciado. Um valor de 0 significa 'Off'. Valor padrão: 0 (desligado).
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="emergency-restart-interval">
+      <term>
+       <parameter>emergency_restart_interval</parameter>
+       <type>mixed</type>
+      </term>
+      <listitem>
+       <para>
+        Intervalo de tempo utilizado por emergency_restart_interval para determinar quando
+        um reinício será feito. Isto pode ser útil para contornar
+        corrupções acidentais em memória compartilhada de um acelerador.
+        Unidades disponíveis: s(econds), m(inutos), h(our), ou d(ays).
+        Unidade Padrão: seconds. Valor padrão: 0 (desligado).
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="process-control-timeout">
+      <term>
+       <parameter>process_control_timeout</parameter>
+       <type>mixed</type>
+      </term>
+      <listitem>
+       <para>
+       Prazo para processos filhos para esperar uma reação em sinais de
+       mestre. Unidades disponíveis: s(econds), m(inutes), h(ours), or d(ays)
+       Unidade Padrão: seconds. Valor padrão: 0.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="daemonize">
+      <term>
+       <parameter>daemonize</parameter>
+       <type>boolean</type>
+      </term>
+      <listitem>
+       <para>
+        Enviar FPM de fundo. Definido como 'no'(não) para manter FPM em primeiro plano para
+        depuração. Valor padrão: yes.
+       </para> 
+      </listitem>
+     </varlistentry>
+    </variablelist>
+   </sect2>
+
+   <sect2> 
+    <title>List of pool directives</title>
+    <para>
+     Com FPM você pode executar várias rotinas de processos com configuração diferente.
+     Essas são as configurações que podem ser otimizadas por cada rotina. 
+    </para>
+    <variablelist>
+     <varlistentry xml:id="listen">
+      <term>
+       <parameter>listen</parameter>
+       <type>string</type>
+      </term>
+      <listitem>
+       <para>
+       O endereço no qual a aceitar pedidos FastCGI. Sintaxes válidas são:
+        'ip.add.re.ss:port', 'port', '/path/to/unix/socket'. Esta opção é
+         obrigatório, em cada rotina.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="listen-backlog">
+      <term>
+       <parameter>listen.backlog</parameter>
+       <type>int</type>
+      </term>
+      <listitem>
+       <para>
+        Definir listen(2) backlog. Um valor de "-1" significa ilimitado. Valor padrão:
+        -1.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="listen-allowed-clients">
+      <term>
+       <parameter>listen.allowed_clients</parameter>
+       <type>string</type>
+      </term>
+      <listitem>
+       <para>
+       Lista de endereços IPv4 de clientes FastCGI que estão autorizados a
+       conectar. Equivalente à variável de ambiente FCGI_WEB_SERVER_ADDRS no
+       originais PHP FastCGI (5.2.2 +). Só faz sentido com um soquete de escuta TCP.
+       Cada endereço deve ser separado por uma vírgula. Se este valor for deixado em branco,
+       conexões serão aceitas a partir de qualquer endereço IP. Valor padrão: nenhum.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="listen-owner">
+      <term>
+       <parameter>listen.owner</parameter>
+       <type>string</type>
+      </term>
+      <listitem>
+       <para>
+        Definir permissões para socket unix, se este for usado. No Linux, permissões de
+        leitura/gravação devem ser definidas de forma a permitir conexões a partir de um servidor
+        web. Muitos sistemas derivados do BSD permitir conexões independentemente das permissões.
+        Os valores padrão: usuários e grupos são definidos como o usuário que está executando, de modo está definido para 0666.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="listen-group">
+      <term>
+       <parameter>listen.group</parameter>
+       <type>string</type>
+      </term>
+      <listitem>
+       <para>
+        Ver <literal>listen.owner</literal>.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="listen-mode">
+      <term>
+       <parameter>listen.mode</parameter>
+       <type>string</type>
+      </term>
+      <listitem>
+       <para>
+        Ver <literal>listen.owner</literal>.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="user">
+      <term>
+       <parameter>user</parameter>
+       <type>string</type>
+      </term>
+      <listitem>
+       <para>
+        Usuário Unix de processos FPM. Esta opção é obrigatória.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="group">
+      <term>
+       <parameter>group</parameter>
+       <type>string</type>
+      </term>
+      <listitem>
+       <para>
+        Grupo Unix de processos FPM. Se não for definido, o grupo do usuário padrão é
+        utilizado.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="pm">
+      <term>
+       <parameter>pm</parameter>
+       <type>string</type>
+      </term>
+      <listitem>
+       <para>
+        Escolha como o gestor do processo vai controlar o número de processos
+        filhos. Valores possíveis: <literal>static</literal>, <literal>ondemand</literal>,
+        <literal>dynamic</literal>. 
+        Esta opção é obrigatória.
+       </para>
+       <para>
+        <literal>static</literal> - o número de processos filho é fixado (<literal>pm.max_children</literal>).
+       </para>
+       <para>
+        <literal>ondemand</literal> - os processos sob demanda (quando solicitado,
+        em oposição a dinâmica, então <literal>pm.start_servers</literal> são iniciadas
+        quando o serviço é iniciado.
+       </para>
+       <para>
+        <literal>dynamic</literal> - o número de processos filho é definida dinamicamente com base nas
+        seguintes diretrizes: <literal>pm.max_children</literal>, <literal>pm.start_servers</literal>, 
+        <literal>pm.min_spare_servers</literal>, <literal>pm.max_spare_servers</literal>.
+       </para>
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="pm.max-chidlren">
+      <term>
+       <parameter>pm.max_children</parameter>
+       <type>int</type>
+      </term>
+      <listitem>
+       <para>
+        O número de processos filhos podem ser criados quando <literal>pm</literal> está configurado como
+        <literal>static</literal> e o número máimo de processos filhos podem ser criados 
+        quando <literal>pm</literal> está configurado como <literal>dynamic</literal>. Essa
+        opção é obrigatória.
+       </para>
+       <para>
+        Esta opção define o limite para o número de solicitações simultâneas que
+        será servida. Equivalente à directiva ApacheMaxClients com
+        mpm_prefork e ao <varname>PHP_FCGI_CHILDREN</varname> variável de ambiente no
+        originais PHP FastCGI.
+       </para>
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="pm.start-servers">
+      <term>
+       <parameter>pm.start_servers</parameter>
+       <type>in</type>
+      </term>
+      <listitem>
+       <para>
+        O número de processos filhos criados na inicialização.
+        Usado apenas quando <literal>pm</literal> é configurado em <literal>dynamic</literal>.
+        Valor padrão: min_spare_servers + (max_spare_servers -
+        min_spare_servers) / 2.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="pm.min-spare-servers">
+      <term>
+       <parameter>pm.min_spare_servers</parameter>
+       <type>int</type>
+      </term>
+      <listitem>
+       <para>
+        O número mínimo desejado de processos servidores inativos. Usado apenas quando
+        <literal>pm</literal> está configurado como <literal>dynamic</literal>. Também
+        obrigatório neste caso.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="pm.max-spare-servers">
+      <term>
+       <parameter>pm.max_spare_servers</parameter>
+       <type>int</type>
+      </term>
+      <listitem>
+       <para>
+        O número máximo desejado de processos servidores inativos. Usado apenas quando
+        <literal>pm</literal> está configurado como <literal>dynamic</literal>. Também
+        obrigatório neste caso.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="pm.max-requests">
+      <term>
+       <parameter>pm.max_requests</parameter>
+       <type>int</type>
+      </term>
+      <listitem>
+       <para>
+        O número de solicitações de cada processo filho deve ser executado antes
+       respawning. Isto pode ser útil para contornar falhas de memória de bibliotecas de
+       terceiro partido. Para o processamento de pedido interminável especificar '0 '. equivalente a
+       <varname>PHP_FCGI_MAX_REQUESTS</varname>. Valor padrão: 0.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="pm.status-path">
+      <term>
+       <parameter>pm.status_path</parameter>
+       <type>string</type>
+      </term>
+      <listitem>
+       <para>
+        O URI para visualizar a página de status do FPM. Se este valor não for definido, não URI
+        será reconhecida como uma página de estado. Valor padrão: nenhum.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="ping.path">
+      <term>
+       <parameter>ping.path</parameter>
+       <type>string</type>
+      </term>
+      <listitem>
+       <para>
+        O URI ping para chamar a página de FPM de monitoramento. Se este valor não é
+        definido, nenhuma URI será reconhecido como uma página de ping. Isto poderia ser usado para testar
+        de fora que FPM está vivo e responder. Por favor, note que o valor deve
+        começar com uma barra à esquerda (/).
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="ping.response">
+      <term>
+       <parameter>ping.response</parameter>
+       <type>string</type>
+      </term>
+      <listitem>
+       <para>
+        Esta diretiva pode ser usado para personalizar a resposta a um pedido
+        ping. A resposta é formatada como text/plain com uma resposta de código 200.
+        Valor padrão: pong.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="request-terminate-timeout">
+      <term>
+       <parameter>request_terminate_timeout</parameter>
+       <type>mixed</type>
+      </term>
+      <listitem>
+       <para>
+       O tempo limite para servir um único pedido após o qual o processo
+       trabalha serão encerradas. Esta opção deve ser usada quando o 'max_execution_time',
+       opção do arquivo ini não parar a execução do script por algum motivo. Um valor de '0', significa
+       'Off'. Unidades disponíveis: s(econds) (padrão), m(inuts), h(our), ou d(ays).
+       Valor padrão: 0.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="request-slowlog-timeout">
+      <term>
+       <parameter>request_slowlog_timeout</parameter>
+       <type>mixed</type>
+      </term>
+      <listitem>
+       <para>
+        O tempo limite para servir um único pedido depois que um rastreamento PHP
+        serão despejados para o arquivo 'slowlog. Um valor de '0 'significa' Off '.
+        Unidades disponíveis: s(econds)(padrão), m(inutes), h(ours), or d(ays).
+        Valor padrão: 0.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="slowlog">
+      <term>
+       <parameter>slowlog</parameter>
+       <type>string</type>
+      </term>
+      <listitem>
+       <para>
+        O arquivo de log de solicitações lentas. Valor padrão:
+        <literal>#INSTALL_PREFIX#/log/php-fpm.log.slow</literal>.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="rlimit-files">
+      <term>
+       <parameter>rlimit_files</parameter>
+       <type>int</type>
+      </term>
+      <listitem>
+       <para>
+        Definir abrir o descritor de arquivo rlimit. Valor padrão: valor definido pelo sistema.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="rlimit-core">
+      <term>
+       <parameter>rlimit_core</parameter>
+       <type>int</type>
+      </term>
+      <listitem>
+       <para>
+        Defina o tamanho do núcleo maxímo do rlimit. Valores possíveis: 'unlimited' ou um número inteiro maior ou igual a 0.
+        Valor padrão: valor definido pelo sistema.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="chroot">
+      <term>
+       <parameter>chroot</parameter>
+       <type>string</type>
+      </term>
+      <listitem>
+       <para>
+        Chroot para o início deste diretório. Este valor deve ser definido como
+        um caminho absoluto. Quando este valor não está definido, chroot não é usado.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="chdir">
+      <term>
+       <parameter>chdir</parameter>
+       <type>string</type>
+      </term>
+      <listitem>
+       <para>
+        Chdir para o início deste diretório. Este valor deve ser um caminho
+        absoluto. Valor padrão: diretório atual ou / ao chroot.
+       </para> 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="catch-workers-output">
+      <term>
+       <parameter>catch_workers_output</parameter>
+       <type>boolean</type>
+      </term>
+      <listitem>
+       <para>
+        Redirecionar stdout e stderr no log de erro principal. Se não for definido,
+        stdout e stderr serão redirecionadas para /dev/null de acordo com especificações FastCGI.
+        Valor padrão: no.
+       </para> 
+      </listitem>
+     </varlistentry>
+    </variablelist>
+    <para>
+     É possível passar variáveis de ambiente adicionais e atualizar as configurações do PHP de uma determinada rotina.
+     Para fazer isso, você precisa adicionar as seguintes opções para <filename>php-fpm.conf</filename>
+     <example>
+      <title>Passando variáveis de ambiente e configurações do PHP para a rotina</title>
+      <programlisting role="ini">
+       <![CDATA[
+       env[HOSTNAME] = $HOSTNAME
+       env[PATH] = /usr/local/bin:/usr/bin:/bin
+       env[TMP] = /tmp
+       env[TMPDIR] = /tmp
+       env[TEMP] = /tmp
+
+       php_admin_value[sendmail_path] = /usr/sbin/sendmail -t -i -f www@my.domain.com
+       php_flag[display_errors] = off
+       php_admin_value[error_log] = /var/log/fpm-php.www.log
+       php_admin_flag[log_errors] = on
+       php_admin_value[memory_limit] = 32M
+       ]]>
+      </programlisting>
+     </example>
+     Configurações do PHP feitas com <literal>php_value</literal> ou
+     <literal>php_flag</literal> irá substituir o seu valor anterior.
+     Por favor, note que a definição de
+     <link linkend="ini.disable-functions">disable_functions</link> ou 
+     <link linkend="ini.disable-classes">disable_classes</link> não
+      irá substituir os previamente os valores definidos em <filename>php.ini</filename>,
+      mas irá adicionar o novo valor em seu lugar.
+    </para>
+    <para>
+     Configurações definidas com <literal>php_admin_value</literal> e <literal>php_admin_flag</literal>
+     não podem ser sobreescritas com <function>ini_set</function>.
+    </para>
+    <para>
+     A partir de 5.3.3, configurações do PHP também são possíveis de ser definida no servidor
+     <example>
+      <title>definir as configurações de PHP no nginx.conf</title>
+      <programlisting role="ini">
+       <![CDATA[
+set $php_value "pcre.backtrack_limit=424242";
+set $php_value "$php_value \n pcre.recursion_limit=99999";
+fastcgi_param  PHP_VALUE $php_value;
+
+fastcgi_param  PHP_ADMIN_VALUE "open_basedir=/var/www/htdocs";
+       ]]>
+      </programlisting>
+     </example>
+     <caution>
+      <para>
+       Como essas configurações são passadas para php-fpm como cabeçalhos FastCGI,
+        php-fpm não deve ser vinculado a um endereço acessível em todo o mundo.
+        Caso contrário, qualquer um pode alterar as opções de configuração do PHP.
+        veja também
+       <link linkend="listen-allowed-clients">listen.allowed_clients</link>.
+      </para>
+     </caution>
+    </para>
+   </sect2>
+   
+  </sect1>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
