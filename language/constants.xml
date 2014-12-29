@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 48573a3b164e53168cbc2acff2c714811ec6387c Maintainer: felipe Status: ready --><!-- CREDITS: ae, thiago -->
+<!-- EN-Revision: d5e05486ba5c0ccfb45e9a92fc95adf2762ab289 Maintainer: felipe Status: ready --><!-- CREDITS: ae, thiago, __lcobucci -->
  <chapter xml:id="language.constants" xmlns="http://docbook.org/ns/docbook">
   <title>Constantes</title>
 
@@ -8,17 +8,17 @@
    sugere, esse valor não pode mudar durante a execução do
    script (exceção às <link linkend="language.constants.predefined">
    constantes mágicas</link>, que não são constantes de verdade).
-   As constantes são "Case Sensitive" (Sensível ao tamanho de letras) por padrão. Por convenção,
-   o nomes de constantes são sempre em maiúsculas.
+   As constantes são "case sensitive" (sensível ao tamanho de letras) por padrão. Por convenção,
+   identificadores de constantes são sempre em maiúsculas.
   </simpara>
   <para>
    O nome de uma constante tem as mesmas regras de qualquer identificador no PHP. Um
-   nome de constante válida começa com uma letra ou sublinhado, seguido
+   nome válido de constante começa com uma letra ou sublinhado, seguido
    por qualquer número de letras, números ou sublinhados. Em expressões
    regulares, ela pode ser representada por:
    <literal>[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*</literal>
   </para>
-   &tip.userlandnaming;
+  &tip.userlandnaming;
   <para>
    <example>
     <title>Nomes de constantes válidos e inválidos</title>
@@ -61,17 +61,19 @@ define("__FOO__", "alguma coisa");
   <sect1 xml:id="language.constants.syntax">
    <title>Sintaxe</title>
    <simpara>
-    Você pode definir uma constante utilizando-se da função
-    <function>define</function>, ou utilizando a palavra-chave <literal>const</literal>
-    fora da definição de uma classe a partir dor PHP 5.3.0. Quando uma constante 
-    é definida, ela nunca mais poderá ser modificada ou anulada.
+    Você pode definir uma constante utilizando a função
+    <function>define</function>, ou a palavra-chave
+    <literal>const</literal> fora da definição de uma classe a partir do
+    PHP 5.3.0. Uma vez definida, a constante não poderá ser modificada ou
+    anulada.
    </simpara>
    <simpara>
-    Somente dados escalares (<type>boolean</type>, <type>integer</type>,
+    Até o PHP 5.6, somente dados escalares (<type>boolean</type>, <type>integer</type>,
     <type>float</type> e <type>string</type>) podem ser colocados
-    em constantes. É possível ter consntantes com um <type>resource</type> 
-    (recurso), mas deve ser evitado já que pode causar resultados não 
-    esperados.
+    em constantes. A partir do PHP 5.6, é possível também utilizar
+    um <type>array</type> como valor de constantes. É permitido o uso de um <type>resource</type> 
+    (recurso) como valor de constante, mas deve ser evitado já que pode causar
+    resultados não esperados.
    </simpara>
    <simpara>
     Você pode obter o valor de uma constante simplesmente especificando seu nome.
@@ -99,15 +101,14 @@ define("__FOO__", "alguma coisa");
     <link linkend="language.types.array.foo-bar">$foo[bar]</link> é
     errado (a não ser que você primeiro <function>define</function>
     <literal>bar</literal> como uma constante). Se você simplesmente quer 
-    checar se uma constante foi definida, utilize a função 
-    <function>defined</function>.
+    checar se uma constante foi definida, utilize a função <function>defined</function>.
    </simpara>
    <para>
     Estas são as diferenças entre constantes e variáveis:
     <itemizedlist>
      <listitem>
       <simpara>
-       Constantes não podem ter um sinal de cifrão (<literal>$</literal>)
+       Constantes não possuem um sinal de cifrão (<literal>$</literal>)
        antes delas;
       </simpara>
      </listitem>
@@ -131,8 +132,11 @@ define("__FOO__", "alguma coisa");
      </listitem>
      <listitem>
       <simpara>
-       Constantes só devem conter valores escalares.
-       </simpara>
+       A partir do PHP 5.6 o valor de constantes devem se escalares, arrays ou expressões
+       com resultados escalares. Você pode utilizar arrays em expressões escalares
+       (por exemplo, <literal>const FOO = array(1,2,3)[0];</literal>),
+       mas o resultado final deve ser um valor escalar.
+      </simpara>
      </listitem>
     </itemizedlist>
    </para>
@@ -162,6 +166,11 @@ echo Constant; // imprime "Constant" e gera um alerta notice.
 const CONSTANT = 'Hello World';
 
 echo CONSTANT;
+
+// Funciona a partir do PHP 5.6.0
+const ANOTHER_CONST = CONSTANT.'; Goodbye World';
+
+echo ANOTHER_CONST;
 ?>
 ]]>
      </programlisting>
@@ -172,9 +181,10 @@ echo CONSTANT;
     <para>
      Ao contrário das funções definidas através de <function>define</function>,
      as constantes definidas usando a palavra-chave <literal>const</literal> 
-     devem ser declarados no escopo de topo (principal) pois são definidas no
+     devem ser declarados no escopo de topo (principal), pois são definidas no
      tempo de compilação. Isso significa que elas não podem ser definidas 
-     dentro de funções, laços ou <literal>if</literal>s.
+     dentro de funções, laços ou <literal>if</literal>s ou blocos
+     <literal>try</literal>/<literal>catch</literal>.
     </para>
    </note>
    
@@ -188,7 +198,7 @@ echo CONSTANT;
 
    <simpara>
     O PHP fornece um grande número de <link
-    linkend="reserved.constants">consntantes predefinidas</link> para qualquer 
+    linkend="reserved.constants">constantes predefinidas</link> para qualquer 
     script que ele execute. A maioria dessas constantes, entretanto, são 
     criadas por várias extensões, e somente estarão presentes quando essas 
     extensões estiverem disponíveis, tanto por carregamento dinâmico quanto por 
@@ -196,7 +206,7 @@ echo CONSTANT;
    </simpara>
 
    <para>
-    Há sete constantes "mágicas", que mudam dependendo de
+    Há oito constantes mágicas, que mudam dependendo de
     onde elas são utilizadas. Por exemplo, o valor de
     <constant>__LINE__</constant> depende do número da linha em que é
     utilizada em seu script. Essas constantes especiais são
@@ -213,73 +223,61 @@ echo CONSTANT;
        </row>
       </thead>
       <tbody>
-       <row>
+       <row xml:id="constant.line">
         <entry><constant>__LINE__</constant></entry>
         <entry>
          A linha atual do script.
         </entry>
        </row>
-       <row>
+       <row xml:id="constant.file">
         <entry><constant>__FILE__</constant></entry>
         <entry>
          O caminho completo e nome do arquivo. Se utilizado dentro de um include,
          o nome do arquivo incluído será retornado.
-         Desde o PHP 4.0.2, <constant>__FILE__</constant> sempre contém um
-         caminho absoluto com links simbólicos resolvidos enquanto em versões antigas 
-         ela continha um caminho relativo sob certas circunstâncias.
         </entry>
        </row>
-       <row>
+       <row xml:id="constant.dir">
         <entry><constant>__DIR__</constant></entry>
         <entry>
          O diretório do arquivo. Se usado dentro de um include,
          o diretório do arquivo incluído é retornado. Isto é equivalente
          a <literal>dirname(__FILE__)</literal>. Este nome do diretório
          não possui barra no final, a não ser que seja o diretório raiz.
-         (Adicionado no PHP 5.3.0.)
         </entry>
        </row>
-       <row>
+       <row xml:id="constant.function">
         <entry><constant>__FUNCTION__</constant></entry>
         <entry>
-         O nome da função (Acrescentado no PHP 4.3.0). A partir do PHP 5 esta 
-         constante retorna o nome da função como ela foi declarada (sensível a 
-         maiúsculas e minúsculas). No PHP 4 sempre retorna o nome em minúsculas.
+         O nome da função. 
         </entry>
        </row>
-       <row>
+       <row xml:id="constant.class">
         <entry><constant>__CLASS__</constant></entry>
         <entry>
-         O nome da classe (Adicionado no PHP 4.3.0). A partir do PHP 5 esta 
-         constante retorna o nome da função como ela foi declarada (sensível a 
-         maiúsculas e minúsculas). No PHP 4 sempre retorna o nome em minúsculas.
-         O nome da classe inclui o namespace em que foi declarado (ex: 
-         <literal>Foo\Bar</literal>). Note que a partir do PHP 5.4, __CLASS__ 
-         funciona também em traits. Quando utilizada em um método trait, __CLASS__ é
-         o nome da classe do trait em que foi utilizada.
+         O nome da classe. O nome da classe inclui
+         o namespace em que foi declarado (ex: <literal>Foo\Bar</literal>).
+         Note que a partir do PHP 5.4, __CLASS__ funciona também em traits.
+         Quando utilizada em um método trait, __CLASS__ é o nome da classe
+         que está utilizando a trait.
         </entry>
        </row>
-       <row>
+       <row xml:id="constant.trait">
         <entry><constant>__TRAIT__</constant></entry>
         <entry>
-         O nome do trait. (Adicionado no PHP 5.4.0) A partir do PHP 5.4 essa
-         constante retorna o trait em que fo delcarado (sensível a maiúsculas e 
-         minúsculas). O nome do trait incluir o namespace em que foi declarado
-         (ex: <literal>Foo\Bar</literal>).
+         O nome do trait. O nome do trait incluir o namespace em
+         que foi declarado (ex: <literal>Foo\Bar</literal>).
         </entry>
        </row>
-       <row>
+       <row xml:id="constant.method">
         <entry><constant>__METHOD__</constant></entry>
         <entry>
-         O nome do método de classe. (Adicionado no PHP 5.0.0). O nome do método é
-         retornado como foi declarado (sensível a maiúsculas e minúsculas).
+         O nome do método de classe.
         </entry>
        </row>
-       <row>
+       <row xml:id="constant.namespace">
         <entry><constant>__NAMESPACE__</constant></entry>
         <entry>
-         O nome do namespace atual (sensível a maiúsculas e minúsculas). Esta 
-         constante é definida em tempo de compilação (Adicionada no PHP 5.3.0).
+         O nome do namespace atual.
         </entry>
        </row>
       </tbody>
@@ -293,6 +291,64 @@ echo CONSTANT;
     <function>file_exists</function>&listendand;
     <function>function_exists</function>.
    </para>
+
+   <sect2 xml:id="language.constants.predefined.changelog">
+    &reftitle.changelog;
+
+    <para>
+     <informaltable>
+      <tgroup cols="2">
+       <thead>
+        <row>
+         <entry>&Version;</entry>
+         <entry>&Description;</entry>
+        </row>
+       </thead>
+       <tbody>
+        <row>
+         <entry>5.4.0</entry>
+         <entry>
+          Adicionada a constante <constant>__TRAIT__</constant>
+         </entry>
+        </row>
+        <row>
+         <entry>5.3.0</entry>
+         <entry>
+          Adicionadas as constantes <constant>__DIR__</constant> e <constant>__NAMESPACE__</constant>
+         </entry>
+        </row>
+        <row>
+         <entry>5.0.0</entry>
+         <entry>
+          Adicionada a constante <constant>__METHOD__</constant>         
+         </entry>
+        </row>
+        <row>
+         <entry>5.0.0</entry>
+         <entry>
+          Antes desta versão os valores de algumas constantes mágicas eram sempre em letras minúsculas.
+          Agora todos são case-sensitive (contém os nomes da mesma maneira que foram declarados).
+         </entry>
+        </row>
+        <row>
+         <entry>4.3.0</entry>
+         <entry>
+          Adicionadas as constantes <constant>__FUNCTION__</constant> e <constant>__CLASS__</constant>
+         </entry>
+        </row>
+        <row>
+         <entry>4.0.2</entry>
+         <entry>
+          <constant>__FILE__</constant> sempre contém o caminho absoluto com os links simbólicos
+          resolvidos, enquanto em versões antigas continha o caminho relativo em algumas
+          circunstâncias
+         </entry>
+        </row>
+       </tbody>
+      </tgroup>
+     </informaltable>
+    </para>
+   </sect2>
   </sect1>
  </chapter>
 
