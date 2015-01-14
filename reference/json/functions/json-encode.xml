@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: felipe Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 01affe9d1b477a955c469540637fc187315f8021 Maintainer: felipe Status: ready --><!-- CREDITS: galvao -->
 <refentry xml:id="function.json-encode" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>json_encode</refname>
@@ -11,6 +11,8 @@
   <methodsynopsis>
    <type>string</type><methodname>json_encode</methodname>
    <methodparam><type>mixed</type><parameter>value</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>options</parameter><initializer>0</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>depth</parameter><initializer>512</initializer></methodparam>
   </methodsynopsis>
   <para>
    Retorna a string contendo a representação JSON de um
@@ -30,7 +32,34 @@
        um <type>resource</type>.
       </para>
       <para>
-       Esta função funciona somente com dados com codificação UTF-8.
+       Toda a string deve ser codificada como UTF-8.
+      </para>
+      &json.implementation.superset;
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>options</parameter></term>
+     <listitem>
+      <para>
+       Bitmask consistindo de <constant>JSON_HEX_QUOT</constant>,
+       <constant>JSON_HEX_TAG</constant>,
+       <constant>JSON_HEX_AMP</constant>,
+       <constant>JSON_HEX_APOS</constant>,
+       <constant>JSON_NUMERIC_CHECK</constant>,
+       <constant>JSON_PRETTY_PRINT</constant>,
+       <constant>JSON_UNESCAPED_SLASHES</constant>,
+       <constant>JSON_FORCE_OBJECT</constant>,
+       <constant>JSON_UNESCAPED_UNICODE</constant>. O comportamento destas 
+       constantes é descrito na
+       <link linkend="json.constants">página de constantes JSON</link>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>depth</parameter></term>
+     <listitem>
+      <para>
+       Define a profundidade máxima. Deve ser maior do que zero.
       </para>
      </listitem>
     </varlistentry>
@@ -41,7 +70,7 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna uma <type>string</type> JSON codificada em caso de sucesso.
+   Retorna uma <type>string</type> JSON codificada em caso de sucesso &return.falseforfailure;.
   </para>
  </refsect1>
 
@@ -58,9 +87,27 @@
      </thead>
      <tbody>
       <row>
-       <entry>5.2.1</entry>
+       <entry>5.5.0</entry>
        <entry>
-        Adicionado suporte a tipos básicos JSON
+        Parâmetro <parameter>depth</parameter> foi adicionado.
+       </entry>
+      </row>
+      <row>
+       <entry>5.4.0</entry>
+       <entry>
+        <parameter>options</parameter> <constant>JSON_PRETTY_PRINT</constant>, <constant>JSON_UNESCAPED_SLASHES</constant>, e <constant>JSON_UNESCAPED_UNICODE</constant> foram adicionadas.
+       </entry>
+      </row>
+      <row>
+       <entry>5.3.3</entry>
+       <entry>
+        <parameter>option</parameter> <constant>JSON_NUMERIC_CHECK</constant> foi adicionada.
+       </entry>
+      </row>
+      <row>
+       <entry>5.3.0</entry>
+       <entry>
+        O parâmetro <parameter>options</parameter> foi adicionado.
        </entry>
       </row>
      </tbody>
@@ -77,7 +124,7 @@
     <programlisting role="php">
 <![CDATA[
 <?php
-$arr = array ('a'=>1,'b'=>2,'c'=>3,'d'=>4,'e'=>5);
+$arr = array('a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5);
 
 echo json_encode($arr);
 ?>
@@ -90,14 +137,176 @@ echo json_encode($arr);
 ]]>
     </screen>
    </example>
+
+   <example>
+    <title>
+     Um exemplo de <function>json_encode</function> mostrando algumas opções em uso
+    </title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$a = array('<foo>',"'bar'",'"baz"','&blong&', "\xc3\xa9");
+
+echo "Normal: ",  json_encode($a), "\n";
+echo "Tags: ",    json_encode($a, JSON_HEX_TAG), "\n";
+echo "Apos: ",    json_encode($a, JSON_HEX_APOS), "\n";
+echo "Quot: ",    json_encode($a, JSON_HEX_QUOT), "\n";
+echo "Amp: ",     json_encode($a, JSON_HEX_AMP), "\n";
+echo "Unicode: ", json_encode($a, JSON_UNESCAPED_UNICODE), "\n";
+echo "All: ",     json_encode($a, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE), "\n\n";
+
+$b = array();
+
+echo "Saída de um array vazio como array: ", json_encode($b), "\n";
+echo "Saída de um array vazio como objeto: ", json_encode($b, JSON_FORCE_OBJECT), "\n\n";
+
+$c = array(array(1,2,3));
+
+echo "Saída de um array não-associativo como array: ", json_encode($c), "\n";
+echo "Saída de um array não-associativo como objeto: ", json_encode($c, JSON_FORCE_OBJECT), "\n\n";
+
+$d = array('foo' => 'bar', 'baz' => 'long');
+
+echo "Array associativo sempre tem saída como objeto: ", json_encode($d), "\n";
+echo "Array associativo sempre tem saída como objeto: ", json_encode($d, JSON_FORCE_OBJECT), "\n\n";
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Normal: ["<foo>","'bar'","\"baz\"","&blong&","\u00e9"]
+Tags: ["\u003Cfoo\u003E","'bar'","\"baz\"","&blong&","\u00e9"]
+Apos: ["<foo>","\u0027bar\u0027","\"baz\"","&blong&","\u00e9"]
+Quot: ["<foo>","'bar'","\u0022baz\u0022","&blong&","\u00e9"]
+Amp: ["<foo>","'bar'","\"baz\"","\u0026blong\u0026","\u00e9"]
+Unicode: ["<foo>","'bar'","\"baz\"","&blong&","é"]
+All: ["\u003Cfoo\u003E","\u0027bar\u0027","\u0022baz\u0022","\u0026blong\u0026","é"]
+
+Saída de um array vazio como array: []
+Saída de um array vazio como objeto: {}
+
+Saída de um array não-associativo como array: [[1,2,3]]
+Saída de um array não-associativo como objeto: {"0":{"0":1,"1":2,"2":3}}
+
+Array associativo sempre tem saída como objeto: {"foo":"bar","baz":"long"}
+Array associativo sempre tem saída como objeto: {"foo":"bar","baz":"long"}
+]]>
+    </screen>
+   </example>
+   <example>
+    <title>Exemplo de array sequencial versus não-sequencial</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+echo "Array sequencial".PHP_EOL;
+$sequential = array("foo", "bar", "baz", "blong");
+var_dump(
+ $sequential,
+ json_encode($sequential)
+);
+
+echo PHP_EOL."Array não-sequencial".PHP_EOL;
+$nonsequential = array(1=>"foo", 2=>"bar", 3=>"baz", 4=>"blong");
+var_dump(
+ $nonsequential,
+ json_encode($nonsequential)
+);
+
+echo PHP_EOL."Array sequencial com uma chave não definida".PHP_EOL;
+unset($sequential[1]);
+var_dump(
+ $sequential,
+ json_encode($sequential)
+);
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Array sequencial
+array(4) {
+  [0]=>
+  string(3) "foo"
+  [1]=>
+  string(3) "bar"
+  [2]=>
+  string(3) "baz"
+  [3]=>
+  string(5) "blong"
+}
+string(27) "["foo","bar","baz","blong"]"
+
+Array não-sequencial
+array(4) {
+  [1]=>
+  string(3) "foo"
+  [2]=>
+  string(3) "bar"
+  [3]=>
+  string(3) "baz"
+  [4]=>
+  string(5) "blong"
+}
+string(43) "{"1":"foo","2":"bar","3":"baz","4":"blong"}"
+
+Array sequencial com uma chave não definida
+array(3) {
+  [0]=>
+  string(3) "foo"
+  [2]=>
+  string(3) "baz"
+  [3]=>
+  string(5) "blong"
+}
+string(33) "{"0":"foo","2":"baz","3":"blong"}"
+]]>
+    </screen>
+   </example>
   </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    Em uma eventual falha ao codificar, <function>json_last_error</function>
+    pode ser usado para determinar a natureza exata do erro.
+   </para>
+  </note>
+  <note>
+   <para>
+    Quando codificando um array, se as chaves não são uma sequência numérica
+    contínua começando por 0, todas as chaves são codificadas como strings, e
+    especificadas explicitamente para cada par chave-valor.
+   </para>
+  </note>
+  <note>
+   <para>
+    Assim como o codificador JSON referenciado, <function>json_encode</function> irá
+    gerar JSON que é um valor simples (isto é, nem um objeto e nem um
+    array) se informado um <parameter>value</parameter> <type>string</type>, <type>integer</type>,
+    <type>float</type> ou <type>boolean</type> como uma entrada. 
+    Enquanto a maioria dos decodificadores aceitará esses valores 
+    como JSON válido, alguns podem não aceitar, já que a especificação é ambígua neste
+    ponto.
+   </para>
+   <para>
+    Para resumir, sempre teste se o seu decodificador JSON pode dar conta da saída que você
+    gerar a partir de <function>json_encode</function>.
+   </para>
+  </note>
  </refsect1>
 
  <refsect1 role="seealso">
   &reftitle.seealso;
   <para>
    <simplelist>
+    <member><interfacename>JsonSerializable</interfacename></member>
     <member><function>json_decode</function></member>
+    <member><function>json_last_error</function></member>
+    <member><function>serialize</function></member>
    </simplelist>
   </para>
  </refsect1>
