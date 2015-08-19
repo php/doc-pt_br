@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: f052ac1bd73549125c3fc3dc68a36d4b0608a16d Maintainer: ae Credits: fernandoc,surfmax Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: d22db7f5b0ed55d6f904549bd3116be900a0e8d3 Maintainer: ae Credits: fernandoc,surfmax Status: ready -->
 <section xml:id="session.configuration" xmlns="http://docbook.org/ns/docbook">
  &reftitle.runtime;
  &extension.runtime;
  <para>
  <table>
-  <title>Session configuration options</title>
+  <title>Opções de configuração de sessão</title>
   <tgroup cols="4">
    <thead>
     <row>
@@ -95,6 +95,12 @@
      <entry>Disponível desde PHP 5.2.0.</entry>
     </row>
     <row>
+     <entry><link linkend="ini.session.use-strict-mode">session.use_strict_mode</link></entry>
+     <entry>"0"</entry>
+     <entry>PHP_INI_ALL</entry>
+     <entry>Disponível desde o PHP 5.5.2.</entry>
+    </row>
+    <row>
      <entry><link linkend="ini.session.use-cookies">session.use_cookies</link></entry>
      <entry>"1"</entry>
      <entry>PHP_INI_ALL</entry>
@@ -140,7 +146,7 @@
      <entry><link linkend="ini.session.use-trans-sid">session.use_trans_sid</link></entry>
      <entry>"0"</entry>
      <entry>PHP_INI_ALL</entry>
-     <entry>PHP_INI_ALL in PHP &lt;= 4.2.3. PHP_INI_PERDIR in PHP &lt; 5. Disponível desde PHP 4.0.3.</entry>
+     <entry>PHP_INI_ALL no PHP &lt;= 4.2.3. PHP_INI_PERDIR no PHP &lt; 5. Disponível desde PHP 4.0.3.</entry>
     </row>
     <row>
      <entry><link linkend="ini.session.bug-compat-42">session.bug_compat_42</link></entry>
@@ -208,13 +214,19 @@
       <entry>PHP_INI_PERDIR</entry>
       <entry>Disponível desde PHP 5.4.0.</entry>
      </row>
+     <row>
+      <entry><link linkend="ini.session.lazy-write">session.lazy_write</link></entry>
+      <entry>"1"</entry>
+      <entry>PHP_INI_ALL</entry>
+      <entry>Disponível desde PHP 7.0.0.</entry>
+     </row>
    </tbody>
   </tgroup>
  </table>
  &ini.php.constants;
  </para>
  <para>
-  O sistema de gerenciamento de sessões suporta um número de opções de configuração
+  O sistema de gerenciamento de sessões suporta várias opções de configuração
   que você pode colocar em seu arquivo &php.ini;. A seguir
   um breve resumo.
  <variablelist>
@@ -268,6 +280,13 @@
      "aspas" porque o separador (<literal>;</literal>) é
      também usado para comentátios no &php.ini;.
     </para>
+    <para>
+     O armazenamento em arquivos criam arquivos com permissões 600 por padrão.
+     Esse padrão pode ser alterado com o argumento opcional <literal>MODE</literal>:
+     <literal>N;MODE;/path</literal> onde <literal>MODE</literal> é o valor octal
+     representando as permissões.
+     Configurar <literal>MODE</literal> não afeta o umask do processo.
+    </para>
     <warning>
      <para>
       Se você deixar isto definido num diretório de leitura público, 
@@ -276,10 +295,24 @@
       diretório.
      </para>
     </warning>
+    <caution>
+     <para>
+      Quando utilizando a opção de diretório <literal>N</literal> como
+      descrito acima, note que utilizando um valor maior que 1 ou 2 é
+      inapropriado na maioria dos sites por conta da geração de um grande número de diretórios
+      exigidos: por exemplo, um valor de 3 implica que existirão <literal>64^3</literal>
+      diretórios em disco, o que resolta numa quantidade enorme de espaço e
+      inodes desperdiçados.
+     </para>
+     <para>
+      Somente use <literal>N</literal> maiores que 2 se você estiver absolutamente
+      certo que o seu site é grande o suficiente para requerir isso.
+     </para>
+    </caution>
     <note>
      <simpara>
-       Antes do PHP 4.3.6 os usuários de Windows tem que mudar esta variável para
-       fazer funções de sessão no PHP. Certifique-se de especifica um caminho válido, ex.:
+      Antes do PHP 4.3.6 os usuários de Windows tem que mudar esta variável para
+      fazer funções de sessão no PHP. Certifique-se de especifica um caminho válido, ex.:
       <filename>c:/temp</filename>.
      </simpara>
     </note>
@@ -323,12 +356,22 @@
    <listitem>
     <simpara>
      <literal>session.serialize_handler</literal> define o nome do
-     manipulador que é usado para serializar/desserializar
-     dados. Disponibilizado o formato interno do PHP (nome <literal>php</literal> ou
-     <literal>php_binary</literal>) e WDDX (nome
-     <literal>wddx</literal>). WDDX está apenas disponível se o PHP
-     estiver compilado com <link linkend="ref.wddx"> suporte a WDDX
-     </link>. Definição inicial <literal>php</literal>.
+     formatador utilizado para serializar/desserializar dados. São suportados o formato
+     serial do PHP (<literal>php_serialize</literal>), o formato interno
+     do PHP (<literal>php</literal> e
+     <literal>php_binary</literal>) e WDDX
+     (<literal>wddx</literal>). O WDDX somente está disponível se o PHP estiver
+     compilado com <link linkend="ref.wddx">suporte
+     WDDX</link>. <literal>php_serialize</literal> está disponível
+     desde o PHP 5.5.4. <literal>php_serialize</literal> utiliza uma função interna
+     para serializar/desserializar os dados e não tem
+     as limitações que <literal>php</literal>
+     e <literal>php_binary</literal> tem. Serializadores antigos
+     não conseguem gravar índices numéricos ou índices string que contenham caracteres
+     especiais (<literal>|</literal> e <literal>!</literal>) no array
+     $_SESSION. Utilize <literal>php_serialize</literal> para evitar erros de índices
+     numéricos ou índices com caracteres especiais no final do script. O padrão
+     é <literal>php</literal>.
     </simpara>
    </listitem>
   </varlistentry>
@@ -376,8 +419,8 @@
    <listitem>
     <simpara>
      <literal>session.gc_maxlifetime</literal> especifíca o número de
-      segundos após os dados terem sido considerados como lixo ('garbage')
-      e eventualmente limpados. Isso pode ocorrer no início da sessão
+     segundos após os dados terem sido considerados como lixo ('garbage')
+     e eventualmente limpados. Isso pode ocorrer no início da sessão
      (dependendo de <link
      linkend="ini.session.gc-probability">session.gc_probability</link> e
      <link linkend="ini.session.gc-divisor">session.gc_divisor</link>).  
@@ -390,16 +433,6 @@
       limpando os dados. Neste caso, use esta diretiva em conjunto com <link
       linkend="ini.session.save-path">session.save_path</link>.
      </para>
-    </note>
-    <note>
-     <simpara>Se você está usando o file-based session handler como padrão,
-     seu sistema de arquivos deve manter registrado quantidade de acessos (atime). Windows FAT não faz
-     dessa forma, então você terá de lidar de outra forma com a limpeza de dados
-     de sessão se você estiver preso um sistema de arquivos FAT ou outro sistema de arquivos
-     que não tenha rastreamento de atime.
-     Desde a versão 4.2.3 está sendo utilizado o mtime (tempo de modificação) em vez de atime. Assim
-     não deve haver muitos problemas nos sistemas de arquivos que não tenham atime.
-     </simpara>
     </note>
    </listitem>
   </varlistentry>
@@ -438,6 +471,13 @@
      Configurando <literal>session.entropy_length</literal> para um valor diferente de zero
      fará o PHP utilizar o Windows Random API como fonte de entropia.
     </simpara>    
+    <note>
+     <simpara>
+      A partir do PHP 5.4.0 <literal>session.entropy_file</literal> tem como padrão
+      <literal>/dev/urandom</literal> ou <literal>/dev/arandom</literal>,
+      o qual estiver disponível. No PHP 5.3.0 essa diretiva está em branco (padrão).
+     </simpara>
+    </note>
    </listitem>
   </varlistentry>
 
@@ -451,6 +491,24 @@
      <literal>session.entropy_length</literal> especifíca o número
      de bytes que serão lidos do arquivo especificado
      acima. Padrão em <literal>0</literal> (desabilitado).
+    </simpara>
+   </listitem>
+  </varlistentry>
+
+  <varlistentry xml:id="ini.session.use-strict-mode">
+   <term>
+    <parameter>session.use_strict_mode</parameter>
+    <type>boolean</type>
+   </term>
+   <listitem>
+    <simpara>
+     <literal>session.use_strict_mode</literal> especifica se o
+     módulo utilizará o modo id de sessão estrito. Se esse modo estiver ativo
+     o módulo não aceitará um session id não inicializado. Se um session id
+     não inicializado for encaminhado, um novo session id é devolvido.
+     Aplicações são protegidas de fixação de sessões via adoção
+     com esse modo estrito.
+     Padrão é <literal>0</literal> (desativado).
     </simpara>
    </listitem>
   </varlistentry>
@@ -558,20 +616,20 @@
    </listitem>
   </varlistentry>
 
- <varlistentry xml:id="ini.session.cookie-httponly">
-  <term>
-   <parameter>session.cookie_httponly</parameter>
-   <type>boolean</type>
-  </term>
-  <listitem>
-   <simpara>
-    Marca o cookie para ser acessível apenas atráves do protocolo HTTP. Isto significa
-    que o cookie não será acessível por linguagens de script, como o
-    JavaScript. Esta definição pode efetivamente reduzir o roubo de identidade
-    atráves de ataques XSS (mesmo não sendo suportado por todos os browsers).
-   </simpara>
-  </listitem>
- </varlistentry>
+  <varlistentry xml:id="ini.session.cookie-httponly">
+   <term>
+    <parameter>session.cookie_httponly</parameter>
+    <type>boolean</type>
+   </term>
+   <listitem>
+    <simpara>
+     Marca o cookie para ser acessível apenas atráves do protocolo HTTP. Isto significa
+     que o cookie não será acessível por linguagens de script, como o
+     JavaScript. Esta definição pode efetivamente reduzir o roubo de identidade
+     atráves de ataques XSS (mesmo não sendo suportado por todos os browsers).
+    </simpara>
+   </listitem>
+  </varlistentry>
   
   <varlistentry xml:id="ini.session.cache-limiter">
    <term>
@@ -621,13 +679,7 @@
     </simpara>
     <note>
      <simpara>
-      Para PHP 4.1.2 ou inferior, ele só é habilitado se fizer a opção
-      na compilação com <link linkend="configure.enable-trans-sid"> 
-      <literal>--enable-trans-sid</literal></link>.
-      A partir do PHP 4.2.0, está sempre compilado.
-     </simpara>
-     <simpara>
-      Gerenciamentode sessões baseadas na URL tem riscos de segurança adicionais
+      Gerenciamento de sessões baseadas em URLs tem riscos de segurança adicionais
       comparados ao gerenciamento baseado em cookies. Usuários podem enviar uma URL
       que contenha uma ID de sessão ativa para seus amigos por
       e-mail ou usuários pode salvar uma URL que contenha uma ID de sessão em
@@ -678,7 +730,7 @@
   <varlistentry xml:id="ini.session.hash-function">
    <term>
     <parameter>session.hash_function</parameter>
-    <type>integer</type>
+    <type>mixed</type>
    </term>
    <listitem>
     <simpara>
@@ -721,7 +773,7 @@
    </listitem>
   </varlistentry>
  
-   <varlistentry xml:id="ini.url-rewriter.tags">
+  <varlistentry xml:id="ini.url-rewriter.tags">
    <term>
     <parameter>url_rewriter.tags</parameter>
     <type>string</type>
@@ -841,15 +893,27 @@
    </listitem>
   </varlistentry>
 
+  <varlistentry xml:id="ini.session.lazy-write">
+   <term>
+    <parameter>session.lazy_write</parameter>
+    <type>boolean</type>
+   </term>
+   <listitem>
+    <simpara>
+     <literal>session.lazy_write</literal> quando configurado para 1 significa que os
+     dados de sessão somente serão reescrito caso eles mudem. Padrão em 1, ativado.
+    </simpara>
+   </listitem>
+  </varlistentry>
+
  </variablelist>
  </para>
 
  <para>
-  As definições de configuração <link
-  linkend="ini.track-vars"><literal>track_vars</literal></link> e
+  A configuração
   <link
   linkend="ini.register-globals"><literal>register_globals</literal></link>
-  influenciam como as variáveis de sessão são
+  influencia em como as variáveis de sessão são
   guardadas e restauradas.
  </para>
 
@@ -859,13 +923,6 @@
   $_POST[ini_get("session.upload_progress.name")] existente.
   Veja <link linkend="session.upload-progress">Progresso de Upload em sessões</link> para mais detalhes da funcionalidade.
  </para>
-
- <note>
-  <para>
-   No PHP 4.0.3, <link
-   linkend="ini.track-vars"><literal>track_vars</literal></link> está sempre ligada.
-  </para>
- </note>
 
 </section>
 
