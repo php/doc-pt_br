@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: c09f0b428b251513ae561545ad3a69d747ce0d68 Maintainer: royopa Status: ready --><!-- CREDITS: royopa -->
+<!-- EN-Revision: e7c3d74e3369e87962da229da463c372474e4df2 Maintainer: royopa Status: ready --><!-- CREDITS: royopa,ae -->
 <chapter xml:id="language.generators" xmlns="http://docbook.org/ns/docbook">
  <title>Generators</title>
 
@@ -21,7 +21,8 @@
    quantidade considerável de tempo de processamento para a geração. Em vez
    disso, você pode escrever uma função generator, que é o mesmo que uma 
    <link linkend="functions.user-defined">função</link> normal, exceto que
-   ao invés do <link linkend="functions.returning-values">retorno</link> ocorrer
+   ao invés do
+   <link linkend="functions.returning-values">retorno</link> ocorrer
    única vez, um generator pode entregar o resultado quantas vezes forem
    necessárias para permitir que os valores sejam iterados.
   </para>
@@ -93,6 +94,18 @@ Single digit odd numbers from xrange(): 1 3 5 7 9
 ]]>
    </screen>
   </example>
+
+  <sect2 xml:id="language.generators.object">
+   <title><classname>Generator</classname> objects</title>
+   <para>
+    Quando uma função geradora é chamada uma primeira vez, um objeto interno
+    de tipo <classname>Generator</classname> é retornado. Este objeto
+    implementa a interface <classname>Iterator</classname> que um objeto
+    somente leitura de uma direção implementaria, provendo também métodos que
+    podem ser utilizados para manipular o estado do gerador, incluindo enviar
+    e retornar valores.
+   </para>
+  </sect2>
  </sect1>
 
  <sect1 xml:id="language.generators.syntax">
@@ -100,8 +113,7 @@ Single digit odd numbers from xrange(): 1 3 5 7 9
 
   <para>
    Uma função generator se parece com uma função normal, exceto que ao invés
-   de retornar um valor, um generator pode entregar o resultado quantas vezes
-   forem necessárias.
+   de retornar um valor, um generator pode entregar o resultado quantas vezes forem necessárias.
   </para>
 
   <para>
@@ -130,8 +142,7 @@ Single digit odd numbers from xrange(): 1 3 5 7 9
    <title>A palavra chave <command>yield</command></title>
 
    <para>
-    O coração de uma função generator é a palavra chave
-    <command>yield</command>. 
+    O coração de uma função generator é a palavra chave <command>yield</command>. 
     Na sua forma mais simples, uma declaração yield se parece muito com um
     retorno, exceto que em vez de parar a execução da função e retornar, o 
     yield fornece um valor para o código de loop sobre o generator e pausa a 
@@ -177,8 +188,8 @@ foreach ($generator as $value) {
    <caution>
     <para>
      Se você usar um yield em um contexto da expressão (por exemplo, a direita
-     de uma atribuição), você deve colocar a declaração yield entre parênteses.
-     Por exemplo, isso é válido:
+     de uma atribuição), você deve colocar a declaração yield entre parênteses
+     no PHP 5. Por exemplo, isso é válido:
     </para>
 
     <informalexample>
@@ -190,7 +201,7 @@ foreach ($generator as $value) {
     </informalexample>
 
     <para>
-     Mas isso não é válido terá como resultado um parse error:
+     Mas isso não é válido terá como resultado um parse error no PHP 5:
     </para>
 
     <informalexample>
@@ -201,6 +212,10 @@ foreach ($generator as $value) {
      </programlisting>
     </informalexample>
 
+    <para>
+     Os parênteses não são necessário no PHP 7.
+    </para>
+    
     <para>
      A sintaxe pode ser usada em conjunto com o método
      <methodname>Generator::send</methodname>.
@@ -368,18 +383,108 @@ foreach (gen_reference() as &$number) {
      </screen>
     </example>
    </sect3>
-  </sect2>
 
-  <sect2 xml:id="language.generators.object">
-   <title>Objetos <classname>Generator</classname></title>
-   <para>
-    Quando uma função é chamada pela primeira vez, um objeto da classe interna
-    <classname>Generator</classname> é retornado. Esse objeto implementa
-    a interface <classname>Iterator</classname> da mesma forma como um objeto
-    iterator que se move só para frente faria.
-   </para>
+   <sect3 xml:id="control-structures.yield.from">
+    <title>Delegação de gerador via<command>yield from</command></title>
+
+    <para>
+     No PHP 7 a delegação de gerador permite retornar valores de outro
+     gerador, objeto <classname>Traversable</classname> ou um
+     <type>array</type> utilizando para isso a instrução <command>yield from</command>.
+     O gerador externo retornará todos os valores do gerador interno,
+     objeto ou array até que o mesmo não seja mais válido, a partir de onde a execução
+     continuará no gerador externo.
+    </para>
+
+    <para>
+     Se um gerador é utilizado com <command>yield from</command>, a expressão
+     <command>yield from</command> também retornará qualquer valor
+     retornado pelo gerador interno.
+    </para>
+
+    <example>
+     <title>Uso básico de <command>yield from</command></title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+function count_to_ten() {
+    yield 1;
+    yield 2;
+    yield from [3, 4];
+    yield from new ArrayIterator([5, 6]);
+    yield from seven_eight();
+    yield 9;
+    yield 10;
+}
+
+function seven_eight() {
+    yield 7;
+    yield from eight();
+}
+
+function eight() {
+    yield 8;
+}
+
+foreach (count_to_ten() as $num) {
+    echo "$num ";
+}
+?>
+]]>
+     </programlisting>
+     &example.outputs;
+     <screen>
+<![CDATA[
+1 2 3 4 5 6 7 8 9 10 
+]]>
+     </screen>
+    </example>
+
+    <example>
+     <title><command>yield from</command> e valores retornados</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+function count_to_ten() {
+    yield 1;
+    yield 2;
+    yield from [3, 4];
+    yield from new ArrayIterator([5, 6]);
+    yield from seven_eight();
+    return yield from nine_ten();
+}
+
+function seven_eight() {
+    yield 7;
+    yield from eight();
+}
+
+function eight() {
+    yield 8;
+}
+
+function nine_ten() {
+    yield 9;
+    return 10;
+}
+
+$gen = count_to_ten();
+foreach ($gen as $num) {
+    echo "$num ";
+}
+echo $gen->getReturn();
+?>
+]]>
+     </programlisting>
+     &example.outputs;
+     <screen>
+<![CDATA[
+1 2 3 4 5 6 7 8 9 10
+]]>
+     </screen>
+    </example>
+   </sect3>
   </sect2>
-   
  </sect1>
 
  <sect1 xml:id="language.generators.comparison">
@@ -461,7 +566,8 @@ class LineIterator implements Iterator {
    para frente e não podem ser rebobinados após a iteração ter sido iniciada.
    Isso também significa que o generator não pode ser iterado múltiplas vezes: 
    o generator precisará ser reconstruído chamando a função generator novamente,
-   ou clonado usando a palavra chave <link linkend="language.oop5.cloning">clone</link>.
+   ou clonado usando a palavra chave
+   <link linkend="language.oop5.cloning">clone</link>.
   </para>
  </sect1>
 </chapter>
