@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: ae Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: a7ff20f87d80fe3491b24f0997eadbaf9ddfa477 Maintainer: ae Status: ready -->
 <refentry xml:id="function.min" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>min</refname>
@@ -7,16 +7,16 @@
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
-  <methodsynopsis>
-   <type>mixed</type><methodname>min</methodname>
-   <methodparam><type>array</type><parameter>values</parameter></methodparam>
-  </methodsynopsis>
-  <methodsynopsis>
-   <type>mixed</type><methodname>min</methodname>
-   <methodparam><type>mixed</type><parameter>value1</parameter></methodparam>
-   <methodparam><type>mixed</type><parameter>value2</parameter></methodparam>
-   <methodparam choice="opt"><type>mixed</type><parameter>value3...</parameter></methodparam>
-  </methodsynopsis>
+   <methodsynopsis>
+    <type>mixed</type><methodname>min</methodname>
+    <methodparam><type>array</type><parameter>values</parameter></methodparam>
+   </methodsynopsis>
+   <methodsynopsis>
+    <type>mixed</type><methodname>min</methodname>
+    <methodparam><type>mixed</type><parameter>value1</parameter></methodparam>
+    <methodparam><type>mixed</type><parameter>value2</parameter></methodparam>
+    <methodparam choice="opt"><type>mixed</type><parameter>...</parameter></methodparam>
+   </methodsynopsis>
   <para>
    Se o primeiro e único argumento é um array, <function>min</function>
    retorna o menor valor no array. Se no mínimo dois parâmetros são fornecidos,
@@ -24,12 +24,11 @@
   </para>
   <note>
    <para>
-    O PHP irá avaliar uma <type>string</type> não numérica como
-    <literal>0</literal> se comparado a <type>integer</type>, mas ainda retorna 
-    a string como se ela fosse numericamente o menor valor. Se vários agumentos 
-    forem avaliados como <literal>0</literal>, <function>min</function> irá retornar 
-    o menor valor alfanumericamente se alguma string é dada, senão um número
-    <literal>0</literal> é retornado.
+    Valores de tipos diferentes serão comparados utilizando <link linkend="language.operators.comparison">
+    as regras padrões de comparação</link>. Por exempli uma <type>string</type> não numérica será
+    comparada com um inteiro <type>integer</type> como se fosse <literal>0</literal>, mas várias
+    <type>string</type>s serão comparadas alfabeticamente. O valor retornado terá o tipo
+    original, sem nenhuma conversão aplicada.
    </para>
   </note>
  </refsect1>
@@ -45,14 +44,42 @@
       </para>
      </listitem>
     </varlistentry>
+    <varlistentry>
+     <term><parameter>value1</parameter></term>
+     <listitem>
+      <para>
+       Qualquer valor <link linkend="language.operators.comparison">comparável</link>.
+       
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>value2</parameter></term>
+     <listitem>
+      <para>
+       Qualquer valor <link linkend="language.operators.comparison">comparável</link>.
+       
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>...</parameter></term>
+     <listitem>
+      <para>
+       Qualquer valor <link linkend="language.operators.comparison">comparável</link>.
+       
+      </para>
+     </listitem>
+    </varlistentry>
    </variablelist>
   </para>
  </refsect1>
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   <function>min</function> retorna o menor numericalmente dos valores
-   dos parâmetros.
+   <function>min</function> retorna o valor considerado o "menor" de acordo com as comparações
+   padrão. Se valores de diferentes tipos forem avaliados como iguais (por exemplo <literal>0</literal>
+   e <literal>'abc'</literal>) então o primeiro valor fornecido será retornado.
   </para>
  </refsect1>
  <refsect1 role="examples">
@@ -66,22 +93,39 @@
 echo min(2, 3, 1, 6, 7);  // 1
 echo min(array(2, 4, 5)); // 2
 
+// A string 'hello' quando comparada com um int é tratada como 0
+// Como os valores são iguais, a ordem determina o resultado
 echo min(0, 'hello');     // 0
 echo min('hello', 0);     // hello
+
+// Aqui a comparação que ocorre é -1 < 0, e -1 é o menor valor
 echo min('hello', -1);    // -1
 
-// Com arrays múltiplos, min compara da esquerda para direita,
-// assim nesse exemplo: 2 == 2, mas 4 < 5
+// Quando comparando arrays de vários comprimentos, min retorna o mais curto
+$val = min(array(2, 2, 2), array(1, 1, 1, 1)); // array(2, 2, 2)
+
+// Vários arrays de mesmo tamanho, a comparação ocorre nos elementos, da esquerda para direita
+// so in our example: 2 == 2, but 4 < 5
 $val = min(array(2, 4, 8), array(2, 5, 1)); // array(2, 4, 8)
 
-// Se ambos forem um array e um não array, o array
-// nunca será retornado porque ele é sempre considerado o maior
+// Se for fornecido um array e um primitivo, o array nunca é retornado
+// pois as comparações tratam os arrays como maiores que outros valores
 $val = min('string', array(2, 5, 7), 42);   // string
+
+// Se um argumento é null ou booleando, ele será comparado com outros valores
+// usando a regra que FALSE < TRUE, independente dos tipos envolvidos
+// Nos exemplos abaixo -10 e 10 são tratados como TRUE nas comparações
+$val = min(-10, FALSE, 10); // FALSE
+$val = min(-10, NULL, 10);  // NULL
+
+// 0 é tratado como FALSE, então é menor que TRUE
+$val = min(0, TRUE); // 0
 ?>
 ]]>
     </programlisting>
    </example>
   </para>
+
  </refsect1>
  <refsect1 role="seealso">
   &reftitle.seealso;
