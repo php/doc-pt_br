@@ -1,175 +1,130 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: narigone Status: ready -->
+<!-- EN-Revision: 3049bd1d4a1bf7c75076e817aeba02e71c0013c2 Maintainer: ae Status: ready --><!-- CREDITS narigone,ae -->
 <sect1 xml:id="install.unix.debian" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>Notas de Instalação para o Debian GNU/Linux</title>
  <para>
   Essa seção contem notas e dicas específicas para a instalação do
   PHP no <link xlink:href="&url.debian;">Debian GNU/Linux</link>.
  </para>
+ <warning>
+  <para>
+   Compilações não oficiais de terceiros não são suportados. Quaisquer bugs
+   devem ser notificados para o Debian a não ser que possam ser reproduzidos utilizando
+   as últimas compilações disponíveis na <link xlink:href="&url.php.downloads;">área
+   de download</link>.
+  </para>
+ </warning>
+ <para>
+  As instruções de compilação do PHP no Unix se aplicam ao Debian,
+  de forma que essa página contém informações específicas opções outras,
+  como utilizar os comandos <literal>apt-get</literal> ou <literal>aptitude</literal>.
+  Essa página utilizará esses dois comandos como opções alternativas.
+ </para>
  <sect2 xml:id="install.unix.debian.apt">
   <title>Usando APT</title>
    <simpara>
-    Embora você possa apenas baixar o fonte do PHP e compilar por conta própria,
-    usar o sistema de pacotes do Debian e o método mais simples e
-    mais limpo de instalar o PHP. Se você não está familiarizado com compilar
-    software no Linux, essa é maneira de se instalar.
+    Primeiro veja que outros pacotes relacionados podem ser desejados, como
+    <literal>libapache2-mod-php5</literal> para integração com o Apache 2 e
+    <literal>php-pear</literal> para o PEAR.
    </simpara>
    <simpara>
-    A primeira decisão que você precisa fazer é se você quer instalar
-    o Apache 1.3.x ou o Apache 2.x. Os pacotes correspondentes do PHP são,
-    respectivamente, libapache-mod-php* e libapache2-mod-php*.
-    Os passos abaixo usarão o Apache 1.3.x.
-    Por favor, perceba que, até o fechamento desse documento, não há nenhum
-    pacote oficial do Debian para o PHP 5. Então, o procedimento instalará o PHP4.
-   </simpara>
-   <simpara>
-    O PHP está disponível no Debian como CGI ou CLI também, pelos pacotes
-    php4-cgi e php4-cli. Se você precisar deles, só terá que reproduzia os
-    passos a seguir com o pacote desejado.
-    Outro pacote especial que você pode querer instalar é o php4-pear. Ele contem um
-    instalação PEAR mínima e a ferramenta de linha de comando
-    <command>pear</command>.
-   </simpara>
-   <simpara>
-    Se você precisa de pacotes do PHP mais recentes que os do Debian stable
-    ou se alguns módulos do PHP não se encontram no repositório oficial do Debian,
-    talvez você deva procurar em <link xlink:href="&url.apt-get;">http://www.apt-get.org/</link>.
-    Um dos resultados encontrados deve ser
-    <link xlink:href="http://www.dotdeb.org/">Dotdeb</link>. Esse repositório não-oficial
-    é mantido por <link xlink:href="mailto:gui@php.net">Guillaume Plessis</link>
-    e contem pacotes Debian das versões mais recentes do PHP 4 e 5.
-    Para usá-lo, apenas adiciona as seguintes linhas ao seu arquivo
-    <filename>/etc/apt/sources.lists</filename> e execute <command>apt-get
-    update</command> :
-   </simpara>
-   <example>
-    <title>Adicionando o repositório Dotdeb</title>
-    <programlisting role="shell">
-<![CDATA[
-deb http://packages.dotdeb.org stable all
-deb-src http://packages.dotdeb.org stable all
-]]>
-    </programlisting>
-   </example>
-   <simpara>
-    A última coisa a ser considade é se sua lista de pacotes está atualizada.
-    Se você não atualizou recentemente, você precisa executar <command>apt-get update</command>
-    antes de qualquer coisa. Dessa forma, você estará usando a versão estável
-    mais recente dos pacotes do Apache e do PHP.
-   </simpara>
-   <simpara>
-    Agora que está tudo no lugar, você pode usar o seguinte exemplo
-    para instalar o Apache e o PHP:
+    Segundo, antes de instalar um pacote é melhor garantir que a lista de pacotes
+    está atualizada. Isso é feito rodando o comando
+    <command>apt-get update</command>.
    </simpara>
    <example xml:id="install.unix.debian.apt.example">
-    <title>Exemplo de Instalação no Debian com o Apache 1.3</title>
+    <title>Exemplo de instalação no Debian com Apache 2</title>
     <programlisting role="shell">
 <![CDATA[
-# apt-get install libapache-mod-php4
+# apt-get install php5-common libapache2-mod-php5 php5-cli
 ]]>
     </programlisting>
    </example>
    <simpara>
-    O APT instalará o módulo do PHP 4 para o Apache 1.3 automaticamente, e todas
-    as suas dependências e então ativá-lo. Se o programa não pedir para reiniciar o
-    Apache durante a instalação, você terá que fazê-lo manualmente:
+    APT instalará automaticamente o módulo do PHP 5 para Apache 2 e todas as suas
+    dependências, depois ativando-o. O Apache deve ser inicializado para que as
+    modificações tenham efeito. Por exemplo:
    </simpara>
    <example xml:id="install.unix.debian.apt.example2">
-    <title>Parando e iniciando o Apache depois que o PHP estiver instalado</title>
+    <title>Parando e iniciando o Apache depois do PHP instalado</title>
     <programlisting role="shell">
 <![CDATA[
-# /etc/init.d/apache stop
-# /etc/init.d/apache start
+# /etc/init.d/apache2 stop
+# /etc/init.d/apache2 start
 ]]>
     </programlisting>
    </example>
  </sect2>
  <sect2 xml:id="install.unix.debian.config">
-  <title>Maior controle sobre a configuração</title>
+  <title>Controle melhor as configurações</title>
    <simpara>
-    Na seção anterior, o PHP foi instalado apenas com os módulos principais.
-    Isso pode não ser o que você quer e você discobrirá em breve que você precisa
-    de mais módulos ativados, como MySQL, cURL, GD, etc.
-   </simpara>
-   <simpara>
-    Quando você compila o PHP do fonte, você precisa ativar os módulos através
-    do comando <command>configure</command>. Com o APT, você só precisa
-    instalar os pacotes adicionais. Todos eles tem o nome 'php4-*' (ou 'php5-*' se
-    você instalou o PHP 5 de um repositório não-oficial).
+    Até então o PHP foi instalado apenas com os meus módulos principais. É bem
+    provável que módulos adicionais serão desejados, como
+    <link linkend="book.mysql">MySQL</link>,
+    <link linkend="book.curl">cURL</link>,
+    <link linkend="book.image">GD</link>,
+    etc. Estes também podem ser instalados pelo comando <literal>apt-get</literal>.
    </simpara>
    <example xml:id="install.unix.debian.config.example">
-    <title>Pegando a lista de pacotes adicionais do PHP</title>
+    <title>Métodos listar pacotes adicionais do PHP 5</title>
     <programlisting role="shell">
 <![CDATA[
-# dpkg -l 'php4-*'
+# apt-cache search php5
+# aptitude search php5
+# aptitude search php5 |grep -i mysql
 ]]>
     </programlisting>
    </example>
    <simpara>
-    Como você pode ver na saída do comando, existem vários módulos do PHP que
-    você pode instalar (tirando os pacotes especiais php4-cgi, php4-cli ou
-    php4-pear).
-    Olhe com bastante atenção e escolha os que você precisar. Se você escolher um módulo e
-    você não tiver as bibliotecas necessárias, o APT instalará todas as dependências
-    automaticamente para você.
-   </simpara>
-   <simpara>
-    Se você escolher adicionar os módulos do MySQL, cURL e GD, o comando
-    parecerá com esse:
+    Os exemplos mostrarão uma grande quantidade de pacotes incluindo vários específicos do PHP,
+    como php5-cgi, php5-cli e php5-dev. Determine quais serão necessários
+    e instale como quaisquer outros via os comandos <literal>apt-get</literal>
+    ou <literal>aptitude</literal>. Como o Debian verifica as
+    dependências, ele perguntará sobre sobre elas. Por exemplo, para instalar
+    MySQL e cURL:
    </simpara>
    <example xml:id="install.unix.debian.config.example2">
-    <title>Instalar o PHP com MySQL, cURL e GD</title>
+    <title>Instalando PHP com MySQL e cURL</title>
     <programlisting role="shell">
 <![CDATA[
-# apt-get install php4-mysql php4-curl php4-gd
+# apt-get install php5-mysql php5-curl
 ]]>
     </programlisting>
    </example>
    <simpara>
-    O APT editará o seu arquivo &php.ini; (<filename>/etc/php4/apache/php.ini</filename>,
-    <filename>/etc/php4/cgi/php.ini</filename>, etc) para dar suporte
-    aos módulos novos.
-   </simpara>
-   <example xml:id="install.unix.debian.config.example3">
-    <title>Essas linhas ativam o MySQL, cURL e GD no PHP</title>
-    <programlisting role="shell">
-<![CDATA[
-extension=mysql.so
-extension=curl.so
-extension=gd.so
-]]>
-    </programlisting>
-   </example>
-   <simpara>
-    Você só terá que parar/iniciar o Apache como antes para ativar os módulos.
+    O APT irá automaticamente adicionair as linhas apropriadas a arquivos
+    &php.ini; relacionados, como
+    <filename>/etc/php5/apache2/php.ini</filename>,
+    <filename>/etc/php5/conf.d/pdo.ini</filename>, etc., e dependendo da
+    da extensão irá ainda acrescentar diretivas similares a <literal>extension=foo.so</literal>.
+    Entretanto é necessário reinicar o servidor web para que essas
+    alterações tenham efeito.
    </simpara>
  </sect2>
  <sect2 xml:id="install.unix.debian.faq">
-  <title>Problemas Comuns</title>
+  <title>Problemas comuns</title>
   <itemizedlist>
    <listitem>
     <simpara>
-     Se você ver o código fonte do seus script ao invés do resultado que eles
-     deveriam produzir, o APT provavelmente não incluiu
-     <filename>/etc/apache/conf.d/php4</filename> na configuração do
-     Apache. Verifique se a linha está presente no arquivo
-     <filename>/etc/apache/httpd.conf</filename> e então reinicie o Apache:
+     Se os scripts PHP não estão sendo interpretados pelo servidor web, então é provável que
+     o PHP não tenha sido acrescentado aos arquivos de configuração do servidor
+     web, que no Debian pode ser <filename>/etc/apache2/apache2.conf</filename>
+     ou algo similar. Veja o manual do Debian para mais detalhes.
     </simpara>
-   <example xml:id="install.unix.debian.faq.example">
-    <title>Essa linha ativa o PHP 4 no Apache</title>
-    <programlisting role="shell">
-<![CDATA[
-# Include /etc/apache/conf.d/
-]]>
-    </programlisting>
-   </example>
    </listitem>
    <listitem>
     <simpara>
-     Se você instalou um módulo adicional e se as funções desse módulo não
-     estiverem disponíveis nos scripts, verifique que a linha apropriada está presente
-     no seu arquivo &php.ini;, como visto antes. O APT pode falhar durante a instalação
-     de módulos adicionais, devido a uma configuração confusa do debconf.
+     Se uma extensão parece ter sido instalada e ainda assim funções permanecem não definidas,
+     verifique que o arquivo .ini apropriado está sendo carregado e/ou se o
+     servidor web foi reiniciado após a instalação.
+    </simpara>
+   </listitem>
+   <listitem>
+    <simpara>
+     Há dois comandos básicos para instalar pacotes no Debian (e em outras
+     variantes Linux): <literal>apt-get</literal> e <literal>aptitude</literal>.
+     Entretanto explicar as sutis diferenças entre esses dois comandos vai
+     além do escopo desse manual.
     </simpara>
    </listitem>
   </itemizedlist>
