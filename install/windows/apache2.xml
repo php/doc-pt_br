@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: af4410a7e15898c3dbe83d6ea38246745ed9c6fb Maintainer: narigone Status: ready -->
+<!-- EN-Revision: 9ccb86fb6f74ca88541ae1e6d056cbc680cadc32 Maintainer: ae Status: ready --><!-- CREDITS: narigone,ae -->
    <sect1 xml:id="install.windows.apache2" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <title>Apache 2.0.x no Microsoft Windows</title>
+    <title>Apache 2.x no Microsoft Windows</title>
     <para>
-     Essa seção contem notas e dicas específicas para instalação do Apache 2.0.x com
+     Essa seção contem notas e dicas específicas para instalação do Apache 2.x com
      o PHP nos sistemas Microsoft Windows.Também há
      <link linkend="install.windows.apache1">instruções e notas
      para o Apache 1.3.x</link> em uma página separada.
@@ -15,72 +15,43 @@
      </para>
     </note>
     <note>
-     <title>Suporte a Apache 2.2.x</title>
+     <title>Suporte a Apache 2.2</title>
      <para>
-      Usuários do Apache 2.2.x devem usar a documentação abaixo exceto que
-      o nome do arquivo da dll apropriada é
-      <filename>php5apache2_2.dll</filename> e lea só existe a partir do 5.2.0.
-      Veja também <link xlink:href="&url.php.snapshots;">&url.php.snapshots;</link>
+      Usuários do Apache 2.2 devem notar que o arquivo DLL para o Apache 2.2 é
+      chamado <filename>php5apache2_2.dll</filename> em vez de <filename>php5apache2.dll</filename>
+      e é disponível apenas para versões do PHP 5.2.0 e posteriores.
      </para>
     </note>
-    &warn.apache2.compat;
 
     <para>
      Encorajamos que você olhe a
      <link xlink:href="&url.apache2.docs;">Documentação do Apache</link> para
-     entender o básico do Servidor Apache 2.0.x. Também considere ler
+     entender o básico do Servidor Apache 2.x. Também considere ler
      as <link xlink:href="&url.apache2.windows;">notas específicas para o
-     Windows</link> para o Apache 2.0.x antes de continuar.
+     Windows</link> para o Apache 2.x antes de continuar.
     </para>
 
-    &install.snippet.apache2.compat;
-
-    <warning>
      <para>
-      Apache 2.0.x foi desenhado para rodar no Windows NT 4.0, Windows 2000 ou
-      Windows XP. Até o momento, suporte para Windows 9x está incompleto.
-      Apache 2.0.x não tem planos para funcionar nessas plataformas.
+      O Apache 2.x foi desenhado para rodar nas versões Windows do
+      do tipo servidoras, como Windows NT 4.0, Windows 2000,
+      Windows XP e Windows 7. O Apache 2.x funcionará rasoavelmente no Windows 9x,
+      mas o suporte nessa plataforma é incompleta, e algumas coisas não funcionarão
+      corretamente. Não há como remediar essas situações.
      </para>
-    </warning>
+     
     <para>
      Baixe a versão mais recente do <link xlink:href= "&url.apache;">
-     Apache 2.0.x</link> e uma versão apropriada do PHP.
+     Apache 2.x</link> e uma versão apropriada do PHP.
      Siga os <link linkend="install.windows.manual">Passos da Instalação
      Manual</link> e volte para continuar com a integração do PHP e Apache.
     </para>
+    
     <para>
-     Existem duas maneiras de configurar o PHP para funcionar com Apache 2.0.x no Windows.
-     Uma é usar o binário CGI e a outra é usar o DLL do módulo do Apache.
-     Em ambos os casos você precisa editar o arquivo &httpd.conf; para configurar o Apache para
-     funcionar com o PHP e, então, reiniciar o servidor.
+     Existem três maneira de rodar o PHP sob o Apache 2.x no Windows.
+     O PHP como módulo (handler), como CGI ou sob o FastCGI.
     </para>
 
     &note.apache.slashes;
-
-    <sect2 xml:id="install.windows.apache2.cgi">
-     <title>Instalando como um binário CGI</title>
-
-     <para>
-      Você precisa inserir essas três linhas para o arquivo &httpd.conf;
-      de configuração do Apache para configura o binário CGI:
-      <example>
-       <title>PHP e Apache 2.0 como CGI</title>
-        <programlisting role="apache-conf">
-<![CDATA[
-ScriptAlias /php/ "c:/php/"
-AddType application/x-httpd-php .php
-
-# Para o PHP 4
-Action application/x-httpd-php "/php/php.exe"
-
-# Para o PHP 5
-Action application/x-httpd-php "/php/php-cgi.exe"
-]]>
-       </programlisting>
-      </example>
-     </para>
-     &warn.install.cgi;
-    </sect2>
 
     <sect2 xml:id="install.windows.apache2.module">
      <title>Instalando como um módulo do Apache</title>
@@ -92,14 +63,9 @@ Action application/x-httpd-php "/php/php-cgi.exe"
        <title>PHP e Apache 2.0 como Módulo</title>
         <programlisting role="apache-conf">
 <![CDATA[
-# Para o PHP 4 faça algo assim:
-LoadModule php4_module "c:/php/php4apache2.dll"
-# Não esqueça de copiar o arquivo php4apache2.dll do diretório sapi para o principal do PHP!
-AddType application/x-httpd-php .php
-
-# Para o PHP 5 faça algo assim:
+# 
 LoadModule php5_module "c:/php/php5apache2.dll"
-AddType application/x-httpd-php .php
+AddHandler application/x-httpd-php .php
 
 # configure o caminho para o arquivo php.ini
 PHPIniDir "C:/php"
@@ -109,29 +75,105 @@ PHPIniDir "C:/php"
      </para>
      <note>
       <simpara>
-       Lembre-se de substituir o caminho <filename>c:/php/</filename> para o caminho
-       onde você instalou o PHP na sua máquina. Tome o cuidade de usar
-       ou <filename>php4apache2.dll</filename> ou
-       <filename>php5apache2.dll</filename> na sua diretiva LoadModule e
-       <emphasis>não</emphasis> <filename>php4apache.dll</filename> ou
-       <filename>php5apache.dll</filename> já que essas últimas são feitas para
-       rodar com o <link linkend="install.windows.apache1">Apache 1.3.x</link>.
+       Lembre-se de substituir o caminho atual do PHP em vez de
+       <filename>C:/php/</filename> dos exemplos acima. Use
+       <filename>php5apache2.dll</filename> ou
+       <filename>php5apache2_2.dll</filename> na sua diretiva directive e
+       verifique que o arquivo referenciado está localizado de fato no caminho
+       apontado na diretiva.
       </simpara>
      </note>
-     <note>
       <para>
-       Se você quiser negociação de conteúdo, leia o
-       <link linkend="faq.installation.apache.multiviews">FAQ relacionado</link>.
+      A configuração acima habilitará a manipulação do PHP por qualquer arquivo
+      com a extensão, mesmo que existam outras extensões. Por exemplo, um
+      arquivo chamado<filename>example.php.txt</filename> será executado pelo
+      manipulador do PHP. Para garantir que apenas arquivos com a extensão <emphasis>terminal</emphasis>
+      <filename>.php</filename> sejam executado, utilize a seguinte
+      configuração:
       </para>
-     </note>
-     <warning>
-      <simpara>
-       Não misture sua instalação com arquivos DLL de
-       <emphasis>versões diferentes do PHP</emphasis>. Você só pode escolher usar
-       as DLL's e extensões inclusas na versão do PHP que você baixou.
-      </simpara>
-     </warning>
+
+      <example>
+        <programlisting role="apache-conf">
+<![CDATA[
+ <FilesMatch \.php$>
+      SetHandler application/x-httpd-php
+ </FilesMatch>
+]]>
+       </programlisting>
+      </example>
     </sect2>
+
+    <sect2 xml:id="install.windows.apache2.cgi">
+     <title>Rodando o PHP como CGI</title>
+
+     <para>
+      Consulte a <link xlink:href="&url.apache.cgi;">Documentação CGI
+      do Apache</link> para melhor compreensão de se rodar CGIs
+      no Apache.
+     </para>
+   
+     <para>
+      Para rodar o PHP como CGI você precisará colocar seus arquivos php-cgi em um
+      diretório assim designado, utilizando para isso a diretiva ScriptAlias.
+     </para>
+
+     <para>
+      Terá também de inserir uma linha #! nos arquivos PHP, apontando para a
+      localização do executável do PHP:
+
+      <example>
+       <title>PHP e Apache 2.x como CGI</title>
+        <programlisting>
+<![CDATA[
+#!C:/php/php.exe
+<?php
+  phpinfo();
+?>
+]]>
+       </programlisting>
+      </example>
+     </para>
+     &warn.install.cgi;
+    </sect2>
+
+    <sect2 xml:id="install.windows.apache2.fastcgi">
+     <title>Rodando o PHP como FastCGI</title>
+
+     <para>
+     Rodar como FastCGI tem vantangens do que rodar como
+     CGI. A configuração é simples:
+     </para>
+     <para>
+     Obtenha o mod_fcgid de
+     <link xlink:href="&url.apache.fcgid;">&url.apache.fcgid;</link>. Executáveis
+     Win32 estão disponíveis para download desse arquivo. Instale o módulo
+     de acordo com as instruções que acompanham o binário.
+     </para>
+     <para>
+     Configure o seu servidor como mostrado abaixo, tomando cuidado de ajustar quaisquer caminhos
+     de forma a refletir os locais onde estão instalados os itens no seu sistema:
+
+     <example>
+     <title>Configurar o Apache para rodar PHP como FastCGI</title>
+     <programlisting>
+<![CDATA[
+LoadModule fcgid_module modules/mod_fcgid.so  
+
+# Onde está o seu arquivo php.ini?
+FcgidInitialEnv PHPRC        "c:/php" 
+
+AddHandler fcgid-script .php  
+FcgidWrapper "c:/php/php-cgi.exe" .php  
+]]>
+     </programlisting>
+     </example>
+
+     Arquivos com a extensão .php agora serão executados pelo manipulador
+     FastCGI do PHP.
+     </para>
+
+    </sect2>
+
    </sect1>
 
 <!-- Keep this comment at the end of the file
