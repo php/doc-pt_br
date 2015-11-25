@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: fbee8b3790fc1ea6653f0c564203e7032a09b945 Maintainer: ae Status: wip --><!-- CREDITS: felipe,ae --><!-- TODO 492 -->
+<!-- EN-Revision: fbee8b3790fc1ea6653f0c564203e7032a09b945 Maintainer: ae Status: wip --><!-- CREDITS: felipe,ae --><!-- TODO 650 -->
  <chapter xml:id="language.operators" xmlns="http://docbook.org/ns/docbook">
   <title>Operadores</title>
   <simpara>
@@ -489,40 +489,75 @@ $b .= "Dia!"; // configura $b para "Bom Dia!", como em $b = $b . "Dia!";
     Objetos podem ser explicitamente copiados através da instrução <link
     linkend="language.oop5.cloning">clone</link>.
    </para>
+   
+   <sect2 xml:id="language.operators.assignment.reference">
+    <title>Atribuição por referência</title>
+    <para>
+     Atribuição por referência também é possível, utilizando-se a sintaxe
+     "<computeroutput>$var = &amp;$othervar;</computeroutput>".
+     A atribuição por referência significa que ambas as variáveis apontam
+     para o mesmo dado, e nada é copiado.
+    </para>
+    <para>
+     <example>
+      <title>Atribuição por referência</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+$a = 3;
+$b = &$a; // $b é uma referência de $a
+
+print "$a\n"; // imprime 3
+print "$b\n"; // imprime 3
+
+$a = 4; // modificamos $a
+
+print "$a\n"; // imprime 4
+print "$b\n"; // imprime 4 também, pois $b é uma referência de $a, que foi
+              // modificada
+?>
+]]>
+      </programlisting>
+     </example>
+    </para>
+    <para>
+     A partir do PHP o operador <link linkend="language.oop5.basic.new">new</link>
+     retorna uma referência automaticamente, de forma que a assimulação de um resultado de
+     <link linkend="language.oop5.basic.new">new</link> gera um alerta
+     <constant>E_DEPRECATED</constant> no PHP 5.3 e posteriores, e
+     um alerta <constant>E_STRICT</constant> nas versões anteriores.
+    </para>
+    <para>
+     Por exemplo, esse código gerá um alerta:
+     <informalexample>
+      <programlisting role="php">
+<![CDATA[
+<?php
+class C {}
+
+/* A linha seguinte gera a mensagem:
+ * Deprecated: Assigning the return value of new by reference is deprecated in...
+ */
+$o = &new C;
+?>
+]]>
+      </programlisting>
+     </informalexample>
+    </para>
+    <para>
+     Mais informações sobre referências se seus usos potenciais podem ser encontrados
+     na seção <link linkend="language.references">Explicando Referências</link>
+     do manual.
+    </para>
+   </sect2>
   </sect1>
 
   <sect1 xml:id="language.operators.bitwise">
-   <title>Operador Bit-a-bit</title>
+   <title>Operadores bit a bit</title>
    <simpara>
-    Operadores bit-a-bit permitem que você acione ou desligue bits específicos dentro
-    de um inteiro. Se ambos os parâmetros da esquerda e da direita forem
-    strings, esses operadores irão trabalhar nos valores ASCII dos caracteres.
+    Operadores bit-a-bit permitem a avaliação e modificação de bits
+    específicos em um tipo inteiro.
    </simpara>
-   <para>
-    <informalexample>
-     <programlisting role="php">
-<![CDATA[
-<?php
-echo 12 ^ 9; // Imprime '5'
-
-echo "12" ^ "9"; // Imprime o caracter de volta (backspace - ASCII 8)
-                 // ('1' (ASCII 49)) ^ ('9' (ASCII 57)) = #8
-
-echo "hallo" ^ "hello"; // Imprime os valores ASCII #0 #4 #0 #0 #0
-                        // 'a' ^ 'e' = #4
-
-echo 2 ^ "3"; // Imprime '1'
-// 2 ^ ((int)"3") == 1
-
-echo "2" ^ 3; // Imprime '1'
-// ((int)"2") ^ 3 == 1
-
-?>
-]]>
-     </programlisting>
-    </informalexample>
-   </para>
-
    <table>
     <title>Operadores Bit-a-bit</title>
     <tgroup cols="3">
@@ -535,54 +570,83 @@ echo "2" ^ 3; // Imprime '1'
      </thead>
      <tbody>
       <row>
-       <entry>$a &amp; $b</entry>
+       <entry><userinput>$a &amp; $b</userinput></entry>
        <entry>E</entry>
-       <entry>Os bits que estão ativos tanto em $a quanto em $b são ativados.</entry>
+       <entry>Os bits que estão ativos tanto em <varname>$a</varname> quanto em <varname>$b</varname> são ativados.</entry>
       </row>
       <row>
-       <entry>$a | $b</entry>
+       <entry><userinput>$a | $b</userinput></entry>
        <entry>OU</entry>
-       <entry>Os bits que estão ativos em $a ou em $b são ativados.</entry>
+       <entry>Os bits que estão ativos em <varname>$a</varname> ou em $b são ativados.</entry>
       </row>
       <row>
-       <entry>$a ^ $b</entry>
+       <entry><userinput>$a ^ $b</userinput></entry>
        <entry>XOR</entry>
        <entry>
-        Os bits que estão ativos em $a ou em $b, mas não em ambos, são ativados.
+        Os bits que estão ativos em <varname>$a</varname> ou em <varname>$b</varname>, mas não em ambos, são ativados.
        </entry>
       </row>
       <row>
-       <entry>~ $a</entry>
+       <entry><userinput>~ $a</userinput></entry>
        <entry>NÃO</entry>
        <entry>
-        Os bits que estão ativos em $a não são ativados, e vice-versa.
+        Os bits que estão ativos em <varname>$a</varname> não são ativados, e vice-versa.
        </entry>
       </row>
       <row>
-       <entry>$a &lt;&lt; $b</entry>
+       <entry><userinput>$a &lt;&lt; $b</userinput></entry>
        <entry>Deslocamento à esquerda</entry>
        <entry>
-        Desloca os bits de $a $b passos para a esquerda (cada passo significa
+        Desloca os bits de <varname>$a</varname> $b passos para a esquerda (cada passo significa
         "multiplica por dois")
        </entry>
       </row>
       <row>
-       <entry>$a &gt;&gt; $b</entry>
+       <entry><userinput>$a &gt;&gt; $b</userinput></entry>
        <entry>Deslocamento à direita</entry>
        <entry>
-        Desloca os bits de $a $b passos para a direita (cada passo significa
+        Desloca os bits de <varname>$a</varname> $b passos para a direita (cada passo significa
         "divide por dois")
        </entry>
       </row>
      </tbody>
     </tgroup>
    </table>
-   <warning>
-    <para>
-     Não desloque bits à direita maiores que 32 bits em sistemas 32 bits. E também
-     a esquerda no caso do resultado ser um número maior que 32 bits.
-    </para>
-   </warning>
+   <para>
+    O deslocamento de bits no PHP é aritmético.
+    Bits deslocados no lado final são descartados.
+    Deslocamentos a esquerda tem zeros inseridos à direita e o bit
+    de sinal é perdido, e assim o sinal do operando
+    não é preservado.
+    Deslocamentos a direita tem cópias do bit de sinal à esquerda,
+    e assim o sinal do operando é preservado.
+   </para>
+   <para>
+    Utilize parenteses para garantir a 
+    <link linkend="language.operators.precedence">precedence</link> desejada.
+    Por exemplo <literal>$a &amp; $b == true</literal> avalia primeiro
+    a equivalência e depois a operação de bits, enquanto que
+    <literal>($a &amp; $b) == true</literal> avalia primeiro a operação de bits e
+    só depois a equivalência.
+   </para>
+   <para>
+    Se ambos os operandos de <literal>&amp;</literal>, <literal>|</literal> e
+    <literal>^</literal> forem strings então a operação será
+    realizada nos valores ASCII dos caracteres das strings, e o
+    resultado final será uma string. Em todos os outros casos ambos os operandos serão
+    <link linkend="language.types.integer.casting">convertidos para inteiros</link>
+    e o resultado será um inteiro.
+   </para>
+   <para>
+    Se o operando de <literal>~</literal> for uma string então a
+    operação será realizada nos valores ASCII dos caracteres da 
+    string, e o resultado será uma string. Nos demais casos o operando e o
+    resultado serão tratados como inteiros.
+   </para>
+   <para>
+    Ambos os operandos e o resultado para <literal>&lt;&lt;</literal> e
+    <literal>&gt;&gt;</literal> sempre são tratados como inteiros.
+   </para>
   </sect1>
 
   <sect1 xml:id="language.operators.comparison">
