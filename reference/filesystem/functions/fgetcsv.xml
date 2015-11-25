@@ -1,19 +1,20 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: af4410a7e15898c3dbe83d6ea38246745ed9c6fb Maintainer: diogo Status: ready --><!-- CREDITS: rarruda, ae -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 6501c09deda9a063eb47e05ca3cbb6d922b7eb49 Maintainer: thiago Status: ready --><!-- CREDITS: diogo, rarruda, ae -->
   <refentry xml:id="function.fgetcsv" xmlns="http://docbook.org/ns/docbook">
    <refnamediv>
     <refname>fgetcsv</refname>
     <refpurpose>Lê uma linha do ponteiro de arquivos e a interpreta como campos CSV</refpurpose>
    </refnamediv>
+   
    <refsect1 role="description">
     &reftitle.description;
      <methodsynopsis>
       <type>array</type><methodname>fgetcsv</methodname>
       <methodparam><type>resource</type><parameter>handle</parameter></methodparam>
-      <methodparam choice="opt"><type>int</type><parameter>length</parameter></methodparam>
-      <methodparam choice="opt"><type>string</type><parameter>delimiter</parameter></methodparam>
-      <methodparam choice="opt"><type>string</type><parameter>enclosure</parameter></methodparam>
-    <methodparam choice="opt"><type>string</type><parameter>escape</parameter></methodparam>
+    <methodparam choice="opt"><type>int</type><parameter>length</parameter><initializer>0</initializer></methodparam>
+    <methodparam choice="opt"><type>string</type><parameter>delimiter</parameter><initializer>","</initializer></methodparam>
+    <methodparam choice="opt"><type>string</type><parameter>enclosure</parameter><initializer>'"'</initializer></methodparam>
+    <methodparam choice="opt"><type>string</type><parameter>escape</parameter><initializer>"\"</initializer></methodparam>
      </methodsynopsis>
   <para>
    Similar à função <function>fgets</function>, exceto que a
@@ -43,8 +44,9 @@
          <para>
           Deve ser maior do que a maior linha (em caracteres) a ser encontrada no arquivo CSV
           (permitindo caracteres de fim-de-linha). Se tornou opcional no PHP 5. Omitir
-          este parâmetro (ou defini-lo como 0 no PHP 5.0.4 e posterior) o tamanho da linha
-          não é limitado, o que é levemente mais lento.
+          este parâmetro (ou defini-lo como 0 no PHP 5.1.0 e posterior) o tamanho da linha
+          não é limitado, o que é 
+          levemente mais lento.
          </para>
         </listitem>
        </varlistentry>
@@ -52,7 +54,7 @@
         <term><parameter>delimiter</parameter></term>
         <listitem>
          <para>
-          Define o delimitador de campo (somente um caractere). O padrão é uma vírgula.
+          O parâmetro opcional <parameter>delimiter</parameter> define o delimitador de campo (somente um caractere).
          </para>
         </listitem>
        </varlistentry>
@@ -60,7 +62,7 @@
         <term><parameter>enclosure</parameter></term>
         <listitem>
          <para>
-          Define o caractere que cerca um campo (somente um caractere). O padrão é aspas duplas.
+          O parâmetro opctional <parameter>enclosure</parameter> define o caractere que cerca um campo (somente um caractere).
          </para>
         </listitem>
        </varlistentry>
@@ -68,8 +70,7 @@
         <term><parameter>escape</parameter></term>
         <listitem>
          <para>
-          Define o caractere de escape (somente um caractere). O padrão é barra invertida
-      (<literal>\</literal>)
+          O parâmetro opcional <parameter>escape</parameter> define o caractere de escape (somente um caractere).
          </para>
         </listitem>
        </varlistentry>
@@ -91,7 +92,8 @@
     </note>
     &note.line-endings;
     <para>
-     <function>fgetcsv</function> returna &false; em caso de erro, inclusive no final do
+     <function>fgetcsv</function> retorna &null; se um parâmetro
+     <parameter>handle</parameter> inválido for fornecido ou &false; por outros erros, inclusive no final do
    arquivo.
     </para>
    </refsect1>
@@ -115,15 +117,21 @@
          </entry>
         </row>
         <row>
-         <entry>4.3.5</entry>
+         <entry>5.1.0</entry>
          <entry>
-          <function>fgetcsv</function> passou a ser segura para binários
+          Agora <parameter>length</parameter> é opcional.
+          O padrão é <literal>0</literal>, que significa sem nenhum limite de comprimento.
+          <!--
+          Note to documentors: the length parameter was actually
+          made optional in PHP 5.0.4 but didn't behave properly.
+          Let's gloss over that here. :)
+          -->
          </entry>
         </row>
         <row>
-         <entry>4.3.0</entry>
+         <entry>4.3.5</entry>
          <entry>
-          O parâmetro <parameter>enclosure</parameter> foi adicionado
+          <function>fgetcsv</function> passou a ser segura para binários
          </entry>
         </row>
        </tbody>
@@ -141,16 +149,17 @@
 <![CDATA[
 <?php
 $row = 1;
-$handle = fopen ("teste.csv","r");
-while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-    $num = count ($data);
-    echo "<p> $num campos na linha $row: <br /></p>\n";
-    $row++;
-    for ($c=0; $c < $num; $c++) {
-        echo $data[$c] . "<br />\n";
-    }
-}
-fclose ($handle);
+ if (($handle = fopen("teste.csv", "r")) !== FALSE) {
+     while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+         $num = count($data);
+         echo "<p> $num campso na linha $row: <br /></p>\n";
+         $row++;
+         for ($c=0; $c < $num; $c++) {
+             echo $data[$c] . "<br />\n";
+         }
+     }
+    fclose ($handle);
+ }
 ?>
 ]]>
       </programlisting>

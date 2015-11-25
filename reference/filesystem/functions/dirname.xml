@@ -1,19 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: diogo Status: ready --><!-- CREDITS: rarruda, ae -->
+<!-- EN-Revision: 784c7b502d772819b579525470f113b31dd6b166 Maintainer: thiago Status: ready --><!-- CREDITS: diogo, rarruda, ae -->
   <refentry xml:id="function.dirname" xmlns="http://docbook.org/ns/docbook">
    <refnamediv>
     <refname>dirname</refname>
-    <refpurpose>Retorna o componente diretório de um caminho/path</refpurpose>
+    <refpurpose>Retorna o caminho/path do diretório pai</refpurpose>
    </refnamediv>
+
    <refsect1 role="description">
     &reftitle.description;
      <methodsynopsis>
       <type>string</type><methodname>dirname</methodname>
-      <methodparam><type>string</type><parameter>path</parameter></methodparam>
-     </methodsynopsis>
+      <methodparam><type>string</type><parameter>path</parameter></methodparam>     
+      <methodparam choice="opt"><type>int</type><parameter>levels</parameter><initializer>1</initializer></methodparam>
+    </methodsynopsis>
     <para>
-     Dada uma string contendo um caminho para um arquivo, esta função
-     irá retornar o nome do diretório.
+     Dada uma string contendo um caminho para um arquivo ou diretório, esta função
+     irá retornar o caminho do diretório pai que é 
+     <parameter>levels</parameter> acima do diretório atual.
   </para>
    </refsect1>
 
@@ -25,31 +28,42 @@
      <term><parameter>path</parameter></term>
      <listitem>
       <para>
-     Um caminho.
-        </para>
-        <para>
-         No Windows, tanto barra (<literal>/</literal>) quanto a
-         barra invertida (<literal>\</literal>) são usadas como caracter
-         separador no path. Em outros ambientes é utilizado a barra
-         (<literal>/</literal>).
-    </para>
+       Um caminho.
+      </para>
+      <para>
+       No Windows, tanto barra (<literal>/</literal>) quanto a
+       barra invertida (<literal>\</literal>) são usadas como caracter
+       separador no path. Em outros ambientes é utilizado a barra (<literal>/</literal>).
+      </para>
      </listitem>
     </varlistentry>
+    <varlistentry>
+     <term><parameter>levels</parameter></term>
+     <listitem>
+      <para>
+       O número de diretórios pai para subir.
+      </para>
+      <para>
+       Deve ser um inteiro maior que 0.
+      </para>
+     </listitem>
+    </varlistentry>    
    </variablelist>
   </para>
-   </refsect1>
+  </refsect1>
 
    <refsect1 role="returnvalues">
     &reftitle.returnvalues;
-  <para>
-     Retorna o nome do diretório. Se não houver nenhuma barra no
-   <parameter>path</parameter>, um ponto ('<literal>.</literal>') é retornado,
-   indicando o diretório atual. Do contrário, a string retornada é o
-   <parameter>path</parameter> com qualquer <literal>/componente</literal>
-   adjacente removido.
-  </para>
-   </refsect1>
-   <refsect1 role="changelog">
+    <para>
+     Retorna o caminho do diretório pai. Se não houver nenhuma barra no
+     <parameter>path</parameter>, um ponto ('<literal>.</literal>') é retornado,
+     indicando o diretório atual. Do contrário, a string retornada é o
+     <parameter>path</parameter> com qualquer <literal>/componente</literal>
+     adjacente removido.
+    </para>
+  </refsect1>
+
+  <refsect1 role="changelog">
     &reftitle.changelog;
     <para>
      <informaltable>
@@ -62,15 +76,15 @@
        </thead>
        <tbody>
         <row>
-         <entry>5.0.0</entry>
+         <entry>7.0.0</entry>
          <entry>
-          <function>dirname</function> passou a ser segura para binários
+          Adicionado o parâmetro opcional <parameter>levels</parameter>.
          </entry>
         </row>
         <row>
-         <entry>4.0.3</entry>
+         <entry>5.0.0</entry>
          <entry>
-          <function>dirname</function> foi corrigida para estar em conformidade com a POSIX.
+          <function>dirname</function> passou a ser segura para binários
          </entry>
         </row>
        </tbody>
@@ -87,11 +101,21 @@
       <programlisting role="php">
 <![CDATA[
 <?php
-$path = "/etc/passwd";
-$file = dirname ($path); // $file = "/etc"
-?>
+ echo dirname("/etc/passwd") . PHP_EOL;
+ echo dirname("/etc/") . PHP_EOL;
+ echo dirname(".") . PHP_EOL;
+ echo dirname("/usr/local/lib", 2);
 ]]>
       </programlisting>
+     &example.outputs.similar;
+     <screen>
+ <![CDATA[
+ /etc
+ / (ou \ no Windows)
+ .
+ /usr
+ ]]>
+     </screen>
      </example>
     </para>
    </refsect1>
@@ -100,7 +124,21 @@ $file = dirname ($path); // $file = "/etc"
     &reftitle.notes;
     <note>
      <para>
-      A partir do PHP 4.0.3, você receberá uma barra ou um ponto da
+      A <function>dirname</function> opera inocentemente com a string de entrada,
+      e não conhece o filesystem, ou componentes de caminho (path) como
+      o "<literal>..</literal>".
+    </para>
+   </note>
+   <note>
+    <para>
+      A <function>dirname</function> é ciente do local (locale), então para que ela veja corretamente
+      o nome do diretório que contenha caracteres multibytes no caminho,
+      o locale certo deve ser definido usando <function>setlocale</function>.
+    </para>
+   </note>
+   <note>
+    <para>      
+      A partir do PHP 4.3.0, você receberá frequentemente uma barra ou um ponto da
     <function>dirname</function> em situações onde a funcionalidade
       anterior devolveria uma string vazia.
      </para>
@@ -135,9 +173,9 @@ dirname('/x'); // retorna '\'
       <member><function>pathinfo</function></member>
       <member><function>realpath</function></member>
      </simplelist>
-  </para>
+    </para>
    </refsect1>
-  </refentry>
+</refentry>
 
 <!-- Keep this comment at the end of the file
 Local variables:

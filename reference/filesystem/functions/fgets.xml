@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: diogo Status: ready --><!-- CREDITS: rarruda, ae -->
+<!-- EN-Revision: 8b5940cadeb4f1c8492f4a7f70743a2be807cf39 Maintainer: thiago Status: ready --><!-- CREDITS: diogo, rarruda, ae -->
   <refentry xml:id="function.fgets" xmlns="http://docbook.org/ns/docbook">
    <refnamediv>
     <refname>fgets</refname>
@@ -32,7 +32,7 @@
        <listitem>
         <para>
      A leitura termina quando <parameter>length</parameter> - 1 bytes tenham sido
-     lidos, em uma quebra de linha (que é incluída no retorno), ou no final do arquivo
+     lidos, ou uma quebra de linha (que é incluída no retorno), ou no final do arquivo
      (EOF), o que acontecer primeiro. Se nenhum comprimento for especificado, a leitura
      do stream continuará até chegar ao final da linha.
         </para>
@@ -53,10 +53,11 @@
     &reftitle.returnvalues;
   <para>
    Retorna uma string de até <parameter>length</parameter> - 1 bytes lida do
-   arquivo apontado por <parameter>handle</parameter>.
+   arquivo apontado por <parameter>handle</parameter>. Se não tiver mais dados 
+   para ler no ponteiro do arquivo, então retorna &false;.
   </para>
     <para>
-     Se um erro ocorrer, retorna &false;.
+     Se um erro ocorrer, é retornado &false;.
     </para>
    </refsect1>
 
@@ -78,12 +79,6 @@
           <function>fgets</function> passou a ser segura para binários
          </entry>
         </row>
-        <row>
-         <entry>4.2.0</entry>
-         <entry>
-          O parâmetro <parameter>length</parameter> tornou-se opcional
-         </entry>
-        </row>
        </tbody>
       </tgroup>
      </informaltable>
@@ -100,10 +95,13 @@
 <?php
 $handle = @fopen("/tmp/arquivodeentrada.txt", "r");
 if ($handle) {
-    while (!feof($handle)) {
-        $buffer = fgets($handle, 4096);
+    while (($buffer = fgets($handle, 4096)) !== false) {
         echo $buffer;
     }
+    if (!feof($handle)) {
+        echo "Erro: falha inexperada de fgets()\n";
+    }
+
     fclose($handle);
 }
 ?>
