@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 0 Maintainer: ae Status: wip --><!-- CREDITS: felipe,ae --><!-- TODO 1600 -->
+<!-- EN-Revision: 0c64ee700871f34304081be5f9a7cfd131ca9199 Maintainer: ae Status: wip --><!-- CREDITS: felipe,ae -->
  <chapter xml:id="language.operators" xmlns="http://docbook.org/ns/docbook">
   <title>Operadores</title>
   <simpara>
@@ -1606,9 +1606,16 @@ echo ((true ? 'true' : 'false') ? 't' : 'f');
     gerada por aquela expressão será ignorada.
    </simpara>
    <simpara>
+    Se você configurar uma função personalizada de manipulação de erros com
+    <function>set_error_handler</function> ela será
+    chamada, mas esta função personalizada pode (e deve) chamar <function>error_reporting</function>
+    que irá retornar 0 quando o erro disparado tiver sido precedido por uma @.
+   </simpara>
+   <simpara>
     Se o recurso <link linkend="ini.track-errors"><option>track_errors</option></link>
     estiver habilitado, qualquer mensagem de erro gerada pela expressão
-    será gravada na variável <varname>$php_errormsg</varname>.
+    será gravada na variável
+    <varname>$php_errormsg</varname>.
     Esta variável será sobrescrita em cada erro, assim verifique-a constantemente
     se você quiser usá-la.
    </simpara>
@@ -1646,12 +1653,6 @@ $value = @$cache[$key];
     Veja também <function>error_reporting</function> e a seção do manual sobre
     <link linkend="ref.errorfunc">funções de Manipulação de Erros e Logging</link>.
    </simpara>
-   <note>
-    <para>
-     O prefixo de controle de erro "@" não desabilita mensagens
-     que são resultado de erros de interpretação (parse errors).
-    </para>
-   </note>
    <warning>
     <para>
      Atualmente, o operador de controle de erro "@" sempre desativa
@@ -1690,6 +1691,12 @@ echo "<pre>$output</pre>";
      ou <function>shell_exec</function> está desabilitado.
     </para>
    </note>
+   <note>
+    <para>
+     Ao contrário de outras linguagens, crases não tem sentido especial
+     dentro de strings delimitadas por aspas.
+    </para>
+   </note>
    <para>
     Veja também a seção do manual sobre <link linkend="ref.exec">funções
     de execução de programas</link>, <function>popen</function>
@@ -1707,8 +1714,9 @@ echo "<pre>$output</pre>";
    </para>
    <note>
     <simpara>
-     Os operadores incremento/decremento não afetam valores booleanos.
-     Decrementando valores &null; não há efeito também, mas incrementando resulta
+     Os operadores incremento/decremento afetam apanas números e strings.
+     Arrays, objetos e recursos não são afetados.
+     Decrementar &null; não gera efeitos, mas incrementar resulta
      em <literal>1</literal>.
     </simpara>
    </note>
@@ -1778,18 +1786,33 @@ echo "Deve ser 4: " . $a . "<br />\n";
    </para>
    <para>
     O PHP segue a convenção Perl quando tratando operações aritmétricas
-    em variavéis caracter em vez da convenção C. Por exemplo, em Perl 'Z'+1 se torna
-    'AA', enquanto que no C 'Z'+1 se torna '[' ( ord('Z') == 90, ord('[') == 91 ).
+    em variavéis caracter em vez da convenção C. Por exemplo, em Perl
+    <literal>$a = 'Z'; $a++;</literal> transforma <literal>$a</literal> em <literal>'AA'</literal> enquanto que em C
+    <literal>a = 'Z'; a++;</literal> transforma <literal>$a</literal> em <literal>'['</literal>
+    (valor ASCII de <literal>'Z'</literal> é 90, valor ASCII <literal>'['</literal> é 91).
     Note que variáveis caracter podem ser incrementadas mas não decrementadas e
     somente caracteres plain ASCII (a-z e A-Z) são suportados.
+    Incrementar ou decrementar outros caracteres não tem efeitos, a
+    string original não sendo modificada.
     <example>
      <title>Operações aritmétricas em variáveis caractere</title>
      <programlisting role="php">
 <![CDATA[
 <?php
-$i = 'W';
+echo '== Alphabets ==' . PHP_EOL;
+$s = 'W';
 for ($n=0; $n<6; $n++) {
-  echo ++$i . "\n";
+    echo ++$s . PHP_EOL;
+}
+// Digit characters behave differently
+echo '== Digits ==' . PHP_EOL;
+$d = 'A8';
+for ($n=0; $n<6; $n++) {
+    echo ++$d . PHP_EOL;
+}
+$d = 'A08';
+for ($n=0; $n<6; $n++) {
+    echo ++$d . PHP_EOL;
 }
 ?>
 ]]>
@@ -1797,12 +1820,26 @@ for ($n=0; $n<6; $n++) {
      &example.outputs;
      <screen>
 <![CDATA[
+== Characters ==
 X
 Y
 Z
 AA
 AB
 AC
+== Digits ==
+A9
+B0
+B1
+B2
+B3
+B4
+A09
+A10
+A11
+A12
+A13
+A14
 ]]>
      </screen>
     </example>
@@ -1871,20 +1908,38 @@ AC
 <![CDATA[
 <?php
 
-// foo() nunca será chamada como estes operadores são short-circuit
+// --------------------
+// foo() nunca será chamada porque toda a expressão sofre curto circuito
+
 $a = (false && foo());
 $b = (true  || foo());
 $c = (false and foo());
 $d = (true  or  foo());
 
+// --------------------
 // "||" tem maior precedência que "or"
-$e = false || true; // $e will be assigned to (false || true) which is true
-$f = false or true; // $f will be assigned to false
+
+// O resultado da expressão (false || true) é atribuido em $e
+// Funciona como: ($e = (false || true))
+$e = false || true;
+
+// A constante false é atribuída a $f e então ignorada
+// Funciona como: (($f = false) or true)
+$f = false or true;
+
 var_dump($e, $f);
 
+// --------------------
 // "&&" tem maior precedência que "and"
-$g = true && false; // $g will be assigned to (true && false) which is false
-$h = true and false; // $h will be assigned to true
+
+// O resultado da expressão (true && false) é atribuído em $g
+// Funciona como: ($g = (true && false))
+$g = true && false;
+
+// A constante true é atribuída em $h e o falso é ignorado
+// Funciona como: (($h = true) and false)
+$h = true and false;
+
 var_dump($g, $h);
 ?>
 ]]>
@@ -1983,9 +2038,10 @@ $a .= "mundo!";     // agora $a contém "Olá mundo!"
     </tgroup>
    </table>
    <para>
-    O operador <literal>+</literal>
-    acrescenta os elementos da direita no array da esquerda, contudo,
-    chaves duplicadas NÃO são sobrescritas.
+    O operador <literal>+</literal> retorna o array à direta anexado
+    ao array da esqueda. Para chaves que existam nos dois arrays os elementos
+    do array a esquerda serão mantidos, os valores de mesma chave no
+    array da direita são ignorados.
    </para>
    <para>
     <informalexample>
@@ -2002,6 +2058,10 @@ var_dump($c);
 $c = $b + $a; // União de $b e $a
 echo "União de \$b e \$a: \n";
 var_dump($c);
+
+$a += $b; // União de $a += $b é $a e $b
+echo "União de \$a += \$b: \n";
+var_dump($a);
 ?>
 ]]>
      </programlisting>
@@ -2026,6 +2086,15 @@ array(3) {
   string(10) "framboesa"
   ["c"]=>
   string(6) "morango"
+}
+União de $a += $b:
+array(3) {
+  'a' =>
+  string(5) "maçã"
+  'b' =>
+  string(6) "banana"
+  'c' =>
+  string(6) "framboesa"
 }
 ]]>
     </screen>
@@ -2065,7 +2134,7 @@ var_dump($a === $b); // bool(false)
     <example>
      <title>Usando instanceof com classes</title>
      <programlisting role="php">
-     <![CDATA[
+<![CDATA[
 <?php
 class MyClass
 {
@@ -2096,7 +2165,7 @@ bool(false)
     <example>
      <title>Usando instanceof com herança</title>
      <programlisting role="php">
-     <![CDATA[
+<![CDATA[
 <?php
 class ParentClass
 {
@@ -2111,10 +2180,10 @@ $a = new MyClass;
 var_dump($a instanceof MyClass);
 var_dump($a instanceof ParentClass);
 ?>
-     ]]>
-    </programlisting>
-    &example.outputs;
-    <screen>
+]]>
+     </programlisting>
+     &example.outputs;
+     <screen>
 <![CDATA[
 bool(true)
 bool(true)
@@ -2156,7 +2225,7 @@ bool(true)
     <example>
      <title>Usando instanceof para classe</title>
      <programlisting role="php">
-     <![CDATA[
+ <![CDATA[
 <?php
 interface MyInterface
 {
@@ -2171,10 +2240,10 @@ $a = new MyClass;
 var_dump($a instanceof MyClass);
 var_dump($a instanceof MyInterface);
 ?>
-     ]]>
-    </programlisting>
-    &example.outputs;
-    <screen>
+]]>
+     </programlisting>
+     &example.outputs;
+     <screen>
 <![CDATA[
 bool(true)
 bool(true)
@@ -2188,7 +2257,7 @@ bool(true)
     <example>
      <title>Usando instanceof com outras variáveis</title>
      <programlisting role="php">
-     <![CDATA[
+<![CDATA[
 <?php
 interface MyInterface
 {
@@ -2207,7 +2276,7 @@ var_dump($a instanceof $b); // $b é umn objeto da classe MyClass
 var_dump($a instanceof $c); // $c é uma string 'MyClass'
 var_dump($a instanceof $d); // $d é uma string 'NotMyClass'
 ?>
-     ]]>
+]]>
     </programlisting>
     &example.outputs;
     <screen>
@@ -2215,6 +2284,35 @@ var_dump($a instanceof $d); // $d é uma string 'NotMyClass'
 bool(true)
 bool(true)
 bool(false)
+]]>
+     </screen>
+    </example>
+   </para>
+   <para>
+    instanceof não lança erros se a variável testada não for
+    um objeto, apenas retorna false. Constantes, entretanto, não são permitidas.
+    <example>
+     <title>Utilizando <literal>instanceof</literal> para testar outras variáveis</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+$a = 1;
+$b = NULL;
+$c = imagecreate(5, 5);
+var_dump($a instanceof stdClass); // inteiro
+var_dump($b instanceof stdClass); // NULL
+var_dump($c instanceof stdClass); // resource
+var_dump(FALSE instanceof stdClass);
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+bool(false)
+bool(false)
+bool(false)
+PHP Fatal error:  instanceof expects an object instance, constant given
 ]]>
      </screen>
     </example>
@@ -2228,12 +2326,12 @@ bool(false)
     <example>
      <title>Evitando que o nome da classe seje verificado e fatal erros com instanceof no PHP 5.0</title>
      <programlisting role="php">
-     <![CDATA[
+<![CDATA[
 <?php
 $d = 'NotMyClass';
 var_dump($a instanceof $d); // não causa erro fatal
 ?>
-     ]]>
+]]>
     </programlisting>
     &example.outputs;
     <screen>
@@ -2247,7 +2345,8 @@ bool(false)
     O operador <literal>instanceof</literal> foi introduzido no PHP 5.
     Antes disso <function>is_a</function> era usado mas
     <function>is_a</function> tornou-se obsoleto pelo
-    <literal>instanceof</literal>.
+    <literal>instanceof</literal>. A partir do PHP 5.3.0
+    <function>is_a</function> não está mais obsoleta.
    </simpara>
    <para>
     Veja também <function>get_class</function> e
