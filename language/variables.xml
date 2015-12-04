@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: felipe Status: ready --><!-- CREDITS: ae -->
+<!-- EN-Revision: c5966670de19d0e3f42021bb5527d54b4a78bfa8 Maintainer: ae Status: ready --><!-- CREDITS: ae,felipe -->
  <chapter xml:id="language.variables" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Variáveis</title>
 
@@ -121,8 +121,7 @@ $bar = &test();    // Inválido.
    
    <para>
     Não é necessário variáveis inicializadas no PHP, contudo é uma ótima
-    prática. Variáveis não inicializadas tem um valor padrão do tipo dela
-    dependendo do contexto no qual eles são usados
+    prática. Variáveis não inicializadas tem um valor padrão do tipo dela dependendo do contexto no qual eles são usados
     - padrão de booleanos é &false;, de inteiros e ponto-flutuantes é zero, strings (e.g. usado em <function>echo</function>) são 
     definidos como uma string vazia e arrays tornam-se um array vazio.
    </para>
@@ -257,7 +256,6 @@ var_dump($unset_obj);
     linkend="ini.variables-order">variables_order</link>, seus
     arrays superglobais predefinidos respectivos estarão vazios.
    </para>
-
   </sect1>
 
 
@@ -286,7 +284,7 @@ include 'b.inc';
     funções definidas pelo usuário, um escopo local é introduzido. Quaisquer
     variáveis utilizadas dento da função é por default limitada dentro do
     escopo local da função. Por exemplo:
-</simpara>
+   </simpara>
 
    <informalexample>
     <programlisting role="php">
@@ -416,6 +414,12 @@ function test_global()
      </programlisting>
     </example>
    </para>
+   <note>
+    <para>
+     Utilizar a instrução <literal>global</literal> fora de uma função não é
+     um erro. Isso deve ser utilizado no caso de um arquivo incluído dentro de uma função.
+    </para>
+   </note>
   </sect2>
 
   <sect2 xml:id="language.variables.scope.static">
@@ -433,7 +437,7 @@ function test_global()
      <programlisting role="php">
 <![CDATA[
 <?php
-function Teste ()
+function Teste()
 {
     $a = 0;
     echo $a;
@@ -471,8 +475,9 @@ function Teste()
     </example>
    </para>
    <simpara>
-    Agora, cada vez que a função Teste() for chamada ele imprimirá o
-    valor de <varname>$a</varname> e o incrementará.
+    Nesse caso <varname>$a</varname> é inicializada apenas da primeira chamada da função
+    e cada vez que <literal>test()</literal> for chamada ela imprimirá o
+    valor de <varname>$a</varname> e depois o incrementa.
    </simpara>
 
    <simpara>
@@ -497,7 +502,7 @@ function Teste()
     $count++;
     echo $count;
     if ($count < 10) {
-        Test ();
+        Teste();
     }
     $count--;
 }
@@ -507,16 +512,16 @@ function Teste()
     </example>
    </para>
 
-    <note>
-     <para>
-       Variáveis estáticas podem ser declaradas como nos exemplos acima.
-       A tentativa de assimilar valores para essas variáveis com
-       resultados de expressões causarão um erro de interpretação (parse).
-     </para>
-     <para>
-      <example>
-       <title>Declarando variáveis static</title>
-       <programlisting role="php">
+   <note>
+    <para>
+      Variáveis estáticas podem ser declaradas como nos exemplos acima.
+      A tentativa de assimilar valores para essas variáveis com
+      resultados de expressões causarão um erro de interpretação (parse).
+    </para>
+    <para>
+     <example>
+      <title>Declarando variáveis static</title>
+      <programlisting role="php">
 <![CDATA[
 <?php
 function foo(){
@@ -531,6 +536,11 @@ function foo(){
 ]]>
       </programlisting>
      </example>
+    </para>
+   </note>
+   <note>
+    <para>
+     Declarações estáticas são resolvida durante a compilação.
     </para>
    </note>
   </sect2>
@@ -571,9 +581,7 @@ var_dump($obj);
     </programlisting>
    </informalexample>
 
-   <simpara>
-    Executando esse exemplo você terá as seguites saídas:
-   </simpara>
+   &example.outputs;
 
    <screen>
 NULL
@@ -625,11 +633,7 @@ $still_obj2 = get_instance_noref();
 ]]>
     </programlisting>
    </informalexample>
-
-   <simpara>
-    Executando esse exemplo você terá as seguites saídas:
-   </simpara>
-
+   &example.outputs;
    <screen>
 Objeto estatico: NULL
 Objeto estatico: NULL
@@ -731,15 +735,82 @@ echo "$a $hello";
     <varname>${$a}[1]</varname> para o segundo.
    </simpara>
 
+   <simpara>
+    Propriedades de classes podem ser acessadas utilizando-se nomes de propriedades variáveis. O
+    nome de propriedade variável será resolvido internamente ao escopo de onde a
+    chamada foi feita. Por exemplo se houver uma expressão como
+    <varname>$foo->$bar</varname>, então o escopo local será examinado procurando por
+    <varname>$bar</varname> e seu valor será utilizado como o nome da
+    propriedade <varname>$foo</varname>. Isso também funciona se
+    <varname>$bar</varname> for um array.
+   </simpara>
+
+   <caution>
+    <simpara>
+     Deferenciamento sequencial de propriedades que estão em um array tem semântica
+     diferentes entre PHP 5 e PHP 7. O 
+     <link linkend="migration70.incompatible.variable-handling.indirect">guia de migração para o PHP 7.0</link>
+     inclui mais detalhes em como os tipos e expressões foram alterados,
+     e em como utilizar colchetes para evitar ambiguidades.
+    </simpara>
+   </caution>
+   
+   <simpara>
+    Colchetes também podem ser utilizados para delimitar claramente os nomes
+    de propriedade. Eles são muito úteis quando acessando valores de uma propriedade que
+    contenham um array, quando o nome da propriedade tem várias partes
+    ou quando o nome da propriedade contém caracteres que não
+    seriam válidos (por exemplo em saídas de <function>json_decode</function>
+    ou <link linkend="book.simplexml">SimpleXML</link>).
+   </simpara>
+
+   <para>
+    <example>
+     <title>Exemplo de propriedade variável</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+class foo {
+    var $bar = 'I am bar.';
+    var $arr = array('I am A.', 'I am B.', 'I am C.');
+    var $r   = 'I am r.';
+}
+
+$foo = new foo();
+$bar = 'bar';
+$baz = array('foo', 'bar', 'baz', 'quux');
+echo $foo->$bar . "\n";
+echo $foo->{$baz[1]} . "\n";
+
+$start = 'b';
+$end   = 'ar';
+echo $foo->{$start . $end} . "\n";
+
+$arr = 'arr';
+echo $foo->{$arr[1]} . "\n";
+
+?>
+]]>
+     </programlisting>
+     &example.outputs;
+     <screen>
+I am bar.
+I am bar.
+I am bar.
+I am r.
+     </screen>
+    </example>
+   </para>
+
    <warning>
     <simpara>
-     Note que variáveis variáveis não podem ser utilizadas com os novos
+     Note que variáveis variáveis não podem ser utilizadas nos
      <link linkend="language.variables.superglobals">arrays superglobais</link>
-     dentro de funções ou métodos de classes. A variável <literal>$this</literal>
-     é também uma variável especial e não pode ser referenciada dinamicamente.
+     detro de funções ou métodos de classe. A variável <literal>$this</literal>
+     também é uma variável especial que não pode ser referenciada dinamicamente.
     </simpara>
    </warning>
-
+  
   </sect1>
 
   <sect1 xml:id="language.variables.external">
@@ -777,78 +848,68 @@ echo "$a $hello";
     <para>
      <example>
       <title>Acessando dados de um formulário HTML via POST</title>
-      <programlisting role="html">
+      <programlisting role="php">
 <![CDATA[
 <?php
-// Disponível desde o PHP 4.1.0
+echo $_POST['username'];
+echo $_REQUEST['username'];
+?>
+]]>
+      </programlisting>
+     </example>
+    </para>
+    
+    <para>
+     Há algumas outras formas de acessar dados enviados pelo usuário nas antigas versões do PHP. Elas
+     estão listadas abaixo. Veja mais detalhes no changelog ao final da página.
+     <example>
+      <title>Meios antigos de acessar dados enviados pelo usuário</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+// CUIDADO: esses métodos NÃO são mais suportados.
+// Os válido estão descritos acima
 
-   echo $_POST['username'];
-   echo $_REQUEST['username'];
-
+// Utilizando import_request_variables() - esta função foi removida no PHP 5.4.0
    import_request_variables('p', 'p_');
    echo $p_username;
 
-// Indisponivel desde o PHP 6. A partir do PHP 5.0.0, essas longas
-// variaveis pré-definidas podem ser desabilitadas pela diretiva register_long_arrays.
-
+// Essas variáveis pré-definidas foram removidas no PHP 5.4.0
    echo $HTTP_POST_VARS['username'];
 
-// Disponível se a diretiva register_globals = on.
-// Desde o PHP 4.2.0 o valor default de register_globals é off
-// Usar/manter esse método é preferível.
-
+// Utilizando register_globals. Este recurso foi removido no in PHP 5.4.0
    echo $username;
 ?>
 ]]>
       </programlisting>
      </example>
     </para>
+
     <para>
      Utilizar um formulário GET é similar, exceto que você use a variável
      GET pré-definida. O metodo GET obtem os dados da
      QUERY_STRING (a informação depois do '?' numa URL). Então,
      por exemplo, <literal>http://www.example.com/test.php?id=3</literal>
      contém os dados GET que serão acessíveis com <varname>$_GET['id']</varname>.
-     Veja também <varname>$_REQUEST</varname> e
-     <function>import_request_variables</function>.
+     Veja também <varname>$_REQUEST</varname>.
     </para>
 
     <note>
      <para>
-      <link linkend="language.variables.superglobals">Arrays superglobais</link>,
-      como <varname>$_POST</varname> e <varname>$_GET</varname>, estão
-      disponíveis desde o PHP 4.1.0.
+      Pontos e espaços em nomes de variáveis são convertidos para underlines. Por
+      exemplo <literal>&lt;input name="a.b" /&gt;</literal> se torna
+      <literal>$_REQUEST["a_b"]</literal>.
      </para>
     </note>
 
     <para>
-     Como explicado, antes do PHP 4.2.0 o valor default de <link
-     linkend="ini.register-globals">register_globals</link>
-     era <emphasis>on</emphasis>. E no PHP ele era sempre on. A comunidade
-     PHP está encorajando todos a não alterarem essa diretiva, assumindo-a
-     sempre como <emphasis>off</emphasis> e codificando
-     em conformidade com isso.
+     O PHP também entende arrays enviados como variáveis de formulário 
+     (veja essa <link linkend="faq.html">FAQ</link>). Você pode,
+     por exemplo, agrupar variáveis relacionadas, ou utilizar este
+     recurso para obter valores de um SELECT múltiplo. Por
+     exemplo o formulário abaixo, que encaminha dados a si mesmo e que
+     mostra os dados quando submetidos:
     </para>
-
-    <note>
-     <para>
-      A diretiva de configuração <link linkend="ini.magic-quotes-gpc">magic_quotes_gpc</link>
-      afeta os valores de GET, POST e Cookies. Se
-      estiver ativada, o valor (It's "PHP!") se tornará automaticamente (It\'s \"PHP!\").
-      Escaping é necessário para inserção em bancos de dados. Veja também
-      <function>addslashes</function>, <function>stripslashes</function> e
-      <link linkend="ini.magic-quotes-sybase">magic_quotes_sybase</link>.
-     </para>
-    </note>
-
-    <simpara>
-     O PHP entende arrays no contexto de variáveis de formulários
-     (veja o <link linkend="faq.html">FAQ</link> relacionado). Você pode,
-     por exemplo, agrupar variáveis relacionadas juntas, ou usar
-     esse recurso para receber valores de um campo de seleção múltipla. Por
-     exemplo, podemos ter um formulario que manda informações para si mesmo
-     até um comando submetido para mostrar todos os dados.
-    </simpara>
 
     <para>
      <example>
@@ -860,7 +921,7 @@ if ($_POST) {
     echo '<pre>';
     echo htmlspecialchars(print_r($_POST, true));
     echo '</pre>';
-} else {
+}
 ?>
 <form action="" method="post">
     Nome:  <input type="text" name="personal[name]" /><br />
@@ -897,7 +958,8 @@ if ($_POST) {
      <simpara>
       Quando o usuário clica em algum lugar da imagem, o formulário
       que o acompanha é transmitido para o servidor com duas variáveis
-      adicionais, sub_x e sub_y. Eles contém a coordenadas do
+      adicionais, <varname>sub_x</varname> and <varname>sub_y</varname>.
+      Eles contém a coordenadas do
       clique do usuário na imagem. Os mais experientes percebem que os
       atuais nomes dessas variáveis enviados pelo browser contém um ponto
       ao invés de um sublinhado, mas o PHP converte o ponto para um
@@ -912,17 +974,16 @@ if ($_POST) {
 
     <simpara>
      O PHP suporta transparentemente cookies HTTP como os definidos pela <link
-     xlink:href="&spec.cookies;">especificação da Netscape</link>. Cookies são um
+     xlink:href="&url.rfc;6265">RFC 6265</link>. Cookies são um
      mecanismo de armazenamento de dados no browser cliente e permite
      o rastreamento ou identificação do retorno de usuários. Você pode criar cookies com
      a função <function>setcookie</function>. Cookies são parte do
-     header HTTP, então, a função <function>setcookie</function> precisa ser chamada antes
+     header HTTP, então a função SetCookie precisa ser chamada antes
      de qualquer saída ser enviada ao browser. Esta é a mesma restrição
      da função <function>header</function>. Dados de cookies
      são disponíveis nos arrays de dados de cookies apropriados,
-     como <varname>$_COOKIE</varname>, <varname>$HTTP_COOKIE_VARS</varname>
-     como também em <varname>$_REQUEST</varname>. Veja o manual de
-     <function>setcookie</function> para mais detalhes e
+     como <varname>$_COOKIE</varname> e também em <varname>$_REQUEST</varname>.
+     Veja o manual de <function>setcookie</function> para mais detalhes e
      exemplos.
     </simpara>
 
@@ -1021,10 +1082,62 @@ $varname.ext;  /* nome de variável inválido */
     </para>
    </sect2>
 
+   <sect2 xml:id="language.variables.external.changelog">
+    &reftitle.changelog;
+
+    <para>
+     <informaltable>
+      <tgroup cols="2">
+       <thead>
+        <row>
+         <entry>&Version;</entry>
+         <entry>&Description;</entry>
+        </row>
+       </thead>
+       <tbody>
+        <row>
+         <entry>5.4.0</entry>
+         <entry>
+          <link linkend="security.globals">Register Globals</link>, 
+          <link linkend="security.magicquotes">Magic Quotes</link> e
+          <link linkend="ini.register-long-arrays">register_long_arrays</link>
+          foram removidos
+         </entry>
+        </row>
+        <row>
+         <entry>5.3.0</entry>
+         <entry>
+          <link linkend="security.globals">Register Globals</link>, 
+          <link linkend="security.magicquotes">Magic Quotes</link> e
+          <link linkend="ini.register-long-arrays">register_long_arrays</link>
+          estão obsoletos
+         </entry>
+        </row>
+        <row>
+         <entry>4.2.0</entry>
+         <entry>
+          <link linkend="ini.register-globals">register_globals</link>
+          com padrão para <emphasis>off</emphasis>.
+         </entry>
+        </row>
+        <row>
+         <entry>4.1.0</entry>
+         <entry>
+          <link linkend="language.variables.superglobals">Superglobal arrays</link>, 
+          like <varname>$_POST</varname> and <varname>$_GET</varname> became 
+          available
+         </entry>
+        </row>
+       </tbody>
+      </tgroup>
+     </informaltable>
+    </para>
+   </sect2>
+
   </sect1>
 
  </chapter>
-
+ 
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: ad46822c2c912ebf70885ff9faa3a7e366555e1f Maintainer: ae Status: ready --><!-- CREDITS: royopa@gmail.com,diegopires,narigone,ae -->
+<!-- EN-Revision: d082313568cd8c1a78fa4beaa58f29ba0fe72797 Maintainer: ae Status: ready --><!-- CREDITS: royopa,diegopires,narigone,ae -->
 <chapter xml:id="configuration" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>Configuração em tempo de execução</title>
  
@@ -134,6 +134,59 @@ include_path = ".;c:\php\lib"
    dentro dos arquivos .ini. Exemplo: <literal>open_basedir = ${open_basedir}
    ":/new/dir"</literal>.
   </para>
+  <sect2 xml:id="configuration.file.scan">
+   <title>Configuração em diretório</title>
+
+   <para>
+    É possível configurar o PHP para procurar por arquivos .ini em um diretório
+    após a leitura do &php.ini;. Isto é possível na compilação pela configuração da opção
+    <option role="configure">--with-config-file-scan-dir</option>. No
+    PHP 5.2.0 e posterior, o diretório de configuração pode ser sobrescrito em tempo de execução
+    através da configuração da variável de ambiente <varname>PHP_INI_SCAN_DIR</varname>.
+   </para>
+
+   <para>
+    É possível procurar em vários diretórios os separando com o
+    delimitador específico da plataforma (<literal>;</literal> no Windows, NetWare
+    e RISC OS; <literal>:</literal> em todas as outras plataformas; o PHP
+    utilizará a constante <constant>PATH_SEPARATOR</constant>).
+    Se um diretório em branco estiver informado em <varname>PHP_INI_SCAN_DIR</varname>, o PHP
+    também procurará pelo diretório informado na diretiva de compilação
+    <option role="configure">--with-config-file-scan-dir</option>.
+   </para>
+
+   <para>
+    Dentro de cada diretório o PHP irá pesquisar todos os arquivos terminados em
+    <literal>.ini</literal> em ordem alfabetica. A lista de arquivos
+    é carregada, e nessa ordem são interpretados com uma chamada a 
+    <function>php_ini_scanned_files</function>, o por rodar o PHP com a opção
+    <option>--ini</option>.
+   </para>
+
+   <informalexample>
+    <screen>
+<![CDATA[
+Assumindo que o PHP foi configurado com --with-config-file-scan-dir=/etc/php.d,
+e o separador de caminho é :
+
+$ php
+  PHP irá carregar todos os arquivos de configuração em in /etc/php.d/*.ini.
+
+$ PHP_INI_SCAN_DIR=/usr/local/etc/php.d php
+  PHP irá carregar todos os arquivos de configuração em /usr/local/etc/php.d/*.ini.
+
+
+$ PHP_INI_SCAN_DIR=:/usr/local/etc/php.d php
+  PHP irá carregar todos os arquivos de configuração em /etc/php.d/*.ini, e então em
+  /usr/local/etc/php.d/*.ini.
+
+$ PHP_INI_SCAN_DIR=/usr/local/etc/php.d: php
+  PHP irá carregar todos os arquivos de configuração em /usr/local/etc/php.d/*.ini, e então em
+  /etc/php.d/*.ini.
+]]>
+    </screen>
+   </informalexample>
+  </sect2>
   <sect2 xml:id="configuration.file.changelog">
    &reftitle.changelog;
 
