@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: narigone Status: ready -->
+<!-- EN-Revision: b9a867f215c6a902c349f40f7436348e866554d1 Maintainer: ae Status: ready --><!-- CREDITS: narigone,ae -->
  <sect1 xml:id="language.oop5.cloning" xmlns="http://docbook.org/ns/docbook">
   <title>Clonando objetos</title>
   
@@ -16,8 +16,9 @@
   </para>
 
   <para>
-   Uma cópia de objeto é criada usando a palavra-chave 'clone' (que chama o
-   método __clone() do objeto, se possível). O método __clone() de um objeto
+   Uma cópia de objeto é criada usando a palavra-chave <emphasis>clone</emphasis> (que chama o
+   método <link linkend="object.clone">__clone()</link> do objeto, se possível).
+   O método <link linkend="object.clone">__clone()</link> de um objeto
    não pode ser chamado diretamente.
   </para>
 
@@ -32,9 +33,18 @@ $copia_do_objeto = clone $objeto;
   <para>
    Quando um objeto é clonado, PHP 5 fará uma cópia superficial de todas as
    propriedades do objeto. Qualquer propriedade que seja referência a outra variável,
-   permanecerá referência. Se um método __clone() for definido, então este
-   será chamado, permitindo definir qualquer alteração necessária
-   nas propriedades.
+   permanecerão como referências.
+  </para>
+
+  <methodsynopsis xml:id="object.clone">
+   <type>void</type><methodname>__clone</methodname>
+   <void/>
+  </methodsynopsis>
+
+  <para>
+   Depois que a clonagem se completa, se um método <link linkend="object.clone">__clone()</link> estiver definido então
+   o novo objetivo criado terá seu método <link linkend="object.clone">__clone()</link> chamado, assim permitindo que
+   qualquer propriedade seja alterada.
   </para>
 
   <example>
@@ -42,43 +52,45 @@ $copia_do_objeto = clone $objeto;
    <programlisting role="php">
 <![CDATA[
 <?php
-class SubObjeto {
-  static $instancias = 0;
-  public $instancia;
+class SubObject
+{
+    static $instances = 0;
+    public $instance;
 
-  public function __construct() {
-    $this->$instancia = ++self::$instancias;
-  }
+    public function __construct() {
+        $this->instance = ++self::$instances;
+    }
 
-  public function __clone() {
-    $this->$instancia = ++self::$instancias;
-  }
+    public function __clone() {
+        $this->instance = ++self::$instances;
+    }
 }
 
-class MeuClonavel {
+class MyCloneable
+{
+    public $object1;
+    public $object2;
 
-  public $objeto1;
-  public $objeto2;
-
-  function __clone() {
-    // Força uma cópia de this->objeto, ou então
-    // apontará para o mesmo objeto
-    $this->objeto1 = clone $this->objeto1;
-  }
+    function __clone()
+    {
+        // Force a copy of this->object, otherwise
+        // it will point to same object.
+        $this->object1 = clone $this->object1;
+    }
 }
 
-$obj = new MeuClonavel();
+$obj = new MyCloneable();
 
-$obj->objeto1 = new SubObjeto();
-$obj->objeto2 = new SubObjeto();
+$obj->object1 = new SubObject();
+$obj->object2 = new SubObject();
 
 $obj2 = clone $obj;
 
 
-print("Objeto Original:\n");
+print("Original Object:\n");
 print_r($obj);
 
-print("Objeto Clonado:\n");
+print("Cloned Object:\n");
 print_r($obj2);
 
 ?> 
@@ -87,31 +99,31 @@ print_r($obj2);
    &example.outputs;
    <screen role="php">
 <![CDATA[
-Objeto Original:
-MeuClonavel Object
+Original Object:
+MyCloneable Object
 (
-    [objeto1] => SubObjeto Object
+    [object1] => SubObject Object
         (
-            [instancia] => 1
+            [instance] => 1
         )
 
-    [objeto2] => SubObjeto Object
+    [object2] => SubObject Object
         (
-            [instancia] => 2
+            [instance] => 2
         )
 
 )
-Objeto Clonado:
-MeuClonavel Object
+Cloned Object:
+MyCloneable Object
 (
-    [objeto1] => SubObjeto Object
+    [object1] => SubObject Object
         (
-            [instancia] => 3
+            [instance] => 3
         )
 
-    [objeto2] => SubObjeto Object
+    [object2] => SubObject Object
         (
-            [instancia] => 2
+            [instance] => 2
         )
 
 )
