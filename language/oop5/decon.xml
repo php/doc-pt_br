@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 28d123ef985df5a7b86f3601e035968ee1b3b142 Maintainer: ae Status: ready --><!-- CREDITS: narigone,felipe -->
+<!-- EN-Revision: 664dfca34e287631fefb83032e810ea505a621e4 Maintainer: ae Status: ready --><!-- CREDITS: narigone,felipe,ae -->
  <sect1 xml:id="language.oop5.decon" xmlns="http://docbook.org/ns/docbook">
   <title>Construtores e Destrutores</title>
 
@@ -21,7 +21,9 @@
      Construtores pais não são chamados implicitamente se a classe filha define
      um construtor. Para executar o construtor da classe pai, uma chamada a
      <function>parent::__construct</function> dentro do construtor da classe filha
-     é necessária.
+     é necessária. Se a classe filhas não definir um construtor então ele será herdado
+     da classe pai como um método normal (se não declarado
+     como privado).
     </simpara>
    </note>
    <example>
@@ -42,20 +44,42 @@ class SubClass extends BaseClass {
    }
 }
 
+class OtherSubClass extends BaseClass {
+    // inherits BaseClass's constructor
+}
+
+// In BaseClass constructor
 $obj = new BaseClass();
+
+// In BaseClass constructor
+// In SubClass constructor
 $obj = new SubClass();
-?>
+
+// In BaseClass constructor
+$obj = new OtherSubClass();
+?> 
 ]]>
     </programlisting>
    </example>
    <para>
-    Para garantir compatibilidade reversa, se o PHP 5 não conseguir achar uma
-    <link linkend="object.construct">__construct()</link> para uma determinada classe, ele procurará
+    Por compatibilidade reversa com os PHP 3 e 4, se não conseguir achar um
+    <link linkend="object.construct">__construct()</link> para uma determinada
+    classe, e não houver um construtor herdado de uma classe pai, ele procurará
     pela função construtora à moda-antiga, que tenha o mesmo nome da classe.
     Efetivamente, significa que o único caso que pode gerar problemas de
     compatibilidade seria se a classe tiver um método chamado
-    <link linkend="object.construct">__construct()</link>  que fosse usado para outra finalidade que não inicializar o objeto.
+    <link linkend="object.construct">__construct()</link> que fosse usado
+    para outra finalidade que não inicializar o objeto.
    </para>
+   <!-- Not using an entity because I want specific wording here, since we're
+   not deprecating constructors in general. -->
+   <warning>
+    <simpara>
+     Construtores no estilo antigo estão <emphasis>OBSOLETOS</emphasis> desde o PHP 7.0, e
+     provalmente serão removidos numa versão futura. Você deve sempre utilizar
+     <link linkend="object.construct">__construct()</link> em código novo.
+    </simpara>
+   </warning>
    <para>
     Diferente de outros métodos, PHP não irá gerar uma mensagem de erro de nível
     <constant>E_STRICT</constant> quando
@@ -119,15 +143,16 @@ $obj = new MinhaClasseDestruivel();
     </programlisting>
    </example>
    <para>
-    Como os construtores, destrutores pais não serão chamados implicitamente pelo
+    Como os construtores, destrutores herdados não serão chamados implicitamente pela
     engine. Para executar o destrutor pai, deve-se fazer uma chamada
     explicitamente a <function>parent::__destruct</function> no corpo do
-    destrutor.
+    destrutor. Assim como construtores, uma classe filha pode herdar o destrutor
+    pai caso ela não impremente um.
    </para>
    <para>
-     Destrutores são chamados durante o encerramento do script tendo os
-     cabeçalhos HTTP enviados. No diretório atual do script a fase de encerramento 
-     pode ser diferente com algumas SAPIs (e.g. Apache).
+    O destrutor será chamado mesmo se o script for terminado utilizando-se
+    <function>exit</function>. Chamar <function>exit</function> em um destrutor
+    irá impedir que as demais rotinas de encerramento de executar.
    </para>
    <note>
     <para>
