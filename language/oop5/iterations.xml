@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: amandavale Status: ready -->
-<!-- CREDITS: narigone-->
+<!-- EN-Revision: c2aae8928b69ed28b4e61bd7aadb869e5ccb64d8 Maintainer: ae Status: ready --><!-- CREDITS: amandavale, narigone,ae -->
  <sect1 xml:id="language.oop5.iterations" xmlns="http://docbook.org/ns/docbook">
   <title>Iteração de Objetos</title>
   <para>
+
    PHP 5 fornece uma maneira de definir objetos para que seja possível
-   iterar por uma lista de items, como, por exemplo, uma instrução <xref
-   linkend="control-structures.foreach" /> . Por padrão, todas as
-   propriedades <link linkend="language.oop5.visibility">visíveis</link> serão
+   iterar por uma lista de items, como, por exemplo, a instrução &foreach;. Por padrão,
+   todas as propriedades <link linkend="language.oop5.visibility">visíveis</link> serão
    usadas para a iteração.
 
   </para>
 
   <example>
-    <title>Simple Object Iteration</title>
-    <programlisting role="php">
+   <title>Iteração simples de objetos</title>
+   <programlisting role="php">
 <![CDATA[
 <?php
 class MyClass
@@ -27,10 +26,10 @@ class MyClass
     private   $private   = 'private var';
 
     function iterateVisible() {
-        echo "MyClass::iterateVisible:\n";
-        foreach($this as $key => $value) {
-            print "$key => $value\n";
-        }
+       echo "MyClass::iterateVisible:\n";
+       foreach ($this as $key => $value) {
+           print "$key => $value\n";
+       }
     }
 }
 
@@ -46,9 +45,9 @@ $class->iterateVisible();
 
 ?>
 ]]>
-  </programlisting>
-  &example.outputs;
-  <screen role="php">
+   </programlisting>
+   &example.outputs; 
+   <screen role="php">
 <![CDATA[
 var1 => value 1
 var2 => value 2
@@ -61,17 +60,18 @@ var3 => value 3
 protected => protected var
 private => private var
 ]]>
-  </screen>
+   </screen>
 
- </example>
+  </example>
 
  <para>
-  Como a saída mostra, o <link
-  linkend="control-structures.foreach">foreach</link> iteragiu por cada uma
+  Como a saída mostra, o &foreach; passou por cada uma
   das variáveis <link linkend="language.oop5.visibility">visíveis</link> que podem ser
-  acessadas. Indo um pouco mais longe, você pode
-  <varname>implementar</varname> uma das <link
-  linkend="language.oop5.interfaces">interfaces</link> internas do PHP5 chamada
+  acessadas.
+ </para>
+ <para>
+  Indo um pouco mais longe, você pode <varname>implementar</varname> uma <link
+  linkend="language.oop5.interfaces">interface</link> chamada
   <varname>Iterator</varname>. Isso permite que o objeto decida o que
   e como o objeto será iterado.
  </para>
@@ -83,50 +83,57 @@ private => private var
 <?php
 class MyIterator implements Iterator
 {
-  private $var = array();
+    private $var = array();
 
-  public function __construct($array)
-  {
-    if (is_array($array) ) {
-      $this->var = $array;
+    public function __construct($array)
+    {
+        if (is_array($array)) {
+            $this->var = $array;
+        }
     }
-  }
 
-  public function rewind() {
-    echo "rewinding\n";
-    reset($this->var);
-  }
+    public function rewind()
+    {
+        echo "rewinding\n";
+        reset($this->var);
+    }
 
-  public function current() {
-    $var = current($this->var);
-    echo "current: $var\n";
-    return $var;
-  }
+    public function current()
+    {
+        $var = current($this->var);
+        echo "current: $var\n";
+        return $var;
+    }
+  
+    public function key() 
+    {
+        $var = key($this->var);
+        echo "key: $var\n";
+        return $var;
+    }
+  
+    public function next() 
+    {
+        $var = next($this->var);
+        echo "next: $var\n";
+        return $var;
+    }
+  
+    public function valid()
+    {
+        $key = key($this->var);
+        $var = ($key !== NULL && $key !== FALSE);
+        echo "valid: $var\n";
+        return $var;
+    }
 
-  public function key() {
-    $var = key($this->var);
-    echo "key: $var\n";
-    return $var;
-  }
-
-  public function next() {
-    $var = next($this->var);
-    echo "next: $var\n";
-    return $var;
-  }
-
-  public function valid() {
-    $var = $this->current() !== false;
-    echo "valid: {$var}\n";
-    return $var;
-  }
 }
 
 $values = array(1,2,3);
 $it = new MyIterator($values);
 
 foreach ($it as $a => $b) {
-  print "$a: $b\n";
+    print "$a: $b\n";
 }
 ?>
 ]]>
@@ -135,35 +142,36 @@ foreach ($it as $a => $b) {
    <screen role="php">
 <![CDATA[
 rewinding
-current: 1
 valid: 1
 current: 1
 key: 0
 0: 1
 next: 2
-current: 2
 valid: 1
 current: 2
 key: 1
 1: 2
 next: 3
-current: 3
 valid: 1
 current: 3
 key: 2
 2: 3
 next:
-current:
-valid:
+valid: 
 ]]>
    </screen>
 
   </example>
 
   <para>
-   Você também pode definir sua classe para que ela não tenha que definir
-   todas as funções do <varname>Iterator</varname> simplesmente implementando
-   a interface <varname>IteratorAggregate</varname> do PHP 5.
+   A <link linkend="language.oop5.interfaces">interface</link>
+   <interfacename>IteratorAggregate</interfacename>
+   pode ser utilizada como uma alternativa em vez de implementar todos os métodos de
+   <interfacename>Iterator</interfacename>.
+   <interfacename>IteratorAggregate</interfacename> somente requer a
+   implementação de um único método,
+   <methodname>IteratorAggregate::getIterator</methodname>, qual deve retornar
+   uma instância de uma classe implementando a interface <interfacename>Iterator</interfacename>.
   </para>
 
   <example>
@@ -171,19 +179,19 @@ valid:
    <programlisting role="php">
 <![CDATA[
 <?php
-class MyCollection implements IteratorAggregate {
-  private $items = array();
-  private $count = 0;
+class MyCollection implements IteratorAggregate
+{
+    private $items = array();
+    private $count = 0;
 
-  /* Definição requirida da interface IteratorAggregate */
-  public function getIterator() {
-    return new MyIterator($this->items);
-  }
+    // Required definition of interface IteratorAggregate
+    public function getIterator() {
+        return new MyIterator($this->items);
+    }
 
-  public function add($value) {
-    $this->items[$this->count++] = $value;
-  }
-
+    public function add($value) {
+        $this->items[$this->count++] = $value;
+    }
 }
 
 $coll = new MyCollection();
@@ -192,12 +200,12 @@ $coll->add('value 2');
 $coll->add('value 3');
 
 foreach ($coll as $key => $val) {
-  echo "key/value: [$key -> $val]\n\n";
+    echo "key/value: [$key -> $val]\n\n";
 }
 ?>
 ]]>
    </programlisting>
-   &example.outputs;
+   &example.outputs;  
    <screen role="php">
 <![CDATA[
 rewinding
@@ -233,6 +241,14 @@ valid:
    <para>
     Para mais exemplos de iteração, veja a
     <link linkend="ref.spl">Extensão SPL</link>.
+   </para>
+  </note>
+
+  <note>
+   <para>
+    Usuário do PHP 5.5 e posteriores talvez queiram investigar sobre
+    <link linkend="language.generators">geradores</link>, que fornecem uma
+    alternativa ao uso de iteradores.
    </para>
   </note>
 
