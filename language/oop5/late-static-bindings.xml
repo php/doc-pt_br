@@ -1,20 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: felipe Status: ready -->
+<!-- EN-Revision: bae6b5c7e070e7969cd99e5d72f9110878a4a538 Maintainer: ae Status: ready --><!-- CREDITS: felipe -->
  <sect1 xml:id="language.oop5.late-static-bindings" xmlns="http://docbook.org/ns/docbook">
   <title>Late Static Bindings</title>
   <para>
-   No PHP 5.3.0, o PHP implementa um recurso chamado late static bindings que
-   pode ser usado para referenciar a classe chamada no contexto de herança estática.
+   A partir do PHP 5.3.0 está implementado um recurso chamado late static bindings que
+   pode ser usado para referenciar a classe chamada em um contexto de herança estática.
   </para>
 
   <para>
-   Este recurso foi nomeado "late static bindings" com um pespectiva interna em
-   mente. "Late binding" vem do fato que <literal>static::</literal>
-   não ser mais resolvido usando a classe onde o mesmo é definido mas
-   ele será avaliado usando informação em tempo de execução.
+   Mais precisamente, late static bindings funcionam através do armazenamento do nome da classe na
+   última "chamada non-forwarding". No caso de chamadas a métodos estáticos, isto é a
+   classe explicitamente chamada (normalmente o nome a esquerda do operador
+   <link linkend="language.oop5.paamayim-nekudotayim"><literal>::</literal></link>);
+   no caso de chamadas a métodos não estáticos, e o nome da classe do objeto. Uma chamada
+   "forwarding" é aquela realizada pelos prefixos <literal>self::</literal>,
+   <literal>parent::</literal>, <literal>static::</literal>, ou, se subindo
+   na hierarquia de classes, <function>forward_static_call</function>.
+   <!-- technically, static:: may be non forwarding, but it's irrelevant -->
 
-   Ele foi também chamado "static binding" como pode ser usado para (mas não é 
-   limitado para) chamada de métodos estáticos.
+   A função <function>get_called_class</function> pode ser utilizada para recuperar
+   uma string com o nome da classe chamada e <literal>static::</literal>
+   introduz seu escopo.
+  </para>
+
+  <para>
+   Esse recurso foi chamado de "late static bindings" de uma perspectiva interna em
+   mente. "Late binding" vem do fato que <literal>static::</literal>
+   não será resolvido usando a classe onde o método foi definido, pois será
+   calculado utilizando informações em tempo de execução.
+
+   É também chamado "static binding" pois pode ser utilizado em (mas não
+   limitado a) chamada de métodos estáticos.
   </para>
 
   <sect2 xml:id="language.oop5.late-static-bindings.self">
@@ -38,11 +54,11 @@ class A {
     }  
 }  
 
-class B extends A {      
+class B extends A {
     public static function who() {
-         echo __CLASS__;
-    }  
-}   
+        echo __CLASS__;
+    }
+}
 
 B::test();
 ?>  
@@ -103,10 +119,11 @@ B
    </example>
    <note>
     <para>
-     <literal>static::</literal> não funciona como <literal>$this</literal> para
-     métodos estáticos! <literal>$this-></literal> segue a regra de
-     herança quando <literal>static::</literal> não o faz. Esta diferença é
-     detalhada depois nesta página.
+     Em contextos não estáticos a classe chamada será a classe da instância
+     do objeto. Assim como <literal>$this-></literal> chamará métodos privados
+     do mesmo escopo, utilizar <literal>static::</literal> pode ter
+     resultados diferentes. Outra diferença é que <literal>static::</literal>
+     só pode referenciar propriedades estáticas.
     </para>
    </note>
    <example>
@@ -114,52 +131,55 @@ B
     <programlisting role="php">
 <![CDATA[
 <?php
-class TestChild extends TestParent {
-    public function __construct() {
-        static::who();
+class A {
+    private function foo() {
+        echo "success!\n";
     }
-
     public function test() {
-        $o = new TestParent();
-    }
-
-    public static function who() {
-        echo __CLASS__."\n";
+        $this->foo();
+        static::foo();
     }
 }
 
-class TestParent {
-    public function __construct() {
-        static::who();
-    }
+class B extends A {
+   /* foo() será copiado para B, assim seu escopo ainda será A e
+    * e a chamada funcionará */
+}
 
-    public static function who() {
-        echo __CLASS__."\n";
+class C extends A {
+    private function foo() {
+        /* método original foi substituído, escopo agora é C */
     }
 }
-$o = new TestChild;
-$o->test();
 
-?>  
+$b = new B();
+$b->test();
+$c = new C();
+$c->test();   //fails
+?>
 ]]>
     </programlisting>
     &example.outputs;
     <screen>
 <![CDATA[
-TestChild
-TestParent
+success!
+success!
+success!
+
+
+Fatal error:  Call to private method C::foo() from context 'A' in /tmp/test.php on line 9
 ]]>
     </screen>
    </example>
    <note>
     <para>
-     A resolução do Late static bindings termina em uma chamada estática
-     inteiramente resolvida sem volta. Por outro lado, chamadas estáticas
-     usando palavras-chave como <literal>parent::</literal> ou 
-     <literal>self::</literal> encaminharão a informação.
+     A resolução de Late static bindings para quando a chamada é realizada
+     sem fallbacks. Por outro lado chamadas estáticas utilizando instruções como
+     <literal>parent::</literal> ou <literal>self::</literal> irão repassar a informação
+     do chamador.
     </para>
     <example>
-     <title>Chamadas encaminhadas e não-encaminhadas</title>
+     <title>Chamadas Forwarding e non-forwarding</title>
      <programlisting role="php">
 <![CDATA[
 <?php
@@ -167,7 +187,7 @@ class A {
     public static function foo() {
         static::who();
     }
-        
+
     public static function who() {
         echo __CLASS__."\n";
     }
@@ -184,7 +204,6 @@ class B extends A {
         echo __CLASS__."\n";
     }
 }
-
 class C extends B {
     public static function who() {
         echo __CLASS__."\n";
@@ -192,7 +211,7 @@ class C extends B {
 }
 
 C::test();
-?>  
+?>
 ]]>
      </programlisting>
      &example.outputs;
@@ -205,50 +224,6 @@ C
      </screen>
     </example>
    </note>
-  </sect2>
-  <sect2 xml:id="language.oop5.late-static-bindings.edge-cases">
-   <title>Edge cases</title>
-   <para>
-    Há várias diferentes formas de ser chamado um método no PHP, como
-    callbacks ou métodos mágicos. Como late static bindings baseia sua 
-    resolução em informação em runtine, ele pode dar resultados inesperados
-    em então chamados edge cases.
-   </para>
-   <example>
-    <title>Late static bindings em métodos mágicos</title>
-    <programlisting role="php">
-<![CDATA[
-<?php
-class A {
-
-   protected static function who() {
-        echo __CLASS__."\n";
-   }
-
-   public function __get($var) {
-       return static::who();
-   }
-}
-
-class B extends A {
-
-   protected static function who() {
-        echo __CLASS__."\n";
-   }
-}
-
-$b = new B;
-$b->foo;
-?>  
-]]>
-    </programlisting>
-    &example.outputs;
-    <screen>
-<![CDATA[
-B
-]]>
-    </screen>
-   </example>
   </sect2>
  </sect1>
 <!-- Keep this comment at the end of the file
@@ -271,3 +246,4 @@ vim600: syn=xml fen fdm=syntax fdl=2 si
 vim: et tw=78 syn=sgml
 vi: ts=1 sw=1
 -->
+
