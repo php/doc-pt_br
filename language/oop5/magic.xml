@@ -1,24 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: fcddfb2551140fba9a14a4c44dc9fa60004440c8 Maintainer: ae Status: ready -->
-<!-- CREDITS: narigone,felipe,lcobucci -->
+<!-- EN-Revision: 4307b3bcdf87f058147f6a917051986871ed8fe1 Maintainer: ae Status: ready --><!-- CREDITS: narigone,felipe,lcobucci -->
  <sect1 xml:id="language.oop5.magic" xmlns="http://docbook.org/ns/docbook">
   <title>Métodos Mágicos</title>
   <para>
    Os nomes de funções
-   <link linkend="language.oop5.decon.constructor"><literal>__construct</literal></link>,
-   <link linkend="language.oop5.decon.destructor"><literal>__destruct</literal></link>,
-   <link linkend="language.oop5.overloading.methods"><literal>__call</literal></link>,
-   <link linkend="language.oop5.overloading.methods"><literal>__callStatic</literal></link>,
-   <link linkend="language.oop5.overloading.members"><literal>__get</literal></link>,
-   <link linkend="language.oop5.overloading.members"><literal>__set</literal></link>,
-   <link linkend="language.oop5.overloading.members"><literal>__isset</literal></link>,
-   <link linkend="language.oop5.overloading.members"><literal>__unset</literal></link>,
-   <link linkend="language.oop5.magic.sleep"><literal>__sleep</literal></link>,
-   <link linkend="language.oop5.magic.sleep"><literal>__wakeup</literal></link>,
-   <link linkend="language.oop5.magic.tostring"><literal>__toString</literal></link>,
-   <link linkend="language.oop5.magic.invoke"><literal>__invoke</literal></link>,
-   <link linkend="language.oop5.magic.set-state"><literal>__set_state</literal></link> and
-   <link linkend="language.oop5.cloning"><literal>__clone</literal></link>
+   <link linkend="object.construct">__construct()</link>,
+   <link linkend="object.destruct">__destruct()</link>,
+   <link linkend="object.call">__call()</link>,
+   <link linkend="object.callstatic">__callStatic()</link>,
+   <link linkend="object.get">__get()</link>,
+   <link linkend="object.set">__set()</link>,
+   <link linkend="object.isset">__isset()</link>,
+   <link linkend="object.unset">__unset()</link>,
+   <link linkend="object.sleep">__sleep()</link>,
+   <link linkend="object.wakeup">__wakeup()</link>,
+   <link linkend="object.tostring">__toString()</link>,
+   <link linkend="object.invoke">__invoke()</link>,
+   <link linkend="object.set-state">__set_state()</link>,
+   <link linkend="object.clone">__clone()</link> and
    <link linkend="object.debuginfo">__debugInfo()</link>
    são mágicos nas classes do PHP. Você
    não pode ter funções com esses nomes em nenhuma de suas
@@ -92,34 +91,31 @@
 class Connection
 {
     protected $link;
-    private $server, $username, $password, $db;
+    private $dsn, $username, $password;
     
-    public function __construct($server, $username, $password, $db)
+    public function __construct($dsn, $username, $password)
     {
-        $this->server = $server;
+        $this->dsn = $dsn;
         $this->username = $username;
         $this->password = $password;
-        $this->db = $db;
         $this->connect();
     }
     
     private function connect()
     {
-        $this->link = mysql_connect($this->server, $this->username, $this->password);
-        mysql_select_db($this->db, $this->link);
+        $this->link = new PDO($this->dsn, $this->username, $this->password);
     }
     
     public function __sleep()
     {
-        return array('server', 'username', 'password', 'db');
+        return array('dsn', 'username', 'password');
     }
     
     public function __wakeup()
     {
         $this->connect();
     }
-}
-?>
+}?>
 ]]>
     </programlisting>
    </example>
@@ -138,6 +134,13 @@ class Connection
     retornar uma string, senão um erro nível <constant>E_RECOVERABLE_ERROR</constant>
     é gerado.
    </para>
+   <warning>
+    <simpara>
+     Você não pode lançar uma exceção de dentro de
+     <link linkend="object.tostring">__toString()</link>. Tentar isso resultará
+     em um erro fatal.
+    </simpara>
+   </warning>
    <example>
     <title>Exemplo Simples</title>
     <programlisting role="php">
@@ -199,7 +202,7 @@ Hello
     </para>
    </note>
    <example>
-    <title>Usando <literal>__invoke</literal></title>
+    <title>Usando <link linkend="object.invoke">__invoke()</link></title>
     <programlisting role="php">
 <![CDATA[
 <?php
