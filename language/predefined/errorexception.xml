@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: n/a Maintainer: felipe Status: ready -->
+<!-- EN-Revision: 8e261db16490c6cba2f01dd2a650380e6ba1e85f Maintainer: ae Status: ready --><!-- CREDITS: felipe,ae -->
 
 <phpdoc:exceptionref xml:id="class.errorexception"
  xmlns="http://docbook.org/ns/docbook"
@@ -8,14 +8,14 @@
  xmlns:phpdoc="http://php.net/ns/phpdoc">
  <title>ErrorException</title>
  <titleabbrev>ErrorException</titleabbrev>
- 
+
  <partintro>
- 
+
 <!-- {{{ ErrorException intro -->
   <section xml:id="errorexception.intro">
    &reftitle.intro;
    <para>
-    Uma Exception de erro.
+    Uma exception tipo Erro.
    </para>
   </section>
 <!-- }}} -->
@@ -40,18 +40,21 @@
     </classsynopsisinfo>
 <!-- }}} -->
  
-    <classsynopsisinfo role="comment">Properties</classsynopsisinfo>
+    <classsynopsisinfo role="comment">&Properties;</classsynopsisinfo>
     <fieldsynopsis>
      <modifier>protected</modifier>
      <type>int</type>
      <varname linkend="errorexception.props.severity">severity</varname>
     </fieldsynopsis>
  
-    <classsynopsisinfo role="comment">Methods</classsynopsisinfo>
+    <classsynopsisinfo role="comment">&InheritedProperties;</classsynopsisinfo>
+    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('exception.synopsis')/descendant::db:fieldsynopsis)" />
+
+    <classsynopsisinfo role="comment">&Methods;</classsynopsisinfo>
     <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.errorexception')/db:refentry/db:refsect1[@role='description']/descendant::db:constructorsynopsis[1])" />
     <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.errorexception')/db:refentry/db:refsect1[@role='description']/descendant::db:methodsynopsis[1])" />
  
-    <classsynopsisinfo role="comment">Inherited methods</classsynopsisinfo>
+    <classsynopsisinfo role="comment">&InheritedMethods;</classsynopsisinfo>
     <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.exception')/db:refentry/db:refsect1[@role='description']/descendant::db:methodsynopsis[1])" />
    </classsynopsis>
 <!-- }}} -->
@@ -76,12 +79,16 @@
    &reftitle.examples;
    <para>
     <example xml:id="errorexception.example.error-handler"><!-- {{{ -->
-     <title>Tornando todas mensagens de erro em ErrorException.</title>
+     <title>Utilizando <function>set_error_handler</function> para transformar mensagens de erro em ErrorException.</title>
      <programlisting role="php">
  <![CDATA[
 <?php
-function exception_error_handler($errno, $errstr, $errfile, $errline ) {
-throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+function exception_error_handler($severity, $message, $file, $line) {
+    if (!(error_reporting() & $severity)) {
+        // This error code is not included in error_reporting
+        return;
+    }
+    throw new ErrorException($message, 0, $severity, $file, $line);
 }
 set_error_handler("exception_error_handler");
 
@@ -93,12 +100,12 @@ strpos();
      &example.outputs.similar;
      <screen>
 <![CDATA[
-Fatal error: Uncaught exception 'ErrorException' with message 'Wrong parameter count for strpos()' in /home/bjori/tmp/ex.php:8
+Fatal error: Uncaught exception 'ErrorException' with message 'strpos() expects at least 2 parameters, 0 given' in /home/bjori/tmp/ex.php:12
 Stack trace:
-#0 [internal function]: exception_error_handler(2, 'Wrong parameter...', '/home/bjori/php...', 8, Array)
-#1 /home/bjori/php/cleandocs/test.php(8): strpos()
+#0 [internal function]: exception_error_handler(2, 'strpos() expect...', '/home/bjori/php...', 12, Array)
+#1 /home/bjori/php/cleandocs/test.php(12): strpos()
 #2 {main}
-  thrown in /home/bjori/tmp/ex.php on line 8
+  thrown in /home/bjori/tmp/ex.php on line 12
 ]]>
      </screen>
     </example><!-- }}} -->
