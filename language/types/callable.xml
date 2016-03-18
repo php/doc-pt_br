@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: e8bb36e5dd60d2b8bc7ec8cdda2fa395c49e8194 Maintainer: __lcobucci Status: ready --><!-- CREDITS: __lcobucci -->
+<!-- EN-Revision: db8f74138c750e5d76a7f99b94cc3386fdf5ca0d Maintainer: fabioluciano Status: ready --><!-- CREDITS: __lcobucci, fabioluciano -->
 <sect1 xml:id="language.types.callable">
  <title>Callbacks / Callables</title>
- 
+
  <para>
-  Callbacks podem ser representados pelo type hint <type>callable</type> a partir do PHP 5.4.
-  Esta documentação usa o tipo <type>callback</type> para referenciar a
+  Callbacks podem ser representados pela declaração de tipo <type>callable</type> a partir do PHP 5.4.
+  Esta documentação utiliza o tipo <type>callback</type> para referenciar a
   mesma coisa.
  </para>
 
  <para>
   Algumas funções como <function>call_user_func</function> ou
   <function>usort</function> aceitam funções de callback definidas pelo usuário
-  como parametro. Funções de callback podem ser não apenas funções simples, mas também
-  métodos de <type>object</type>s, incluindo os estáticos.
+  como parâmetro. Funções de callback não precisam ser apenas funções simples, mas também
+  métodos de <type>objeto</type>s, incluindo os estáticos.
  </para>
 
  <sect2 xml:id="language.types.callable.passing">
@@ -23,22 +23,23 @@
    Uma função PHP é passada através do seu nome como uma <type>string</type>. Qualquer função padrão
    ou definida pelo usuário pode ser utilizada, com exceção dos construtores de linguagem como:
    <function>array</function>, <function>echo</function>,
-   <function>empty</function>, <function>eval</function>, 
-   <function>exit</function>, <function>isset</function>, 
+   <function>empty</function>, <function>eval</function>,
+   <function>exit</function>, <function>isset</function>,
    <function>list</function>, <function>print</function> ou
    <function>unset</function>.
   </para>
 
   <para>
-   Um método de um <type>object</type> instanciado é passado como um
-   <type>array</type> contendo um <type>object</type> no índice 0 e o
-   nome do método no índice 1.
+   Um método de um <type>objeto</type> instanciado é passado como um
+   <type>array</type> contendo um <type>objeto</type> no índice 0 e o
+   nome do método no índice 1. Acessar métodos protegidos e privados
+   de uma classe é permitido.
   </para>
 
   <para>
-   Métodos estáticos também podem ser passadas sem a instância de um
-   <type>object</type> dessa classe ao passar o nome da classe ao invés de um
-   <type>object</type> no índice 0.
+   Métodos estáticos também podem ser passados sem a instância de um
+   <type>objeto</type> dessa classe ao passar o nome da classe ao invés de um
+   <type>objeto</type> no índice 0.
    A partir do PHP 5.2.3, também é possível utilizar
    <literal>'NomeDaClasse::nomeDoMetodo'</literal>.
   </para>
@@ -56,7 +57,7 @@
     </title>
     <programlisting role="php">
 <![CDATA[
-<?php 
+<?php
 
 // Exemplo de função de callback
 function my_callback_function() {
@@ -71,10 +72,10 @@ class MyClass {
 }
 
 // Tipo 1: Calback simples
-call_user_func('my_callback_function'); 
+call_user_func('my_callback_function');
 
 // Tipo 2: Chamada à métodos estáticos
-call_user_func(array('MyClass', 'myCallbackMethod')); 
+call_user_func(array('MyClass', 'myCallbackMethod'));
 
 // Tipo 3: Chamada à metodos de objetos
 $obj = new MyClass();
@@ -97,6 +98,16 @@ class B extends A {
 }
 
 call_user_func(array('B', 'parent::who')); // A
+
+// Type 6: Objetos que implementam __invoke podem sere utilizados como callables (desde o PHP 5.3)
+class C {
+    public function __invoke($name) {
+        echo 'Hello ', $name, "\n";
+    }
+}
+
+$c = new C();
+call_user_func($c, 'PHP!');
 ?>
 ]]>
     </programlisting>
@@ -118,7 +129,7 @@ $double = function($a) {
 // Este é a série de números
 $numbers = range(1, 5);
 
-// O uso da closure aqui para 
+// O uso da closure aqui para
 // dobrar o valor de cada elemento de nossa
 // série
 $new_numbers = array_map($double, $numbers);
@@ -138,8 +149,8 @@ print implode(' ', $new_numbers);
 
   <note>
    <simpara>
-    No PHP 4, era necessário o uso de referencia para criar um callback que
-    aponta realmente para o <type>object</type>, e não para uma cópia dele. Para maiores
+    No PHP 4, era necessário o uso de referência para criar um callback que
+    realmente aponta para o <type>objeto</type>, e não para uma cópia dele. Para maiores
     detalhes, veja
     <link linkend="language.references">Explicação sobre referências</link>.
    </simpara>
@@ -149,7 +160,7 @@ print implode(' ', $new_numbers);
  </sect2>
 
 </sect1>
- 
+
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
