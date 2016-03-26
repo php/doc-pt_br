@@ -1,46 +1,75 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: felipe Status: ready -->
+<!-- EN-Revision: fb3920c122edad53d0dbf02685ba25e7a7200fa8 Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, fabioluciano -->
 <sect1 xml:id="language.types.integer">
  <title>Inteiros</title>
- 
+
+ <simpara>
+  Um <type>inteiro</type> é um número do conjunto
+  Z = {..., -2, -1, 0, 1, 2, ...}.
+ </simpara>
+
+ <para>
+  Veja também:
+ </para>
+
+ <itemizedlist>
+  <listitem>
+   <simpara>
+    <link linkend="book.gmp">Inteiros de tamanho arbitrário / GMP</link>
+   </simpara>
+  </listitem>
+  <listitem>
+   <simpara>
+    <link linkend="language.types.float">Números de ponto flutuante</link>
+   </simpara>
+  </listitem>
+  <listitem>
+   <simpara>
+    <link linkend="book.bc">Precisão arbitrária / BCMath</link>
+   </simpara>
+  </listitem>
+ </itemizedlist>
+
+ <sect2 xml:id="language.types.integer.syntax">
+ <title>Sintaxe</title>
+
   <simpara>
-   Um <type>inteiro</type> é um número do conjunto
-   Z = {..., -2, -1, 0, 1, 2, ...}.
+   <type>Inteiro</type>s podem ser especificados em notação decimal (base 10), hexadecimal
+   (base 16), octal (base 8) ou binária (base 2), opcionalmente precedido de sinal
+   (- ou +).
   </simpara>
 
   <para>
-   Veja também:
-   <link linkend="ref.gmp">Inteiros de tamanho arbitrário / GMP</link>, 
-   <link linkend="language.types.float">Números de ponto flutuante</link> e 
-   <link linkend="ref.bc">Precisão arbitrária / BCMath</link>.
+   <type>Inteiro</type>s binários literais estão disponíveis desde o PHP 5.4.0.
   </para>
 
-  <sect2 xml:id="language.types.integer.syntax">
-   <title>Sintaxe</title>
-   <simpara>
-    Inteiros podem ser especificados em notação decimal (base 10), hexadecimal (base 16)
-    ou octal (base 8), opcionalmente precedido de sinal (- ou +).
-   </simpara>
-   <para>
-    Para usar a notação octal, você precisa preceder o número com um
-    <literal>0</literal> (zero). Para utilizar a notação hexadecimal, preceda
-    número com <literal>0x</literal>.
-    <example>
-     <title>Literais inteiras</title>
-     <programlisting role="php">
+  <para>
+   Para usar a notação octal, preceda o número com um <literal>0</literal> (zero).
+   Para utilizar a notação hexadecimal, preceda número com <literal>0x</literal>.
+   Para utilizar a notação binária, preceda o número com <literal>0b</literal>.
+  </para>
+
+  <example>
+   <title>Literais inteiras</title>
+   <programlisting role="php">
 <![CDATA[
 <?php
 $a = 1234; // número decimal
 $a = -123; // um número negativo
 $a = 0123; // número octal (equivalente a 83 em decimal)
 $a = 0x1A; // número hexadecimal (equivalente a 26 em decimal)
+$a = 0b11111111; // número binário (equivalente ao 255 decimal)
 ?>
 ]]>
-     </programlisting>
-    </example>
-    Formalmente, as possíveis representação de inteiros são:
-    <informalexample>
-     <programlisting>
+   </programlisting>
+  </example>
+
+  <para>
+   Formalmente, as estruturas para <type>inteiro</type>s literais são:
+  </para>
+
+  <informalexample>
+   <programlisting>
 <![CDATA[
 decimal     : [1-9][0-9]*
             | 0
@@ -49,195 +78,202 @@ hexadecimal : 0[xX][0-9a-fA-F]+
 
 octal       : 0[0-7]+
 
+binary      : 0b[01]+
+
 integer     : [+-]?decimal
             | [+-]?hexadecimal
             | [+-]?octal
+            | [+-]?binary
 ]]>
-     </programlisting>
-    </informalexample>
-    O tamanho de um inteiro é dependente de plataforma, sendo
-    um número aproximado a 2 bilhões o valor mais comum
-    (número de 32 bits com sinal). O PHP não suporta inteiros
-    sem sinal.
-    O tamanho do inteiro pode ser determinado pela constante <constant>PHP_INT_SIZE</constant>,
-    e seu o valor máximo com a constante <constant>PHP_INT_MAX</constant> desde o PHP 4.4.0 e
-    PHP 5.0.5.
+   </programlisting>
+  </informalexample>
+
+  <para>
+   O tamanho de um <type>inteiro</type> depende da plataforma, sendo
+   um número aproximado a 2 bilhões o valor mais comum (número de 32 bits com sinal).
+   Plataformas 64-bit possuem comumente o valor máximo de aproximadamente  9E18, exceto em
+   Windows com versões anteriores ao PHP 7, onde são sempre 32-bit.
+   O PHP não suporta <type>inteiro</type>s sem sinal. O tamanho do inteiro pode ser determinado
+   pela constante <constant>PHP_INT_SIZE</constant>, e seu o valor máximo com
+   a constante <constant>PHP_INT_MAX</constant> desde o PHP 4.4.0 e PHP 5.0.5,
+   e o valor mínimo utilizando a constante <constant>PHP_INT_MIN</constant> desde o
+   PHP 7.0.0.
+  </para>
+
+  <warning>
+   <para>
+    Em versões anteriores ao PHP 7, se um dígito inválido é passado para <type>inteiro</type> octal
+    (i.e. 8 ou 9), o resto do número será ignorado. Desde o PHP 7, um erro de parse
+    é emitido.
    </para>
-   <warning>
-    <para>
-     Se um dígito inválido é passado para inteiro octal (i.e. 8 ou 9), o resto
-     do número é ignorado.
-     <example>
-      <title>Octal weirdness</title>
-      <programlisting role="php">
-<![CDATA[
-<?php
-var_dump(01090); // 010 octal = 8 decimal
-?>
-]]>
-      </programlisting>
-     </example>
-    </para>
-   </warning>
-  </sect2>
+  </warning>
+ </sect2>
 
   <sect2 xml:id="language.types.integer.overflow">
    <title>Overflow de inteiros</title>
-   <para>
-    Se você especifica um número além dos limites do tipo <type>inteiro</type>,
-    ele será interpretado como um <type>ponto flutuante</type>. Assim, 
-    uma operação que resulte em um número além dos limites do tipo <type>inteiro</type>, 
-    um <type>ponto flutuante</type> será retornado.
 
-    <informalexample>
-     <programlisting role="php">
+  <para>
+   Se o PHP encontrar um número além dos limites do tipo <type>inteiro</type>,
+   ele será interpretado como um <type>ponto flutuante</type>. Assim, uma
+   operação que resulte em um número além dos limites do tipo
+   <type>inteiro</type>, retornará um <type>ponto flutuante</type>.
+  </para>
+
+  <example>
+   <title>Overflow de inteiros em sistemas 32-bit</title>
+   <programlisting role="php">
 <![CDATA[
 <?php
-$ numero_grande =  2147483647;
-var_dump($numero_grande);
-// saida: int(2147483647)
+$large_number = 2147483647;
+var_dump($large_number);                     // int(2147483647)
 
-$numero_grande =  2147483648;
-var_dump($numero_grande);
-// saida: float(2147483648)
+$large_number = 2147483648;
+var_dump($large_number);                     // float(2147483648)
 
-// é válido também para inteiros hexadecimais entre 2^31 e 2^32-1:
-var_dump( 0xffffffff );
-// output: float(4294967295)
-
-// porém não é válido para hexadecimais com valores acima de 2^32-1:
-var_dump( 0x100000000 );
-// output: int(2147483647)
-
-$milhao = 1000000;
-$numero_grande =  50000 * $milhao;
-var_dump($numero_grande);
-// saida: float(50000000000)
+$million = 1000000;
+$large_number =  50000 * $million;
+var_dump($large_number);                     // float(50000000000)
 ?>
 ]]>
-     </programlisting>
-    </informalexample>
-    <warning>
-     <simpara>
-      Infelizmente, há um bug no PHP que faz que ele
-      nem sempre trabalhe corretamente quando há números negativos
-      envolvidos. Por exemplo, quando você faz <literal>-50000 *
-      $milhao</literal>, o resultado será
-      <literal>-429496728</literal>. Entretanto, quando ambos os operadores são
-      positivos, isso não ocorre.
-     </simpara>
-     <simpara>
-      Isto foi resolvido no PHP 4.1.0.
-     </simpara>
-    </warning>
-   </para>
-   <para>
-    Não há operador de divisão inteira no PHP.
-    <literal>1/2</literal> retorna o <type>ponto flutuante</type>
-    <literal>0.5</literal>. Você pode moldar (cast) o valor para
-    inteiro para sempre truncar o número, ou você pode
-    usar a função <function>round</function>.
-    <informalexample>
-     <programlisting role="php">
+   </programlisting>
+  </example>
+
+  <example>
+   <title>Overflow de inteiros em sistemas 64-bit</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$large_number = 9223372036854775807;
+var_dump($large_number);                     // int(9223372036854775807)
+
+$large_number = 9223372036854775808;
+var_dump($large_number);                     // float(9.2233720368548E+18)
+
+$million = 1000000;
+$large_number =  50000000000000 * $million;
+var_dump($large_number);                     // float(5.0E+19)
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <para>
+   Não há um operador de divisão que resulta em um <type>integer</type> no PHP.
+   <literal>1/2</literal> retorna o <type>ponto flutuante</type> <literal>0.5</literal>.
+   O valor pode ser manipulado para <type>inteiro</type> para sempre truncar o número, ou
+   usar a função <function>round</function> que provê um fino controle sobre o arredondamento.
+  </para>
+
+  <informalexample>
+   <programlisting role="php">
 <![CDATA[
 <?php
 var_dump(25/7);         // float(3.5714285714286)
 var_dump((int) (25/7)); // int(3)
-var_dump(round(25/7));  // float(4) 
+var_dump(round(25/7));  // float(4)
 ?>
 ]]>
-     </programlisting>
-    </informalexample>
+   </programlisting>
+  </informalexample>
+</sect2>
+
+ <sect2 xml:id="language.types.integer.casting">
+  <title>Convertendo para inteiro</title>
+
+  <simpara>
+   Para converter explicitamente um valor para <type>inteiro</type>, utilize-se um dos modificadores
+   <literal>(int)</literal> ou <literal>(integer)</literal>. Entretanto, na
+   maioria dos casos, p modificador não é necessário, já que o valor
+   será automaticamente convertido se um operador, função ou estrutura de controle
+   requerer um <type>inteiro</type> como argumento. Um valor também pode ser convertido para
+   <type>inteiro</type> utilizando a função <function>intval</function>.
+  </simpara>
+
+  <simpara>
+   Se um <type>recurso</type> for convertido para um <type>inteiro</type>,
+   resultará no número único do recurso atribuído ao
+   <type>recurso</type> pelo PHP em tempo de execução.
+  </simpara>
+
+  <simpara>
+   Veja também <link linkend="language.types.type-juggling">Manipulação de tipos</link>.
+  </simpara>
+
+  <sect3 xml:id="language.types.integer.casting.from-boolean">
+   <title>De <link linkend="language.types.boolean">booleanos</link></title>
+
+   <simpara>
+    &false; será retornado como <literal>0</literal> (zero), e &true; retornará
+    <literal>1</literal> (um).
+   </simpara>
+  </sect3>
+
+  <sect3 xml:id="language.types.integer.casting.from-float">
+   <title>
+    De <link linkend="language.types.float">números de ponto flutuante</link>
+   </title>
+
+   <simpara>
+    Conversão de números de ponto flutuante para inteiros, fará que o número seja
+    <emphasis>truncado</emphasis>.
+   </simpara>
+
+   <para>
+    Se o número convertido estiver além dos limites de um <type>integer</type> (geralmente
+    <literal>+/- 2.15e+9 = 2^31</literal> em plataformas 32 bit e
+    <literal>+/- 9.22e+18 = 2^63</literal> em plataformas 64-bit que não sejam Windows), o resultado é indefinido,
+    por que o <type>ponto flutuante</type> não
+    possui precisão suficiente para fornecer um resultado <type>inteiro</type> exato. Não se preocupe,
+    pois nenhum aviso será emitido se isso acontecer!
    </para>
-  </sect2>
 
-
-  <sect2 xml:id="language.types.integer.casting">
-   <title>Convertendo para inteiro</title>
-    <simpara>
-     Para converter explicitamente um valor para <type>inteiro</type>, utilize-se
-     dos modificadores <literal>(int)</literal> ou <literal>(integer)</literal>.
-     Entretanto, na maioria dos casos, você não precisa utilizar o modificador, desde que qualquer
-     valor será automaticamente convertido se um operador, função ou
-     estrutura de controle requerer um argumento <type>inteiro</type>.
-     Você também pode converter o valor de um inteiro com a função
-     <function>intval</function>.
-    </simpara>
-    <simpara>
-     Veja também <link linkend="language.types.type-juggling">Manipulação de tipos</link>.
-    </simpara>
-
-    <sect3 xml:id="language.types.integer.casting.from-boolean">
-     <title>de <link linkend="language.types.boolean"
-         >booleanos</link></title>
-     <simpara>
-      &false; será retornado como
-      <literal>0</literal> (zero), e &true;
-      como <literal>1</literal> (um).
-     </simpara>
-    </sect3>
-
-    <sect3 xml:id="language.types.integer.casting.from-float">
-     <title>De <link linkend="language.types.float">números de ponto flutuante</link></title>
-     <simpara>
-      Quando convertendo de números de ponto flutuante para inteiros, o número será
-      <emphasis>truncado</emphasis>.
-     </simpara>
-
+    <warning>
      <para>
-      Se o número convertido estiver além dos limites de um inteiro
-      (usualmente <literal>+/- 2.15e+9 = 2^31</literal>),
-      o resultado é indefinido, mesmo porque o ponto flutuante
-      não tem a mesma precisão para fornecer um resultado inteiro exato.
-      Não se preocupe, pois nenhum aviso será emitido neste
-      caso!
-     </para>
+     Nunca modifique uma fração desconhecida para <type>inteiro</type>, porque isto pode,
+     as vezes, fornecer resultados inesperados.
+    </para>
 
-     <warning><para>
-      Nunca modifique uma fração desconhecida para <type>inteiro</type>, porque isto pode
-      fornecer resultados inesperados as vezes.
-      <informalexample>
-       <programlisting role="php">
+    <informalexample>
+     <programlisting role="php">
 <![CDATA[
 <?php
 echo (int) ( (0.1+0.7) * 10 ); // imprime 7!
 ?>
 ]]>
-       </programlisting>
-      </informalexample>
+     </programlisting>
+    </informalexample>
 
-      Para maiores informações, veja o <link
-      linkend="warn.float-precision">alerta
-      sobre a precisão de número flutuante.</link>.
-     </para></warning>
-    </sect3>
+    <para>
+      Veja também o <link linkend="warn.float-precision">alerta sobre a precisão de número
+      flutuante.</link>.
+   </para>
+   </warning>
+  </sect3>
 
-    <sect3 xml:id="language.types.integer.casting.from-string">
-     <title>De strings</title>
-     <simpara>
-      Veja <link linkend="language.types.string.conversion">Conversão
-      de strings para números</link>
-     </simpara>
-    </sect3>
+  <sect3 xml:id="language.types.integer.casting.from-string">
+   <title>De strings</title>
 
-    <sect3 xml:id="language.types.integer.casting.from-other">
-     <title>De outros tipos</title>
-     <para>
-      <caution>
-       <simpara>
-        O comportamento da conversão de um inteiro é indefinido de outros
-        tipos. Atualmente, o comportamento é o mesmo como se primeiro o
-        valor fosse <link linkend="language.types.boolean.casting"
-        >convertido para booleano</link>. Entretanto,
-        <emphasis>não confie</emphasis> neste comportamento, pois ele pode
-        mudar sem aviso.
-       </simpara>
-      </caution>
-     </para>
-    </sect3>
-  </sect2>
+   <simpara>
+    Veja <link linkend="language.types.string.conversion">Conversão de strings para
+    números</link>
+   </simpara>
+  </sect3>
+
+  <sect3 xml:id="language.types.integer.casting.from-other">
+   <title>De outros tipos</title>
+
+   <caution>
+    <simpara>
+     O comportamento da conversão de um <type>inteiro</type> é indefinido de outros
+     tipos. <emphasis>Não confie</emphasis> em nenhum comportamento observado, pois ele pode
+     mudar sem aviso.
+    </simpara>
+   </caution>
+  </sect3>
+
+ </sect2>
 </sect1>
- 
+
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
