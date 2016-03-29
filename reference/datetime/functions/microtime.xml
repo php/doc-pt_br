@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: felipe Status: ready --><!-- CREDITS: surfmax -->
+<!-- EN-Revision: e41aab5ecacf449e51179886c17f1d41735b0234 Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, surfmax, fabioluciano -->
 <refentry xml:id="function.microtime" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>microtime</refname>
@@ -13,8 +13,8 @@
    <methodparam choice="opt"><type>bool</type><parameter>get_as_float</parameter></methodparam>
   </methodsynopsis>
   <para>
-   A <function>microtime</function> retorna o timestamp atual com microsegundos. Esta função
-   está apenas disponível em sistemas operacionais que suportam o chamda do sistema 
+   A função <function>microtime</function> retorna o timestamp atual com microssegundos. Esta função
+   está disponível apenas em sistemas operacionais que suportam o chamada de sistema
    gettimeofday().
   </para>
  </refsect1>
@@ -27,14 +27,9 @@
      <term><parameter>get_as_float</parameter></term>
      <listitem>
       <para>
-       Quando chamada sem o argumento opcional, esta função retorna a string
-       "msec sec" onde sec é o a hora atual medida em segundos desde a era UNIX 
-       (0:00:00 January 1, 1970 GMT), e msec é a parte em microsegundos.
-       Ambas porções de string são retornadas em segundos.
-      </para>
-      <para>
-       Se o opcional <parameter>get_as_float</parameter> é definido para
-       &true; então um <type>float</type> (em segundos) é retornado.
+       Se utilizada e definida como &true;, a função <function>microtime</function> retornará um
+       <type>float</type> em vez de uma <type>string</type>, como descrito na
+       seção de valores de retorno a seguir.
       </para>
      </listitem>
     </varlistentry>
@@ -42,27 +37,20 @@
   </para>
  </refsect1>
 
- <refsect1 role="changelog">
-  &reftitle.changelog;
+  <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
   <para>
-   <informaltable>
-    <tgroup cols="2">
-     <thead>
-      <row>
-       <entry>&Version;</entry>
-       <entry>&Description;</entry>
-      </row>
-     </thead>
-     <tbody>
-      <row>
-       <entry>5.0.0</entry>
-       <entry>
-        O parâmetro <parameter>get_as_float</parameter> foi adicionado.
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
+   Por padrão, a função <function>microtime</function> retorna uma <type>string</type> no
+   formato "msec sec", onde <literal>sec</literal> é o número de segundos
+   desde a Unix epoch (0:00:00 January 1,1970 GMT), e <literal>msec</literal>
+   mensura os microssegundos que se passaram desde <literal>sec</literal>
+   e também é expressada em segundos.
+  </para>
+  <para>
+   Se o parâmetro opcional <parameter>get_as_float</parameter> for definido para &true;
+   então a função <function>microtime</function> retornará um <type>float</type>, que
+   representa a hora atual em segundos desde Unix epoch com precisão
+   de microssegundos.
   </para>
  </refsect1>
 
@@ -77,14 +65,14 @@
 /**
  * Simple function to replicate PHP 5 behaviour
  */
-function microtime_float() 
-{ 
-    list($usec, $sec) = explode(" ", microtime()); 
-    return ((float)$usec + (float)$sec); 
-} 
+function microtime_float()
+{
+    list($usec, $sec) = explode(" ", microtime());
+    return ((float)$usec + (float)$sec);
+}
 
 $time_start = microtime_float();
-    
+
 // Sleep for a while
 usleep(100);
 
@@ -97,7 +85,7 @@ echo "Did nothing in $time seconds\n";
     </programlisting>
    </example>
    <example>
-    <title>Timing script execution in PHP 5</title>
+    <title>Cronometrando a execução do script no PHP 5</title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -105,10 +93,27 @@ $time_start = microtime(true);
 
 // Sleep for a while
 usleep(100);
-    
+
 $time_end = microtime(true);
 $time = $time_end - $time_start;
-    
+
+echo "Did nothing in $time seconds\n";
+?>
+]]>
+    </programlisting>
+   </example>
+   <example>
+    <title><function>microtime</function> e <literal>REQUEST_TIME_FLOAT</literal> (a partir do PHP 5.4.0)</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// Randomize sleeping time
+usleep(mt_rand(100, 10000));
+
+// As of PHP 5.4.0, REQUEST_TIME_FLOAT is available in the $_SERVER superglobal array.
+// It contains the timestamp of the start of the request with microsecond precision.
+$time = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+
 echo "Did nothing in $time seconds\n";
 ?>
 ]]>

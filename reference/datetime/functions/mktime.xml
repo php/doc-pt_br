@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: felipe Status: ready --><!-- CREDITS:
-surfmax, thiago  -->
+<!-- EN-Revision: bce4e5f7d7979c5b672e9375a17860b0ced5eef3 Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, surfmax, thiago, fabioluciano  -->
 <refentry xml:id="function.mktime" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>mktime</refname>
@@ -20,15 +19,27 @@ surfmax, thiago  -->
     <methodparam choice="opt"><type>int</type><parameter>is_dst</parameter></methodparam>
    </methodsynopsis>
   <para>
-   Retorna o timestamp Unix correspondente para os argumentos dados. 
-   Este timestamp é um longo inteiro contendo o número de segundos 
+   Retorna o timestamp Unix correspondente para os argumentos dados.
+   Este timestamp é um longo inteiro contendo o número de segundos
    entre a Era Unix (January 1 1970 00:00:00 GMT) e o tempo especificado.
   </para>
   <para>
    Argumentos podem ser omitidos da direita para esquerda; quaisquer
-   argumentos assim omitidos serão definidos para o valor atual de acordo
+   argumentos omitidos serão definidos
+   para o valor atual de acordo
    com a data e a hora local.
   </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    A partir do PHP 5.1, chamar a função sem argumentos fará com que <function>mktime</function>
+    lance um aviso <constant>E_STRICT</constant>: utilize a função
+    <function>time</function> em substistituição.
+   </para>
+  </note>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -39,7 +50,10 @@ surfmax, thiago  -->
      <term><parameter>hour</parameter></term>
      <listitem>
       <para>
-       O número da hora.
+       O número da hora relativa ao início de determinado dia do
+       <parameter>month</parameter>, <parameter>day</parameter> e <parameter>year</parameter>.
+       Valores negativos referenciam a hora anterior a meia noite do dia em questão.
+       Valores maiores que 23 referenciam a hora correspondente no(s) próximo(s) dia(s).
       </para>
      </listitem>
     </varlistentry>
@@ -47,7 +61,9 @@ surfmax, thiago  -->
      <term><parameter>minute</parameter></term>
      <listitem>
       <para>
-       O número do minuto.
+       O número de minutos relativos ao início da <parameter>hour</parameter>.
+       Valores negativos referenciam minutos da hora anterior.
+       Valores maiores que 23 referenciam os minutos correspondentes a(s) próxima(s) horas(s).
       </para>
      </listitem>
     </varlistentry>
@@ -55,7 +71,9 @@ surfmax, thiago  -->
      <term><parameter>second</parameter></term>
      <listitem>
       <para>
-       O número de segundos passados do minuto.
+       O número de segundos relativos ao início do <parameter>minute</parameter>.
+       Valores negativos referenciam segundos do minuto anterior.
+       Valores maiores que 23 referenciam os segundos correspondentes ao(s) próximo(s) minuto(s).
       </para>
      </listitem>
     </varlistentry>
@@ -63,7 +81,10 @@ surfmax, thiago  -->
      <term><parameter>month</parameter></term>
      <listitem>
       <para>
-       O número do mês.
+       O número do mês relativo ao fim do anterior.
+       Valores de 1 a 12 referenciam o calendário normal de meses do ano em questão.
+       Valores menores que 1 (valores negativos, incluso) referenciam meses do ano anterior em ordem reversa, então 0 é Dezembro, -1 Novembro, e etc.
+       Valores maiores que 12 referenciam meses correspondentes ao(s) próximo(s) ano(s).
       </para>
      </listitem>
     </varlistentry>
@@ -71,7 +92,10 @@ surfmax, thiago  -->
      <term><parameter>day</parameter></term>
      <listitem>
       <para>
-       O número do dia.
+       O número do dia relativo ao final do mês anterior.
+       Valores de 1 a 28, 29, 30 e 31 (dependendo do mês) corresponde a dias normais no mês.
+       Valores menores que 1 (valores negativos, incluso) corresponde a dias no mês anterior, então 0 é o último dia do mês anterior, -1 é o dia anterior a este, e etc.
+       Valores maiores que o número de dias do mês, referenciam dias correspondentes ao(s) próximo(s) mês(es).
       </para>
      </listitem>
     </varlistentry>
@@ -92,43 +116,48 @@ surfmax, thiago  -->
      <term><parameter>is_dst</parameter></term>
      <listitem>
       <para>
-       Este parâmetro pode ser definido para 1 se está durante o horário de verão 
-       (DST), 0 se não está, ou -1 (o padrão) se é desconhecido se o tempo está 
-       dentro do horário de verão ou não. Se é desconhecido, o PHP tenta 
-       compreender por si mesmo. Isto pode causar inesperado (mas não incorreto) 
-       resultados. As vezes é inválido se DST é habilitado no sistema em que o PHP
-       está executando ou <parameter>is_dst</parameter> é definido para 1. Se DST 
-       é habilitado em e.g. 2:00, todo tempo entre 2:00 e 3:00 são inválidos e
-       <function>mktime</function> retorna um indefinido (normalmente negativo) valor. 
-       Alguns sistemas (e.g. Solaris 8) habilita DST na meia-noite então tempo
+       Este parâmetro pode ser definido para 1 se está durante o horário de verão (DST),
+       0 se não está, ou -1 (o padrão) se é desconhecido se o tempo está dentro
+       do horário de verão ou não. Se é desconhecido, o PHP tentará compreender por si mesmo.
+       Isto pode causar resultados (mas não incorretos) inesperados.
+       As vezes será inválido se DST estiver habilitado no sistema em que o PHP está executando ou
+       <parameter>is_dst</parameter> estiver definido para 1. Se DST estiver habilitado em e.g. 2:00, todos o período de tempo
+       entre 2:00 e 3:00 será inválidos e a função <function>mktime</function> retornará um valor indefinido
+       (normalmente negativo).
+       Alguns sistemas (e.g. Solaris 8) habilita DST na meia-noite então á hora
        0:30 do dia quando DST está habilitado é avaliado como 23:30 do dia anterior.
       </para>
       <note>
        <para>
         No PHP 5.1.0, este parâmetro tornou-se obsoleto. Como resultado, o
-        o novo recurso de manuseamento de timezone deve ser usado ao invés dele.
+        o novo recurso de manipulação de fuso horário deve ser usado em substituição.
+       </para>
+      </note>
+      <note>
+       <para>
+        Este parâmetro foi removido no PHP 7.0.0.
        </para>
       </note>
      </listitem>
     </varlistentry>
    </variablelist>
   </para>
- </refsect1>                                                                                                            
-  
+ </refsect1>
+
+
  <refsect1 role="returnvalues">
-  &reftitle.returnvalues; 
+  &reftitle.returnvalues;
   <para>
-   <function>mktime</function> retorna o Unix timestamp dos argumentos dado.
-   Se os argumentos são inválidos, a função retorna &false; (antes do PHP 5.1
-   retornava <literal>-1</literal>).
+   A função <function>mktime</function> retorna o o timestamp Unix dos argumentos
+   informados.
+   Se os argumentos são inválidos, a função retornará &false; (em versões anteriores ao PHP 5.1
+   <literal>-1</literal> era retornado).
   </para>
  </refsect1>
 
  <refsect1 role="errors">
   &reftitle.errors;
-   
-   &date.timezone.errors.description;
- 
+  &date.timezone.errors.description;
  </refsect1>
 
  <refsect1 role="changelog">
@@ -144,21 +173,39 @@ surfmax, thiago  -->
      </thead>
      <tbody>
       <row>
-       <entry>3.0.10</entry>
-       <entry>Adicionado o parâmetro<parameter>is_dst</parameter></entry>
+       <entry>7.0.0</entry>
+       <entry>
+        O parâmetro <parameter>is_dst</parameter> foi removido.
+       </entry>
+      </row>
+      <row>
+       <entry>5.3.0</entry>
+       <entry>
+        <function>mktime</function> agora lançará um aviso <constant>E_DEPRECATED</constant>
+        se o parâmetro <parameter>is_dst</parameter> for utilizado.
+       </entry>
       </row>
       <row>
        <entry>5.1.0</entry>
        <entry>
         O parâmetro <parameter>is_dst</parameter> tornou-se obsoleto.
-        Fazendo a função retornar &false; em erro, ao invés de <literal>-1</literal>.
-        Reparada a função para aceitar o ano, mês e dia para ser todos passados
+        Fazendo a função retornar &false; em erro, em vez de
+        <literal>-1</literal>.
+        Reparada a função para aceitar ano, mês e dia passados
         como zero.
        </entry>
       </row>
-      
+      <row>
+       <entry>5.1.0</entry>
+       <entry>
+        Quando chamada sem argumentos, a função <function>mktime</function> lançará um
+        aviso <constant>E_STRICT</constant>. Utilize a função
+        <function>time</function> em substituição.
+       </entry>
+      </row>
+
       &date.timezone.errors.changelog;
-     
+
      </tbody>
     </tgroup>
    </informaltable>
@@ -169,11 +216,30 @@ surfmax, thiago  -->
   &reftitle.examples;
   <para>
    <example>
+    <title>Exemplo básico da função <function>mktime</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// Configura o fuso horário a ser utilizado. Disponível desde o PHP 5.1
+date_default_timezone_set('UTC');
+
+// Imprime: July 1, 2000 is on a Saturday
+echo "July 1, 2000 is on a " . date("l", mktime(0, 0, 0, 7, 1, 2000));
+
+// Imprime algo como: 2006-04-05T01:02:03+00:00
+echo date('c', mktime(1, 2, 3, 4, 5, 2006));
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
     <title>Exemplo da <function>mktime</function></title>
     <para>
-     <function>mktime</function> é útil durante a aritmética e validação de data,
-     enquanto ela calculará automaticamente o valor correto para a entrada fora
-     do intervalo. Por exemplo, cada uma das seguintes linhas produzirá a string 
+     <function>mktime</function> é útil para a aritmética e validação de data,
+     já que calculará automaticamente o valor correto para a entrada fora
+     do intervalo. Por exemplo, cada uma das seguintes linhas produzirá a string
      "Jan-01-1998".
    </para>
     <programlisting role="php">
@@ -192,18 +258,17 @@ echo date("M-d-Y", mktime(0, 0, 0, 1, 1, 98));
    <example>
     <title>Último dia do próximo mês</title>
     <para>
-     O último dia de um mês dado pode ser expressado como o dia "0" do mês 
-     seguinte, não o dia -1. Os dois exemplos seguintes produzirão a string 
+     O último dia de um mês informado pode ser expressado como o dia "0" do mês
+     seguinte, não o dia -1. Os dois exemplos seguintes produzirão a string
      "The last day in Feb 2000 is: 29".
      </para>
     <programlisting role="php">
 <![CDATA[
 <?php
-$lastday = mktime (0,0,0,3,0,2000);
-echo strftime ("Last day in Feb 2000 is: %d", $lastday);
-     
-$lastday = mktime (0,0,0,4,-31,2000);
-echo strftime ("Last day in Feb 2000 is: %d", $lastday);
+$lastday = mktime(0, 0, 0, 3, 0, 2000);
+echo strftime("Last day in Feb 2000 is: %d", $lastday);
+$lastday = mktime(0, 0, 0, 4, -31, 2000);
+echo strftime("Last day in Feb 2000 is: %d", $lastday);
 ?>
 ]]>
     </programlisting>
@@ -215,7 +280,7 @@ echo strftime ("Last day in Feb 2000 is: %d", $lastday);
   &reftitle.notes;
   <caution>
    <para>
-    Antes do PHP 5.1.0, timestamp negativos não eram suportados em nenhuma
+    Em versões anteriores a PHP 5.1.0, timestamps negativos não eram suportados em nenhuma
     versão conhecida do Windows e em alguns outros sistemas também. Portanto
     o intervalo válido de anos foi limitado para 1970 até 2038.
    </para>
@@ -226,8 +291,9 @@ echo strftime ("Last day in Feb 2000 is: %d", $lastday);
   &reftitle.seealso;
   <para>
    <simplelist>
+    <member><function>checkdate</function></member>
     <member><function>gmmktime</function></member>
-    <member><function>date</function></member> 
+    <member><function>date</function></member>
     <member><function>time</function></member>
    </simplelist>
   </para>

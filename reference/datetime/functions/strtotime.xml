@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: felipe Status: ready --><!-- CREDITS:
-surfmax, thiago -->
+<!-- EN-Revision: bbed905d26cedda922f38c72a07c19da9a7c383e Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, surfmax, thiago, fabioluciano -->
+
 <refentry xml:id="function.strtotime" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>strtotime</refname>
@@ -16,23 +16,17 @@ surfmax, thiago -->
   <simpara>
    A função espera que seja dado uma string contendo um formato de data em inglês US
    e tentará analisar esse formato dentro de um timestamp Unix (o número de segundos
-   desde January 1 1970 00:00:00 GMT), relativo ao timestamp dado em 
+   desde January 1 1970 00:00:00 GMT), relativo ao timestamp dado em
    <parameter>now</parameter>, ou a hora atual se <parameter>now</parameter> não
    é fornecido.
   </simpara>
   <para>
-   Esta função usará a variável de ambiente <envar>TZ</envar> (se disponível)
-   para calcular o timestamp. Desde o PHP 5.1.0 há forma fácil para definir o
-   timezone que é usada em todas as funções de data/hora.
-   Este processo é explicado na página da função
-   <function>date_default_timezone_get</function>.
+   Cada parâmetro desta função utiliza o fuso horário padrão a não ser que
+   um fuso horário seja especificado neste parâmetro. Tome cuidado para não utilizar
+   fusos horários diferentes em cada um dos parâmetros a não ser que seja o pretendido.
+   Veja a função <function>date_default_timezone_get</function> para verificar
+   as diversas formas de definir um fuso horário padrão.
   </para>
-  <note>
-   <para>
-    Se o número do ano é especificado no formato de dois dígitos, o valor
-    entre 00-69 é mapeado para 2000-2069 e 70-99 para 1970-1999.
-   </para>
-  </note>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -42,19 +36,15 @@ surfmax, thiago -->
     <varlistentry>
      <term><parameter>time</parameter></term>
      <listitem>
-      <para>
-       A string para analisar, de acordo com a sintaxe GNU de <link
-        xlink:href="&url.gnu.man.date-input;">Formato de Entrada de Data</link>.
-       Antes do PHP 5.0.0, microsegundos não eram permitidos na hora, desde o
-       PHP 5.0.0 eles são permitidos mas ignorados.
-      </para>
+      <para>&date.formats.parameter;</para>
      </listitem>
     </varlistentry>
     <varlistentry>
      <term><parameter>now</parameter></term>
      <listitem>
       <para>
-       O timestamp usado para calcular o valor retornado.
+       O timestamp que será utilizado como base no cálculo das datas
+       relativas.
       </para>
      </listitem>
     </varlistentry>
@@ -72,9 +62,9 @@ surfmax, thiago -->
 
  <refsect1 role="errors">
   &reftitle.errors;
-   
+
    &date.timezone.errors.description;
- 
+
  </refsect1>
 
  <refsect1 role="changelog">
@@ -90,14 +80,58 @@ surfmax, thiago -->
      </thead>
      <tbody>
       <row>
+       <entry>5.3.0</entry>
+       <entry>
+        Em versões anteriores ao PHP 5.3.0, formatos relativos de tempo informados ao argumento
+        <parameter>time</parameter> da função <function>strtotime</function>
+        como <literal>this week</literal>, <literal>previous week</literal>,
+        <literal>last week</literal>, and <literal>next week</literal> eram
+        interpretados como um período de 7 dias relativos a data/hora corrente, em vez
+        de o período de uma semana de <literal>Segunda-feira</literal> a <literal>Domingo</literal>.
+       </entry>
+      </row>
+      <row>
+       <entry>5.3.0</entry>
+       <entry>
+        Em versões anteriores ao PHP 5.3.0, <literal>24:00</literal> não era um formato válido e
+        <function>strtotime</function> retornava &false;.
+       </entry>
+      </row>
+      <row>
+       <entry>5.2.7</entry>
+       <entry>
+        No PHP 5, em versões anteriores a 5.2.7,solicitar
+        uma certa ocorrência de um dia  da semana em um mês onde este dia fosse o primeiro dia do
+        mês pode adicionar incorretamente uma semana para o timestamp
+        retornado. Isso foi corritido na versão 5.2.7 e
+        posteriores.
+       </entry>
+      </row>
+      <row>
        <entry>5.1.0</entry>
        <entry>
-        Ela agora retorna &false; em falha, ao invés de <literal>-1</literal>.
+        Agora retorna &false; em falha, ao invés
+        de <literal>-1</literal>.
        </entry>
       </row>
 
       &date.timezone.errors.changelog;
 
+      <row>
+       <entry>5.0.2</entry>
+       <entry>
+        No PHP 5, em versões superiores a 5.0.2, <literal>"now"</literal> e outros
+        horários relativos eram computados erroneamente como a meia noite
+        do dia corrente. Isso difere de outras versões onde era
+        computado corretamente como a hora atual.
+       </entry>
+      </row>
+      <row>
+       <entry>5.0.0</entry>
+       <entry>
+        Microssegundos são aceitos, porém ignorados.
+       </entry>
+      </row>
      </tbody>
     </tgroup>
    </informaltable>
@@ -108,7 +142,7 @@ surfmax, thiago -->
   &reftitle.examples;
   <para>
    <example>
-    <title>Exemplo da <function>strtotime</function></title>
+    <title>Exemplo da função <function>strtotime</function></title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -147,30 +181,57 @@ if (($timestamp = strtotime($str)) === false) {
 
  <refsect1 role="notes">
   &reftitle.notes;
-  <warning>
+  <note>
    <para>
-    Em PHP 5 superior a 5.0.2, <literal>"now"</literal> e outros tempo relativos
-    são erradamente computados para meia-noite do dia. Diferente de outras
-    versões onde ele é corretamente computado da hora atual.
+    Se o número do ano for especificado no formato como dois dígitos, o valor
+    entre 00-60 será mapeado para 2000-2069 e 70-99 para 1970-1999. Veja as notas a
+    seguir para possíveis diferenças em sistemas 32bit (as datas possíveis acabam em
+    2038-01-19 03:14:07),
    </para>
-  </warning>
-  <warning>
-   <para>
-    Nas versões do PHP menor que 4.4.0, <literal>"next"</literal> é incorretamente
-    computado como +2. Uma solução típica para isso é usar
-    <literal>"+1"</literal>.
-   </para>
-  </warning>
+  </note>
   <note>
    <para>
     O intervalo válido de um timestamp é tipicamente de Fri, 13 Dec
-    1901 20:45:54 GMT até Tue, 19 Jan 2038 03:14:07 GMT. (Estas são datas que 
-    correspondem aos valores máximos e mínimos para um inteiro assinado de 32-bit.)
-    Adicionalmente, nem todas as plataformas suportam timestamps negativos, então 
-    a faixa de    sua data pode ser limitada antes de chegar na Era Unix. Isto 
-    significa que ex. datas antes de Jan 1, 1970 não trabalharão no Windows, nem 
-    em algumas distribuições do Linux, e num grupo de outros sistemas operacionais.
-    PHP 5.1.0 e mais recentes versões superaram esta limitação, no entanto.
+    1901 20:45:54 GMT até Tue, 19 Jan 2038 03:14:07 GMT. (Estas são datas que
+    correspondem aos valores máximos e mínimos para
+    um inteiro assinado de 32-bit.)
+   </para>
+   <para>
+    Em versões anteriores ao PHP 5.1.0, nem todas as plataformas suportam timestamps negativos, então
+    a faixa de sua data pode ser limitada antes de chegar na Era Unix. Isto
+    significa que datas antes de Jan 1, 1970 não funcionam no Windows,
+    algumas distribuições do Linux, e outros sistemas operacionais.
+   </para>
+   <para>
+    Em versões do PHP em 64-bit, a faixa válida de um timestamp é praticamente
+    infinita, já que 64 bits pode representar aproximadamente 293 bilhões de anos em ambas
+    direções.
+   </para>
+  </note>
+  <note>
+   <para>
+    Datas nos formatos <literal>m/d/y</literal> e <literal>d-m-y</literal>
+    são diferenciadas observando o separador entre os vários
+    componentes: se o separador é uma barra (<literal>/</literal>), o formato
+    Americano <literal>m/d/y</literal> é utilizado; enquanto que, se o separador for
+    um traço (<literal>-</literal>) ou um ponto (<literal>.</literal>), o formato
+    Europeu <literal>d-m-y</literal> será utilizado.
+    Entretanto, se o ano foi informado no formato de dois dígitos e o separador for um
+    traço (<literal>-</literal>, a string de data será interpretada como
+    <literal>y-m-d</literal>.
+   </para>
+   <para>
+    Para evitar uma ambiguidade em potencial, o melhor é utilizar datas que seguem a ISO 8601
+    (<literal>YYYY-MM-DD</literal>) ou o método
+    <methodname>DateTime::createFromFormat</methodname> sempre que possível.
+   </para>
+  </note>
+  <note>
+   <para>
+    O uso desta função para operações matemáticas não é recomendado.
+    É melhor a utilização dos métodos <methodname>DateTime::add</methodname> e
+    <methodname>DateTime::sub</methodname> no PHP 5.3 e superior, ou
+    o método <methodname>DateTime::modify</methodname> no PHP 5.2.
    </para>
   </note>
  </refsect1>
@@ -179,6 +240,9 @@ if (($timestamp = strtotime($str)) === false) {
   &reftitle.seealso;
   <para>
    <simplelist>
+    <member><link linkend="datetime.formats">Formatos de Data e Hora</link></member>
+    <member><methodname>DateTime::createFromFormat</methodname></member>
+    <member><function>checkdate</function></member>
     <member><function>strptime</function></member>
    </simplelist>
   </para>
