@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: felipe Status: ready --><!-- CREDITS: lucasr -->
+<!-- EN-Revision: 27acde0b15f7131bbc5239a14073d63307770b18 Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, lucasr, fabioluciano -->
 <refentry xml:id="function.array-filter" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>array_filter</refname>
@@ -10,16 +10,16 @@
   &reftitle.description;
   <methodsynopsis>
    <type>array</type><methodname>array_filter</methodname>
-   <methodparam><type>array</type><parameter>input</parameter></methodparam>
-   <methodparam choice="opt"><type>callback</type><parameter>callback</parameter></methodparam>
+   <methodparam><type>array</type><parameter>array</parameter></methodparam>
+   <methodparam choice="opt"><type>callable</type><parameter>callback</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>flag</parameter><initializer>0</initializer></methodparam>
   </methodsynopsis>
   <para>
    Itera sobre cada valor de
-   <parameter>input</parameter> passando-os para a função
+   <parameter>array</parameter> passando-os para a função
    <parameter>callback</parameter>. Se a função <parameter>
    callback</parameter> retornar true, o valor atual de
-   <parameter>input</parameter> é retornado na matriz resultado.
-   Os índices das matrizes são preservados.
+   <parameter>array</parameter> é retornado na matriz resultado. As chaves do array são preservadas.
   </para>
  </refsect1>
 
@@ -29,7 +29,7 @@
    <variablelist>
 
     <varlistentry>
-     <term><parameter>input</parameter></term>
+     <term><parameter>array</parameter></term>
      <listitem>
       <para>
        O array a ser iterado
@@ -45,9 +45,28 @@
       </para>
       <para>
        Se nenhum <parameter>callback</parameter> é fornecido, todas entradas de
-       <parameter>input</parameter> iguais a &false; (veja
+       <parameter>array</parameter> iguais a &false; (veja
        <link linkend="language.types.boolean.casting">convertendo para
         booleano</link>) serão removidas.
+      </para>
+     </listitem>
+    </varlistentry>
+
+    <varlistentry>
+     <term><parameter>flag</parameter></term>
+     <listitem>
+      <para>
+       Flag determina quais argumentos são passadosoara o parâmetro <parameter>callback</parameter>:
+       <itemizedlist>
+        <listitem>
+         <simpara><constant>ARRAY_FILTER_USE_KEY</constant> - passa chaves como argumentos
+         para <parameter>callback</parameter> em vez de valor</simpara>
+        </listitem>
+        <listitem>
+         <simpara><constant>ARRAY_FILTER_USE_BOTH</constant> - passa tanto valor quanto chave como
+         argumento para <parameter>callback</parameter> em vez do valor</simpara>
+        </listitem>
+       </itemizedlist>
       </para>
      </listitem>
     </varlistentry>
@@ -63,6 +82,30 @@
   </para>
  </refsect1>
 
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>5.6.0</entry>
+      <entry>
+       Adicionado o parâmetro opcional <parameter>flag</parameter> e as contantes
+       <constant>ARRAY_FILTER_USE_KEY</constant> e
+       <constant>ARRAY_FILTER_USE_BOTH</constant>
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
 <!--
  <refsect1 role="errors">
   &reftitle.errors;
@@ -74,17 +117,19 @@
   &reftitle.examples;
   <para>
    <example>
-    <title>Exemplo de <function>array_filter</function></title>
+    <title>Exemplo da função <function>array_filter</function></title>
     <programlisting role="php">
 <![CDATA[
 <?php
 function impar($var)
 {
+    // retorna se o inteiro informado é impar
     return($var & 1);
 }
 
 function par($var)
 {
+    // retorna se o inteiro informado é par
     return(!($var & 1));
 }
 
@@ -127,12 +172,12 @@ Array
 <?php
 
 $entry = array(
-0 => 'foo',
-1 => false,
-2 => -1,
-3 => null,
-4 => ''
-);
+             0 => 'foo',
+             1 => false,
+             2 => -1,
+             3 => null,
+             4 => ''
+          );
 
 print_r(array_filter($entry));
 ?>
@@ -149,6 +194,41 @@ Array
 ]]>
    </screen>
   </example>
+   <example>
+    <title><function>array_filter</function> com
+    <parameter>flag</parameter></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$arr = ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4];
+
+var_dump(array_filter($arr, function($k) {
+    return $k == 'b';
+}, ARRAY_FILTER_USE_KEY));
+
+var_dump(array_filter($arr, function($v, $k) {
+    return $k == 'b' || $v == 4;
+}, ARRAY_FILTER_USE_BOTH));
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+array(1) {
+  ["b"]=>
+  int(2)
+}
+array(2) {
+  ["b"]=>
+  int(2)
+  ["d"]=>
+  int(4)
+}
+]]>
+    </screen>
+   </example>
   </para>
  </refsect1>
 
