@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- $Revision: 322134 Maintainer: ae Status: ready --><!-- CREDITS: narigone,amandavale -->
+<!-- $Revision: 332595 Maintainer: fabioluciano Status: ready --><!-- CREDITS: ae, narigone, amandavale, fabioluciano -->
  <sect1 xml:id="language.oop5.overloading" xmlns="http://docbook.org/ns/docbook">
   <title>Sobrecarga</title>
 
   <para>
    Sobrecarga em PHP provê recursos para <quote>criar</quote>
-   dinamicamente membros e métodos.
+   dinamicamente propriedades e métodos.
    Estas entidades dinâmicas são processadas via métodos mágicos que podem
    estabelecer em uma classe para vários tipos de ações.
   </para>
 
   <para>
-   Os métodos sobrecarregados são invocados quando interagem com membros ou
+   Os métodos sobrecarregados são invocados quando interagem com propriedades ou
    métodos que não foram declarados ou não são
-   <link linkend="language.oop5.visibility">visíveis</link> no escopo
-   corrente. O resto desta seção usará os termos
-   <quote>membros inacessíveis</quote> e <quote>métodos inacessíveis</quote>
-   para se referirir a esta combinação de declaração e visibilidade.
-   
+   <link linkend="language.oop5.visibility">visíveis</link> no
+   escopo atual. O resto desta seção usará os termos
+   <quote>propriedades inacessíveis</quote> e <quote>métodos inacessíveis</quote>
+   para se referirir a esta combinação de declaração
+   e visibilidade.
   </para>
 
   <para>
@@ -26,7 +26,7 @@
 
   <note>
    <para>
-    Nenhum dos argumentos destes métodos mágicos podem ser 
+    Nenhum dos argumentos destes métodos mágicos podem ser
     <link linkend="functions.arguments.by-reference">passados por
     referência</link>.
    </para>
@@ -66,6 +66,13 @@
         <entry>5.1.0</entry>
         <entry>
          Adicionados <link linkend="object.isset">__isset()</link> e <link linkend="object.unset">__unset()</link>.
+         Adicionado o suporte aos métodos <link linkend="object.get">__get()</link> para sobrecarga de propriedades privadas.
+        </entry>
+       </row>
+       <row>
+        <entry>5.0.0</entry>
+        <entry>
+         Adicionado o método <link linkend="object.get">__get()</link>.
         </entry>
        </row>
       </tbody>
@@ -76,7 +83,7 @@
 
 
   <sect2 xml:id="language.oop5.overloading.members">
-   <title>Sobrecarga de membros</title>
+   <title>Sobrecarga de propriedades</title>
 
    <methodsynopsis xml:id="object.set">
     <modifier>public</modifier> <type>void</type><methodname>__set</methodname>
@@ -97,69 +104,56 @@
    </methodsynopsis>
 
    <para>
-    <link linkend="object.set">__set()</link> é executado ao se escrever dados para membros
+    <link linkend="object.set">__set()</link> é executado ao escrever dados em propriedades
     inacessíveis.
    </para>
 
    <para>
-    <link linkend="object.get">__get()</link> é utilizados para ler dados de membros
+    <link linkend="object.get">__get()</link> é utilizados para ler dados de propriedades
     inacessíveis.
    </para>
 
    <para>
-    <link linkend="object.isset">__isset()</link> é disparado para chamar
+    <link linkend="object.isset">__isset()</link> é disparado ao chamar
     <function>isset</function> ou <function>empty</function>
-    em membros inacessíveis.
+    em propriedades inacessíveis.
    </para>
 
    <para>
     <link linkend="object.unset">__unset()</link> é invocado quando
-    <function>unset</function> é usado em membros inacessíveis.
+    <function>unset</function> é usado em propriedades inacessíveis.
    </para>
 
    <para>
-    O argumento <varname>$name</varname> é o nome do membro com o qual se está
+    O argumento <varname>$name</varname> é o nome da propriedade com o qual se está
     interagindo. O argumento <varname>$value</varname> do método <link linkend="object.set">__set()</link>
-    especifica o valor para o qual o membro <varname>$name</varname> deveria
-    ser setado.
+    especifica o valor para o qual a propriedade
+    <varname>$name</varname> deveria ser
+    setado.
    </para>
 
    <para>
-    Sobrecarga de membros somente trabalha no contexto de objetos. Estes
-    métodos mágicos não serão disparados no contexto estático. Portanto estes
-    métodos não podem ser declarados <link
-     linkend="language.oop5.static">static</link>. A partir do PHP
-     5.3.0, um warning é emitido se algum método mágico sobrecarregado
-     é declarado como <literal>static</literal>.
+    Sobrecarga de propriedades funciona somente no contexto de objeto. Estes
+    métodos mágicos não serão disparados em contexto estático. Portanto estes
+    métodos não podem ser declarados como
+    <link linkend="language.oop5.static">static</link>. A partir do PHP
+    5.3.0, um aviso é emitido se algum método mágico sobrecarregado
+    é declarado como <literal>static</literal>.
    </para>
 
-    <note>
+   <note>
     <para>
      O valor de retorno de <link linkend="object.set">__set()</link> é ignorado
-     por causa da forma que o PHP processa o operador de assimilação.
-     Da mesma forma, <link linkend="object.get">__get()</link> nunca é chamado quando
-     encadeando assimilações como essa:
+     por causa da forma que o PHP processa o operador de atribuição.
+     Da mesma forma, <link linkend="object.get">__get()</link> nunca é chamado em
+     atribuições encadeadas como essa:
      <literal><![CDATA[ $a = $obj->b = 8; ]]></literal>
     </para>
    </note>
 
-   <note>
-    <para>
-     Não é possível utilizar propriedades sobrecarregadas em outros
-     constructos de linguagem além de <function>isset</function>. Isto
-     significa que se <function>empty</function> é chamado em uma propriedade
-     sobrecarregada, o método sobrecarregado não é chamado.
-    </para>
-    <para>
-     Para contornar essa limitação, a propriedade sobrecarregada precisa
-     ser copiada em uma variável local dentro do escopo e então
-     ser manipulada por <function>empty</function>.
-    </para>
-   </note>
-   
    <example>
     <title>
-     Sobrecarregando propriedades via <link linkend="object.get">__get()</link>,
+     Sobrecarga de propriedades via <link linkend="object.get">__get()</link>,
      <link linkend="object.set">__set()</link>, <link linkend="object.isset">__isset()</link>
      and <link linkend="object.unset">__unset()</link>
     </title>
@@ -266,7 +260,6 @@ Getting 'hidden'
 
 
 Notice:  Undefined property via __get(): hidden in <file> on line 70 in <file> on line 29
-
 ]]>
     </screen>
 
@@ -288,7 +281,7 @@ Notice:  Undefined property via __get(): hidden in <file> on line 70 in <file> o
    </methodsynopsis>
 
    <para>
-    <link linkend="object.call">__call()</link> é disparado quando invocando métodos
+    <link linkend="object.call">__call()</link> é disparado ao invocar métodos
     inacessíveis em um contexto de objeto.
    </para>
 
@@ -300,8 +293,8 @@ Notice:  Undefined property via __get(): hidden in <file> on line 70 in <file> o
    <para>
     O argumento <varname>$name</varname> é o nome do método sendo chamado. O
     argumento <varname>$arguments</varname> é um array enumerado contendo os
-    parâmetros passados para o método <varname>$name</varname>.
-    
+    parâmetros passados para o
+    método <varname>$name</varname>.
    </para>
 
    <example>
