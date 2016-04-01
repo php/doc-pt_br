@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: felipe Status: ready -->
-  <refentry xml:id="function.empty" xmlns="http://docbook.org/ns/docbook">
-   <refnamediv>
-    <refname>empty</refname>
-    <refpurpose>Informa se a variável é vazia</refpurpose>
-   </refnamediv>
+<!-- EN-Revision: e41aab5ecacf449e51179886c17f1d41735b0234 Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, fabioluciano -->
+<refentry xml:id="function.empty" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>empty</refname>
+  <refpurpose>Determina se a variável é vazia</refpurpose>
+ </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
-     <methodsynopsis>
-      <type>bool</type><methodname>empty</methodname>
-      <methodparam><type>mixed</type><parameter>var</parameter></methodparam>
-     </methodsynopsis>
-    <para>
-     Determina se a variável é considerada vazia.
-    </para>
+  <methodsynopsis>
+   <type>bool</type><methodname>empty</methodname>
+   <methodparam><type>mixed</type><parameter>var</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Determina se uma variável é considerada vazia. Uma variável é considerada vazia se não existir ou seu valor é igual &false;. A função <function>empty</function> não gera um aviso se a variável não existir.
+  </para>
  </refsect1>
  <refsect1 role="parameters">
-  &reftitle.parameters;
+ &reftitle.parameters;
   <para>
    <variablelist>
     <varlistentry>
@@ -27,16 +27,17 @@
       </para>
       <note>
        <para>
-        <function>empty</function> somente verifica variáveis, qualquer outra coisa então
-        irá resultar em um parse error. Em outras palavras, o seguinte não irá funcionar:
-        <command>empty(trim($name))</command>.
+        Em versões anteriores ao PHP 5.5, a função <function>empty</function> somente suportava variáveis;
+        qualquer outra coisa resultaria em um erro de interpretação. Em outras palavras, o código
+        a seguir não funcionará: <command>empty(trim($name))</command>.
+        Em substituição, use <command>trim($name) == false</command>.
        </para>
       </note>
-    <para>
-     <function>empty</function> é o oposto de
-     <literal>(boolean) var</literal>,
-     com exceção de não gerar um alerta (warning) se a variável não existir.
-    </para>
+      <para>
+       Nenhum aviso é gerado se a variável não existir.
+       Isso significa que a função <function>empty</function> é essencialmente
+       equivalente a <command>!isset($var) || $var == false</command>.
+      </para>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -45,24 +46,25 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna &false; se <parameter>var</parameter> não for vazia
-   e valor diferente de zero.
+   Retorna &false; se <parameter>var</parameter> existir e não estiver vazia e não conter um valor zerado.
+   Caso contrário retornará &true;.
   </para>
   <para>
    O que é visto abaixo é considerado vazio:
    <simplelist>
-    <member><literal>"" (an empty string)</literal></member>
-    <member><literal>0 (0 as an integer)</literal></member>
-    <member><literal>"0" (0 as a string)</literal></member>
+    <member><literal>""</literal> (uma string vazia)</member>
+    <member><literal>0</literal> (0 como um inteiro)</member>
+    <member><literal>0.0</literal> (0 como um ponto flutuante)</member>
+    <member><literal>"0"</literal> (0 como uma string)</member>
     <member>&null;</member>
     <member>&false;</member>
-    <member><literal>array() (an empty array)</literal></member>
-    <member><literal>var $var; (a variable declared, but without a value in a class)</literal></member>
+    <member><literal>array()</literal> (um array vazio)</member>
+    <member><literal>$var;</literal> (uma variável declarada, mas sem valor)</member>
    </simplelist>
-  </para>
+ </para>
  </refsect1>
  <refsect1 role="changelog">
-  &reftitle.changelog;
+ &reftitle.changelog;
   <para>
    <informaltable>
     <tgroup cols="2">
@@ -74,18 +76,19 @@
      </thead>
      <tbody>
       <row>
-       <entry>PHP 5</entry>
+       <entry>5.5.0</entry>
        <entry>
         <para>
-         No PHP 5, objetos sem propriedades não são mais considerado vazio.
+         A função <function>empty</function> agora suporta expressões, em vez de somente
+         variáveis.
         </para>
        </entry>
       </row>
       <row>
-       <entry>PHP 4</entry>
+       <entry>5.4.0</entry>
        <entry>
         <para>
-         No PHP 4, a string "0" é considerada vazia.
+         Checar deslocamentos de strings não numéricos retorna &true;.
         </para>
        </entry>
       </row>
@@ -96,50 +99,100 @@
  </refsect1>
  <refsect1 role="examples">
   &reftitle.examples;
-    <para>
-     <example>
-      <title>
-       Uma simples comparação entre as funções
-        <function>empty</function> / <function>isset</function>.
-      </title>
-      <programlisting role="php">
+   <para>
+    <example>
+     <title>
+      Uma simples comparação entre as funções <function>empty</function> /
+      <function>isset</function>.
+     </title>
+    <programlisting role="php">
 <![CDATA[
 <?php
 $var = 0;
 
-// Será interpretado como true, porque $var é um valor vazio
+// Evaluates to true because $var is empty
 if (empty($var)) {
-    echo '$var é um dos valores: 0, empty ou uma variável inexistente';
+    echo '$var is either 0, empty, or not set at all';
 }
 
-// Será interpretado como true porque $var está 'setado'
+// Evaluates as true because $var is set
 if (isset($var)) {
-    echo '$var está "setado" apesar de vazio';
+    echo '$var is set even though it is empty';
 }
 ?>
 ]]>
-      </programlisting>
-     </example>
-    </para>
+    </programlisting>
+   </example>
+  </para>
+  <example>
+   <title>Função <function>empty</function> em Deslocamento de String</title>
+   <para>
+    O PHP 5.4 modifica como <function>empty</function> se comporta
+    quando passado deslocamentos de string.
+   </para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$expected_array_got_string = 'somestring';
+var_dump(empty($expected_array_got_string['some_key']));
+var_dump(empty($expected_array_got_string[0]));
+var_dump(empty($expected_array_got_string['0']));
+var_dump(empty($expected_array_got_string[0.5]));
+var_dump(empty($expected_array_got_string['0.5']));
+var_dump(empty($expected_array_got_string['0 Mostel']));
+?>
+]]>
+   </programlisting>
+   &example.outputs.53;
+   <screen>
+<![CDATA[
+bool(false)
+bool(false)
+bool(false)
+bool(false)
+bool(false)
+bool(false)
+]]>
+   </screen>
+   &example.outputs.54;
+   <screen>
+<![CDATA[
+bool(true)
+bool(false)
+bool(false)
+bool(false)
+bool(true)
+bool(true)
+]]>
+   </screen>
+  </example>
  </refsect1>
  <refsect1 role="notes">
   &reftitle.notes;
-    &note.language-construct;
+  &note.language-construct;
+  <note>
+   <para>
+    Ao utilizar a função <function>empty</function> em propriedades de objetos inacessíveis,
+    o método de sobrecarga <link linkend="object.isset">__isset()</link>
+    será chamado, se declarado.
+   </para>
+  </note>
  </refsect1>
  <refsect1 role="seealso">
   &reftitle.seealso;
-     <para>
+  <para>
    <simplelist>
     <member><function>isset</function></member>
+    <member><link linkend="object.isset">__isset()</link></member>
     <member><function>unset</function></member>
     <member><function>array_key_exists</function></member>
-    <member><function>count</function></member> 
+    <member><function>count</function></member>
     <member><function>strlen</function></member>
     <member><link linkend="types.comparisons">A tabela de comparação de tipos</link></member>
    </simplelist>
-     </para>
-   </refsect1>
-  </refentry>
+  </para>
+ </refsect1>
+</refentry>
 
 <!-- Keep this comment at the end of the file
 Local variables:
