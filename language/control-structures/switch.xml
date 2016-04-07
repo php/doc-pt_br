@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 6495ac90b47487b86574d2273a9b2238dc0827cf Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano -->
+
+<sect1 xml:id="control-structures.switch" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title><literal>switch</literal></title>
+ <?phpdoc print-version-for="switch"?>
+ <simpara>
+  A declaração <literal>switch</literal> é similar a uma série de
+  declarações IF na mesma expressão. Em muitos casos, se deseja
+  comparar as mesmas variáveis (ou expressões), com
+  diferentes valores, e executar pedaços diferentes de código dependendo
+  de qual valor ela é igual. Esta é exatamente a serventia da
+  declaração <literal>switch</literal>.
+ </simpara>
+ <note>
+  <simpara>
+   Note que ao contrário de outras linguagens, a declaração
+   <link linkend="control-structures.continue">continue</link>
+   aplica-se ao <literal>switch</literal> e age similarmente ao <literal>break</literal>. Se
+   possuir um <literal>switch</literal> dentro de um laço, e deseja continuar na próxima iteração
+   do laço externo, utilize <literal>continue 2</literal>.
+  </simpara>
+ </note>
+ <note>
+  <para>
+   Note que o switch/case faz
+   <link linkend="types.comparisions-loose">comparação frouxa</link>.
+  </para>
+ </note>
+ <para>
+  <table>
+   &reftitle.changelog;
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>7.0.0</entry>
+      <entry>
+       Múltiplos cases <literal>default</literal> lançarão um erro <constant>E_COMPILE_ERROR</constant>.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </table>
+ </para>
+ <para>
+  Os dois exemplos a seguir demonstram duas formas diferentes de escrever
+  a mesma coisa, uma usando uma série de declarações <literal>if</literal> e
+  <literal>elseif</literal>, e a outra usando a declaração
+  <literal>switch</literal>:
+  <example>
+   <title>Estrutura do <literal>switch</literal></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+if ($i == 0) {
+    echo "i equals 0";
+} elseif ($i == 1) {
+    echo "i equals 1";
+} elseif ($i == 2) {
+    echo "i equals 2";
+}
+
+switch ($i) {
+    case 0:
+        echo "i equals 0";
+        break;
+    case 1:
+        echo "i equals 1";
+        break;
+    case 2:
+        echo "i equals 2";
+        break;
+}
+?>
+]]>
+   </programlisting>
+  </example>
+  <example>
+   <title>A estrutura do <literal>switch</literal> permite o uso de <type>string</type>s</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+switch ($i) {
+    case "apple":
+        echo "i is apple";
+        break;
+    case "bar":
+        echo "i is bar";
+        break;
+    case "cake":
+        echo "i is cake";
+        break;
+}
+?>
+]]>
+   </programlisting>
+  </example>
+ </para>
+ <para>
+  É importante entender como a declaração <literal>switch</literal>
+  é executada a fim de evitar enganos. A declação
+  <literal>switch</literal> executa linha por linha
+  (na verdade, declaração por declaração). No início nenhum código é
+  executado. Somente quando uma declaração <literal>case</literal> é encontrada
+  com um valores correspondente ao valor da expressão do
+  <literal>switch</literal>, o PHP começará a executar a
+  declaração. O PHP continuará a executar a declaração até o fim do bloco
+  <literal>switch</literal>, ou até a primeira declaração
+  <literal>break</literal> encontrada. Se não for escrita uma declaração
+  <literal>break</literal> ao final da lista de declarações do case,
+  o PHP continuará executando as declarações dos próximos
+  cases. Por exemplo:
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+switch ($i) {
+    case 0:
+        echo "i equals 0";
+    case 1:
+        echo "i equals 1";
+    case 2:
+        echo "i equals 2";
+}
+?>
+]]>
+   </programlisting>
+  </informalexample>
+ </para>
+ <simpara>
+  Neste exemplo, se a variável <varname>$i</varname> for igual a 0, o PHP executará todos as
+  declarações echo! Se a variável <varname>$i</varname> for igual a 1, o PHP executará as duas
+  últimas declarações echo. Somente se obterá o comportamento esperado ('i equals 2'
+  será exibido), se <varname>$i</varname> for igual a 2. Sendo assim,
+  é importante não esquecer as declarações <literal>break</literal>
+  (mesmo quando se quer evitar, de propósito, sua omissão em
+  certas circunstâncias).
+ </simpara>
+ <simpara>
+  Em uma declaração <literal>switch</literal>, a condição é
+  avaliada somente uma vez, e o resultado é comparado a cada
+  declaração <literal>case</literal>. Em uma declaração <literal>elseif</literal>.
+  a condição é avaliada outra vez. Se a condição for
+  mais complicada que uma simples comparação e/ou está em um laço pequeno,
+  a declaração <literal>switch</literal> pode ser mais rápida.
+ </simpara>
+ <para>
+  A lista de declarações de um case também podem estar vazia,
+  passando o controle da lista de declarações para o próximo case.
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+switch ($i) {
+case 0:
+case 1:
+case 2:
+    echo "i is less than 3 but not negative";
+    break;
+case 3:
+    echo "i is 3";
+}
+?>
+]]>
+   </programlisting>
+  </informalexample>
+ </para>
+ <para>
+  Um case especial é o <literal>default</literal>. Este case corresponde
+  a tudo que não foi correspondido pelos outros cases. Por exemplo:
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+switch ($i) {
+    case 0:
+        echo "i equals 0";
+        break;
+    case 1:
+        echo "i equals 1";
+        break;
+    case 2:
+        echo "i equals 2";
+        break;
+    default:
+       echo "i is not equal to 0, 1 or 2";
+}
+?>
+]]>
+   </programlisting>
+  </informalexample>
+ </para>
+ <para>
+  A expressão <literal>case</literal>pode ser qualquer expressão
+  que avalie um tipo simples, isto é, <type>integer</type> ou número de ponto
+  flutuante e <type>string</type>s. <type>Array</type>s or <type>object</type>s não podem ser utilizados
+  a não que referenciados para um tipo simples.
+ </para>
+ <para>
+  A sintaxe alternativa das estruturas de controle é suportada por
+  switches. Para mais informações, veja <link
+  linkend="control-structures.alternative-syntax">Sintaxe alternativa
+  para estruturas de controle</link>.
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+switch ($i):
+    case 0:
+        echo "i equals 0";
+        break;
+    case 1:
+        echo "i equals 1";
+        break;
+    case 2:
+        echo "i equals 2";
+        break;
+    default:
+        echo "i is not equal to 0, 1 or 2";
+endswitch;
+?>
+]]>
+   </programlisting>
+  </informalexample>
+ </para>
+ <para>
+  É possível utilizar o ponto e vírgula ao invés dos dois pontos em um case, como:
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+switch($beer)
+{
+    case 'tuborg';
+    case 'carlsberg';
+    case 'heineken';
+        echo 'Good choice';
+    break;
+    default;
+        echo 'Please make a new selection...';
+    break;
+}
+?>
+]]>
+   </programlisting>
+  </informalexample>
+ </para>
+</sect1>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
