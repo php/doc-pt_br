@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 4307b3bcdf87f058147f6a917051986871ed8fe1 Maintainer: ae Status: ready --><!-- CREDITS: narigone,felipe,lcobucci -->
+<!-- EN-Revision: 4307b3bcdf87f058147f6a917051986871ed8fe1 Maintainer: ae Status: ready --><!-- CREDITS: narigone, felipe, lcobucci, fabioluciano -->
  <sect1 xml:id="language.oop5.magic" xmlns="http://docbook.org/ns/docbook">
   <title>Métodos Mágicos</title>
   <para>
-   Os nomes de funções
+   Os nomes de função
    <link linkend="object.construct">__construct()</link>,
    <link linkend="object.destruct">__destruct()</link>,
    <link linkend="object.call">__call()</link>,
@@ -17,19 +17,19 @@
    <link linkend="object.tostring">__toString()</link>,
    <link linkend="object.invoke">__invoke()</link>,
    <link linkend="object.set-state">__set_state()</link>,
-   <link linkend="object.clone">__clone()</link> and
+   <link linkend="object.clone">__clone()</link> e
    <link linkend="object.debuginfo">__debugInfo()</link>
-   são mágicos nas classes do PHP. Você
-   não pode ter funções com esses nomes em nenhuma de suas
-   classes a não ser que queria que a funcionalidade mágica associada
-   com eles.
+   são mágicos nas classes do PHP. Não
+   deve-se ter funções com esses nomes em nenhuma de suas
+   classes a não ser que queira a funcionalidade mágica associada
+   a eles.
   </para>
 
   <caution>
    <simpara>
-    PHP reserva todas as funções com nomes começando com __ como mágicas.
-    É recomendado que você não use funções com nomes com
-    __ no PHP a não ser que você queira alguma funcionalidade mágica documentada.
+    O PHP reserva todas as funções com nomes iniciadas com __ como mágicas.
+    É recomendado que não se utilize funções com nomes com
+    __ no PHP, a não ser que deseje-se alguma funcionalidade mágica documentada.
    </simpara>
   </caution>
 
@@ -47,40 +47,40 @@
     <type>void</type><methodname>__wakeup</methodname>
     <void/>
    </methodsynopsis>
-   
+
    <para>
     <function>serialize</function> checa se sua classe tem uma função com
-    o nome mágico <link linkend="object.sleep">__sleep()</link>. Se tiver, a função é
+    o nome mágico <link linkend="object.sleep">__sleep()</link>. Se houver, a função é
     executa antes de qualquer serialização. Ela pode limpar o objeto
     e deve retornar um array com os nomes de todas as variáveis
     do objeto que devem ser serializadas. Se o método não retornar nada,
-    então &null; é serializada e um
-    <constant>E_NOTICE</constant> é disparado.
+    então &null; é serializado e um
+    <constant>E_NOTICE</constant> disparado.
    </para>
    <note>
     <para>
      Não é possível que <link linkend="object.sleep">__sleep()</link> retorne nomes de
-     propriedades privadas da classe ancestral. Isso causará um erro nível
-     <constant>E_NOTICE</constant>. Pode-se ser utilizada a interface
-     <classname>Serializable</classname> se for o caso.
+     propriedades privadas da classe pai. Fazer isso causará um erro de nível
+     <constant>E_NOTICE</constant>. Ao invés disso, pode-se utilizar a interface
+     <classname>Serializable</classname>.
     </para>
    </note>
    <para>
-    O intuito do método <link linkend="object.sleep">__sleep()</link> enviar dados
-    pendentes ou realizar tarefas similares de limpeza. Além disso, a função é
-    útil se você tiver objetos muito grandes que não precisarão ser
-    salvos completamente.
+    O intuito do método <link linkend="object.sleep">__sleep()</link> é enviar dados
+    pendentes ou realizar tarefas de limpeza. Além disso, a função é
+    útil se tiver objetos muito grandes que não precisem ser
+    completamente salvos.
    </para>
    <para>
-    Inversamente, <function>unserialize</function> checa pela
+    Ao mesmo tempo, <function>unserialize</function> checa pela
     presença da função com o nome mágico
-    <link linkend="object.wakeup">__wakeup()</link>. Se achar, essa função pode
-    reconstruir qualquer recursos que o objeto pode ter.
+    <link linkend="object.wakeup">__wakeup()</link>. Se presente, essa função pode
+    reconstruir qualquer recurso que o objeto possa ter.
    </para>
    <para>
     O intuito do método <link linkend="object.wakeup">__wakeup()</link> é
     reestabelecer qualquer conexão com banco de dados que podem ter sido perdidas
-    durante a serialização e realizar tarefas de
+    durante a serialização, e realizar outras tarefas de
     reinicialização.
    </para>
    <example>
@@ -92,7 +92,7 @@ class Connection
 {
     protected $link;
     private $dsn, $username, $password;
-    
+
     public function __construct($dsn, $username, $password)
     {
         $this->dsn = $dsn;
@@ -100,17 +100,17 @@ class Connection
         $this->password = $password;
         $this->connect();
     }
-    
+
     private function connect()
     {
         $this->link = new PDO($this->dsn, $this->username, $this->password);
     }
-    
+
     public function __sleep()
     {
         return array('dsn', 'username', 'password');
     }
-    
+
     public function __wakeup()
     {
         $this->connect();
@@ -129,15 +129,15 @@ class Connection
    </methodsynopsis>
    <para>
     O método <link linkend="object.tostring">__toString()</link> permite que uma classe decida
-    como se comportar quando for convertida para uma string. Por exemplo,
+    como se comportar quando convertida para uma string. Por exemplo,
     o que <literal>echo $obj;</literal> irá imprimir. Este método precisa
     retornar uma string, senão um erro nível <constant>E_RECOVERABLE_ERROR</constant>
     é gerado.
    </para>
    <warning>
     <simpara>
-     Você não pode lançar uma exceção de dentro de
-     <link linkend="object.tostring">__toString()</link>. Tentar isso resultará
+     Você não pode lançar uma exceção de dentro do método
+     <link linkend="object.tostring">__toString()</link>. Fazer isso resultará
      em um erro fatal.
     </simpara>
    </warning>
@@ -176,13 +176,13 @@ Hello
    </example>
    <para>
     Vale lembrar que antes do PHP 5.2.0 o método <link linkend="object.tostring">__toString()</link>
-    só era chamado quando diretamente combinado com
+    só era chamado quando combinado diretamente com
     <function>echo</function> ou <function>print</function>.
-    Desde o PHP 5.2.0, ele é chamado no contexto de string (e.g. em 
+    Desde o PHP 5.2.0, ele é chamado no contexto de string (e.g. em
     <function>printf</function> com modificador <literal>%s</literal>) mas não
     em outros tipos de contextos (e.g. como modificador <literal>%d</literal>).
-    Desde o PHP 5.2.0, convertendo objetos sem o método <link linkend="object.tostring">__toString()</link>
-    para string causa <constant>E_RECOVERABLE_ERROR</constant>.
+    Desde o PHP 5.2.0, converter objetos sem o método <link linkend="object.tostring">__toString()</link>
+    para string causará <constant>E_RECOVERABLE_ERROR</constant>.
    </para>
   </sect2>
 
@@ -228,7 +228,7 @@ bool(true)
     </screen>
    </example>
   </sect2>
-  
+
   <sect2 xml:id="language.oop5.magic.set-state">
    <title><link linkend="object.set-state">__set_state()</link></title>
    <methodsynopsis xml:id="object.set-state">
@@ -237,10 +237,10 @@ bool(true)
    </methodsynopsis>
    <para>
     Esse método <link linkend="language.oop5.static">estático</link> é chamado
-    para classes exportadas por <function>var_export</function> desde PHP 5.1.0.
+    em classes exportadas por <function>var_export</function> desde PHP 5.1.0.
    </para>
    <para>
-    O único parâmetro para esse método é um array contendo propriedades
+    O único parâmetro deste método é um array contendo propriedades
     exportadas no formato <literal>array('property' => value, ...)</literal>.
    </para>
    <example>
@@ -297,16 +297,16 @@ object(A)#2 (2) {
     <void/>
    </methodsynopsis>
    <para>
-    This method is called by <function>var_dump</function> when dumping an
-    object to get the properties that should be shown. If the method isn't
-    defined on an object, then all public, protected and private properties
-    will be shown.
+    Este método é chamado pela função <function>var_dump</function> ao despejar um
+    objeto para obter as propriedades que devem ser exibidas. Se este método não for
+    definido em um objeto, todos as propriedades públicas, protegidas e provadas
+    serão exibidas.
    </para>
    <para>
-    This feature was added in PHP 5.6.0.
+    Este recurso foi adicionado no 5.6.0.
    </para>
    <example>
-    <title>Using <link linkend="object.debuginfo">__debugInfo()</link></title>
+    <title>Utilizando o  <link linkend="object.debuginfo">__debugInfo()</link></title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -340,7 +340,7 @@ object(C)#1 (1) {
    </example>
   </sect2>
  </sect1>
- 
+
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
