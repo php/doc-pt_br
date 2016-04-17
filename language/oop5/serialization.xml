@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 1fc0b05670b5f6ad20e3a4aad30a491eca7a2659 Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano -->
+ <sect1 xml:id="language.oop5.serialization" xmlns="http://docbook.org/ns/docbook">
+  <title>Serialização de Objetos - objetos em sessão</title>
+
+  <para>
+   A função <function>serialize</function> retorna uma string contendo uma
+   representação byte-stream de qualquer valor que pode ser armazenado pelo
+   PHP. A função <function>unserialize</function> pode utilizar essa string para
+   recriar os valores originais da variável. Utilizar a serialização para
+   salvar um objeto, salvará todas as variáveis de um objeto. Os
+   métodos de um objeto não serão salvos, apenas o nome da
+   classe.
+  </para>
+
+  <para>
+   Para deserializar um objeto com a função <function>unserialize</function>, a
+   classe deste objeto precisar estar definida. Isto é, se possuir um objeto
+   da classe A e serializá-lo, você obterá
+   uma string que referencia a classe A e contêm todos os valores de variáveis
+   contidas nele. Se deseja-se deserializar este
+   em outro arquivo, um objeto da classe A, a
+   definição da classe A deve estar presente neste arquivo.
+   Isso pode ser feito, por exemplo, armazenando a definição da classe A
+   em um arquivo, e incluí-lo, fazendo uso da função
+   <function>spl_autoload_register</function>.
+  </para>
+
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+// classa.inc:
+
+  class A {
+      public $one = 1;
+
+      public function show_one() {
+          echo $this->one;
+      }
+  }
+
+// page1.php:
+
+  include("classa.inc");
+
+  $a = new A;
+  $s = serialize($a);
+  // store $s somewhere where page2.php can find it.
+  file_put_contents('store', $s);
+
+// page2.php:
+
+  // this is needed for the unserialize to work properly.
+  include("classa.inc");
+
+  $s = file_get_contents('store');
+  $a = unserialize($s);
+
+  // now use the function show_one() of the $a object.
+  $a->show_one();
+?>
+]]>
+   </programlisting>
+  </informalexample>
+
+  <para>
+   Se uma aplicação estiver usando sessões e usar a função
+   <function>session_register</function> para registrar objetos, estes serão
+   serializados automaticamente ao fim de cada página PHP, e serão
+   deserializados automaticamente em cada uma das páginas seguintes. Isso significa que
+   estes objetos podem aparecer em qualquer uma das páginas da aplicação, já que fazem
+   parte da sessão. Entretanto, a função <function>session_register</function> foi
+   removida no PHP 5.4.0.
+  </para>
+
+  <para>
+   É fortemente recomendado que, quando uma aplicação serializa seus objetos, para
+   uso posterior na aplicação, esta inclua a definição da classe
+   do objeto em questão ao longo de toda aplicação. Não fazer isso pode resultar em
+   objetos serem deserializados sem a definição da classe, que acarretará no
+   PHP entregar um objeto da classe <classname>__PHP_Incomplete_Class_Name</classname>,
+   que não possui métodos, tornando o objeto inútil.
+  </para>
+
+  <para>
+   Então, se, no exemplo anterior, <varname>$a</varname> se tornou parte da sessão
+   ao executar <literal>session_register("a")</literal>, deve-se incluir o
+   arquivo <literal>classa.inc</literal> em todas suas páginas, e não somente em <filename>page1.php</filename>
+   e <filename>page2.php</filename>.
+  </para>
+
+  <para>
+   Além dos conselhos acima, note que pode-se capturar os eventos de serialização
+   e deserialização de um objeto usando os métodos
+   <link linkend="object.sleep">__sleep()</link> e
+   <link linkend="object.wakeup">__wakeup()</link>. Usar
+   o método <link linkend="object.sleep">__sleep()</link> também lhe permitirá
+   serializar somente subconjuntos de propriedades de um objeto.
+  </para>
+ </sect1>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
