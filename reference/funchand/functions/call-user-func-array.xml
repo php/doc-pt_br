@@ -10,11 +10,11 @@
   &reftitle.description;
   <methodsynopsis>
    <type>mixed</type><methodname>call_user_func_array</methodname>
-   <methodparam><type>callback</type><parameter>function</parameter></methodparam>
+   <methodparam><type>callable</type><parameter>callback</parameter></methodparam>
    <methodparam><type>array</type><parameter>param_arr</parameter></methodparam>
   </methodsynopsis>
   <para>
-   Chama uma <parameter>function</parameter> definida pelo usuário com
+   Chama um <parameter>callback</parameter> definido pelo usuário com
    os parâmetros <parameter>param_arr</parameter>.
   </para>
  </refsect1>
@@ -24,10 +24,10 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>function</parameter></term>
+     <term><parameter>callback</parameter></term>
      <listitem>
       <para>
-       A função a ser chamada.
+       O <type>callable</type> a ser chamado.
       </para>
      </listitem>
     </varlistentry>
@@ -50,37 +50,70 @@
   </para>
  </refsect1>
 
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>5.3.0</entry>
+       <entry>
+        The interpretation of object oriented keywords like <literal>parent</literal> 
+        and <literal>self</literal> has changed. Previously, calling them using the 
+        double colon syntax would emit an <constant>E_STRICT</constant> warning because 
+        they were interpreted as static.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
    <example>
-    <title>Exemplo da <function>call_user_func_array</function></title>
-       <programlisting role="php">
+    <title><function>call_user_func_array</function> example</title>
+    <programlisting role="php">
 <![CDATA[
 <?php
-function debug($var, $val)
-{
-    echo "***DEBUGGING\nVARIABLE: $var\nVALUE:";
-    if (is_array($val) || is_object($val) || is_resource($val)) {
-        print_r($val);
-    } else {
-        echo "\n$val\n";
+function foobar($arg, $arg2) {
+    echo __FUNCTION__, " got $arg and $arg2\n";
+}
+class foo {
+    function bar($arg, $arg2) {
+        echo __METHOD__, " got $arg and $arg2\n";
     }
-    echo "***\n";
 }
 
-$c = mysql_connect();
-$host = $_SERVER["SERVER_NAME"];
 
-call_user_func_array ('debug', array("host", $host));
-call_user_func_array ('debug', array("c", $c));
-call_user_func_array ('debug', array("_POST", $_POST));
+// Call the foobar() function with 2 arguments
+call_user_func_array("foobar", array("one", "two"));
+
+// Call the $foo->bar() method with 2 arguments
+$foo = new foo;
+call_user_func_array(array($foo, "bar"), array("three", "four"));
 ?>
 ]]>
     </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+foobar got one and two
+foo::bar got three and four
+]]>
+    </screen>
    </example>
    <example>
-    <title>Usando <function>call_user_func_array</function> com nome do namespace</title>
+    <title><function>call_user_func_array</function> using namespace name</title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -93,17 +126,44 @@ class Foo {
     }
 }
 
-// A partir do PHP 5.3.0
+// As of PHP 5.3.0
 call_user_func_array(__NAMESPACE__ .'\Foo::test', array('Hannes'));
-// Hello Hannes!
 
-// A partir do PHP 5.3.0
+// As of PHP 5.3.0
 call_user_func_array(array(__NAMESPACE__ .'\Foo', 'test'), array('Philip'));
-// Hello Philip!
 
 ?>
 ]]>
     </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+Hello Hannes!
+Hello Philip!
+]]>
+    </screen>
+   </example>
+   <example>
+    <title>Using lambda function</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$func = function($arg1, $arg2) {
+    return $arg1 * $arg2;
+};
+
+var_dump(call_user_func_array($func, array(2, 4))); /* As of PHP 5.3.0 */
+
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+int(8)
+]]>
+    </screen>
    </example>
   </para>
  </refsect1>
@@ -111,24 +171,37 @@ call_user_func_array(array(__NAMESPACE__ .'\Foo', 'test'), array('Philip'));
  <refsect1 role="notes">
   &reftitle.notes;
   <note>
-    <para>
-    Variáveis referenciadas em <parameter>param_arr</parameter> são passadas para a 
-    função por referência, outras são passadas por valor. Em outras palavras, ele
-    não depende da assinatura da função se o parâmetro é passado por
-    valor ou por referência.
-    </para>
-    </note>
-   </refsect1>
-
-  <refsect1 role="seealso">
-   &reftitle.seealso;
    <para>
-    <simplelist> 
-     <member><function>call_user_func</function></member>
-     <member>&seealso.callback;</member>
-    </simplelist>
+    Before PHP 5.4, referenced variables in <parameter>param_arr</parameter>
+    are passed to the function by reference, regardless of whether the function
+    expects the respective parameter to be passed by reference. This form of
+    call-time pass by reference does not emit a deprecation notice, but it is
+    nonetheless deprecated, and has been removed in PHP 5.4.
+    Furthermore, this does not apply to internal functions, for which
+    the function signature is honored. Passing by value when the function
+    expects a parameter by reference results in a warning and having
+    <function>call_user_func</function> return &false; (there is, however, an
+    exception for passed values with reference count = 1, such as in literals,
+    as these can be turned into references without ill effects — but also
+    without writes to that value having any effect —; do not rely
+    in this behavior, though, as the reference count is an implementation
+    detail and the soundness of this behavior is questionable).
    </para>
-  </refsect1>
+  </note>
+  &note.func-callback-exceptions;
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>call_user_func</function></member>
+    <member>&seealso.callback;</member>
+    <member><methodname>ReflectionFunction::invokeArgs</methodname></member>
+    <member><methodname>ReflectionMethod::invokeArgs</methodname></member>
+   </simplelist>
+  </para>
+ </refsect1>
 
 </refentry>
 
