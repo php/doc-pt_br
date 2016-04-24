@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 2ef03df114cbcb863b26c8d967e808e8ca3e4606 Maintainer: none Status: ready -->
+
+<refentry xml:id="zmqpoll.poll" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>ZMQPoll::poll</refname>
+  <refpurpose>Consulta os itens</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <modifier>public</modifier> <type>integer</type><methodname>ZMQPoll::poll</methodname>
+   <methodparam><type>array</type><parameter role="reference">readable</parameter></methodparam>
+   <methodparam><type>array</type><parameter role="reference">writable</parameter></methodparam>
+   <methodparam choice="opt"><type>integer</type><parameter>tempo_limite</parameter><initializer>-1</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Consulta os itens na lista de pesquisa atual. Os itens de leitura e escrita são retornados nos
+   parâmetros <parameter>readable</parameter> e <parameter>writable</parameter>.
+   A função <function>ZMQPoll::getLastErrors</function> pode ser usada para verificar se houveram erros.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>readable</parameter></term>
+     <listitem>
+      <para>
+       Um array (vetor) onde os ZMQSockets de leitura ou recursos de fluxo (streams) PHP são retornados. O array
+       será esvaziado no inicio da operação.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>writable</parameter></term>
+     <listitem>
+      <para>
+       Um array (vetor) onde os ZMQSockets de escrita ou recursos de fluxo (streams) PHP são retornados. O array
+       será esvaziado no inicio da operação.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>tempo_limite</parameter></term>
+     <listitem>
+      <para>
+       O tempo limite de execução da operação. -1 significa que a pesquisa espera até
+       pelo menos um item entre em atividade. Note que a partir da
+       versão 1.0.0 o tempo limite de consulta é definido em milisegundos, em vez
+       de microsegundos.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+ &reftitle.examples;
+  <para>
+   <example>
+    <title>Um exemplo de <function>ZMQPoll</function></title>
+    <para>
+     Cria um servidor de consulta simples
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+/* Cria um socket, padrão requisição-resposta (socket de resposta) */
+$contexto = new ZMQContext();
+$servidor  = $contexto->getSocket(ZMQ::SOCKET_REP);
+
+/* Associa à porta 5555 em 127.0.0.1 */
+$servidor->bind("tcp://127.0.0.1:5555");
+
+/* Cria uma nova lista de consulta para mensagens de entrada/saída */
+$consulta = new ZMQPoll();
+
+/* Adiciona o objeto e espera por consultas de entrada/saída */
+$id = $consulta->add($servidor, ZMQ::POLL_IN | ZMQ::POLL_OUT);
+echo "Adicionou o objeto com id " . $id . "\n";
+
+/* Inicializa os arrays de leitura e escrita */
+$leitura = array();
+$escrita = array();
+
+while (true) {
+   /* Quantidade de eventos recuperados */
+   $eventos = 0;
+
+   try {
+       /* Pesquisa até que haja algo a ser feito */
+       $eventos = $consulta->poll($leitura, $escrita, -1);
+       $erros = $consulta->getLastErrors();
+
+       if (count($erros) > 0) {
+           foreach ($erros as $erro) {
+               echo "Erro ao consultar objeto " . $erro . "\n";
+           }
+       }
+   } catch (ZMQPollException $e) {
+       echo "A pesquisa falhou: " . $e->getMessage() . "\n";
+   }
+
+   if ($eventos > 0) {
+       /* Itera através dos objetos de leitura e mensagens recebidas */
+       foreach ($leitura as $le) {
+           try {
+               echo "Mensagem recebida: " . $le->recv() . "\n";
+           } catch (ZMQException $e) {
+               echo "o método recv falhou: " . $e->getMessage() . "\n";
+           }
+       }
+
+       /* Itera através dos objetos de escrita e das mensagens enviada */
+       foreach ($escrita as $es) {
+           try {
+               $es->send("Recebido!");
+           } catch (ZMQException $e) {
+               echo "o método send falhou: " . $e->getMessage() . "\n";
+           }
+       }
+   }
+}
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna um inteiro representando a quantidade de itens com atividade. Lança uma exceção ZMQPollException caso haja erro.
+  </para>
+ </refsect1>
+
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
