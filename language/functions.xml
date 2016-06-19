@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: dcafd6ef3d94c77eee1173d22f2bcad56e7c1a44 Maintainer: ae Status: ready --><!-- CREDITS: fabioluciano -->
+<!-- EN-Revision: ec6a5fb91f8b7eb6b312b4773ef22162116e45d3 Maintainer: ae Status: ready --><!-- CREDITS: fabioluciano -->
 <chapter xml:id="language.functions" xmlns="http://docbook.org/ns/docbook">
   <title>Funções</title>
 
@@ -587,9 +587,9 @@ NULL
      <title>Tipagem estrita</title>
 
      <para>
-      Por padrão o PHP irá converter o tipo incorreto no tipo escalar esperado
-      se possível. Por exemplo, uma função qual é entregue um parâmetro <type>integer</type>
-      onde a mesma espera uma <type>string</type>
+      Por padrão, se possível, o PHP irá converter o tipo incorreto no tipo escalar
+      esperado. Por exemplo, uma função que passa um parâmetro <type>integer</type>
+      onde se espera uma <type>string</type>
       receberá o valor com o tipo <type>string</type>.
      </para>
 
@@ -597,8 +597,10 @@ NULL
       É possível habilitar o modo estrito arquivo a arquivo. No modo estrito
       somente uma variável do exato tipo especificado na declaração será
       aceito, ou uma exceção <classname>TypeError</classname> será lançada. A
-      única exceção são é o tipo <type>integer</type> que poderá ser
-      entregue a uma função esperando um <type>float</type>.
+      única exceção é o tipo <type>integer</type> que poderá ser entregue a uma
+      função esperando um <type>float</type>. Chamadas a funções de dentro
+      de funções internas não serão afetadas pelas declarações
+      <literal>strict_types</literal>
      </para>
 
      <para>
@@ -1318,10 +1320,14 @@ $func(); // prints "bar" a partir PHP 7.0.0; anteriormente lança um erro fatal
    <title>Funções anonimas</title>
 
    <simpara>
-    funções anonimas, também conhecidas como <literal>closures</literal>, permitem a criação
+    Funções anonimas, também conhecidas como <literal>closures</literal>, permitem a criação
     de funções que não tem o nome especificado. Elas são mais úteis
     como o valor de parâmetros <link linkend="language.types.callback">callback</link>,
     mas podem tem vários outros usos.
+   </simpara>
+   <simpara>
+    Funções anônimas são implementadas utilizando a classe
+    <link linkend="class.closure"><classname>Closure</classname></link>
    </simpara>
 
    <example>
@@ -1339,8 +1345,8 @@ echo preg_replace_callback('~-([a-z])~', function ($match) {
    </example>
 
    <simpara>
-    Closures também podem ser usadas como valores de variáveis; PHP automaticamente
-    converte expessões assim em instancias da classe interna
+    Closures também podem ser utilizadas como valores de variáveis; o PHP automaticamente
+    converte expressões assim em instancias da classe interna
     <classname>Closure</classname>. Definindo um closure
     a uma variável usa a mesma sintaxe que qualquer outra definição, incluindo
     o ponto-e-vírgula:
@@ -1497,10 +1503,102 @@ print $my_cart->getTotal(0.05) . "\n";
     </programlisting>
    </example>
 
-   <simpara>
-    Funções anônimas são implementadas utilizando a classe <link linkend="class.closure">
-    <classname>Closure</classname></link>.
-   </simpara>
+   <example>
+    <title>Vinculação automática do <literal>$this</literal></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+class Test
+{
+    public function testing()
+    {
+        (function() {
+            var_dump($this);
+        })();
+    }
+}
+
+(new Test)->testing(); // a partir do PHP 5.4
+
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+object(Test)#1 (0) {
+}
+]]>
+    </screen>
+   </example>
+
+   <para>
+    Ao ser declarada no contexto de uma classe, a classe corrente é
+    automaticamente vinculada a ela, tornando <literal>$this</literal> disponível
+    dentro do escopo da função. Se essa vinculação automática da classe
+    corrente não for o comportamento esperado,
+    <link linkend="functions.anonymous-functions.static">funções anônimas estáticas</link>
+    podem ser utilizadas.
+   </para>
+
+   <sect2 xml:id="functions.anonymous-functions.static">
+    <title>Funções anônimas estáticas</title>
+    <para>
+     A partir do PHP 5.4, funções anônimas podem ser declaradas estaticamente. Evita
+     que a classe corrente seja automaticamente vinculada a
+     ela. Objetos também podem não serão vinculadas a ela em tempo de execução.
+    </para>
+    <para>
+     <example>
+      <title>Tentando utilizar o <literal>$this</literal> de dentro de uma função anônima estática</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+
+new class {
+    function __construct()
+    {
+        (static function() {
+            var_dump($this);
+        })();
+    }
+};
+?>
+]]>
+      </programlisting>
+      &example.outputs;
+      <screen>
+<![CDATA[
+Notice: Undefined variable: this in %s on line %d
+NULL
+]]>
+      </screen>
+     </example>
+    </para>
+
+    <para>
+     <example>
+      <title>Tentando vincular um objeto a uma função anônima estática</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+
+(static function() {
+    // function body
+})->call(new StdClass);
+?>
+]]>
+      </programlisting>
+      &example.outputs;
+      <screen>
+<![CDATA[
+Warning: Cannot bind an instance to a static closure in /in/sLLS9 on line 5
+]]>
+      </screen>
+     </example>
+    </para>
+   </sect2>
 
    <sect2 role="changelog">
     &reftitle.changelog;
