@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: fernandoc Status: ready --><!-- CREDITS: surfmax -->
-<refentry xml:id="function.session-destroy" xmlns="http://docbook.org/ns/docbook">
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: fernandoc Status: ready --><!-- CREDITS: surfmax -->
+<refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.session-destroy">
  <refnamediv>
   <refname>session_destroy</refname>
   <refpurpose>Destrói todos os dados registrados em uma sessão</refpurpose>
@@ -13,14 +13,16 @@
    <void/>
   </methodsynopsis>
   <simpara>
-   <function>session_destroy</function> destrói todos os dados associados com a 
-   sessão atual. Ela não desregistra nenhuma das variáveis globais associadas a 
-   sessão atual, nem desregistra o cookie de sessão.
+   <function>session_destroy</function> destrói todos os dados associados com a
+   sessão atual. Ela não apaga nenhuma das variáveis globais
+   associadas a sessão atual, nem apaga o cookie de sessão.
+   Para usar as variáveis de sessão novamente, <function>session_start</function> tem
+   que ser chamada.
   </simpara>
   <para>
-   Para poder matar a sessão junto, como para fazer o log out do usuário, 
-   o id da sessão também deve ser desregistrado. Se for usado um cookie para propagar o
-   id de sessão (funcionamento padrão), então o cookie de sessão deve ser excluído.  
+   Para matar a sessão também, como para fazer o log out do usuário, o
+   id da sessão também deve ser apagado. Se um cookie for usado para propagar o
+   id de sessão (funcionamento padrão), então o cookie de sessão deve ser excluído.
    <function>setcookie</function> pode ser usado para isso.
   </para>
  </refsect1>
@@ -40,20 +42,24 @@
     <programlisting role="php">
 <![CDATA[
 <?php
-// Initialize the session.
-// If you are using session_name("something"), don't forget it now!
+// Inicializa a sessão.
+// Se estiver sendo usado session_name("something"), não esqueça de usá-lo agora!
 session_start();
 
-// Unset all of the session variables.
+// Apaga todas as variáveis da sessão
 $_SESSION = array();
 
-// If it's desired to kill the session, also delete the session cookie.
-// Note: This will destroy the session, and not just the session data!
-if (isset($_COOKIE[session_name()])) {
-    setcookie(session_name(), '', time()-42000, '/');
+// Se é preciso matar a sessão, então os cookies de sessão também devem ser apagados.
+// Nota: Isso destruirá a sessão, e não apenas os dados!
+if (ini_get("session.use_cookies")) {
+    $params = session_get_cookie_params();
+    setcookie(session_name(), '', time() - 42000,
+        $params["path"], $params["domain"],
+        $params["secure"], $params["httponly"]
+    );
 }
 
-// Finally, destroy the session.
+// Finalmente, destrói a sessão
 session_destroy();
 ?>
 ]]>
@@ -66,7 +72,7 @@ session_destroy();
   &reftitle.notes;
   <note>
    <para>
-    Apenas use <function>session_unset</function> para código antigo obsoleto
+    Somente use <function>session_unset</function> para código antigo/obsoleto
     que não use <varname>$_SESSION</varname>.
    </para>
   </note>
