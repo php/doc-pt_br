@@ -1,34 +1,276 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: felipe Status: ready --><!-- CREDITS: fernandoc -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: ed9c01378f221478d0c4ec634cdb27003330c18b Maintainer: felipe Status: ready --><!-- CREDITS: fernandoc -->
+
 <chapter xml:id="session.security" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>Sessões e segurança</title>
  <para>
-  External links: <link xlink:href="&url.session-fixation;">Session fixation</link>
+  Links externos: <link xlink:href="&url.session-fixation;">Session fixation</link>
  </para>
  <para>
-  O módulo das sessões não pode garantir que a informação que você guarda
-  em uma sessão será visto somente pelo usuário que criou a sessão. Você precisa
-  tomar medidas adicionais de segurança para proteger ativamente a integridade
+  Gerenciamento de sessões HTTP é o núcleo de segurança na web. Toda provenção
+  deve ser adotada para garantir a segurança. Desenvolvedores devem
+  habilitar/utilizar as configurações apropriadamente.
+ </para>
+
+ <itemizedlist>
+  <listitem>
+   <simpara>
+    <link linkend="ini.session.cookie-lifetime">session.cookie_lifetime</link>=0.
+    0 tem um sentido especial. Ele diz ao browser para não guardar os cookies no
+    armazenamento permanente. Portanto, quando o browser é encerrado, o cookie
+    com ID de sessão é deletado imediatamente. Se o desenvolvedor definir valor diferente de 0, pode
+    permitir que outros usuários utilizem o ID da sessão. A maioria das aplicações devem
+    utilizar "0" para esta configuração. Se o recurso de login automático é necessário, implemente
+    seu próprio recurso de login automático de forma segura. Não utilize o ID da sessão para isto.
+   </simpara>
+  </listitem>
+
+  <listitem>
+   <simpara>
+    <link linkend="ini.session.use-cookies">session.use_cookies</link>=On and
+    <link linkend="ini.session.use-only-cookies">session.use_only_cookies</link>=On.
+    Apesar de cookies HTTP terem alguns problemas, cookies é a forma preferida para
+    gerenciar o ID de sessão. Utilize apenas cookies para gerenciamento do ID de sessão quando
+    possível. A maioria das aplicações devem utilizar cookies para o
+    ID de sessão.
+   </simpara>
+  </listitem>
+
+  <listitem>
+   <simpara>
+    <link linkend="ini.session.use-strict-mode">session.use_strict_mode</link>=On.
+    Isto previne o módulo de sessão de utilizar ID de sessão não inicializado. Em
+    outras palavras, o módulo de sessão aceita apenas ID de sessão válido gerado
+    pelo módulo de sessão. ID de sessão fornecidos pelo usuário são
+    rejeitados. Injeção de ID de sessão pode ser feito injetando cookies via
+    JavaScript permanentemente ou temporariamente. Quando sessão transparente está
+    habilitada, o ID de sessão pode ser injetado via query string ou parâmetro de
+    formulário. Não há razão para aceitar ID de sessão fornecida pelo usuário,
+    a maioria das aplicações não devem aceitar ID de sessão não inicializados
+    fornecidos pelo usuário.
+   </simpara>
+  </listitem>
+
+  <listitem>
+   <simpara>
+    <link linkend="ini.session.cookie-httponly">session.cookie_httponly</link>=On.
+    Impede que o JavaScript tenha acesso aos cookies de sessão. Esta configuração
+    previne o roubo de cookies por injeção de JavaScript. É possível
+    usar ID de sessão como proteção CSRF, mas não é
+    recomendado. Por exemplo, o código HTML pode ser salvo e enviado para
+    outros usuários. O desenvolvedor não deve adicionar o ID de sessão nas páginas para
+    manter a segurança. Quase todas as aplicações devem utilizar o atributo httponly para
+    cookie de ID de sessão.
+   </simpara>
+  </listitem>
+
+  <listitem>
+   <simpara>
+    <link linkend="ini.session.cookie-secure">session.cookie_secure</link>=On.
+    Permite acesso ao cookie de ID de sessão apenas quando o protocolo é HTTPS. Se
+    seu web site é todo em HTTPS, você deve habilitar esta
+    configuração. O uso de HSTS deve ser considerado para sites completamentes em HTTPS.
+   </simpara>
+  </listitem>
+
+  <listitem>
+   <simpara>
+    <link linkend="ini.session.gc-maxlifetime">session.gc_maxlifetime</link>=[choose smallest possible].
+    GC trabalha com probabilidade. Esta configuração não garante que sessões
+    antigas serão apagadas. Alguns manipuladores de gravação de sessão não utilizam
+    esta configuração. Veja a documentação para manipuladores de gravação de sessão para
+    detalhes. Apesar do desenvolver não poder depender desta configuração, configurá-la
+    para o menor valor possível é recomendado. Ajuste <link
+    linkend="ini.session.gc-probability">session.gc_probability</link>
+    e <link
+    linkend="ini.session.gc-divisor">session.gc_divisor</link> para que
+    sessões obsoletas sejam deletadas na frequência apropriada. Se o recurso de login automático
+    é necessário, implemente seu próprio recurso de login automático de forma segura.
+    Não utilize ID de sessão com longa vida para isto.
+   </simpara>
+  </listitem>
+
+  <listitem>
+   <simpara>
+    <link linkend="ini.session.use-trans-sid">session.use_trans_sid</link>=Off.
+    O uso do gerenciamento transparente de ID de sessão não é proibido. Ele
+    deve ser usado quando necessário. Contudo, desabilitar o gerenciamento
+    transparente melhora a segurança geral do ID de sessão ao
+    remover a possibilidade de injeção e vazamento do ID de sessão.
+   </simpara>
+  </listitem>
+
+  <listitem>
+   <simpara>
+    <link linkend="ini.session.referer-check">session.referer_check</link>=[your originating URL]
+    Quando <link
+    linkend="ini.session.use-trans-sid">session.use_trans_sid</link>
+    está habilitado, o uso desta configuração é recomendada se for
+    possível. Ela reduz o risco de injeção de ID de sessão. Se seu site é
+    http://example.com/, então defina-o como http://example.com/. Note que quando
+    HTTPS é usado, o browser não enviará o cabeçalho com o referrer. O browser também pode
+    não enviar o cabeçalho com o referrer por configuração. Portanto, esta configuração
+    não é uma medida de segurança confiável.
+   </simpara>
+  </listitem>
+
+  <listitem>
+   <simpara>
+    <link linkend="ini.session.cache-limiter">session.cache_limiter</link>=nocache.
+    Certifique-se de que conteúdo HTTP não sejam salvos em cache para sessão
+    autenticada. Permita cache apenas quando o conteúdo não é
+    privado. Caso contrário, os conteúdos podem ser expostos. "privado" pode ser usado
+    se o conteúdo HTTP não inclui dados sensíveis. Note
+    que "privado" pode deixar informações privadas salvas em cache por clientes
+    compartilhados. "public" pode ser usado apenas quando o conteúdo HTTP não
+    contém informação privada.
+   </simpara>
+  </listitem>
+
+  <listitem>
+   <simpara>
+    <link linkend="ini.session.hash-function">session.hash_function</link>="sha256".
+    Funções de hash mais fortes irão gerar ID de sessão mais
+    fortes. Apesar de colisão no hash ser pouco provável até mesmo com hash MD5, desenvolvedores
+    devem usar funções de hash SHA-2 ou posterior para a tarefa. Desenvolvedores podem
+    utilizar hashes mais fortes, como sha384 e sha512.
+   </simpara>
+  </listitem>
+ </itemizedlist>
+ 
+ <para>
+  O módulo de sessão não pode garantir que a informação que você guarda
+  em uma sessão será visto somente pelo usuário que criou a sessão. Medidas adicionais
+  de segurança devem ser tomadas para proteger ativamente a integridade
   da sessão, dependendo do valor dos dados.
  </para>
+
  <para>
-  Meça a importância dos dados carregados pelas suas sessões e
-  tome medidas adicionais de proteção -- isto normalmente vem com um preço, menos
-  conveniência para o usuário. Por exemplo, se você quiser proteger os usuários
-  de táticas simples de engenharia social, você deve ativar
-  <literal>session.use_only_cookies</literal>. Neste caso,
+  Avalie a importância dos dados carregados pelas suas sessões e
+  tome medidas adicionais de proteção -- isto normalmente vem com um preço,
+  menos conveniência para o usuário.  Por exemplo, se você quiser
+  proteger os usuários de táticas simples de engenharia social, você deve
+  ativar <literal>session.use_only_cookies</literal>. Neste caso,
   os cookies devem estar ativados incondicionalmente do lado do usuário ou
   as sessões não irão funcionar.
  </para>
+
  <para>
-  Existem várias maneiras de vazar um id de uma sessão para terceiros.
-  Um id de sessão vazado permite a terceiros acessar a todos os recursos
-  que estão associados ao id específico. Primeiro, URLs carregando ids de sessão.
-  Se você criar um link com um site externo, a URL inclusa no id de sessão
-  deve ser guardada nos logs de referência do site externo. Segundo, um ataque mais
-  ativo pode escutar ao seu tráfego de rede. Se ele não for criptografado,
-  os ids de sessão irão passar como texto simples pela sua rede. A solução aqui
-  é implementar SSL em seu servidor e tornar obrigatório para os seus usuários.
+  Existem várias maneiras de vazar um ID de sessão para
+  terceiros. Um ID de sessão vazado permite a terceiros acessar todos
+  os recursos que estão associados ao ID específico. Primeiro, URLs
+  carregando IDs de sessão. Se você criar um link com um site externo, a URL
+  incluindo o ID de sessão pode ser guardada nos logs do
+  site externo. Segundo, um ataque mais ativo pode capturar seu
+  tráfego de rede. Se ele não for criptografado, os IDs de sessão irão passar como
+  texto simples pela rede. A solução aqui é implementar SSL
+  em seu servidor e tornar obrigatório para os usuários.  HSTS deve ser usado
+  para isto.
+ </para>
+
+ <para>
+  Desde o PHP 5.5.2, <link
+  linkend="ini.session.use-strict-mode">session.use_strict_mode</link>
+  está disponível. Quando estiver habilitado e o módulo de gravação o suportar,
+  ID de sessão não inicializado é rejeitado e um novo ID de sessão é
+  criado. Isso protege de ataques que forçam os usuários a utilizarem ID de sessão
+  conhecidos. Atacantes podem colar links ou enviar e-mails contendo o ID de
+  sessão. Por exemplo, http://example.com/page.php?PHPSESSID=123456789 Se <link
+  linkend="ini.session.use-trans-sid">session.use_trans_sid</link> estiver
+  habilitado, a vitima iniciará sessão usando o ID de sessão fornecido pelo
+  atacante.  <link
+  linkend="ini.session.use-strict-mode">session.use_strict_mode</link>
+  diminui o risco.
+ </para>
+
+ <para>
+  Apesar de <link
+  linkend="ini.session.use-strict-mode">session.use_strict_mode</link>
+  diminuir o risco da adoção do gerenciamento de sessão, o atacante pode forçar
+  os usuários a utilizarem um ID de sessão inicializado criado pelo
+  atacante. Tudo o que o atacante precisa fazer é iniciar o ID de sessão antes
+  do ataque e mantê-lo ativo.
+ </para>
+
+ <para>
+  Cookie de ID de sessão pode ser definido com os atributos domain, path, httponly e
+  secure. Existe uma precedência definida pelo browser. Com o uso da
+  precedência, o atacante pode definir o ID de sessão que poderia ser usado
+  permanentemente. O uso de <link
+  linkend="ini.session.use-only-cookies">session.use_only_cookies</link>
+  não resolverá essa questão. <link
+  linkend="ini.session.use-strict-mode">session.use_strict_mode</link>
+  diminui o risco. Com <link
+  linkend="ini.session.use-strict-mode">session.use_strict_mode</link>=On,
+  ID de sessão não inicializado não será aceito. O módulo de sessão
+  cria um novo ID de sessão sempre que o ID de sessão não é inicializado pelo
+  módulo de sessão. Isso poderia resultar em um ataque DoS para a vítima, mas DoS ainda é
+  melhor do que uma conta exposta.
+ </para>
+
+ <para>
+  <link
+  linkend="ini.session.use-strict-mode">session.use_strict_mode</link>
+  é uma boa forma de diminuir riscos, mas não é o suficiente para 
+  sessão autenticada. Desenvolvedores devem usar
+  <function>session_regenerate_id</function> para autenticação.
+  <function>session_regenerate_id</function> deve ser chamada antes de
+  definir informações de autenticação em
+  $_SESSION. <function>session_regenerate_id</function> garante que a nova
+  sessão contém informação de autenticação armazenadas apenas em uma nova
+  sessão. Isto é, erros durante o processo de autenticação podem salvar
+  informações de autenticação em sessão antiga.
+ </para>
+
+ <para>
+  Executar a função <function>session_regenerate_id</function> poderia
+  resultar em ataque DoS, da mesma forma que use_strict_mode=On. No entanto, DoS ainda é
+  melhor do que uma conta exposta. ID de sessão deve ser renovado
+  pelo menos quando o usuário fizer a autenticação. A renovação do ID de sessão reduz
+  o risco do roubo de ID de sessão, deste modo ela deve ser executada periodicamente.
+  O desenvolvedor não deve depender da expiração do ID de sessão. Atacantes podem
+  acessar o ID de sessão da vítima periodicamente para impedir que ele expire.
+  Desenvolvedores devem implementar seus próprios meios de expiração para sessões antigas.
+ </para>
+
+ <para>
+  Note que <function>session_regenerate_id</function> não apaga
+  sessão antiga por padrão. Sessão antiga de autenticação pode ficar disponível
+  para uso. Se o desenvolvedor quiser prevenir que sessão de autenticação antiga seja
+  usada por alguém, o desenvolvedor deve destruir a sessão definindo
+  <parameter>delete_old_session</parameter> como &true;. Contudo,
+  a eliminação de sessão antiga tem efeitos colaterais não desejados. A sessão
+  pode desaparecer quando houver conexões concorrentes em aplicações web
+  e/ou quando a rede estiver instável. Ao invés de apagar a sessão
+  antiga imediatamente, pode ser definido um tempo de expiração curto na
+  $_SESSION. Se o usuário acessar com uma sessão obsoleta
+  (uma sessão expirada), negue o acesso.
+ </para>
+
+ <para>
+  <link
+  linkend="ini.session.use-only-cookies">session.use_only_cookies</link>
+  e o uso adequado de <function>session_regenerate_id</function> poderiam
+  causar DoS individual. Quando este for o caso, pode ser solicitado aos usuários que
+  remova os cookies e alertá-los de que pode haver problemas de
+  segurança. Atacantes podem definir cookies maliciosos via aplivações web
+  vulneráveis (isto é, injeção de JavaScript), plugins vulneráveis/malicosos
+  para browsers, etc.
+ </para>
+
+ <para>
+  Desenvolvedores não devem utilizar ID de sessão de longa vida para login automático, pois
+  aumenta o risco de roubo de sessão. O login automático deve ser implementado
+  pelo desenvolvedor. Use chaves de hash descartáveis como chaves para o login automático através de
+  cookies. Use hash mais forte que SHA-2. Por exemplo, SHA-256 ou maior
+  com dados aleatórios de /dev/urandom ou similar. Se o usuário não estiver
+  autenticado, verifique se a chave descartável de login automática é válida ou não. Se
+  a chave é válida, autentique o usuário e defina uma nova chave de hash
+  descartável. A chave para login automático é uma chave de autenticação de longa duração, ela deve
+  estar o mais protegida possível. Use os atributos path/httponly/secure
+  dos cookies para proteção. O desenvolvedor deve implementar o recurso que
+  desabilita o login automático e remove chaves desnecessárias dos cookies dos
+  usuários.
  </para>
 </chapter>
 
