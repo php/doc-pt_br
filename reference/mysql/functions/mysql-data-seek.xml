@@ -1,10 +1,21 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: fernandoc Status: ready -->
-<refentry xml:id="function.mysql-data-seek" xmlns="http://docbook.org/ns/docbook">
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 65e697ff671608989432a6e6bf8ae8128b2be2c7 Maintainer: fernandoc Status: ready -->
+<refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.mysql-data-seek">
  <refnamediv>
   <refname>mysql_data_seek</refname>
   <refpurpose>Move o ponteiro interno do resultado</refpurpose>
  </refnamediv>
+
+ <refsynopsisdiv>
+  <warning>
+   &mysql.alternative.note;
+   <simplelist role="alternatives">
+    <member><function>mysqli_data_seek</function></member>
+    <member><constant>PDO::FETCH_ORI_ABS</constant></member>
+   </simplelist>
+  </warning>
+ </refsynopsisdiv>
+
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
@@ -14,18 +25,17 @@
   </methodsynopsis>
   <para>
    <function>mysql_data_seek</function> move o ponteiro interno
-   das linhas de um resultado MySQL associado ao identificador de resultado dado
-   para o número da linha especificado. A próxima chamada a
-   uma função MySQL que retorne resultado, como <function>mysql_fetch_assoc</function>,
+   da linha de um resultado MySQL associado ao identificador de resultado informado
+   para o número da linha especificada. A próxima chamada
+   a uma função MySQL que retorna resultado, como <function>mysql_fetch_assoc</function>,
    irá retornar esta linha.
   </para>
   <para>
    <parameter>row_number</parameter> começa em 0. O
    <parameter>row_number</parameter> deve ser um valor no intervalo de 0 a
    <function>mysql_num_rows</function> - 1. Entretanto, se o conjunto de reseultados
-   for vazio (<function>mysql_num_rows</function> == 0), uma busca para 0
-   irá falhar com um <link
-   linkend="errorfunc.constants.errorlevels.e-warning">E_WARNING</link> e
+   for vazio (<function>mysql_num_rows</function> == 0), uma busca para 0 irá
+   falhar com um <link linkend="errorfunc.constants.errorlevels.e-warning">E_WARNING</link> e
    <function>mysql_data_seek</function> iá retornar &false;.
   </para>
  </refsect1>
@@ -64,21 +74,21 @@
 <?php
 $link = mysql_connect('localhost', 'mysql_user', 'mysql_password');
 if (!$link) {
-    die('Não foi possível conectar: ' . mysql_error());
+    die('Could not connect: ' . mysql_error());
 }
 $db_selected = mysql_select_db('sample_db');
 if (!$db_selected) {
-    die('Não foi possível selecionar o banco de dados: ' . mysql_error());
+    die('Could not select database: ' . mysql_error());
 }
 $query = 'SELECT last_name, first_name FROM friends';
 $result = mysql_query($query);
 if (!$result) {
-    die('A consulta falhou: ' . mysql_error());
+    die('Query failed: ' . mysql_error());
 }
-/* obtém as linhas em ordem reversa */
+/* fetch rows in reverse order */
 for ($i = mysql_num_rows($result) - 1; $i >= 0; $i--) {
     if (!mysql_data_seek($result, $i)) {
-        echo "Não foi possível mover para a linha $i: " . mysql_error() . "\n";
+        echo "Cannot seek to row $i: " . mysql_error() . "\n";
         continue;
     }
 
