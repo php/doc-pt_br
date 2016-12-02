@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 2fd3f0c96d9d221fe37109775af4df4cf949d5d8 Maintainer: felipe Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 14af302c9c0e561fa6f9cdd956268758ba9a89c5 Maintainer: felipe Status: ready -->
+
  <reference xml:id="ref.pdo-mysql" xmlns="http://docbook.org/ns/docbook">
-  <title>MySQL Functions (PDO_MYSQL)</title>
+  <?phpdoc extension-membership="bundledexternal" ?>
+  <title>Funções do MySQL (PDO_MYSQL)</title>
   <titleabbrev>MySQL (PDO)</titleabbrev>
   <partintro>
 
@@ -10,24 +12,26 @@
     <para>
      PDO_MYSQL é um driver que implementa a interface <link linkend="intro.pdo">PHP
      Data Objects (PDO)</link>
-     para acesso do PHP ao MySQL 3.x, 4.x and 5.x.
+     para habilitar o acesso do PHP ao MySQL 3.x, 4.x and 5.x.
     </para>
     <para>
-     PDO_MYSQL tem vantagens do nativo suporte a prepared statement presente
-     no MySQL 4.1 e superior. Se você está usando um versão antiga da biblioteca
-      do mysql client, PDO irá emular para você.
+     PDO_MYSQL utiliza as vantagens do suporte nativo à prepared statement presente
+     no MySQL 4.1 e superior. Se você está usando uma versão antiga da
+     biblioteca do cliente mysql, o PDO irá emular o prepared statement.
     </para>
     <warning>
      <para>
-      Cuidado: Alguns tipos de table do MySQL (storage engines) não suportam transações. Quando
-      escrevendo código para um banco de dados transacional onde o tipo de tabela não suporta
-      transações, MySQL irá pretender que a transação foi inicializada com sucesso.
-      Adicionalmente, qualquer DDL queries serão implicitamente
-      aceitas sem pedir confirmação.
+      Cuidado: Alguns tipos de tabelas do MySQL (storage engines) não suportam transações. Ao
+      escrever código para um banco de dados transacional onde o tipo de tabela não suporta
+      transações, o MySQL irá entender que a transação foi inicializada com sucesso.
+      Além disso, qualquer query DDL irá, de forma implícita,
+      executar o commit para qualquer transação que esteja pendente.
      </para>
     </warning>
    </section>
+   &reference.pdo-mysql.configure;
    &reference.pdo-mysql.constants;
+   &reference.pdo-mysql.ini;
   </partintro>
 
   <refentry xml:id="ref.pdo-mysql.connection">
@@ -39,7 +43,7 @@
    <refsect1 role="description">
     &reftitle.description;
     <para>
-     A PDO_MYSQL Data Source Name (DSN) é composta dos seguintes elementos:
+     O PDO_MYSQL Data Source Name (DSN) é composto dos seguintes elementos:
      <variablelist>
       <varlistentry>
        <term>DSN prefix</term>
@@ -50,7 +54,7 @@
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><constant>host</constant></term>
+       <term><literal>host</literal></term>
        <listitem>
         <para>
          O hostname no qual o servidor do banco de dados está.
@@ -58,7 +62,7 @@
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><constant>port</constant></term>
+       <term><literal>port</literal></term>
        <listitem>
         <para>
          O número da porta onde o servidor do banco de dados está escutando.
@@ -66,7 +70,7 @@
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><constant>dbname</constant></term>
+       <term><literal>dbname</literal></term>
        <listitem>
         <para>
          O nome do banco de dados.
@@ -74,7 +78,7 @@
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><constant>unix_socket</constant></term>
+       <term><literal>unix_socket</literal></term>
        <listitem>
         <para>
          O socket Unix do MySQL (não deve ser usado com <literal>host</literal>
@@ -82,16 +86,87 @@
         </para>
        </listitem>
       </varlistentry>
+      <varlistentry>
+       <term><literal>charset</literal></term>
+       <listitem>
+        <para>
+         O character set. Veja a documentação de <link linkend="mysqlinfo.concepts.charset">character set</link>
+         para mais informações.
+        </para>
+        <para>
+         Em versões anteriores ao PHP 5.3.6, esse elemento era ignorado de forma silenciosa. O mesmo
+         comportamente pode ser parcialmente replicado com a opção
+         <constant>PDO::MYSQL_ATTR_INIT_COMMAND</constant>, assim como
+         o exemplo a seguir demonstra.
+        </para>
+        <warning>
+         <simpara>
+          O método no exemplo abaixo pode ser usado com os character sets
+          que compartilham a mesma representação que ASCII nos 7 bits mais baixos, como
+          ISO-8859-1 e UTF-8. Usuários utilizando character sets que possuem diferentes
+          representações (como UTF-16 ou Big5) <emphasis>devem</emphasis>
+          usar a opção <literal>charset</literal> disponível no PHP 5.3.6
+          e versões posteriores.
+         </simpara>
+        </warning>
+        <para>
+         <example>
+          <title>
+           Configurando o character set como UTF-8 antes do PHP 5.3.6
+          </title>
+          <programlisting role="php">
+<![CDATA[
+<?php
+$dsn = 'mysql:host=localhost;dbname=testdb';
+$username = 'username';
+$password = 'password';
+$options = array(
+    PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
+); 
+
+$dbh = new PDO($dsn, $username, $password, $options);
+?>
+]]>
+          </programlisting>
+         </example>
+        </para>
+       </listitem>
+      </varlistentry>
      </variablelist>
     </para>
    </refsect1>
+
+   <refsect1 role="changelog">
+    &reftitle.changelog;
+    <para>
+     <informaltable>
+      <tgroup cols="2">
+       <thead>
+        <row>
+         <entry>&Version;</entry>
+         <entry>&Description;</entry>
+        </row>
+       </thead>
+       <tbody>
+        <row>
+         <entry>5.3.6</entry>
+         <entry>
+          Antes do PHP 5.3.6, o <literal>charset</literal> era ignorado.
+         </entry>
+        </row>
+       </tbody>
+      </tgroup>
+     </informaltable>
+    </para>
+   </refsect1>
+
    <refsect1 role="examples">
     &reftitle.examples;
     <para>
      <example>
       <title>PDO_MYSQL DSN examples</title>
       <para>
-       O seguinte exemplo mostrar um PDO_MYSQL DSN para conexão com
+       O exemplo a seguir demonstra um PDO_MYSQL DSN para conexão com
        banco de dados MySQL:
        <programlisting>
 <![CDATA[
@@ -108,6 +183,20 @@ mysql:unix_socket=/tmp/mysql.sock;dbname=testdb
       </para>
      </example>
     </para>
+   </refsect1>
+
+   <refsect1 role="notes">
+    &reftitle.notes;
+    <note>
+     <title>Somente em Unix:</title>
+     <para>
+      Quando o hostname é definido como <literal>"localhost"</literal>, a conexão ao
+      servidor é feita através de um socket de domínio. Se o PDO_MYSQL é compilado usando libmysqlclient, a
+      localização do socket é a mesma localização da compilação de libmysqlclient. Se PDO_MYSQL foi compilado 
+      usando mysqlnd, um socket padrão pode ser definido através da configuração <link linkend="ini.pdo-mysql.default-socket">
+      pdo_mysql.default_socket</link>.
+     </para>
+    </note>
    </refsect1>
   </refentry>
 
