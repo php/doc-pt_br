@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: fernandoc Status: ready --><!-- CREDITS: surfmax -->
+<!-- EN-Revision: 894b3c74d9a9e4c6100139cabaa7c97eb2e294c0 Maintainer: fernandoc Status: ready --><!-- CREDITS: surfmax -->
 <refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.session-destroy">
  <refnamediv>
   <refname>session_destroy</refname>
@@ -15,16 +15,48 @@
   <simpara>
    <function>session_destroy</function> destrói todos os dados associados com a
    sessão atual. Ela não apaga nenhuma das variáveis globais
-   associadas a sessão atual, nem apaga o cookie de sessão.
-   Para usar as variáveis de sessão novamente, <function>session_start</function> tem
-   que ser chamada.
+   associadas à sessão atual, nem apaga o cookie de sessão.
+   Para usar as variáveis de sessão novamente, <function>session_start</function> deve
+   ser chamada.
   </simpara>
+  <note>
+   <simpara>
+     Não é necessário chamar <function>session_destroy</function> em um código
+     habitual. Ao invés de destruir os dados da sessão, limpe o array $_SESSION.
+   </simpara>
+  </note>
   <para>
-   Para matar a sessão também, como para fazer o log out do usuário, o
-   id da sessão também deve ser apagado. Se um cookie for usado para propagar o
-   id de sessão (funcionamento padrão), então o cookie de sessão deve ser excluído.
+   Para matar a sessão completamente, o
+   ID da sessão também deve ser apagado. Se um cookie for usado para propagar o
+   ID da sessão (funcionamento padrão), então o cookie de sessão deve ser excluído.
    <function>setcookie</function> pode ser usado para isso.
   </para>
+  <para>
+   Quando <link linkend="ini.session.use-strict-mode">session.use_strict_mode</link>
+   está habilitado, não é necessário remover o cookie de ID das sessões obsoletas porque
+   o módulo de sessão não aceitará um cookie de ID de sessão quando não houver
+   dados associados ao ID de sessão, e irá criar um novo cookie de ID de sessão.
+   Habilitar <link linkend="ini.session.use-strict-mode">session.use_strict_mode</link>
+   é recomendado para todos os sites.
+  </para>
+  <warning>
+   <para>
+    A remoção imediata da sessão pode causar resultados indesejados. Quando há
+    requisições concorrentes, outras conexões podem perder de forma repentina os dados da
+    sessão, como por exemplo, requisições originadas no JavaScript e/ou requisições de links.
+   </para>
+   <para>
+    Embora o módulo de sessão atual não aceita um cookie de ID de sessão
+    vazio, a remoção imediata da sessão pode resultar em um cookie de ID de sessão
+    vazio por causa da condição de corrida no navegador do usuário. Isso fará
+    com que o usuário crie vários IDs de sessão desnecessariamente.
+   </para>
+   <para>
+    Para evitar isso, deve ser definido um timestamp de removação em $_SESSION e
+    o acesso à sessão deve ser rejeitado algum tempo depois. Ou então a aplicação não pode
+    ter requisições concorrentes. Isso se aplica à <function>session_regenerate_id</function> também.
+   </para>
+  </warning>
  </refsect1>
 
  <refsect1 role="returnvalues">
@@ -50,7 +82,7 @@ session_start();
 $_SESSION = array();
 
 // Se é preciso matar a sessão, então os cookies de sessão também devem ser apagados.
-// Nota: Isso destruirá a sessão, e não apenas os dados!
+// Nota: Isto destruirá a sessão, e não apenas os dados!
 if (ini_get("session.use_cookies")) {
     $params = session_get_cookie_params();
     setcookie(session_name(), '', time() - 42000,
@@ -59,7 +91,7 @@ if (ini_get("session.use_cookies")) {
     );
 }
 
-// Finalmente, destrói a sessão
+// Por último, destrói a sessão
 session_destroy();
 ?>
 ]]>
@@ -82,6 +114,9 @@ session_destroy();
   &reftitle.seealso;
   <para>
    <simplelist>
+    <member><link linkend="ini.session.use-strict-mode">session.use_strict_mode</link></member>
+    <member><function>session_reset</function></member>
+    <member><function>session_regenerate_id</function></member>
     <member><function>unset</function></member>
     <member><function>setcookie</function></member>
    </simplelist>
