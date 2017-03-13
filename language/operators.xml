@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: a8b24da312bc04d20f404f99c90d2705e850ec16 Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, ae, fabioluciano, rogeriopradoj -->
+<!-- EN-Revision: 603d5c848b77b2ac7637b4b14b7821162678be50 Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, ae, fabioluciano, rogeriopradoj -->
  <chapter xml:id="language.operators" xmlns="http://docbook.org/ns/docbook">
   <title>Operadores</title>
   <simpara>
@@ -319,6 +319,30 @@ $array[$i] = $i++; // pode definir o índice 1 ou 2
 ]]>
      </programlisting>
     </example>
+    <example>
+     <title><literal>+</literal>, <literal>-</literal> and <literal>.</literal> possuem a mesma precedência</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+$x = 4;
+// esta linha pode resultar em uma saída inesperada:
+echo "x menos um é igual a " . $x-1 . ", ou assim eu espero\n";
+// porque é avaliada como esta linha:
+echo (("x menos um é igual a " . $x) - 1) . ", ou assim eu espero\n";
+// a precedência desejada pode ser aplicada utilizando parênteses:
+echo "x menos um é igual a " . ($x-1) . ", ou assim eu espero\n";
+?>
+]]>
+     </programlisting>
+     &example.outputs;
+     <screen>
+<![CDATA[
+-1, ou assim eu espero
+-1, ou assim eu espero
+x menos um é igual a 3, ou assim eu espero
+]]>
+     </screen>
+    </example>
    </para>
    <note>
     <para>
@@ -348,6 +372,14 @@ $array[$i] = $i++; // pode definir o índice 1 ou 2
       </row>
      </thead>
      <tbody>
+      <row>
+       <entry>+$a</entry>
+       <entry>Identidade</entry>
+       <entry>
+        Conversão de <varname>$a</varname> para <type>int</type> ou
+        <type>float</type> conforme apropriado.
+       </entry>
+      </row>
       <row>
        <entry>-$a</entry>
        <entry>Negação</entry>
@@ -389,11 +421,13 @@ $array[$i] = $i++; // pode definir o índice 1 ou 2
    <simpara>
     O operador de divisão ("/") sempre retorna um valor com ponto flutuante,
     a não ser que os dois operandos sejam inteiros (ou strings que são convertidas para inteiros)
-    e números inteiramente divisíveis, nesse caso um inteiro é retornado.
+    e números inteiramente divisíveis, nesse caso um inteiro é retornado. Para
+    divisão de inteiros, veja <function>intdiv</function>.
    </simpara>
    <simpara>
     Operandos de módulo são convertidos para inteiros (removendo a parte decimal)
-    antes do processamento.
+    antes do processamento. Para módulos de ponto flutuante, veja
+    <function>fmod</function>.
    </simpara>
    <para>
     O resultado do operador de módulo <literal>%</literal> tem o mesmo sinal
@@ -1287,14 +1321,6 @@ Expressão: 0 = -4 << 62
         que <varname>$b</varname>. Disponível a partir do PHP 7.
        </entry>
       </row>
-      <row>
-       <entry>$a ?? $b ?? $c</entry>
-       <entry>Null coalescing</entry>
-       <entry>
-        O primeiro operando da esquerda para direita que exista e não for &null;.
-        Retorna &null; se nenhum valor estiver definifo ou se todos nulos &null;. Disponível desde o PHP 7.
-       </entry>
-      </row>
      </tbody>
     </tgroup>
    </table>
@@ -1548,11 +1574,11 @@ if (empty($_POST['action'])) {
     <note>
      <simpara>
       Note que o operador ternário é uma expressão, e ele não é
-      avaliado para uma variável, mas para o resultado do comando. Isto é
+      avaliado para uma variável, mas para o resultado de uma expressão. Isto é
       importante saber se você quer retornar uma variável por referência.
-      O  comando <literal>return $var == 42 ? $a : $b;</literal> em uma
-      função que retorna por referência conseqüêntemente não irá funcionar e será avisado
-      nas últimas versões do PHP.
+      A declaração <literal>return $var == 42 ? $a : $b;</literal> em uma
+      função que retorna por referência conseqüêntemente não irá funcionar e será 
+      avisado.
      </simpara>
     </note>
     <note>
@@ -1585,6 +1611,71 @@ echo ((true ? 'true' : 'false') ? 't' : 'f');
     </note>
    </sect2>
 
+   <sect2 xml:id="language.operators.comparison.coalesce">
+    <title>Operador Null Coalescing</title>
+    <para>
+     Existe ainda o operador "??" (ou null coalescing), disponível desde o PHP 7.
+     <example>
+      <title>Atribuindo um valor padrão</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+// Exemplo do operador Null Coalesce
+$action = $_POST['action'] ?? 'default';
+
+// O conteúdo acima é idêntico à essa declaração if/else
+if (isset($_POST['action'])) {
+    $action = $_POST['action'];
+} else {
+    $action = 'default';
+}
+
+?>
+]]>
+      </programlisting>
+     </example>
+     A expressão <literal>(expr1) ?? (expr2)</literal> é avaliada para
+     <replaceable>expr2</replaceable> se <replaceable>expr1</replaceable> for
+     &null;, e <replaceable>expr1</replaceable> do contrário.
+    </para>
+    <para>
+     Esse operador em particular não emite aviso caso o valor da esquerda
+     não exista, assim como <function>isset</function>. Sendo especialmente
+     útil em chaves de arrays.
+    </para>
+    <note>
+     <simpara>
+      Note que o operador null coalescing é uma expressão, e ele
+      não é avaliado para uma variável, mas para o resultado de uma expressão. Isto 
+      é importante saber se você quer retornar uma variável por referência.
+      A declaração <literal>return $foo ?? $bar;</literal> em uma 
+      função que retorna por referência conseqüêntemente não irá funcionar e será
+      avisado.
+     </simpara>
+    </note>
+    <note>
+     <para>
+      Note que o operador null coalescing permite a criação de aninhamentos simples:
+      <example>
+       <title>Aninhando o operador null coalescing</title>
+       <programlisting role="php">
+<![CDATA[
+<?php
+
+$foo = null;
+$bar = null;
+$baz = 1;
+$qux = 2;
+
+echo $foo ?? $bar ?? $baz ?? $qux; // exibe 1
+
+?>
+]]>
+       </programlisting>
+      </example>
+     </para>
+    </note>
+   </sect2> 
   </sect1>
 
   <sect1 xml:id="language.operators.errorcontrol">

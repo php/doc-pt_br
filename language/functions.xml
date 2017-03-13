@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 82d79c66531b3a08b781ac8c89c0c2f2fe4efb8f Maintainer: ae Status: ready --><!-- CREDITS: fabioluciano,ae -->
+<!-- EN-Revision: b896533ae5029ca337205d171a73d3cc876bb735 Maintainer: ae Status: ready --><!-- CREDITS: fabioluciano,ae -->
 <chapter xml:id="language.functions" xmlns="http://docbook.org/ns/docbook">
   <title>Funções</title>
 
@@ -1372,8 +1372,10 @@ $greet('PHP');
    </example>
 
    <simpara>
-    Closures também podem herdar variáveis do escopo pai.
-    Essas variáveis precisam ser referenciadas utilizando a instrução<literal>use</literal>.
+    Closures também podem herdar variáveis do escopo pai. Essas 
+    variáveis precisam ser referenciadas utilizando a instrução<literal>use</literal>.
+    A partir do PHP 7.1, essas variáveis podem não incluir &link.superglobals;,
+    <varname>$this</varname>, ou variáveis com o mesmo nome como um parâmetro.
    </simpara>
 
    <example>
@@ -1566,14 +1568,18 @@ NULL]]>
 <![CDATA[
 <?php
 
-new class {
+class Foo
+{
     function __construct()
     {
-        (static function() {
+        $func = static function() {
             var_dump($this);
-        })();
+        };
+        $func();
     }
 };
+new Foo();
+
 ?>
 ]]>
       </programlisting>
@@ -1594,9 +1600,12 @@ NULL
 <![CDATA[
 <?php
 
-(static function() {
+$func = static function() {
     // function body
-})->call(new StdClass);
+};
+$func = $func->bindTo(new StdClass);
+$func();
+
 ?>
 ]]>
       </programlisting>
@@ -1622,6 +1631,14 @@ Warning: Cannot bind an instance to a static closure in /in/sLLS9 on line 5
         </row>
        </thead>
        <tbody>
+        <row>
+         <entry>7.1.0</entry>
+         <entry>
+          Funções anônimas podem não incluir &link.superglobals;,
+          <varname>$this</varname>, ou qualquer variável com o mesmo nome como um
+          parâmetro.
+         </entry>
+        </row>
         <row>
          <entry>5.4.0</entry>
          <entry>
