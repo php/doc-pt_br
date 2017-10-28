@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: fernandoc Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 1f705a6620328378f908411de03eb88e33db306c Maintainer: fernandoc Status: ready -->
 <refentry xml:id="function.substr" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>substr</refname>
@@ -28,7 +28,7 @@
      <term><parameter>string</parameter></term>
      <listitem>
       <para>
-       A string de entrada.
+       A string de entrada. Deve ter ao menos um caracter.
       </para>
      </listitem>
     </varlistentry>
@@ -48,6 +48,10 @@
        Se <parameter>start</parameter> for negativo, a string retornada
        irá começar no caractere <parameter>start</parameter>
        a partir do fim de <parameter>string</parameter>.
+      </para>
+      <para>
+       Se a <parameter>string</parameter> for mais curta que o parâmetro
+       <parameter>start</parameter>, &false; will be returned.
       </para>
       <para>
        <example>
@@ -72,16 +76,24 @@ $rest = substr("abcdef", -3, 1); // retorna "d"
        Se <parameter>length</parameter> for dado e for positivo,
        a string retornada irá conter <parameter>length</parameter> caracteres
        começando em <parameter>start</parameter> (dependendo do tamanho de
-       <parameter>string</parameter>). Se a <parameter>string</parameter> é menor do
-       que <parameter>start</parameter>, será retornado &false;.
+       <parameter>string</parameter>).
       </para>
       <para>
-       Se <parameter>length</parameter> for dado e for negativo, então esta quantidade
+       Se <parameter>length</parameter> for informado e for negativo, então esta quantidade
        caracteres serão omitidos do final de <parameter>string</parameter>
        (após a posicão de inicio ter sido calculada quando
        <parameter>start</parameter> for negativo). Se
        <parameter>start</parameter> denota uma posição além da truncagem,
-       uma string vazia será retornada.
+       &false; will be returned.
+      </para>
+      <para>
+       Se <parameter>length</parameter> for informado como <literal>0</literal>,
+       &false; or &null;, uma string vazia será retornada.
+      </para>
+      <para>
+       Se <parameter>length</parameter> for omitido, a substring iniciando em
+       <parameter>start</parameter> será
+       retornada.
       </para>
       <example>
        <title>Usando um <parameter>length</parameter> negativo</title>
@@ -90,7 +102,7 @@ $rest = substr("abcdef", -3, 1); // retorna "d"
 <?php
 $rest = substr("abcdef", 0, -1);  // retorna "abcde"
 $rest = substr("abcdef", 2, -1);  // retorna "cde"
-$rest = substr("abcdef", 4, -4);  // retorna ""
+$rest = substr("abcdef", 4, -4);  // retorna false
 $rest = substr("abcdef", -3, -1); // retorna "de"
 ?>
 ]]>
@@ -105,7 +117,42 @@ $rest = substr("abcdef", -3, -1); // retorna "de"
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna a parte extraída da string.
+   Retorna a parte extraída da <parameter>string</parameter>; &return.falseforfailure;, ou
+   uma string vazia.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>7.0.0</entry>
+       <entry>
+        Se <parameter>string</parameter> tiver o comprimento de
+        <parameter>start</parameter>, uma string vazia será
+        retornada. Antes dessa versão, retornava &false; nesse caso.
+       </entry>
+      </row>
+      <row>
+       <entry>5.2.2 - 5.2.6</entry>
+       <entry>
+        Se <parameter>start</parameter> indicar a posição de truncagem
+        negativa ou além, retorna false. Outras versões
+        retornavam a string a partir do começo.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
   </para>
  </refsect1>
 
@@ -123,13 +170,75 @@ echo substr('abcdef', 0, 4);  // abcd
 echo substr('abcdef', 0, 8);  // abcdef
 echo substr('abcdef', -1, 1); // f
 
-// Accessing single characters in a string
-// can also be achived using "curly braces"
+// O acesso a caracteres individuais pode
+// ser feito atravéz de indexação
 $string = 'abcdef';
-echo $string{0};                 // a
-echo $string{3};                 // d
-echo $string{strlen($string)-1}; // f
+echo $string[0];                 // a
+echo $string[3];                 // d
+echo $string[strlen($string)-1]; // f
 
+?>
+]]>
+    </programlisting>
+   </example>   
+   <example>
+    <title>Comportamento de cast no <function>substr</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+class apple {
+    public function __toString() {
+        return "green";
+    }
+}
+
+echo "1) ".var_export(substr("pear", 0, 2), true).PHP_EOL;
+echo "2) ".var_export(substr(54321, 0, 2), true).PHP_EOL;
+echo "3) ".var_export(substr(new apple(), 0, 2), true).PHP_EOL;
+echo "4) ".var_export(substr(true, 0, 1), true).PHP_EOL;
+echo "5) ".var_export(substr(false, 0, 1), true).PHP_EOL;
+echo "6) ".var_export(substr("", 0, 1), true).PHP_EOL;
+echo "7) ".var_export(substr(1.2e3, 0, 4), true).PHP_EOL;
+?>
+]]>
+    </programlisting>
+    &example.outputs.7;
+    <screen>
+<![CDATA[
+1) 'pe'
+2) '54'
+3) 'gr'
+4) '1'
+5) ''
+6) ''
+7) '1200'
+]]>
+    </screen>
+    &example.outputs.5;
+    <screen>
+<![CDATA[
+1) 'pe'
+2) '54'
+3) 'gr'
+4) '1'
+5) false
+6) false
+7) '1200'
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <para>
+   Returns &false; on error.
+   <example>
+    <programlisting role="php">
+<![CDATA[
+<?php
+var_dump(substr('a', 2)); // bool(false)
 ?>
 ]]>
     </programlisting>
@@ -147,6 +256,7 @@ echo $string{strlen($string)-1}; // f
     <member><function>trim</function></member>
     <member><function>mb_substr</function></member>
     <member><function>wordwrap</function></member>
+    <member><link linkend="language.types.string.substr">acesso a substrings</link></member>
    </simplelist>
   </para>
  </refsect1>
