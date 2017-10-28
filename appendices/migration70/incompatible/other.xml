@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 8a4b3b6a355133da942aeec1ac739705ce2c4796 Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano -->
+<!-- EN-Revision: 8ea5a6ef510601f3086e82d54691f80cdc155493 Maintainer: fabioluciano Status: revision --><!-- CREDITS: fabioluciano,arcristo -->
 
 <sect2 xml:id="migration70.incompatible.other">
  <title>Outras mudanças incompatíveis com versões anteriores</title>
@@ -37,10 +37,10 @@ Parse error: syntax error, unexpected 'new' (T_NEW) in /tmp/test.php on line 3
  </sect3>
 
  <sect3 xml:id="migration70.incompatible.other.classes">
-  <title>Classes inválidas e nomenclatura de interfaces e traits</title>
+  <title>Nomes inválidos de classes, interfaces e traits</title>
 
   <para>
-   Os nomes a seguir não podem ser utilizados como nome de classes, interfaces ou traits
+   Os nomes a seguir não podem ser utilizados como nome de classes, interfaces ou traits:
   </para>
 
   <itemizedlist>
@@ -68,8 +68,7 @@ Parse error: syntax error, unexpected 'new' (T_NEW) in /tmp/test.php on line 3
   </itemizedlist>
 
   <para>
-   Além disso, os nomes a seguir não devem ser utilizados. Entretanto não será
-   gerado nenhum erro no PHP 7.0, eles são reservados para uso futuro e devem ser
+   Além disso, os seguintes nomes não devem ser usados. Embora eles não gerem um erro no PHP 7.0, eles são reservados para uso futuro e devem ser
    considerados depreciados.
   </para>
 
@@ -93,7 +92,7 @@ Parse error: syntax error, unexpected 'new' (T_NEW) in /tmp/test.php on line 3
   <title>Tags ASP e script removidas</title>
 
   <para>
-   O suporte ao uso de tags ASP e script para delimitar o código PHP foi removido.
+   O suporte ao uso das tags ASP e script para delimitar o código PHP foi removido.
    As tags afetadas são:
   </para>
 
@@ -125,13 +124,13 @@ Parse error: syntax error, unexpected 'new' (T_NEW) in /tmp/test.php on line 3
  </sect3>
 
  <sect3 xml:id="migration70.incompatible.other.incompatible-this">
-  <title>Chamadas de contextos incompatíveis foram removidos</title>
+  <title>Chamadas de contextos incompatíveis foram removidas</title>
 
   <para>
-   <link linkend="migration56.deprecated.incompatible-context">Depreciadas no PHP 5.6</link>,
-   chamadas estáticas feitas em métodos não estáticos em um contexto incompatível irá
-   resultar em chamar o método tendo a variável
-   <literal>$this</literal> indefinida e um aviso de depreciação ser emitido.
+   <link linkend="migration56.deprecated.incompatible-context">Anteriormente depreciadas no PHP 5.6</link>,
+   chamadas estáticas feitas a métodos não-estáticos com um contexto incompatível agora
+   resultarão no método chamado tendo uma variável
+   <literal>$this</literal> indefinida e um aviso de depreciação será emitido.
   </para>
 
   <informalexample>
@@ -142,7 +141,7 @@ class A {
     public function test() { var_dump($this); }
 }
 
-// Note: Does NOT extend A
+// Nota: NÃO extende A
 class B {
     public function callNonStaticMethodOfA() { A::test(); }
 }
@@ -172,13 +171,14 @@ NULL
  </sect3>
 
  <sect3 xml:id="migration70.incompatible.other.yield">
-  <title>O &yield; agora é um operador associativo à direta</title>
+  <title>&yield; agora é um operador associativo à direita</title>
 
   <para>
-   Parênteses em chamadas ao construtor do &yield; não são mais necessários, além disso, foi
-   modificados para ser um operador associativo à direita com precedência entre
+   O construtor &yield; não requer mais o uso de parênteses e foi
+   alterado
+   para um operador associativo à direita com precedência entre
    <literal>print</literal> e <literal>=&gt;</literal>. Isso pode resultar em um
-   comportamento diferenciado:
+   comportamento alterado:
   </para>
 
   <informalexample>
@@ -202,7 +202,7 @@ yield ($foo or die);
   </informalexample>
 
   <para>
-   Parenteses podem ser utilizados para remover a ambiguidade entre estes casos.
+   Parênteses podem ser utilizados para remover a ambiguidade nestes casos.
   </para>
  </sect3>
 
@@ -210,8 +210,8 @@ yield ($foo or die);
   <title>Funções não podem ter vários parâmetros com o mesmo nome</title>
 
   <para>
-   Não é mais possível definir dois ou mais parâmetros em uma função com o mesmo
-   nome. Por exemplo, a função a seguir vai disparar um
+   Não é mais possível definir dois ou mais parâmetros em uma função com o
+   mesmo nome. Por exemplo, a função a seguir vai disparar um
    <constant>E_COMPILE_ERROR</constant>:
   </para>
 
@@ -228,12 +228,48 @@ function foo($a, $b, $unused, $unused) {
   </informalexample>
  </sect3>
 
+ <sect3 xml:id="migration70.incompatible.other.func-parameter-modified">
+  <title>Funções inspecionando argumentos informam o valor <emphasis>atual</emphasis> do parâmetro</title>
+
+  <para>
+   <function>func_get_arg</function>, <function>func_get_args</function>,
+   <function>debug_backtrace</function> e backtraces de exceção não
+   informam mais o valor original que foi passado para um parâmetro, mas ao invés disso, irão
+   informar o valor atual (que pode ter sido modificado).
+  </para>
+
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+function foo($x) {
+    $x++;
+    var_dump(func_get_arg(0));
+}
+foo(1);?>
+]]>
+   </programlisting>
+   &example.outputs.5;
+   <screen>
+<![CDATA[
+1
+]]>
+   </screen>
+   &example.outputs.7;
+   <screen>
+<![CDATA[
+2
+]]>
+   </screen>
+  </informalexample>
+ </sect3>
+
  <sect3 xml:id="migration70.incompatible.other.multiple-default">
-  <title>Declarações switch não podem ter mais vários blocos default</title>
+  <title>Declarações switch não podem ter vários blocos default</title>
 
   <para>
    Não é mais possível definir dois ou mais blocos default em uma declaração
-   switch. Por exemplo, a declaração switch a seguir vai disparar um
+   switch. Por exemplo, a declaração switch a seguir irá disparar um
    <constant>E_COMPILE_ERROR</constant>:
   </para>
 
@@ -267,9 +303,9 @@ switch (1) {
   <title>Comentários iniciados com <literal>#</literal> nos arquivos INI foram removidos</title>
 
   <para>
-   O suporte a prefixar comentários com <literal>#</literal> nos arquivos INI foi
-   removido. Em vez disso, o <literal>;</literal> (ponto-e-vírgula) deve ser usado.
-   Essa mudança aplica-se ao &php.ini;, assim como arquivos manipulados pelas funções
+   O suporte a comentários prefixados com <literal>#</literal> nos arquivos INI foi
+   removido. Em vez disso, o <literal>;</literal> (ponto-e-vírgula) deve ser usado. Esta mudança
+   aplica-se ao &php.ini;, assim como aos arquivos manipulados pelas funções
    <function>parse_ini_file</function> e <function>parse_ini_string</function>.
   </para>
  </sect3>
@@ -278,47 +314,62 @@ switch (1) {
   <title>Substituição da extensão JSON por JSOND</title>
 
   <para>
-   A extensão JSON foi substituída pela JSOND, que causa duas quebras no cálculo
-   básico. Em primeiro lugar, um número não pode ser terminado em um ponto decimal (isto é
+   A extensão JSON foi substituída por JSOND, causando três quebras menores de compatibilidade com versões
+   anteriores. Em primeiro lugar, um número não pode ser terminado em um ponto decimal (isto é,
    <literal>34.</literal> deve ser modificado para <literal>34.0</literal> ou
-   <literal>34</literal>). Em segundo lugar, quando usada a notação científica, o
-   expoente <literal>e</literal> não deve preceder exatamente o ponto decimal
-   (isto é <literal>3.e3</literal> deve ser modificado para
+   <literal>34</literal>). Em segundo lugar, ao usar notação científica, o
+   expoente <literal>e</literal> não deve seguir imediatamente o ponto decimal
+   (isto é, <literal>3.e3</literal> deve ser modificado para
    <literal>3.0e3</literal> ou <literal>3e3</literal>).
+   Finalmente, uma string vazia não é mais considerada JSON válido.
   </para>
  </sect3>
 
  <sect3 xml:id="migration70.incompatible.other.internal-function-failure-overflow">
-  <title>Função interna de falha em caso de estouro</title>
+  <title>Função interna falha em caso de estouro</title>
 
   <para>
-   Antes, funções internas silenciosamente truncavam números produzidos por coerções
-   de pontos flutuantes para inteiros quando o ponto flutuante era
-   grande demais para ser representado como um inteiro. Agora um E_WARNING será emitido e
-   &null; retornado.
+   Antes, funções internas silenciosamente truncavam números produzidos por
+   coerções de pontos flutuantes para inteiros quando o ponto flutuante era grande demais para ser representado como um
+   inteiro. Agora um E_WARNING será emitido e &null; será retornado.
   </para>
  </sect3>
 
  <sect3 xml:id="migration70.incompatible.other.fixes-custom-session-handler">
-  <title>Ajustes aos valores retornados pelo manipular de sessão customizado</title>
+  <title>Ajustes nos valores retornados pelo manipulador de sessão customizado</title>
+
   <para>
-   Quaisquer funções implementadas por manipuladores de sessões que retornem &false;
-   ou <literal>-1</literal> resultarão em erros fatais. Se qualquer valor retornado
-   dessas funções não são um booleano, <literal>-1</literal>, ou <literal>0</literal>,
-   então falhará e um E_WARNING será emitido.
+   Quaisquer funções de predicado implementadas por manipuladores de sessões customizados que retornem
+   &false; ou <literal>-1</literal> resultarão em erros fatais. Se qualquer valor retornado
+   destas funções não é um booleano, <literal>-1</literal> ou
+   <literal>0</literal>, então ela irá falhar e um E_WARNING será
+   emitido.
   </para>
  </sect3>
 
- <sect3 xml:id="migration70.incompatible.other.func-get-args-change">
-  <title>
-   As funções <function>func_get_arg</function> e <function>func_get_args</function>
-   agora retornam os valores correntes dos argumentos
-  </title>
-
+ <sect3 xml:id="migration70.incompatible.other.sort-order">
+  <title>Ordenações de elementos iguais</title>
   <para>
-   As funções <function>func_get_arg</function> e <function>func_get_args</function>
-   anteriormente retornavam os valores originais do argumentos, mesmo depois de
-   modificados. Agora, elas sempre retornam os valores correntes dos argumentos.
+   O algoritmo interno de ordenação foi melhorado, o que pode resultar em
+   diferentes ordenações de elementos, que são comparados como iguais, do que antes.
+  </para>
+  <note>
+   <para>
+    Não confie na ordem de elementos que são comparados como iguais; ela pode mudar
+    a qualquer momento.
+   </para>
+  </note>
+ </sect3>
+
+ <sect3 xml:id="migration70.incompatible.other.mhash">
+  <title>Mhash não é mais uma extensão</title>
+  <para>
+   A extensão Mhash foi completamente integrada na extensão <link
+   linkend="book.hash">Hash</link>. Portanto, não é mais
+   possível detectar o suporte à extensão Mhash com <function>extension_loaded</function>;
+   em vez disso use <function>function_exists</function>. Além disso, Mhash não é mais
+   informada por <function>get_loaded_extensions</function> e recursos
+   relacionados.
   </para>
  </sect3>
 </sect2>
