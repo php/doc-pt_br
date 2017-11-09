@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: diogo Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 8c3557271d9ae71bbc8ec2a47ad83960d4272184 Maintainer: diogo Status: ready --><!-- CREDITS: diogo,rogeriopradoj -->
 <refentry xml:id="function.iterator-to-array" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>iterator_to_array</refname>
@@ -10,14 +10,11 @@
   &reftitle.description;
   <methodsynopsis>
    <type>array</type><methodname>iterator_to_array</methodname>
-   <methodparam><type>IteratorAggregate</type><parameter>iterator</parameter></methodparam>
-   <methodparam choice="opt"><type>bool</type><parameter>use_keys</parameter></methodparam>
+   <methodparam><type>Traversable</type><parameter>iterator</parameter></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>use_keys</parameter><initializer>true</initializer></methodparam>
   </methodsynopsis>
-
-  &warn.undocumented.func;
-
   <para>
-   Conta os elementos em um iterador.
+   Copia os elementos de um iterador em um array.
   </para>
  </refsect1>
 
@@ -29,7 +26,7 @@
      <term><parameter>iterator</parameter></term>
      <listitem>
       <para>
-       O iterador a ser contado.
+       O iterador que está sendo copiado.
       </para>
      </listitem>
     </varlistentry>
@@ -37,8 +34,25 @@
      <term><parameter>use_keys</parameter></term>
      <listitem>
       <para>
-       <!-- FIXME -->
+       Se as chaves do iterador serão utilizadas como índices.
       </para>
+      <para>
+       A partir do PHP 5.5, se uma chave for um <type>array</type> ou um
+       <type>object</type>, um erro warning será gerado. Chaves &null; serão
+       convertidas em uma string vazia, chaves <type>double</type> serão
+       truncadas em sua parte <type>integer</type>,
+       chaves <type>resource</type> irão gerar um erro warning e serão convertidas para
+       o seu resource ID, e as chaves <type>boolean</type> serão convertidas para
+       inteiros.
+      </para>
+      <note>
+       <para>
+        Se este parâmetro não for definido ou for definido como &true;, as chaves duplicadas serão
+        sobrescritas. O último valor com aquela chave estará no <type>array</type>
+        retornado. Defina esse parâmetro como &false; para receber todos os valores
+        em qualquer caso.
+       </para>
+      </note>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -48,7 +62,82 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   O número de elementos em <parameter>iterator</parameter>.
+   Um <type>array</type> contendo os elementos do <parameter>iterator</parameter>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>5.5.0</entry>
+       <entry>
+        <function>iterator_to_array</function> recebeu suporte para outros tipos
+        de chave além de <type>integer</type> e <type>string</type> quando o
+        parâmetro <parameter>use_keys</parameter> estiver habilitado.
+       </entry>
+      </row>
+      <row>
+       <entry>5.2.1</entry>
+       <entry>
+        O parâmetro <parameter>use_keys</parameter> foi adicionado.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo da <function>iterator_to_array</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$iterator = new ArrayIterator(array('recipe'=>'pancakes', 'egg', 'milk', 'flour'));
+var_dump(iterator_to_array($iterator, true));
+var_dump(iterator_to_array($iterator, false));
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+array(4) {
+  ["recipe"]=>
+  string(8) "pancakes"
+  [0]=>
+  string(3) "egg"
+  [1]=>
+  string(4) "milk"
+  [2]=>
+  string(5) "flour"
+}
+array(4) {
+  [0]=>
+  string(8) "pancakes"
+  [1]=>
+  string(3) "egg"
+  [2]=>
+  string(4) "milk"
+  [3]=>
+  string(5) "flour"
+}
+]]>
+    </screen>
+   </example>
   </para>
  </refsect1>
 
