@@ -1,32 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 6dc1664c0bfef5ea18cf3c05edfffc64a2172a73 Maintainer: fibbarth Status: ready -->
-<!-- CREDITS: narigone, diegopires -->
+<!-- EN-Revision: 30f67e7cb94d6c7f8f49834570dfee9212e632fb Maintainer: fibbarth Status: revision --><!-- CREDITS: narigone, diegopires, adiel -->
 <appendix xml:id="filters" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>Lista de Filtros Disponíveis</title>
  <para>
-  A seguir está uma lista de alguns filtros de stream embutidos para
-  o uso com <function>stream_filter_append</function>.
-  Sua versão de PHP pode ter mais filtros (ou menos) que os
+  A seguir está uma lista de alguns filtros internos de stream para
+  uso com <function>stream_filter_append</function>.
+  Sua versão do PHP pode ter mais filtros (ou menos) que os
   listados aqui.
  </para>
 
  <para>
   Vale notar que existe uma leve assimetria entre
   <function>stream_filter_append</function>
-  e <function>stream_filter_prepend</function>
+  e <function>stream_filter_prepend</function>.
   Toda stream no PHP contém um pequeno <emphasis>buffer de leitura</emphasis>
-  onde ele guarda blocos de dados recuperados do
-  sistema de arquivo ou outro recurso (resource) com o propósito de processar dados da maneira mais eficiente. Assim que os dados são recuperados
+  onde ela guarda blocos de dados recuperados do
+  sistema de arquivos ou outro recurso (resource) com o propósito de processar dados
+  da maneira mais eficiente. Assim que os dados são recuperados
   do recurso para o buffer interno da stream, eles
-  são processados imediatamente por qualquer filtro anexo caso
-  a aplicação PHP esteja preparada ou não para receber os dados.
-  Se os dados estão esperando no buffer de leitura quando o filtro for
+  são processados imediatamente por qualquer filtro anexo quer esteja
+  a aplicação PHP preparada para receber os dados ou não.
+  Se os dados estão esperando no buffer de leitura quando um filtro for
   <emphasis>anexado</emphasis>, esses dados serão imediatamente
   processados através daquele filtro, fazendo o fato de que eles estavam
-  esperando num buffer transparente. No entanto, se os dados estão
+  esperando no buffer transparente. No entanto, se os dados estão
   esperando no buffer de leitura quando um filtro é
-  <emphasis>desanexado</emphasis>, esses dados <emphasis>NÃO</emphasis> serão
-  processados pelo filtro. Ao invés disso, eles esperarão até
+  <emphasis>prefixado</emphasis>, esses dados <emphasis>NÃO</emphasis> serão
+  processados por este filtro. Ao invés disso, eles esperarão até
   o próximo bloco de dados ser recuperado do recurso.
  </para>
 
@@ -39,9 +39,9 @@
   <title>Filtros de String</title>
 
   <simpara>
-   Cada um dos filtros faz precisamente o que o seu nome implica e
-   corresponde ao comportamente da função de manuseio de string homônima.
-   Para mais informação em um dado filtro, veja a página do manual para
+   Cada um destes filtros faz precisamente o que o seu nome implica e
+   corresponde ao comportamento da função interna de tratamento de string homônima.
+   Para mais informações sobre um determinado filtro, veja a página do manual para
    a função correspondente.
   </simpara>
 
@@ -57,8 +57,8 @@
 <?php
 $fp = fopen('php://output', 'w');
 stream_filter_append($fp, 'string.rot13');
-fwrite($fp, "This is a test.\n");
-/* Saída:  Guvf vf n grfg.   */
+fwrite($fp, "Isto é um teste.\n");
+/* Saída:  Vfgb é hz grfgr.   */
 ?>
 ]]>
    </programlisting>
@@ -76,8 +76,8 @@ fwrite($fp, "This is a test.\n");
 <?php
 $fp = fopen('php://output', 'w');
 stream_filter_append($fp, 'string.toupper');
-fwrite($fp, "This is a test.\n");
-/* Saída:  THIS IS A TEST.   */
+fwrite($fp, "Isto é um teste.\n");
+/* Saída:  ISTO é UM TESTE.   */
 ?>
 ]]>
    </programlisting>
@@ -95,8 +95,8 @@ fwrite($fp, "This is a test.\n");
 <?php
 $fp = fopen('php://output', 'w');
 stream_filter_append($fp, 'string.tolower');
-fwrite($fp, "This is a test.\n");
-/* Saída:  this is a test.   */
+fwrite($fp, "Isto é um teste.\n");
+/* Saída:  isto é um teste.   */
 ?>
 ]]>
    </programlisting>
@@ -119,15 +119,15 @@ fwrite($fp, "This is a test.\n");
 <?php
 $fp = fopen('php://output', 'w');
 stream_filter_append($fp, 'string.strip_tags', STREAM_FILTER_WRITE, "<b><i><u>");
-fwrite($fp, "<b>bolded text</b> enlarged to a <h1>level 1 heading</h1>\n");
+fwrite($fp, "<b>texto em negrito</b> aumentado para um <h1>heading de nível 1</h1>\n");
 fclose($fp);
-/* Saída:  <b>bolded text</b> enlarged to a level 1 heading   */
+/* Saída:  <b>texto em negrito</b> aumentado para um heading de nível 1   */
 
 $fp = fopen('php://output', 'w');
 stream_filter_append($fp, 'string.strip_tags', STREAM_FILTER_WRITE, array('b','i','u'));
-fwrite($fp, "<b>bolded text</b> enlarged to a <h1>level 1 heading</h1>\n");
+fwrite($fp, "<b>texto em negrito</b> aumentado para um <h1>heading de nível 1</h1>\n");
 fclose($fp);
-/* Saída:  <b>bolded text</b> enlarged to a level 1 heading   */
+/* Saída:  <b>texto em negrito</b> aumentado para um heading de nível 1   */
 ?>
 ]]>
    </programlisting>
@@ -139,22 +139,22 @@ fclose($fp);
   <title>Fitros de Conversão</title>
 
   <simpara>
-   Como todos os filtros de string, os filtros convert realizam ações
-   similares aos seus nomes. Os filtros de conversão foram adicionados com
+   Como todos os filtros string.*, os filtros convert.* realizam ações
+   similares aos seus nomes. Os filtros de conversão foram adicionados com o
    PHP 5.0.0.
-   Para mais informações em um dado filtro, veja a página do manual para
+   Para mais informações sobre um determinado filtro, veja a página do manual para
    a função correspondente.
   </simpara>
 
   <simpara>
    <literal>convert.base64-encode</literal> e
    <literal>convert.base64-decode</literal>
-   O uso desses filtros são equivalentes ao processamento de todos os dados de stream pelas
+   O uso desses filtros é equivalente a processar todos os dados da stream com as
    funções <function>base64_encode</function> e <function>base64_decode</function>
    respectivamente.
    <literal>convert.base64-encode</literal> suporta parâmetros no formato de
    um array associativo. Se <parameter>line-length</parameter> for passado, a
-   saída do base64 será quebrada em pedaços de <parameter>line-length</parameter>
+   saída do base64 será dividida em pedaços de <parameter>line-length</parameter>
    caracteres cada. Se <parameter>line-break-chars</parameter> for passado, cada
    pedaço será delimitado pelos caracteres passados. Esses parâmetros dão o
    mesmo efeito que usar <function>base64_encode</function> com
@@ -170,43 +170,43 @@ fclose($fp);
 <?php
 $fp = fopen('php://output', 'w');
 stream_filter_append($fp, 'convert.base64-encode');
-fwrite($fp, "This is a test.\n");
+fwrite($fp, "Isto é um teste.\n");
 fclose($fp);
-/* Saída:  VGhpcyBpcyBhIHRlc3QuCg==  */
+/* Saída:  SXN0byDDqSB1bSB0ZXN0ZS4K  */
 
 $param = array('line-length' => 8, 'line-break-chars' => "\r\n");
 $fp = fopen('php://output', 'w');
 stream_filter_append($fp, 'convert.base64-encode', STREAM_FILTER_WRITE, $param);
-fwrite($fp, "This is a test.\n");
+fwrite($fp, "Isto é um teste.\n");
 fclose($fp);
-/* Saída:  VGhpcyBp
-          :  cyBhIHRl
-          :  c3QuCg==  */
+/* Saída:  SXN0byDD
+        :  qSB1bSB0
+        :  ZXN0ZS4K  */
 
 $fp = fopen('php://output', 'w');
 stream_filter_append($fp, 'convert.base64-decode');
-fwrite($fp, "VGhpcyBpcyBhIHRlc3QuCg==");
+fwrite($fp, "SXN0byDDqSB1bSB0ZXN0ZS4K");
 fclose($fp);
-/* Saída:  This is a test.  */
+/* Saída:  Isto é um teste.  */
 ?>
 ]]>
    </programlisting>
   </example>
 
   <simpara>
-   <literal>convert.quoted-printable-encode</literal> and
+   <literal>convert.quoted-printable-encode</literal> e
    <literal>convert.quoted-printable-decode</literal>
-   O uso da versão de decodificação desse filtro é equivalente ao processamente de todos
-   os dados da stream pelas funções <function>quoted_printable_decode</function>.
+   O uso da versão de decodificação desse filtro é equivalente ao processamento de todos os dados
+   da stream pelas funções <function>quoted_printable_decode</function>.
    Não há nenhuma função equivalente a <literal>convert.quoted-printable-encode</literal>.
    <literal>convert.quoted-printable-encode</literal> suporta parâmetros passados como
    um array associativo. Além dos parâmetros suportados por
    <literal>convert.base64-encode</literal>, <literal>convert.quoted-printable-encode</literal>
-   também suporta argumentos boleanos <parameter>binários</parameter> e
+   também suporta os argumentos booleanos <parameter>binary</parameter> e
    <parameter>force-encode-first</parameter>.
-   <literal>convert.base64-decode</literal> só suporta o
+   <literal>convert.base64-decode</literal> suporta apenas o
    parâmetro <parameter>line-break-chars</parameter> como uma dica de tipo
-   para cortar o conteúdo codificado.
+   para retirar do conteúdo codificado.
   </simpara>
   <example>
    <title>
@@ -218,8 +218,8 @@ fclose($fp);
 <?php
 $fp = fopen('php://output', 'w');
 stream_filter_append($fp, 'convert.quoted-printable-encode');
-fwrite($fp, "This is a test.\n");
-/* Saída:  =This is a test.=0A  */
+fwrite($fp, "Isto é um teste.\n");
+/* Saída:  Isto =C3=A9 um teste.=0A  */
 ?>
 ]]>
    </programlisting>
@@ -230,19 +230,19 @@ fwrite($fp, "This is a test.\n");
   <title>Filtros de Compressão</title>
 
   <simpara>
-   Enquanto os <link linkend="wrappers.compression">Filtros de Compressão</link>
-   permitem uma maneira de criar
-   arquivos compatíveis com gzip and bz2 no seu sistema de arquivos local, eles não possuem
-   meios para compressão generalizada sobre streams de rede, nem possuem uma
+   Enquanto os <link linkend="wrappers.compression">Wrappers de Compressão</link>
+   fornecem uma maneira de criar
+   arquivos compatíveis com gzip e bz2 no sistema de arquivos local, eles não fornecem um
+   meio para compressão generalizada sobre streams de rede, nem fornecem uma
    maneira de começar com uma stream não-comprimida e mudar para uma comprimida.
-   Para isso, um filtro comprimido pode ser aplicado a qualquer recurso de stream em qualquer momento.
+   Para isso, um filtro de compressão pode ser aplicado a qualquer recurso de stream em qualquer momento.
   </simpara>
 
   <note>
    <simpara>
     Filtros de compressão <emphasis>não</emphasis> geram cabeçalhos e rodapés
     usados por utilitários de linha de comando como o <literal>gzip</literal>. Eles apenas comprimem
-    e descomprimem as porções de conteúdo das streams de dados comprimidos.
+    e descomprimem as porções de conteúdo das streams de dados comprimidas.
    </simpara>
   </note>
 
@@ -259,26 +259,26 @@ fwrite($fp, "This is a test.\n");
    0 (para nenhuma compressão), e -1 (padrão interno da zlib -- atualmente 6).
 
    <parameter>window</parameter> é o logaritmo na base 2 do tamanho da janela de loopback de compressão.
-   Valores mais altos (acima de 15 -- 32768 bytes) resultam em melhor compressão com o custo de memória,
-   enquanto valores menores (abaixo de 9 -- 512 bytes) resultam em pior compressão usando menos memória.
+   Valores mais altos (até 15 -- 32768 bytes) resultam em melhor compressão ao custo de memória,
+   enquanto valores menores (até 9 -- 512 bytes) resultam em pior compressão usando menos memória.
    O tamanho padrão de <parameter>window</parameter> atualmente é <constant>15</constant>.
 
    <parameter>memory</parameter> é uma escala indicando quanta memória deve ser alocada para trabalhar.
-   Valores válidos vão de 1 (alocação máxima) até 9 (alocação mínima). Essa alocação de memória
-   afeta apenas a velocidade e não tem impacto sobre o tamanho do arquivo gerada.
+   Valores válidos vão de 1 (alocação mínima) até 9 (alocação máxima). Essa alocação de memória
+   afeta apenas a velocidade e não tem impacto sobre o tamanho do conteúdo gerado.
   </simpara>
 
   <note>
    <simpara>
-    O nível de compressão, por ser o parâmetro mais usado normalmente, pode ser passado
-    de maneira alternativa com um simples valor inteiro (ao invés de um elemento de um array).
+    Pelo fato do nível de compressão ser o parâmetro mais usado normalmente, ele pode ser passado
+    de maneira alternativa como um simples valor inteiro (ao invés de um elemento de um array).
    </simpara>
   </note>
 
   <simpara>
-    Filtros de compressão zlib estão disponíveis com o PHP a partir da versão <literal>5.1.0</literal> se
-    o suporte à <link linkend="ref.zlib">zlib</link> estiver ativado. Eles também estão disponíveis como uma backport na versão
-    <literal>5.0.x</literal> instalando o pacote <link xlink:href="&url.pecl.package;zlib_filter">zlib_filter</link>
+    Filtros de compressão zlib.* estão disponíveis com o PHP a partir da versão <literal>5.1.0</literal> se
+    o suporte a <link linkend="ref.zlib">zlib</link> estiver ativado. Eles também estão disponíveis como um backport nas versões
+    <literal>5.0.x</literal> ao instalar o pacote <link xlink:href="&url.pecl.package;zlib_filter">zlib_filter</link>
     da <link xlink:href="&url.pecl;">PECL</link>.
   </simpara>
 
@@ -292,27 +292,27 @@ fwrite($fp, "This is a test.\n");
 <?php
 $params = array('level' => 6, 'window' => 15, 'memory' => 9);
 
-$original_text = "This is a test.\nThis is only a test.\nThis is not an important string.\n";
-echo "The original text is " . strlen($original_text) . " characters long.\n";
+$original_text = "Isto é um teste.\nIsto é apenas um teste.\nEsta não é uma string importante.\n";
+echo "O texto original tem " . strlen($original_text) . " caracteres.\n";
 
 $fp = fopen('test.deflated', 'w');
 stream_filter_append($fp, 'zlib.deflate', STREAM_FILTER_WRITE, $params);
 fwrite($fp, $original_text);
 fclose($fp);
 
-echo "The compressed file is " . filesize('test.deflated') . " bytes long.\n";
-echo "The original text was:\n";
-/* Use readfile and zlib.inflate to decompress on the fly */
+echo "O arquivo comprimido tem " . filesize('test.deflated') . " bytes.\n";
+echo "O texto original era:\n";
+/* Use readfile e zlib.inflate para descomprimir de forma improvisada */
 readfile('php://filter/zlib.inflate/resource=test.deflated');
 
 /* Gera a saída:
 
-The original text is 70 characters long.
-The compressed file is 56 bytes long.
-The original text was:
-This is a test.
-This is only a test.
-This is not an important string.
+O texto original tem 79 caracteres.
+O arquivo comprimido tem 61 bytes.
+O texto original era:
+Isto é um teste.
+Isto é apenas um teste.
+Esta não é uma string importante.
 
  */
 ?>
@@ -327,21 +327,21 @@ This is not an important string.
    <programlisting role="php">
 <![CDATA[
 <?php
-$original_text = "This is a test.\nThis is only a test.\nThis is not an important string.\n";
-echo "The original text is " . strlen($original_text) . " characters long.\n";
+$original_text = "Isto é um teste.\nIsto é apenas um teste.\nEsta não é uma string importante.\n";
+echo "O texto original tem " . strlen($original_text) . " caracteres.\n";
 
 $fp = fopen('test.deflated', 'w');
-/* Here "6" indicates compression level 6 */
+/* Aqui "6" indica nível de compressão 6 */
 stream_filter_append($fp, 'zlib.deflate', STREAM_FILTER_WRITE, 6);
 fwrite($fp, $original_text);
 fclose($fp);
 
-echo "The compressed file is " . filesize('test.deflated') . " bytes long.\n";
+echo "O arquivo comprimido tem " . filesize('test.deflated') . " bytes.\n";
 
 /* Gera a saída:
 
-The original text is 70 characters long.
-The compressed file is 56 bytes long.
+O texto original tem 79 caracteres.
+O arquivo comprimido tem 60 bytes.
 
  */
 ?>
@@ -352,7 +352,7 @@ The compressed file is 56 bytes long.
   <simpara>
    <literal>bzip2.compress</literal> e
    <literal>bzip2.decompress</literal>
-   funcionam da mesma maneira como os filtros da zlib descritos acima.
+   funcionam da mesma maneira que os filtros da zlib descritos acima.
 
    O filtro <literal>bzip2.compress</literal> aceita até dois parâmetros passados como
    elementos de um array associativo:
@@ -361,24 +361,24 @@ The compressed file is 56 bytes long.
    de 1 até 9 especificando o número de blocos de 100kbyte de memória para alocar para
    o espaço de trabalho.
 
-   <parameter>work</parameter> também é um valor inteiro variando entre
-   0 e 250 indicando quanto esforço a será gasto usando o método normal de compressão
+   <parameter>work</parameter> também é um valor inteiro variando de
+   0 a 250 indicando quanto esforço será realizado usando o método normal de compressão
    antes de desistir e usar um mais lento, mas mais confiável. Alterar esse parâmetro
    afeta apenas a velocidade de compressão. Nem o tamanho da saída comprimida nem o uso de memória
    são alterados por essa configuração. Um fator de trabalho de 0 diz à biblioteca bzip para usar
    o padrão interno.
 
    O filtro <literal>bzip2.decompress</literal> só aceita um parâmetro,
-   que pode ser passado ou como um valor boolean comum ou como o
+   que pode ser passado ou como um valor booleano comum ou como o
    elemento <parameter>small</parameter> de um array associativo.
 
    <parameter>small</parameter>, quando configurado para o valor &true;, diz à biblioteca bzip
-   para fazer a descompressão usando o mínimo de memória com o custo de velocidade.
+   para fazer a descompressão usando o mínimo de memória ao custo da velocidade.
   </simpara>
 
   <simpara>
-    Filtros de compressão bzip2 estão disponíveis no PHP a partir da versão <literal>5.1.0</literal> se
-    o suporte à <link linkend="ref.bzip2">bz2</link> estiver ativado. Eles também estão disponíveis como um backport na versão
+    Filtros de compressão bzip2.* estão disponíveis no PHP a partir da versão <literal>5.1.0</literal> se
+    o suporte a <link linkend="ref.bzip2">bz2</link> estiver ativado. Eles também estão disponíveis como um backport nas versões
     <literal>5.0.x</literal> instalando o pacote <link xlink:href="&url.pecl.package;bz2_filter">bz2_filter</link>
     da <link xlink:href="&url.pecl;">PECL</link>.
   </simpara>
@@ -393,19 +393,19 @@ The compressed file is 56 bytes long.
 <?php
 $param = array('blocks' => 9, 'work' => 0);
 
-echo "The original file is " . filesize('LICENSE') . " bytes long.\n";
+echo "O arquivo original tem " . filesize('LICENSE') . " bytes.\n";
 
 $fp = fopen('LICENSE.compressed', 'w');
 stream_filter_append($fp, 'bzip2.compress', STREAM_FILTER_WRITE, $param);
 fwrite($fp, file_get_contents('LICENSE'));
 fclose($fp);
 
-echo "The compressed file is " . filesize('LICENSE.compressed') . " bytes long.\n";
+echo "O arquivo comprimido tem " . filesize('LICENSE.compressed') . " bytes.\n";
 
 /* Gera a saída:
 
-The original text is 3288 characters long.
-The compressed file is 1488 bytes long.
+O arquivo original tem 3218 bytes.
+O arquivo comprimido tem 1511 bytes.
 
  */
 ?>
@@ -417,15 +417,23 @@ The compressed file is 1488 bytes long.
  <section xml:id="filters.encryption">
   <title>Filtros de Criptografia</title>
 
+  <para>
+    &warn.deprecated.feature-7-1-0;
+  </para>
+
+  <para>
+    Os filtros de criptografia são especialmente úteis para criptografia de arquivo/stream.
+  </para>
+
   <simpara>
    Os filtros <literal>mcrypt.*</literal> e <literal>mdecrypt.*</literal>
-   permitem criptografar e descriptografar usando libmcrypt.
+   fornecem criptografia e descriptografia simétricas usando libmcrypt.
    Ambos os conjuntos de filtros suportam os mesmos algoritmos disponíveis na
    <link linkend="ref.mcrypt">extensão mcrypt</link> na forma de
    <literal>mcrypt.ciphername</literal> onde <parameter>ciphername</parameter>
-   é o nome da cifra como seria passada para
+   é o nome da cifra como seria passado para
    <function>mcrypt_module_open</function>.
-   Os cinco filtros a seguir estão disponíveis:
+   Os cinco parâmetros de filtros a seguir também estão disponíveis:
   </simpara>
 
   <para>
@@ -435,7 +443,7 @@ The compressed file is 1488 bytes long.
      <thead>
       <row>
        <entry>Parâmetro</entry>
-       <entry>É Necessário?</entry>
+       <entry>Obrigatório?</entry>
        <entry>Valor Padrão</entry>
        <entry>Exemplos de Valores</entry>
       </row>
@@ -451,25 +459,25 @@ The compressed file is 1488 bytes long.
        <entry>algorithms_dir</entry>
        <entry>Opcional</entry>
        <entry>ini_get('mcrypt.algorithms_dir')</entry>
-       <entry>Localização do módulos de algoritmos</entry>
+       <entry>Localização dos módulos de algoritmos</entry>
       </row>
       <row>
        <entry>modes_dir</entry>
        <entry>Opcional</entry>
        <entry>ini_get('mcrypt.modes_dir')</entry>
-       <entry>Localização do módulos de modos</entry>
+       <entry>Localização dos módulos de modos</entry>
       </row>
       <row>
        <entry>iv</entry>
-       <entry>Necessário</entry>
+       <entry>Obrigatório</entry>
        <entry>N/A</entry>
-       <entry>Tipicamente 8, 16, or 32 bytes de dados binários. Dependa da cifra.</entry>
+       <entry>Tipicamente 8, 16 ou 32 bytes de dados binários. Depende da cifra.</entry>
       </row>
       <row>
        <entry>key</entry>
-       <entry>Necessário</entry>
+       <entry>Obrigatório</entry>
        <entry>N/A</entry>
-       <entry>Tipicamente 8, 16, or 32 bytes de dados binários. Dependa da cifra.</entry>
+       <entry>Tipicamente 8, 16 ou 32 bytes de dados binários. Depende da cifra.</entry>
       </row>
      </tbody>
     </tgroup>
@@ -477,55 +485,145 @@ The compressed file is 1488 bytes long.
   </para>
 
   <example>
-   <title>Criptografando saída de arquivo usando 3DES</title>
+   <title>Criptografar/Descriptografar com Blowfish</title>
    <programlisting role="php">
 <![CDATA[
 <?php
-$passphrase = 'My secret';
-
-/* Turn a human readable passphrase
- * into a reproducable iv/key pair
- */
-$iv = substr(md5('iv'.$passphrase, true), 0, 8);
-$key = substr(md5('pass1'.$passphrase, true) . 
-               md5('pass2'.$passphrase, true), 0, 24);
-$opts = array('iv'=>$iv, 'key'=>$key);
-
-$fp = fopen('secret-file.enc', 'wb');
-stream_filter_append($fp, 'mcrypt.tripledes', STREAM_FILTER_WRITE, $opts);
-fwrite($fp, 'Secret secret secret data');
-fclose($fp);
-?>
-]]>
-   </programlisting>
-  </example>
-
-  <example>
-   <title>Lendo um arquivo criptografado</title>
-   <programlisting role="php">
-<![CDATA[
-<?php
-$passphrase = 'My secret';
-
-/* Turn a human readable passphrase
- * into a reproducable iv/key pair
- */
-$iv = substr(md5('iv'.$passphrase, true), 0, 8);
-$key = substr(md5('pass1'.$passphrase, true) . 
-               md5('pass2'.$passphrase, true), 0, 24);
-$opts = array('iv'=>$iv, 'key'=>$key);
-
-$fp = fopen('secret-file.enc', 'rb');
-stream_filter_append($fp, 'mdecrypt.tripledes', STREAM_FILTER_READ, $opts);
-$data = rtrim(stream_get_contents($fp));
+// assume-se que $key foi gerada anteriormente
+$iv_size = mcrypt_get_iv_size(MCRYPT_BLOWFISH, MCRYPT_MODE_CBC);
+$iv = mcrypt_create_iv($iv_size, MCRYPT_DEV_URANDOM);
+$fp = fopen('encrypted-file.enc', 'wb');
+fwrite($fp, $iv);
+$opts = array('mode'=>'cbc','iv'=>$iv, 'key'=>$key);
+stream_filter_append($fp, 'mcrypt.blowfish', STREAM_FILTER_WRITE, $opts);
+fwrite($fp, 'mensagem para criptografar');
 fclose($fp);
 
+// descriptografar...
+$fp = fopen('encrypted-file.enc', 'rb');
+$iv = fread($fp, $iv_size = mcrypt_get_iv_size(MCRYPT_BLOWFISH, MCRYPT_MODE_CBC));
+$opts = array('mode'=>'cbc','iv'=>$iv, 'key'=>$key);
+stream_filter_append($fp, 'mdecrypt.blowfish', STREAM_FILTER_READ, $opts);
+$data = rtrim(stream_get_contents($fp)); // retira o null padding
+fclose($fp);
 echo $data;
 ?>
 ]]>
    </programlisting>
   </example>
+  <example>
+   <title>Criptografar arquivo usando CBC AES-128 com HMAC SHA256 no PHP 5.5+</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+AES_CBC::encryptFile($password, "plaintext.txt", "encrypted.enc");
+AES_CBC::decryptFile($password, "encrypted.enc", "decrypted.txt");
 
+class AES_CBC
+{
+  protected static $KEY_SIZES = array('AES-128'=>16,'AES-192'=>24,'AES-256'=>32);
+  protected static function key_size() { return self::$KEY_SIZES['AES-128']; } // padrão AES-128
+  public static function encryptFile($password, $input_stream, $aes_filename){
+    $iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
+    $fin = fopen($input_stream, "rb");
+    $fc = fopen($aes_filename, "wb+");
+    if (!empty($fin) && !empty($fc)) {
+      fwrite($fc, str_repeat("_", 32) ); // placeholder, HMAC SHA256 será usado aqui mais tarde
+      fwrite($fc, $hmac_salt = mcrypt_create_iv($iv_size, MCRYPT_DEV_URANDOM));
+      fwrite($fc, $esalt = mcrypt_create_iv($iv_size, MCRYPT_DEV_URANDOM));
+      fwrite($fc, $iv = mcrypt_create_iv($iv_size, MCRYPT_DEV_URANDOM));
+      $ekey = hash_pbkdf2("sha256", $password, $esalt, $it=1000, self::key_size(), $raw=true);
+      $opts = array('mode'=>'cbc', 'iv'=>$iv, 'key'=>$ekey);
+      stream_filter_append($fc, 'mcrypt.rijndael-128', STREAM_FILTER_WRITE, $opts);
+      $infilesize = 0;
+      while (!feof($fin)) {
+        $block = fread($fin, 8192);
+        $infilesize+=strlen($block);
+        fwrite($fc, $block);
+      }
+      $block_size = mcrypt_get_block_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
+      $padding = $block_size - ($infilesize % $block_size); // $padding é um número de 1-16
+      fwrite($fc, str_repeat(chr($padding), $padding) ); // realiza o padding PKCS7
+      fclose($fin);
+      fclose($fc);
+      $hmac_raw = self::calculate_hmac_after_32bytes($password, $hmac_salt, $aes_filename);
+      $fc = fopen($aes_filename, "rb+");
+      fwrite($fc, $hmac_raw); // sobrescreve o placeholder
+      fclose($fc);
+    }
+  }
+  public static function decryptFile($password, $aes_filename, $out_stream) {
+    $iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
+    $hmac_raw = file_get_contents($aes_filename, false, NULL,  0, 32);
+    $hmac_salt = file_get_contents($aes_filename, false, NULL, 32, $iv_size);
+    $hmac_calc = self::calculate_hmac_after_32bytes($password, $hmac_salt, $aes_filename);
+    $fc = fopen($aes_filename, "rb");
+    $fout = fopen($out_stream, 'wb');
+    if (!empty($fout) && !empty($fc) && self::hash_equals($hmac_raw,$hmac_calc)) {
+      fread($fc, 32+$iv_size); // ignora HMAC SHA256 e salt
+      $esalt = fread($fc, $iv_size);
+      $iv    = fread($fc, $iv_size);
+      $ekey = hash_pbkdf2("sha256", $password, $esalt, $it=1000, self::key_size(), $raw=true);
+      $opts = array('mode'=>'cbc', 'iv'=>$iv, 'key'=>$ekey);
+      stream_filter_append($fc, 'mdecrypt.rijndael-128', STREAM_FILTER_READ, $opts);
+      while (!feof($fc)) {
+        $block = fread($fc, 8192);
+        if (feof($fc)) {
+          $padding = ord($block[strlen($block) - 1]); // assume padding PKCS7
+          $block = substr($block, 0, 0-$padding);
+        }
+        fwrite($fout, $block);
+      }
+      fclose($fout);
+      fclose($fc);
+    }
+  }
+  private static function hash_equals($str1, $str2) {
+    if(strlen($str1) == strlen($str2)) {
+      $res = $str1 ^ $str2;
+      for($ret=0,$i = strlen($res) - 1; $i >= 0; $i--) $ret |= ord($res[$i]);
+      return !$ret;
+    }
+    return false;
+  }
+  private static function calculate_hmac_after_32bytes($password, $hsalt, $filename) {
+    static $init=0;
+    $init or $init = stream_filter_register("user-filter.skipfirst32bytes", "FileSkip32Bytes");
+    $stream = 'php://filter/read=user-filter.skipfirst32bytes/resource=' . $filename;
+    $hkey = hash_pbkdf2("sha256", $password, $hsalt, $iterations=1000, 24, $raw=true);
+    return hash_hmac_file('sha256', $stream, $hkey, $raw=true);
+  }
+}
+class FileSkip32Bytes extends php_user_filter
+{
+  private $skipped=0;
+  function filter($in, $out, &$consumed, $closing)  {
+    while ($bucket = stream_bucket_make_writeable($in)) {
+      $outlen = $bucket->datalen;
+      if ($this->skipped<32){
+        $outlen = min($bucket->datalen,32-$this->skipped);
+        $bucket->data = substr($bucket->data, $outlen);
+        $bucket->datalen = $bucket->datalen-$outlen;
+        $this->skipped+=$outlen;
+      }
+      $consumed += $outlen;
+      stream_bucket_append($out, $bucket);
+    }
+    return PSFS_PASS_ON;
+  }
+}
+class AES_128_CBC extends AES_CBC {
+  protected static function key_size() { return self::$KEY_SIZES['AES-128']; }
+}
+class AES_192_CBC extends AES_CBC {
+  protected static function key_size() { return self::$KEY_SIZES['AES-192']; }
+}
+class AES_256_CBC extends AES_CBC {
+  protected static function key_size() { return self::$KEY_SIZES['AES-256']; }
+}
+]]>
+   </programlisting>
+  </example>
  </section>
 
 </appendix>
