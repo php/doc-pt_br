@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: f616f360e1988ed68d5120e1c43e1e473a5b9e13 Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, fabioluciano, rogeriopradoj -->
+<!-- EN-Revision: 74a8bfdfceb206ee8fe5751d841a205049a9fe35 Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, fabioluciano, rogeriopradoj, @geekcom -->
 <sect1 xml:id="language.types.array">
  <title>Arrays</title>
 
@@ -80,7 +80,7 @@ $array = [
    </para>
 
    <para>
-    Adicionalmente, as seguites coerções ocorrerão a <replaceable>chave</replaceable>:
+    Adicionalmente, as seguintes coerções ocorrerão a <replaceable>chave</replaceable>:
     <itemizedlist>
      <listitem>
       <simpara>
@@ -346,10 +346,16 @@ list(, $secondElement) = getArray();
 
    <note>
     <para>
-      Tentativas de acesso a uma chave de array que não foi defina é
+      Tentativas de acesso a uma chave de array que não foi definida é
       o mesmo que acessar qualquer outra variável indefinida:
       uma mensagem de erro de nível <constant>E_NOTICE</constant> será
       emitida, e o resultado será  &null;.
+    </para>
+   </note>
+   <note>
+    <para>
+    Referenciar um valor scalar de um array que não seja uma <type>string</type>
+    gerará silenciosamente um &null;, isto é, sem emitir uma mensagem de erro.
     </para>
    </note>
   </sect3>
@@ -363,9 +369,9 @@ list(, $secondElement) = getArray();
    </para>
 
    <para>
-    Isto é feito apenas assimilando valores para o array enquanto especifica a
+    Isto é feito apenas assimilando valores para o <type>array</type> enquanto especifica a
     chave em colchetes. Você pode omitir a chave, colocando um par vazio
-    de colchetes ("<literal>[]</literal>").
+    de colchetes (<literal>[]</literal>).
    </para>
 
     <synopsis>
@@ -384,6 +390,12 @@ $arr[] = <replaceable>valor</replaceable>;
     a string</link>. Sempre será recomentado a inicialização de uma variável por atribuição
     direta.
    </para>
+    <note>
+     <simpara>
+      A partir do PHP 7.1.0, aplicar um operador de índice vazio a uma string lança um erro fatal.
+      Antes, a string era silencionamente convertida em um array.
+     </simpara>
+    </note>
 
    <para>
     Para mudar um certo valor, apenas atribua um novo valor
@@ -495,7 +507,7 @@ Array
    <para>
     A função <function>unset</function> permite apagar chaves de um
     <type>array</type>. Esteja avisado que o array <emphasis>não</emphasis> será
-    reindexado. Se um compartamento como "remover e deslocar" é o desejado, o
+    reindexado. Se um comportamento como "remover e deslocar" é o desejado, o
     <type>array</type> poderá ser reindexado utilizando a
     função <function>array_values</function>.
   </para>
@@ -554,9 +566,8 @@ echo $foo[bar];
 
    <para>
     Isto está errado, mas funciona. A razão é que este código possui uma
-    constante indefinida (bar) em vez de uma <type>string</type> ('bar' - repare nas
-    aspas simples). O PHP, no futuro, pode definir constantes que, infelizmente em algum
-    código, pode ter os mesmos nome. Isto funciona, porque o PHP converte automaticamente uma
+    constante indefinida (<literal>bar</literal>) em vez de uma <type>string</type> (<literal>'bar'</literal> - repare nas
+    aspas simples). Isto funciona, porque o PHP converte automaticamente uma
     <emphasis>string base</emphasis> (uma <type>string</type> não delimitada que
     não corresponde a nenhum símbolo conhecido) em uma <type>string</type> que contém
     a <type>string</type> base. Por exemplo, se não existir uma constante definida com o
@@ -564,9 +575,17 @@ echo $foo[bar];
     <type>string</type> <literal>'bar'</literal> e usá-la.
    </para>
 
+   <warning>
+    <simpara>
+     O fallback para tratar uma constante indefinida como string base está depreciado
+     a partir do PHP 7.2.0, e emitirá um erro de nível <constant>E_WARNING</constant>.
+     Antes, um erro de nível <constant>E_NOTICE</constant> era emitido.
+    </simpara>
+   </warning>
+
    <note>
     <simpara>
-     Isto não que significa deve-se <emphasis>sempre</emphasis> delimitar as chaves. Não
+     Isto não que significa que deve-se <emphasis>sempre</emphasis> delimitar as chaves. Não
      delimite chaves que sejam <link linkend="language.constants">constantes</link> ou
      <link linkend="language.variables">variáveis</link>, porque isso impedirá
      o PHP de interpretá-las.
@@ -802,7 +821,7 @@ var_dump((array) new B());
     </informalexample>
 
   <para>
-   Acima aparece duas chaves chamadas 'AA', embora uma delas é,
+   Acima aparecem duas chaves chamadas 'AA', embora uma delas é,
    na verdade, nomeada '\0A\0A'.
   </para>
 
@@ -826,7 +845,7 @@ var_dump((array) new B());
   <title>Exemplos</title>
 
   <para>
-   O tipo array do PHP é muito versátil. Temos aqui alguns exemplos.
+   O tipo array do PHP é muito versátil. Temos aqui alguns exemplos:
   </para>
 
     <informalexample>
@@ -934,26 +953,20 @@ Você gosta de amarelo?
   </example>
 
   <para>
-   Alterar diretamente os valores do <type>array</type> é possível desde o PHP
-   5, passando-os como referência. Em versões anteriores, uma alternativa era necessária:
+   É possível alterar diretamente os valores de um <type>array</type>
+   passando-os como referência.
   </para>
 
    <example xml:id="language.types.array.examples.changeloop">
-    <title>Coleção</title>
+    <title>Alterando valores em um laço</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-// PHP 5
 foreach ($colors as &$color) {
     $color = strtoupper($color);
 }
 unset($color); /* ensure that following writes to
 $color will not modify the last array element */
-
-// Workaround for older versions
-foreach ($colors as $key => $color) {
-    $colors[$key] = strtoupper($color);
-}
 
 print_r($colors);
 ?>
