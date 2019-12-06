@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 0b626f05d2eec973a97ef16e56a338553cca7844 Maintainer: fabioluciano Status: ready --> <!-- Credits: felipe, thiago, fabioluciano, rogeriopradoj -->
+<!-- EN-Revision: 417eda23c69cc5d6814e66c97437d3d62270baf1 Maintainer: fabioluciano Status: ready --> <!-- Credits: felipe, thiago, fabioluciano, rogeriopradoj, @geekcom -->
 <sect1 xml:id="language.types.string">
  <title>Strings</title>
 
@@ -13,7 +13,10 @@
 
  <note>
   <simpara>
-   O tipo <type>string</type> possui o tamanho máximo de 2GB (máximo de 2147483647 bytes)
+   A partir do PHP 7.0.0, não há restrições particulares em relação ao tamanho de uma
+   uma <type>string</type> em compilações de 64 bits. Em compilações de 32 bits e em
+   versões anteriores, uma
+   <type>string</type> pode ter o tamanho de até 2GB (máximo de 2147483647 bytes)
   </simpara>
  </note>
 
@@ -43,7 +46,7 @@
    <listitem>
     <simpara>
      <link linkend="language.types.string.syntax.nowdoc">sintaxe nowdoc</link>
-     (desde o PHP 5.3.0)
+     (a partir do PHP 5.3.0)
     </simpara>
    </listitem>
   </itemizedlist>
@@ -141,15 +144,15 @@ echo 'Variáveis $também não $expandem';
       </row>
       <row>
        <entry><literal>\v</literal></entry>
-       <entry>TAB vertical (VT ou 0x0B (11) em ASCII) (desde o PHP 5.2.5)</entry>
+       <entry>TAB vertical (VT ou 0x0B (11) em ASCII) (a partir do PHP 5.2.5)</entry>
       </row>
       <row>
        <entry><literal>\e</literal></entry>
-       <entry>escape (ESC or 0x1B (27) em ASCII) (desde o PHP 5.4.4)</entry>
+       <entry>escape (ESC or 0x1B (27) em ASCII) (a partir do PHP 5.4.4)</entry>
       </row>
       <row>
        <entry><literal>\f</literal></entry>
-       <entry>form feed (FF ou 0x0C (12) em ASCII) (desde o PHP 5.2.5)</entry>
+       <entry>form feed (FF ou 0x0C (12) em ASCII) (a partir do PHP 5.2.5)</entry>
       </row>
       <row>
        <entry><literal>\\</literal></entry>
@@ -217,7 +220,7 @@ echo 'Variáveis $também não $expandem';
    <simpara>
     O identificador de fechamento <emphasis>precisa</emphasis> começar na primeira
     coluna da linha. Além disso, o identificador precisa seguir as mesmas regras de nomeação
-    que qualquer outro rótulo no PHP: deve conter somente caracteres alfanuméricos e
+    como qualquer outro rótulo no PHP: deve conter somente caracteres alfanuméricos e
     sublinhados, e precisa começar com um caractere não numérico ou sublinhado.
    </simpara>
 
@@ -241,14 +244,10 @@ echo 'Variáveis $também não $expandem';
      arquivo atual, um erro de interpretação será lançado na última linha.
     </simpara>
 
-    <para>
-     Heredocs não podem ser usados para inicializar propriedades de classes. Desde o PHP 5.3,
-     esta limitação é válida somente para heredocs que contêm variáveis.
-    </para>
-
     <example>
      <title>Exemplo inválido</title>
      <programlisting role="php">
+      <!-- This is an INVALID example -->
 <![CDATA[
 <?php
 class foo {
@@ -256,10 +255,32 @@ class foo {
 bar
     EOT;
 }
+// O identifcador não deve ser indentado
 ?>
 ]]>
      </programlisting>
     </example>
+    <example>
+     <title>Exemplo válido</title>
+     <programlisting role="php">
+      <!-- This is a VALID example -->
+<![CDATA[
+<?php
+class foo {
+    public $bar = <<<EOT
+bar
+EOT;
+}
+?>
+]]>
+     </programlisting>
+    </example>
+
+    <para>
+     Heredocs não podem ser usados para inicializar propriedades de classe. A partir do php 5.3,
+     esta limitação é válida apenas para heredocs contendo variáveis.
+    </para>
+
    </warning>
 
    <para>
@@ -343,7 +364,7 @@ EOD
     <programlisting role="php">
 <![CDATA[
 <?php
-// Static variables
+// Variáveis estáticas
 function foo()
 {
     static $bar = <<<LABEL
@@ -351,7 +372,7 @@ Nothing in here...
 LABEL;
 }
 
-// Class properties/constants
+// Classe propriedades/constantes
 class foo
 {
     const BAR = <<<FOOBAR
@@ -373,7 +394,7 @@ FOOBAR;
    </para>
 
    <example>
-    <title>Usando aspas no Heredoc</title>
+    <title>Usando aspas duplas no Heredoc</title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -401,9 +422,9 @@ FOOBAR;
    </para>
 
    <para>
-    Um nowdoc é identificado com a mesma seqüência <literal>&lt;&lt;&lt;</literal>
+    Um nowdoc é identificado com a mesma sequência <literal>&lt;&lt;&lt;</literal>
     usada para heredocs, mas o identificador precisa ficar entre
-    aspas simples, e.g. <literal>&lt;&lt;&lt;'EOT'</literal>. Todas as regras para
+    aspas simples, por exemplo. <literal>&lt;&lt;&lt;'EOT'</literal>. Todas as regras para
     identificadores heredoc também se aplicam para identificadores nowdoc, especialmente aquelas
     referentes a aparência do identificador de fechamento.
    </para>
@@ -413,19 +434,34 @@ FOOBAR;
     <programlisting role="php">
 <![CDATA[
 <?php
-$str = <<<'EOD'
-Example of string
-spanning multiple lines
-using nowdoc syntax.
+echo <<<'EOD'
+Example of string spanning multiple lines
+using nowdoc syntax. Backslashes are always treated literally,
+e.g. \\ and \'.
 EOD;
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Example of string spanning multiple lines
+using nowdoc syntax. Backslashes are always treated literally,
+e.g. \\ and \'.
+]]>
+    </screen>
+   </example>
 
-/* Exemplo mais complexo, com variáveis. */
+   <example>
+    <title>Exemplo de Nowdoc, com variáveis</title>
+    <programlisting role="php">
+        <![CDATA[
+<?php
 class foo
 {
     public $foo;
     public $bar;
 
-    function foo()
+    function __construct()
     {
         $this->foo = 'Foo';
         $this->bar = array('Bar1', 'Bar2', 'Bar3');
@@ -485,7 +521,7 @@ EOT;
 
    <simpara>
     Há dois tipos de sintaxe: uma
-    <link linkend="language.types.string.parsing.simple">simples</link> e um
+    <link linkend="language.types.string.parsing.simple">simples</link> e uma
     <link linkend="language.types.string.parsing.complex">complexa</link>.
     A sintaxe simples é a mais comum e conveniente. Provê uma maneira de
     interpretar uma variável, o valor de um <type>array</type> ou uma propriedade de <type>objeto</type>
@@ -517,7 +553,7 @@ echo "He drank some $juice juice.".PHP_EOL;
 // Invalid. "s" is a valid character for a variable name, but the variable is $juice.
 echo "He drank some juice made of $juices.";
 // Valid. Explicitly specify the end of the variable name by enclosing it in braces:
-echo "He drank some juice made of ${juice}s."
+echo "He drank some juice made of ${juice}s.";
 ?>
 ]]>
      </programlisting>
@@ -538,7 +574,7 @@ He drank some juice made of apples.
      propriedade de objetos, assim como para variáveis simples.
     </simpara>
 
-    <example><title>Simple syntax example</title>
+    <example><title>Exemplo com sintaxe simples</title>
      <programlisting role="php">
 <![CDATA[
 <?php
@@ -580,7 +616,32 @@ Robert Paulsen greeted the two .
     </example>
 
     <simpara>
-     Para qualquer coisa mais complexa, você deve utilizar a sintaxe complexa.
+     A partir do PHP 7.1.0 índices numéricos <emphasis>negativos</emphasis> são
+     suportados.
+    </simpara>
+
+    <example><title>Índices numéricos negativos</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+$string = 'string';
+echo "The character at index -2 is $string[-2].", PHP_EOL;
+$string[-3] = 'o';
+echo "Changing the character at index -3 to o gives $string.", PHP_EOL;
+?>
+]]>
+     </programlisting>
+     &example.outputs;
+     <screen>
+<![CDATA[
+The character at index -2 is n.
+Changing the character at index -3 to o gives strong.
+]]>
+     </screen>
+    </example>
+
+    <simpara>
+     Para qualquer coisa mais complexa, utilize a sintaxe complexa.
     </simpara>
    </sect4>
 
@@ -589,7 +650,7 @@ Robert Paulsen greeted the two .
 
     <simpara>
      Isto não é chamado sintaxe complexa porque a sintaxe é complexa,
-     mas sim para utilização de expressões complexas.
+     mas sim porque permite a utilização de expressões complexas.
     </simpara>
 
     <simpara>
@@ -600,7 +661,7 @@ Robert Paulsen greeted the two .
      <literal>}</literal>. Já que que <literal>{</literal> não pode escapado, esta
      sintaxe será somente reconhecida quando o <literal>$</literal> seguir,
      imediatamente, o <literal>{</literal>. Use <literal>{\$</literal> para obter um literal
-     <literal>{$</literal>. Alguns exemplos para torná-lo claro:
+     <literal>{$</literal>. Alguns exemplos que tornam isto claro:
     </simpara>
 
     <informalexample>
@@ -696,7 +757,7 @@ I am bar.
     <note>
      <para>
       Funções, chamadas a métodos, variáveis estáticas de classe e constantes de
-      classe dentro de <literal>{$}</literal> funcionam desde o PHP
+      classe dentro de <literal>{$}</literal> funcionam a partir do PHP
       5. Entretanto, o valor acessado deverá ser interpretado como o nome
       de uma variável no escopo em que a string está definida. Utilizar
       somente chaves (<literal>{}</literal>) não funcionará
@@ -739,12 +800,22 @@ echo "I'd like an {${beers::$ale}}\n";
    <para>
     É possível acessar e modificar caracteres dentro de <type>string</type>s
     especificando a posição, baseada em zero, do caractere desejado na
-    <type>string</type> usando de colchetes, parecido com <type>array</type>s, por exemplo
+    <type>string</type> usando colchetes, parecido com <type>array</type>s, por exemplo
     <varname>$str[42]</varname>. Imagine uma <type>string</type> como um
     <type>array</type> de caracteres. As funções
     <function>substr</function> e <function>substr_replace</function>,
     podem ser utilizadas quando se deseja extrair ou substituir mais que 1 caractere.
    </para>
+
+   <note>
+    <simpara>
+     A partir do PHP 7.1.0, posições negativas para strings são suportadas. Estas especificam
+     a posição do final da string.
+     Antes, posições negativas emitiam um <constant>E_NOTICE</constant> para leitura
+     (gerando um string vazia) e um <constant>E_WARNING</constant> para escrita
+     (deixando a string intocada).
+    </simpara>
+   </note>
 
    <note>
     <simpara>
@@ -757,10 +828,10 @@ echo "I'd like an {${beers::$ale}}\n";
     <simpara>
      Escrever em uma posição fora do intervalo preenche a string com espaços.
      Tipos diferentes de inteiro são convertidos para inteiro.
-     Tipo ilegal de deslocamento emite <constant>E_NOTICE</constant>.
-     Deslocamento negativo emite <constant>E_NOTICE</constant> na escrita e uma uma string vazia na leitura.
-     Somente o primeiro caractere de uma string atribuída é usada.
-     Atribuir uma string vazia atribui o byte NULL.
+     Tipo ilegal de deslocamento emite um <constant>E_WARNING</constant>.
+     Apenas o primeiro caractere de uma string atribuída é usado.
+     A partir de PHP 7.1.0, a atribuição de uma string vazia lança um erro fatal. Antes,
+     era atribuído o byte NULL.
     </simpara>
    </warning>
 
@@ -772,6 +843,13 @@ echo "I'd like an {${beers::$ale}}\n";
      como a ISO-8859-1.
     </simpara>
    </warning>
+
+   <note>
+    <simpara>
+     A partir do PHP 7.1.0, aplicar um operador de índice vazio em uma string lança um erro fatal
+     Antes, a string vazia era convertida em um array.
+    </simpara>
+   </note>
 
     <example>
      <title>Alguns exemplos com strings</title>
@@ -889,16 +967,15 @@ bool(false)
 
   <simpara>
    Veja a <link linkend="ref.strings">seção de funções de string</link> para
-   funções gerais e as <link linkend="ref.regex">funções de expressões
-   regulares</link> ou as <link linkend="ref.pcre">funções de expressões regulares compatíveis com Perl</link>
+   funções gerais e <link linkend="ref.pcre">funções de expressões regulares compatíveis com Perl</link>
    para funcionalidades avançadas de localização &amp; e substituição.
   </simpara>
 
   <simpara>
    Há também <link linkend="ref.url">funções para strings URL</link> e
    funções para criptografia/descriptografia de strings
-   (<link linkend="ref.mcrypt">mcrypt</link> e
-   <link linkend="ref.mhash">mhash</link>).
+   (<link linkend="ref.sodium">Sodium</link> e
+   <link linkend="ref.hash">Hash</link>).
   </simpara>
 
   <simpara>
@@ -908,7 +985,7 @@ bool(false)
  </sect2>
 
  <sect2 xml:id="language.types.string.casting">
-  <title>˜Conversão em strings</title>
+  <title>Conversão em strings</title>
 
   <para>
    Um valor pode ser convertido em uma <type>string</type> utilizando o modificador
@@ -953,12 +1030,8 @@ bool(false)
   </para>
 
   <para>
-   <type>Objeto</type>s, no PHP 4, são sempre convertidos para a <type>string</type>
-   <literal>"Object"</literal>. Para imprimir os valores das propriedades do objeto para
-   depuração, leia os parágrafos a seguir. Para obter o nome da classe
-   utilize a função <function>get_class</function>. A partir do PHP 5,
-   o método <link linkend="language.oop5.magic">__toString</link> é usado quando
-   aplicável.
+   Para converter <type>objeto</type>s em <type>string</type>s o método
+   mágico <link linkend="language.oop5.magic">__toString</link> deve ser usado.
   </para>
 
   <para>
@@ -987,9 +1060,7 @@ bool(false)
   <para>
    A maioria dos valores no PHP também podem ser convertidos em strings para armazenamento
    permanente. Este método é chamado de serialização e pode ser feito com a função
-   <function>serialize</function>. Se o PHP engine tiver sido compilado com
-   suporte ao <link linkend="ref.wddx">WDDX</link>, os valores no PHP também poderão ser
-   serializados como XML.
+   <function>serialize</function>.
   </para>
 
  </sect2>

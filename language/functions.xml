@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: b896533ae5029ca337205d171a73d3cc876bb735 Maintainer: ae Status: ready --><!-- CREDITS: fabioluciano,ae -->
+<!-- EN-Revision: 6187696fb48916b4585a8a837bf725845f7cf3c7 Maintainer: ae Status: ready --><!-- CREDITS: fabioluciano, ae, @geekcom -->
 <chapter xml:id="language.functions" xmlns="http://docbook.org/ns/docbook">
   <title>Funções</title>
 
@@ -36,7 +36,7 @@ function foo ($arg_1, $arg_2, /* ..., */ $arg_n)
     nome de função válido começa com uma letra ou um sublinhado, seguido,
     seguido por qualquer número de letras, números ou sublinhado. Com uma expressão
     regular, seria expressado com:
-    <literal>[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*</literal>.
+    <code>^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$</code>.
    </para>
     &tip.userlandnaming;
    <simpara>
@@ -394,7 +394,7 @@ Fazendo uma taça de framboesa azeda.
         <row>
          <entry>Classe/interface</entry>
          <entry>
-          O parametro precisa ser um &instanceof; da classe ou interface
+          O parâmetro precisa ser um &instanceof; da classe ou interface
           informada.
          </entry>
          <entry>PHP 5.0.0</entry>
@@ -402,7 +402,7 @@ Fazendo uma taça de framboesa azeda.
         <row>
          <entry><literal>self</literal></entry>
          <entry>
-          O parâmetro precisa ser um &instanceof; da mesma classe do métrodo
+          O parâmetro precisa ser um &instanceof; da mesma classe do método
           onde a função está definida. Somente pode ser utilizado em métodos de classe
           e instância.
          </entry>
@@ -411,14 +411,14 @@ Fazendo uma taça de framboesa azeda.
         <row>
          <entry><type>array</type></entry>
          <entry>
-          O parametro precisa ser um <type>array</type>.
+          O parâmetro precisa ser um <type>array</type>.
          </entry>
          <entry>PHP 5.1.0</entry>
         </row>
         <row>
          <entry><type>callable</type></entry>
          <entry>
-          O parâmetro precis ser um <type>callable</type> válido.
+          O parâmetro precisa ser um <type>callable</type> válido.
          </entry>
          <entry>PHP 5.4.0</entry>
         </row>
@@ -449,6 +449,20 @@ Fazendo uma taça de framboesa azeda.
           O parâmetro precisa ser uma <type>string</type>.
          </entry>
          <entry>PHP 7.0.0</entry>
+        </row>
+        <row>
+         <entry><literal>iterable</literal></entry>
+         <entry>
+           O parâmetro precisa ser um <type>array</type> ou um &instanceof; <classname>Traversable</classname>.
+         </entry>
+         <entry>PHP 7.1.0</entry>
+        </row>
+        <row>
+         <entry><literal>object</literal></entry>
+         <entry>
+          O parâmetro precisa ser um <type>object</type>.
+         </entry>
+         <entry>PHP 7.2.0</entry>
         </row>
        </tbody>
       </tgroup>
@@ -557,6 +571,36 @@ Stack trace:
      </example>
 
      <example>
+      <title>Passando parâmetros tipados por referência</title>
+      <simpara>
+       Os tipos declarados de parâmetros de referência são verificados na entrada da função, mas
+       não no retorno função, assim, depois que a função tiver retornado, o
+       tipo de argumento pode ter mudado.
+      </simpara>
+      <programlisting role="php">
+<![CDATA[
+<?php
+function array_baz(array &$param)
+{
+    $param = 1;
+}
+$var = [];
+array_baz($var);
+var_dump($var);
+array_baz($var);
+?>
+]]>
+      </programlisting>
+      &example.outputs.similar;
+      <screen>
+<![CDATA[
+int(1)
+
+Fatal error: Uncaught TypeError: Argument 1 passed to array_baz() must be of the type array, int given, called in %s on line %d
+]]>
+      </screen>
+     </example>
+     <example>
       <title>Declaração de tipos nulificáveis</title>
       <programlisting role="php">
 <![CDATA[
@@ -630,7 +674,7 @@ NULL
       <para>
        A tipagem estrita somente ocorre para declarações de tipo escalar,
        e portanto requer PHP 7.0.0 ou posterior, dado que declarações
-       escalares foram acrescenadas nessa versão.
+       escalares foram acrescentadas nessa versão.
       </para>
      </note>
 
@@ -725,10 +769,10 @@ Error: Argument 1 passed to sum() must be of the type integer, float given, call
     <simpara>
      O PHP tem suporte para um número variável de argumentos nas funções
      definidas pelo usuário. Isso é implementado usando o token
-     <literal>...</literal> no PHP 5.6 e posterior, e usando as funções
+     <literal>...</literal> a partir do PHP 5.6, e usando as funções
      <function>func_num_args</function>,
      <function>func_get_arg</function>, e
-     <function>func_get_args</function> no PHP 5.5 e posteriores.
+     <function>func_get_args</function> a partir do PHP 5.5.
     </simpara>
 
     <sect3 xml:id="functions.variable-arg-list.new">
@@ -1000,9 +1044,15 @@ $nova_referencia =& retorna_referencia();
     ser o tipo correto ou uma exceção <classname>TypeError</classname> será lançada.
    </para>
 
+   <para>
+    A partir do PHP 7.1.0, os valores de retorno podem ser marcados como anuláveis prefixando o
+    sinal de interrogação (<literal>?</literal>) a frente do tipo. Isto significa que
+    a função retorna o tipo especificado ou &null;.
+   </para>
+
    <note>
     <para>
-     Quando sobrescrevendo um método, o novo método precisa concidir com
+     Quando sobrescrevendo um método, o novo método precisa coincidir com
      a tipagem de retorno do método anterior. Se o método sobrescrito não
      define uma tipagem de tipo, então o novo método precisa espelhar isso.
     </para>
@@ -1086,6 +1136,23 @@ object(C)#1 (0) {
 ]]>
       </screen>
      </example>
+
+     <example>
+      <title>Declaração de tipo de retorno anulável (a partir do PHP 7.1.0)</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+function get_item(): ?string {
+    if (isset($_GET['item'])) {
+        return $_GET['item'];
+    } else {
+        return null;
+    }
+}
+?>
+]]>
+      </programlisting>
+     </example>
     </sect3>
    </sect2>
   </sect1>
@@ -1143,9 +1210,9 @@ $func('test');  // Chama echoit()
     </example>
    </para>
    <para>
-    Um metodo de um objeto também pode ser chamado com a sintaxe de funções variáveis.
+    Um método de um objeto também pode ser chamado com a sintaxe de funções variáveis.
     <example>
-     <title>Exemplo de chama de método variável</title>
+     <title>Exemplo de chamada de um método variável</title>
      <programlisting role="php">
 <![CDATA[
 <?php
@@ -1270,23 +1337,23 @@ $func(); // prints "bar" a partir PHP 7.0.0; anteriormente lança um erro fatal
 
    <para>
     O PHP vem por padrão com muitas funções e contrutores. Também existem
-    funções que necessitam que uma extenção especifica esteja compilada, se não
+    funções que necessitam que uma extensão específica esteja compilada, se não
     erros fatais "undefined function" (função não definida) irão aparecer. Por exemplo, para usar
     as funções <link linkend="ref.image">image</link> como
     <function>imagecreatetruecolor</function>, o PHP deve ser compilado com suporte
     <productname>GD</productname>. Ou, para usar
-    <function>mysql_connect</function>, PHP deve ser compilado com suporte
-    <link linkend="ref.mysql">MySQL</link>. Existem muitas funções do núcleo
+    <function>mysqli_connect</function>, PHP deve ser compilado com suporte
+    <link linkend="book.mysqli">MySQLi</link>. Existem muitas funções do núcleo
     que são incluídas em cada versão do PHP, como
     <link linkend="ref.strings">string</link> e
     <link linkend="ref.var">variable</link>. Uma chamada a
     <function>phpinfo</function> ou
-    <function>get_loaded_extensions</function> irá mostras quais extenções estão
-    carregadas no PHP. Note também que várias extenções são ativadas por padrão e que
-    o manual do PHP é dividido por extenção. Veja
-    <link linkend="configuration">configução</link>,
-    <link linkend="install">instalação</link>, e os capitulos
-    individuais das extenções para como configurar o PHP.
+    <function>get_loaded_extensions</function> irá mostrar quais extensões estão
+    carregadas no PHP. Note também que várias extensões são ativadas por padrão e que
+    o manual do PHP é dividido por extensão. Veja
+    <link linkend="configuration">configuração</link>,
+    <link linkend="install">instalação</link>, e os capítulos
+    individuais das extensões para como configurar o PHP.
    </para>
    <para>
     A leitura e entendimento de um protótipo de função é explicado na
@@ -1304,7 +1371,7 @@ $func(); // prints "bar" a partir PHP 7.0.0; anteriormente lança um erro fatal
    <note>
     <simpara>
      Se os parâmetros dados a uma função não forem o que ela espera, como
-     passar um <type>array</type> aonde um <type>string</type> é esperado,
+     passar um <type>array</type> aonde uma <type>string</type> é esperada,
      o valor de retorno da função é indefinido. Neste caso provavelmente
      irá retornar &null; mas isto é apenas uma convenção, e
      você não pode depender disso.
@@ -1319,10 +1386,10 @@ $func(); // prints "bar" a partir PHP 7.0.0; anteriormente lança um erro fatal
   </sect1>
 
   <sect1 xml:id="functions.anonymous">
-   <title>Funções anonimas</title>
+   <title>Funções anônimas</title>
 
    <simpara>
-    Funções anonimas, também conhecidas como <literal>closures</literal>, permitem a criação
+    Funções anônimas, também conhecidas como <literal>closures</literal>, permitem a criação
     de funções que não tem o nome especificado. Elas são mais úteis
     como o valor de parâmetros <link linkend="language.types.callback">callback</link>,
     mas podem tem vários outros usos.
@@ -1333,7 +1400,7 @@ $func(); // prints "bar" a partir PHP 7.0.0; anteriormente lança um erro fatal
    </simpara>
 
    <example>
-    <title>Exemplo de Função Anonima</title>
+    <title>Exemplo de Função Anônima</title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -1355,7 +1422,7 @@ echo preg_replace_callback('~-([a-z])~', function ($match) {
    </simpara>
 
    <example>
-    <title>Exemplo de como definir uma função anonima para uma variável</title>
+    <title>Exemplo de como definir uma função anônima para uma variável</title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -1374,7 +1441,7 @@ $greet('PHP');
    <simpara>
     Closures também podem herdar variáveis do escopo pai. Essas 
     variáveis precisam ser referenciadas utilizando a instrução<literal>use</literal>.
-    A partir do PHP 7.1, essas variáveis podem não incluir &link.superglobals;,
+    A partir do PHP 7.1, essas variáveis não devem incluir &link.superglobals;,
     <varname>$this</varname>, ou variáveis com o mesmo nome como um parâmetro.
    </simpara>
 
@@ -1642,7 +1709,8 @@ Warning: Cannot bind an instance to a static closure in /in/sLLS9 on line 5
         <row>
          <entry>5.4.0</entry>
          <entry>
-          <varname>$this</varname> pode ser utilizado em funções anônimas.
+          <varname>$this</varname> pode ser utilizado em funções anônimas,
+          bem como ser declarada estaticamente.
          </entry>
         </row>
         <row>

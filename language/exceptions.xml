@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 92d94d9c11538fb9f6d79ec7c51dd1e8c2cfd54e Maintainer: ae Status: ready --><!-- CREDITS: narigone,felipe,ae -->
+<!-- EN-Revision: 6398de67edc88a4f296fbcc2103a7565a043492e Maintainer: ae Status: ready --><!-- CREDITS: narigone,felipe,ae, @geekcom -->
  <chapter xml:id="language.exceptions" xmlns="http://docbook.org/ns/docbook">
   <title>Exceções</title>
 
@@ -15,7 +15,7 @@
     <programlisting role="php">
 <![CDATA[
 <?php
-class Exception
+class Exception extends Throwable
 {
     protected $message = 'Unknown exception';   // Mensagem da exceção
     private   $string;                          // Cache __toString 
@@ -217,7 +217,7 @@ class MyException extends Exception
 
   <simplesect xml:id="language.exceptions.introduction">
    <para>
-    O PHP 5 possui um modelo de exceções similar ao de outras linguagens 
+    O PHP possui um modelo de exceções similar ao de outras linguagens
     de programação. Uma exceção pode ser lançada (&throw;) e capturada (&catch;).
     Código pode ser envolvido por um bloco &try; para facilitar a captura
     de exceções potenciais. Cada bloco &try; precisa ter ao menos um bloco
@@ -247,12 +247,18 @@ class MyException extends Exception
     "<literal>Uncaught Exception ...</literal>" na ausência de uma função
     definida com <function>set_exception_handler</function>.
    </para>
+   <para>
+    A partir do PHP 7.1 um bloco &catch; pode especificar múltiplas exceções
+    usando o caractere pipe (<literal>|</literal>). Isto é útil quando
+    diferentes exceções de diferentes hierarquias de classes são tratadas
+    da mesma forma.
+   </para>
   </simplesect>
 
   <simplesect xml:id="language.exceptions.finally">
    <title><literal>finally</literal></title>
    <para>
-    No PHP 5.5 e posteriores, um blocl &finally; pode ser especificado após
+    A partir do PHP 5.5, um bloco &finally; pode ser especificado após
     ou no lugar de blocos &catch;. Códigos dentro de &finally; sempre serão
     executados depois do &try; ou &catch;, independente se houve o
     lançamento de uma exceção, e antes que a execução normal continue. 
@@ -393,6 +399,39 @@ $foo->testing();
     <screen>
 <![CDATA[
 string(4) "foo!"
+]]>
+    </screen>
+   </example>
+   <example>
+    <title>Manipulação de múltiplas exceções no mesmo bloco catch</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+class MyException extends Exception { }
+
+class MyOtherException extends Exception { }
+
+class Test {
+    public function testing() {
+        try {
+            throw new MyException();
+        } catch (MyException | MyOtherException $e) {
+            var_dump(get_class($e));
+        }
+    }
+}
+
+$foo = new Test;
+$foo->testing();
+
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+string(11) "MyException"
 ]]>
     </screen>
    </example>
