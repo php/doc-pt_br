@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 2bb07c8c43f028c665a33bfc08a22639e9e35dc6 Maintainer: royopa Status: ready --><!-- CREDITS: Davi Crystal, royopa, diegopires -->
+<!-- EN-Revision: 1de9b77d0306d3589e8fe27e4fa587718eb691c2 Maintainer: royopa Status: ready --><!-- CREDITS: Davi Crystal, royopa, diegopires, geekcom -->
  <chapter xml:id="features.file-upload" xmlns="http://docbook.org/ns/docbook">
   <title>Gerenciar o upload de arquivos</title>
 
@@ -12,7 +12,8 @@
     o que deve ser feito com o arquivo após o upload estar completo.
    </simpara>
    <simpara>
-    O PHP é capaz de receber uploads de arquivos de qualquer browser compatível com RFC-1867.
+    O PHP é capaz de receber uploads de arquivos de qualquer browser
+    compatível com RFC-1867.
    </simpara>
 
    <note>
@@ -22,7 +23,8 @@
      <link linkend="ini.upload-max-filesize">upload_max_filesize</link>,
      <link linkend="ini.upload-tmp-dir">upload_tmp_dir</link>,
      <link linkend="ini.post-max-size">post_max_size</link>,
-     <link linkend="ini.max-input-time">max_input_time</link> no &php.ini;
+     <link linkend="ini.max-input-time">max_input_time</link>
+     no &php.ini;
     </para>
    </note>
 
@@ -54,11 +56,18 @@
 ]]>
      </programlisting>
      <para>
-      O parâmetro <literal>__URL__</literal> no exemplo acima deve ser substituido e apontar para um arquivo PHP.
+      O parâmetro <literal>__URL__</literal> no exemplo acima deve ser substituido
+      e apontar para um arquivo PHP.
      </para>
      <para>
-      O campo escondido (input type="hidden") <literal>MAX_FILE_SIZE</literal> (medido em bytes) deve preceder o campo de input de arquivo (input type="file"), e o seu valor é o tamanho limite aceito pelo PHP. Este elemento do formulário deve sempre ser usado para evitar que usuários tenham o problema de ter que esperar pela transferência de um arquivo para só então descobrir que ele era grande demais
-      e a transferência falhar. Fique ciente: é muito simples burlar esse parâmetro pelo lado do navegador, portanto nunca dependa exclusivamente desse recurso para bloquear arquivos com maior tamanho. Isso é um recurso meramente conveniente para usuários da aplicação no lado do cliente. Os parâmetros do PHP (no servidor) para "maximum-size", no entanto, não podem ser burlados.
+      O campo escondido (input type="hidden") <literal>MAX_FILE_SIZE</literal> (medido em bytes) deve
+      preceder o campo de input de arquivo (input type="file"), e o seu valor é o tamanho limite aceito pelo PHP.
+      Este elemento do formulário deve sempre ser usado para evitar que usuários tenham o problema de
+      ter que esperar pela transferência de um arquivo para só então descobrir que ele era grande demais
+      e a transferência falhar. Fique ciente: é muito simples burlar esse parâmetro pelo lado do navegador,
+      portanto nunca dependa exclusivamente desse recurso para bloquear arquivos com maior tamanho.
+      Isso é um recurso meramente conveniente para usuários da aplicação no lado do cliente.
+      Os parâmetros do PHP (no servidor) para "maximum-size", no entanto, não podem ser burlados.
      </para>
     </example>
    </para>
@@ -139,9 +148,6 @@
      <programlisting role="php">
 <![CDATA[
 <?php
-// Nas versões do PHP anteriores a 4.1.0, $HTTP_POST_FILES deve ser utilizado ao invés
-// de $_FILES.
-
 $uploaddir = '/var/www/uploads/';
 $uploadfile = $uploaddir . basename($_FILES['userfile']['name']);
 
@@ -211,7 +217,9 @@ print "</pre>";
 foreach ($_FILES["pictures"]["error"] as $key => $error) {
     if ($error == UPLOAD_ERR_OK) {
         $tmp_name = $_FILES["pictures"]["tmp_name"][$key];
-        $name = $_FILES["pictures"]["name"][$key];
+        // basename() may prevent filesystem traversal attacks;
+        // further validation/sanitation of the filename may be appropriate
+        $name = basename($_FILES["pictures"]["name"][$key]);
         move_uploaded_file($tmp_name, "data/$name");
     }
 }
@@ -350,7 +358,7 @@ foreach ($_FILES["pictures"]["error"] as $key => $error) {
     <literal>post_max_size</literal> grande o suficiente.
    </simpara>
    <simpara>
-    Desde o PHP 5.2.12, o parâmetro
+    A partir do PHP 5.2.12, o parâmetro
     <link linkend="ini.max-file-uploads">max_file_uploads</link>
     controla o número máximo de arquivos que podem ser enviados em uma única requisição.
     Caso sejam enviados mais arquivos que o definido neste limite, então
@@ -401,14 +409,15 @@ foreach ($_FILES["pictures"]["error"] as $key => $error) {
     </example>
    </para>
    <simpara>
-    Quando o formulário acima é submetido, as arrays
+    Quando o formulário acima é submetido, os arrays
     <varname>$_FILES['userfile']</varname>,
     <varname>$_FILES['userfile']['name']</varname>, e
-    <varname>$_FILES['userfile']['size']</varname> serão inicializadas
-    (assim como <varname>$HTTP_POST_FILES</varname> para versões do PHP anteriores
-    a 4.1.0).
-    Quando o parâmetro
-    <link linkend="ini.register-globals">register_globals</link> está ativo, globals para os arquivos enviados também são inicializadas. Cada um deles será uma array dos valores apropriados, indexada numéricamente, para os arquivos submetidos.
+    <varname>$_FILES['userfile']['size']</varname> serão
+    inicializados.
+    Quando
+    o parâmetro <link linkend="ini.register-globals">register_globals</link> está ativo, globals para os arquivos enviados
+    também são inicializadas. Cada um deles será uma array dos valores apropriados, indexado numéricamente,
+    para os arquivos submetidos.
    </simpara>
    <simpara>
     Por exemplo, suponha os nomes dos arquivos
@@ -430,7 +439,7 @@ foreach ($_FILES["pictures"]["error"] as $key => $error) {
    </simpara>
    <warning>
     <simpara>
-     Desde o PHP 5.2.12, a definição da configuração do parâmetro
+     A partir do PHP 5.2.12, a definição da configuração do parâmetro
      <link linkend="ini.max-file-uploads">max_file_uploads</link>
      atua como um limite no número de arquivos que podem ser
      enviados em umá única requisição. Você precisa ter certeza que
@@ -504,6 +513,15 @@ fclose($putdata);
     </example>
    </para>
   </sect1>
+
+ <sect1 xml:id="features.file-upload.errors.seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><link linkend="security.filesystem">Segurança do sistema de arquivos</link></member>
+   </simplelist>
+  </para>
+ </sect1>
 
  </chapter>
 
