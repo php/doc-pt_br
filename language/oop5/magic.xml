@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: ec77057bf375ae4d50ffe24aa6f6a5dc629c10f3 Maintainer: ae Status: ready --><!-- CREDITS: narigone, felipe, lcobucci, fabioluciano -->
+<!-- EN-Revision: e1438a020bbc755a27f18235a0ea94f3d9d556aa Maintainer: ae Status: ready --><!-- CREDITS: narigone,felipe,lcobucci,fabioluciano,ae -->
  <sect1 xml:id="language.oop5.magic" xmlns="http://docbook.org/ns/docbook">
   <title>Métodos Mágicos</title>
   <para>
@@ -14,6 +14,8 @@
    <link linkend="object.unset">__unset()</link>,
    <link linkend="object.sleep">__sleep()</link>,
    <link linkend="object.wakeup">__wakeup()</link>,
+   <link linkend="object.serialize">__serialize()</link>,
+   <link linkend="object.unserialize">__unserialize()</link>,
    <link linkend="object.tostring">__toString()</link>,
    <link linkend="object.invoke">__invoke()</link>,
    <link linkend="object.set-state">__set_state()</link>,
@@ -24,6 +26,12 @@
    classes a não ser que queira a funcionalidade mágica associada
    a eles.
   </para>
+
+  <note>
+   <simpara>
+    Todos os métodos mágicos <emphasis>DECEM</emphasis> ser declarados como <literal>public</literal>
+   </simpara>
+  </note>
 
   <caution>
    <simpara>
@@ -44,7 +52,7 @@
     <void/>
    </methodsynopsis>
    <methodsynopsis xml:id="object.wakeup">
-    <type>void</type><methodname>__wakeup</methodname>
+    <modifier>public</modifier> <type>void</type><methodname>__wakeup</methodname>
     <void/>
    </methodsynopsis>
 
@@ -121,6 +129,107 @@ class Connection
    </example>
   </sect2>
 
+  <sect2 xml:id="language.oop5.magic.serialize">
+   <title>
+    <link linkend="object.serialize">__serialize()</link> e
+    <link linkend="object.unserialize">__unserialize()</link>
+   </title>
+
+   <methodsynopsis xml:id="object.serialize">
+    <modifier>public</modifier> <type>array</type><methodname>__serialize</methodname>
+    <void/>
+   </methodsynopsis>
+   <methodsynopsis xml:id="object.unserialize">
+    <modifier>public</modifier> <type>void</type><methodname>__unserialize</methodname>
+    <methodparam><type>array</type><parameter>data</parameter></methodparam>
+   </methodsynopsis>
+
+   <para>
+    <function>serialize</function> verifica se a classe contém uma função
+    com o nome mágico <link linkend="object.serialize">__serialize()</link>. Se sim, essa função é
+    executada antes de qualquer serialização. Ela precisa construir e retornar um array associativo de chaves-valores
+    que representam a forma serializada do objeto. Se o array não for retornado então um erro <classname>TypeError</classname>
+    será lançado.
+   </para>
+   <note>
+    <para>
+     Se ambos <link linkend="object.serialize">__serialize()</link> e <link linkend="object.sleep">__sleep()</link>
+     estiverem definidos no mesmo objeto, somente <link linkend="object.serialize">__serialize()</link> será chamado.
+     <link linkend="object.sleep">__sleep()</link> será ignorado. Se o objeto implementa a interface <link linkend="class.serializable">Serializable</link>,
+     o método <literal>serialize()</literal> da interface será ignorado e o método mágico <link linkend="object.serialize">__serialize()</link>
+     será utilizado.
+    </para>
+   </note>
+   <para>
+    O uso pretendido de <link linkend="object.serialize">__serialize()</link> é definir uma representação arbitrária,
+    amigável, da representação do objeto. Elementos do array podem corresponder a propriedades do objeto diretamente, mas
+    isso não é obrigatório.
+   </para>
+   <para>
+    Inversamente, <function>unserialize</function> verifica a
+    presença da função mágica
+    <link linkend="object.unserialize">__unserialize()</link>. Se presente, essa função será chamada
+    com o array retornado de <link linkend="object.serialize">__serialize()</link>. Ela poderá,
+    então, restaurar as propriedades do objeto a partir do array.
+   </para>
+   <note>
+    <para>
+     Se ambos <link linkend="object.unserialize">__unserialize()</link> e <link linkend="object.wakeup">__wakeup()</link>
+     estiverem definidos, somente <link linkend="object.unserialize">__unserialize()</link> será chamado, e
+     <link linkend="object.wakeup">__wakeup()</link> será ignorado.
+    </para>
+   </note>
+   <note>
+    <para>
+     Esse recurso está disponível desde o PHP 7.4.0.
+    </para>
+   </note>
+   <example>
+    <title>Serialize e unserialize</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+class Connection
+{
+    protected $link;
+    private $dsn, $username, $password;
+
+    public function __construct($dsn, $username, $password)
+    {
+        $this->dsn = $dsn;
+        $this->username = $username;
+        $this->password = $password;
+        $this->connect();
+    }
+
+    private function connect()
+    {
+        $this->link = new PDO($this->dsn, $this->username, $this->password);
+    }
+
+    public function __serialize(): array
+    {
+        return [
+          'dsn' => $this->dsn,
+          'user' => $this->username,
+          'pass' => $this->password,
+        ];
+    }
+
+    public function __unserialize(array $data): void
+    {
+        $this->dsn = $data['dsn'];
+        $this->username = $data['user'];
+        $this->password = $data['pass'];
+
+        $this->connect();
+    }
+}?>
+]]>
+    </programlisting>
+   </example>
+  </sect2>
+
   <sect2 xml:id="language.oop5.magic.tostring">
    <title><link linkend="object.tostring">__toString()</link></title>
    <methodsynopsis xml:id="object.tostring">
@@ -136,9 +245,9 @@ class Connection
    </para>
    <warning>
     <simpara>
-     Você não pode lançar uma exceção de dentro do método
-     <link linkend="object.tostring">__toString()</link>. Fazer isso resultará
-     em um erro fatal.
+     Não era possível lançar uma exception de dentro de um método
+     <link linkend="object.tostring">__toString()</link> antes do PHP 7.4.0. Isso gera
+     um erro fatal.
     </simpara>
    </warning>
    <example>
@@ -146,7 +255,7 @@ class Connection
     <programlisting role="php">
 <![CDATA[
 <?php
-// Declare a simple class
+// Declara uma classe simples
 class TestClass
 {
     public $foo;
@@ -254,7 +363,7 @@ class A
     public $var1;
     public $var2;
 
-    public static function __set_state($an_array) // As of PHP 5.1.0
+    public static function __set_state($an_array) // Desde o PHP 5.1.0
     {
         $obj = new A;
         $obj->var1 = $an_array['var1'];
