@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 6187696fb48916b4585a8a837bf725845f7cf3c7 Maintainer: ae Status: ready --><!-- CREDITS: fabioluciano, ae, geekcom -->
+<!-- EN-Revision: 9268006bcf989f31baeaa9035e4ef7cfc7690c28 Maintainer: ae Status: ready --><!-- CREDITS: fabioluciano, ae, geekcom -->
 <chapter xml:id="language.functions" xmlns="http://docbook.org/ns/docbook">
   <title>Funções</title>
 
@@ -126,8 +126,8 @@ bar();
    </simpara>
    <note>
     <simpara>
-     Nomes de funções são insensíveis ao caso, mas é melhor chamar
-     as funções da mesma forma que ela aparecem nas declarações.
+     Nomes de funções são case-insensitive para caracteres ASCII <literal>A</literal> até <literal>Z</literal>, mas é melhor chamar
+     as funções da mesma forma que elas aparecem nas declarações.
     </simpara>
    </note>
    <simpara>
@@ -1736,6 +1736,170 @@ Warning: Cannot bind an instance to a static closure in /in/sLLS9 on line 5
     </note>
    </sect2>
 
+  </sect1>
+  <sect1 xml:id="functions.arrow">
+   <title>Arrow Functions</title>
+
+   <simpara>
+    Arrow functions foram introduzidos a partir do PHP 7.4 como uma sintaxe mais concisa para
+    <link linkend="functions.anonymous">funções anônimas</link>.
+   </simpara>
+   <simpara>
+    Funções anônimas e arrow functions são implementadas usando a classe
+    <link linkend="class.closure"><classname>Closure</classname></link>.
+   </simpara>
+
+   <simpara>
+    Arrow functions tem a forma básica
+    <code>fn (argument_list) =&gt; expr</code>.
+   </simpara>
+
+   <simpara>
+    Arrow functions possuem a mesmas características das
+    <link linkend="functions.anonymous">funções anônimas</link>,
+    exceto que o uso de variáveis do escopo pai é sempre automático.
+   </simpara>
+
+   <simpara>
+    Quando uma variável usada na expressão é definida no escopo pai
+    ele será implicitamente capturado por valor.
+    No exemplo a seguir, as funções <varname>$fn1</varname> e
+    <varname>$fn2</varname>comportam-se da mesma maneira.
+   </simpara>
+
+   <para>
+    <example>
+    <title>Arrow functions capturam variáveis por valor automaticamente</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$y = 1;
+
+$fn1 = fn($x) => $x + $y;
+// equivalent to using $y by value:
+$fn2 = function ($x) use ($y) {
+    return $x + $y;
+};
+
+var_export($fn1(3));
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+4
+]]>
+    </screen>
+   </example>
+   </para>
+   <simpara>
+    Isso também funciona se as arrow de functions estiverem aninhadas:
+   </simpara>
+   <para>
+    <example>
+     <title>Arrow functions capturam variáveis por valor automaticamente, mesmo quando aninhadas</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+
+$z = 1;
+$fn = fn($x) => fn($y) => $x * $y + $z;
+// Outputs 51
+var_export($fn(5)(10));
+?>
+]]>
+     </programlisting>
+    </example>
+   </para>
+   <simpara>
+    Da mesma forma que funções anônimas,
+    a sintaxe das arrow functions permitem assinaturas de função arbitrária,
+    incluindo parâmetros e tipos de retorno, valores padrão, variadics,
+    bem como por referência passando e retornando.
+    Todos os exemplos válidos de arrow functions:
+   </simpara>
+   <para>
+    <example>
+     <title>Examplos de arrow functions</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+
+fn(array $x) => $x;
+static fn(): int => $x;
+fn($x = 42) => $x;
+fn(&$x) => $x;
+fn&($x) => $x;
+fn($x, ...$rest) => $rest;
+
+?>
+]]>
+     </programlisting>
+    </example>
+   </para>
+   <simpara>
+    Arrow functions usam vinculação de variável por valor.
+    Isso é aproximadamente equivalente a realizar um <code>use($x)</code> para cada
+    variável <varname>$x</varname> usada dentro da arrow function.
+    Uma passagem de variável por valor, significa que não é possível modificar quaisquer valores
+    do escopo externo.
+    <link linkend="functions.anonymous">Funções anônimas</link>
+    podem ser usadas em vez disso para passagem de variável por referência.
+   </simpara>
+   <para>
+    <example>
+     <title>Valores do escopo externo não podem ser modificados por arrow functions</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+
+$x = 1;
+$fn = fn() => $x++; // Has no effect
+$fn();
+var_export($x);  // Outputs 1
+
+?>
+]]>
+     </programlisting>
+    </example>
+   </para>
+
+   <sect2 role="changelog">
+    &reftitle.changelog;
+    <para>
+     <informaltable>
+      <tgroup cols="2">
+       <thead>
+        <row>
+         <entry>&Version;</entry>
+         <entry>&Description;</entry>
+        </row>
+       </thead>
+       <tbody>
+        <row>
+         <entry>7.4.0</entry>
+         <entry>
+          Arrow functions tornou-se disponível.
+         </entry>
+        </row>
+       </tbody>
+      </tgroup>
+     </informaltable>
+    </para>
+   </sect2>
+
+   <sect2 role="notes">
+    &reftitle.notes;
+    <note>
+     <simpara>
+      É possível usar <function>func_num_args</function>,
+      <function>func_get_arg</function>, e <function>func_get_args</function>
+      de dentro de uma arrow functions.
+     </simpara>
+    </note>
+   </sect2>
   </sect1>
 
  </chapter>
