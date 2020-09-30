@@ -1,21 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: af4410a7e15898c3dbe83d6ea38246745ed9c6fb Maintainer: fernandoc Status: ready -->
-  <refentry xml:id="function.get-magic-quotes-gpc" xmlns="http://docbook.org/ns/docbook">
-   <refnamediv>
-    <refname>get_magic_quotes_gpc</refname>
-    <refpurpose>Obtém a configuração atual de magic quotes gpc</refpurpose>
-   </refnamediv>
- 
+<!-- EN-Revision: 5b53e0d1772a256cbfa55f6abba783d32f6a9deb Maintainer: fernandoc Status: revision --><!-- CREDITS: fernandoc, adiel -->
+<refentry xml:id="function.get-magic-quotes-gpc" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>get_magic_quotes_gpc</refname>
+  <refpurpose>Obtém a configuração atual de magic quotes gpc</refpurpose>
+ </refnamediv>
+
+ <refsynopsisdiv>
+  &warn.deprecated.function-7-4-0;
+ </refsynopsisdiv>
+
  <refsect1 role="description">
   &reftitle.description;
-     <methodsynopsis>
-      <type>int</type><methodname>get_magic_quotes_gpc</methodname>
-      <void/>
-     </methodsynopsis>
-     <para>
-       Retorna a configuração atual definida para <link
-       linkend="ini.magic-quotes-gpc">magic_quotes_gpc</link> 
-     </para>
+  <methodsynopsis>
+   <type>bool</type><methodname>get_magic_quotes_gpc</methodname>
+   <void/>
+  </methodsynopsis>
+  <para>
+   Retorna a configuração atual definida para <link
+   linkend="ini.magic-quotes-gpc">magic_quotes_gpc</link>
+  </para>
   <para>
    Lembre-se que a configuração <link linkend="ini.magic-quotes-gpc">
    magic_quotes_gpc</link> não irá funcionar em runtime.
@@ -30,6 +34,37 @@
   &reftitle.returnvalues;
   <para>
    Retorna 0 se magic quotes gpc está off, 1 caso contrário.
+   Ou sempre retorna &false; a partir do PHP 5.4.0.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>7.4.0</entry>
+       <entry>
+        This function has been deprecated.
+       </entry>
+      </row>
+      <row>
+       <entry>5.4.0</entry>
+       <entry>
+        Always returns &false; because the magic quotes feature was removed from PHP.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
   </para>
  </refsect1>
 
@@ -41,38 +76,28 @@
       <programlisting role="php">
 <![CDATA[
 <?php
-echo get_magic_quotes_gpc();         // 1
+// If magic quotes are enabled
 echo $_POST['lastname'];             // O\'reilly
 echo addslashes($_POST['lastname']); // O\\\'reilly
 
-if (!get_magic_quotes_gpc()) {
-    $lastname = addslashes($_POST['lastname']);
-} else {
+// Usage across all PHP versions
+if (get_magic_quotes_gpc()) {
+    $lastname = stripslashes($_POST['lastname']);
+}
+else {
     $lastname = $_POST['lastname'];
 }
+
+// If using MySQL
+$lastname = mysql_real_escape_string($lastname);
 
 echo $lastname; // O\'reilly
 $sql = "INSERT INTO lastnames (lastname) VALUES ('$lastname')";
 ?>
 ]]>
-      </programlisting>
-     </example>
-    </para>
-   </refsect1>
-
- <refsect1 role="notes">
-  &reftitle.notes;
-  <note>
-   <para>
-    Se a diretiva <link linkend="ini.magic-quotes-sybase">
-    magic_quotes_sybase</link> está ON irá completamente sobreescrever
-    <link linkend="ini.magic-quotes-gpc">magic_quotes_gpc</link>. Sendo assim
-    quando <function>get_magic_quotes_gpc</function> retorna
-    &true; nenhuma as dupla, barra invertida ou NUL's ganharão
-    escape. Somente aspas simples ganharão escape. Neste caso
-    teremos: <emphasis>''</emphasis>
-   </para>
-  </note>
+    </programlisting>
+   </example>
+  </para>
  </refsect1>
 
  <refsect1 role="seealso">
@@ -87,7 +112,7 @@ $sql = "INSERT INTO lastnames (lastname) VALUES ('$lastname')";
   </para>
  </refsect1>
 
-  </refentry>
+</refentry>
 
 <!-- Keep this comment at the end of the file
 Local variables:
