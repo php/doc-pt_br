@@ -13,7 +13,7 @@
    <methodparam><type>string</type><parameter>to</parameter></methodparam>
    <methodparam><type>string</type><parameter>subject</parameter></methodparam>
    <methodparam><type>string</type><parameter>message</parameter></methodparam>
-   <methodparam choice="opt"><type>string</type><parameter>additional_headers</parameter></methodparam>
+   <methodparam choice="opt"><type>mixed</type><parameter>additional_headers</parameter></methodparam>
    <methodparam choice="opt"><type>string</type><parameter>additional_parameters</parameter></methodparam>
   </methodsynopsis>
   <para>
@@ -71,7 +71,7 @@
         (Somente Windows) Quando PHP está usando o servidor SMTP diretamente, e
         uma parada total é encontrada no início de uma linha, ela é removida.
         Para se defender disto, substitua estas ocorrência com dois pontos seguidos.
-    <programlisting role="php">
+        <programlisting role="php">
 <![CDATA[
 <?php
 $text = str_replace("\n.", "\n..", $text);
@@ -91,7 +91,21 @@ $text = str_replace("\n.", "\n..", $text);
       <para>
        Esta é normalmente usada para adicionar cabeçalhos extras (From, Cc, e Bcc).
        Múltiplos cabeçalhos extra devem ser separados com um CRLF (\r\n).
+       Se dados externos forem usados para compor este cabeçalho, os dados
+       devem ser higienizados para que nenhum cabeçalho indesejado possa ser injetado.
       </para>
+      <para>
+       Se um <type>array</type> for passado, suas chaves são os nomes dos cabeçalhos
+       e seus valores são os respectivos valores dos cabeçalhos.
+      </para>
+      <note>
+       <para>
+        Antes do PHP 5.4.42 e 5.5.27, respectivamente, <parameter>additional_headers</parameter>
+        não tinha proteção de injeção de cabeçalho de email.
+        Portanto, os usuários devem garantir que os cabeçalhos especificados sejam seguros e contenham apenas cabeçalhos.
+        Ou seja, nunca inicie o corpo do e-mail colocando várias novas linhas.
+       </para>
+      </note>      
       <note>
        <para>
         Quando enviando email, o email <emphasis>precisa</emphasis> conter
@@ -131,10 +145,24 @@ $text = str_replace("\n.", "\n..", $text);
        <literal>-f</literal>.
       </para>
       <para>
-       O usuário que executa o servidor web deve ser adicionado como trusted user na
-       configuração de sendmail para evitar que um cabeçalho 'X-Warning' seja adicionado
-       à mensagem quando você define o envelope remetente (-f) usando este método.
-       Para usuários de sendmail, este arquivo é <filename>/etc/mail/trusted-users</filename>.
+       Este parâmetro é escapado por <function>escapeshellcmd</function> internamente
+       para prevenir a execução do comando. <function>escapeshellcmd</function> impede
+       a execução de comandos, mas permite adicionar parâmetros adicionais. Por razões de segurança,
+       é recomendado que o usuário higienize este parâmetro para evitar adicionar
+       parâmetros indesejados ao comando shell.
+      </para>
+      <para>
+       Uma vez que <function>escapeshellcmd</function> é aplicada automaticamente, alguns caracteres
+       que são permitidos como endereços de e-mail por RFCs da Internet não podem ser usados.
+       <function>mail</function> não pode permitir tais caracteres, portanto, em programas onde o uso de
+       tais caracteres é necessário, meios alternativos de envio de emails (como o uso de um framework
+       ou biblioteca) são recomendados.
+      </para>
+      <para>
+       O usuário com o qual o servidor web roda deve ser adicionado como um usuário
+       confiável à configuração do sendmail para evitar que um cabeçalho 'X-Warning'
+       seja adicionado à mensagem quando o remetente do envelope (-f) é definido usando este método.
+       Para usuários do sendmail, este arquivo é <filename>/etc/mail/trusted-users</filename>.
       </para>
      </listitem>
     </varlistentry>
@@ -166,28 +194,10 @@ $text = str_replace("\n.", "\n..", $text);
      </thead>
      <tbody>
       <row>
-       <entry>4.3.0 (Somente Windows)</entry>
+       <entry>7.2.0</entry>
        <entry>
-        Todos os cabeçalhos (como From, Cc, Bcc e Date) são suportados, e não são
-        case-sensitive.
-        (Como cabeçalhos customizados não são interpretados pela MTA,
-        são analisados pelo PHP, PHP &lt; 4.3 suportava somente o elemento de cabeçalho Cc
-        e era case-sensitive).
-       </entry>
-      </row>
-      <row>
-       <entry>4.2.3</entry>
-       <entry>
-        O parâmetro <parameter>additional_parameters</parameter> é desabilitado em
-        <link linkend="ini.safe-mode">safe_mode</link> e a função
-        <function>mail</function> emitirá uma mensagem de aviso e
-        retornará &false; quando usada.
-       </entry>
-      </row>
-      <row>
-       <entry>4.0.5</entry>
-       <entry>
-        O parâmetro <parameter>additional_parameters</parameter> foi adicionado.
+        The <parameter>additional_headers</parameter> parameter now also accepts
+        an <type>array</type>.
        </entry>
       </row>
      </tbody>
@@ -208,13 +218,13 @@ $text = str_replace("\n.", "\n..", $text);
 <![CDATA[
 <?php
 // The message
-$message = "Line 1\nLine 2\nLine 3";
+$message = "Line 1\r\nLine 2\r\nLine 3";
 
 // In case any of our lines are larger than 70 characters, we should use wordwrap()
-$message = wordwrap($message, 70);
+$message = wordwrap($message, 70, "\r\n");
 
 // Send
-mail('caffinated@example.com', 'My Subject', $message);
+mail('caffeinated@example.com', 'My Subject', $message);
 ?>
 ]]>
     </programlisting>
@@ -243,9 +253,32 @@ mail($to, $subject, $message, $headers);
    <example>
     <title>Enviando email com um parâmetro adicional da linha de comando.</title>
     <para>
-     O parâmetro <parameter>additional_parameters</parameter> pode ser usado
-     para passar um parâmetro adicional para o programa configurado
-     para usar quando enviar email usando a definição de configuração <literal>sendmail_path</literal>.
+     Este exemplo envia o mesmo e-mail que o exemplo imediatamente acima, mas
+     passa os cabeçalhos adicionais como array (disponível a partir do PHP 7.2.0).
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$to      = 'nobody@example.com';
+$subject = 'the subject';
+$message = 'hello';
+$headers = array(
+    'From' => 'webmaster@example.com',
+    'Reply-To' => 'webmaster@example.com',
+    'X-Mailer' => 'PHP/' . phpversion()
+);
+
+mail($to, $subject, $message, $headers);
+?>
+]]>
+    </programlisting>
+   </example>
+   <example>
+    <title>Enviando e-mail com um parâmetro de linha de comando adicional.</title>
+    <para>
+     O parâmetro <parameter>additional_parameters</parameter> pode ser
+     usado para passar um parâmetro adicional para o programa
+     configurado para usar ao enviar e-mail usando o <literal>sendmail_path</literal>.
     </para>
     <programlisting role="php">
 <![CDATA[
@@ -264,48 +297,47 @@ mail('nobody@example.com', 'the subject', 'the message', null,
     <programlisting role="php">
 <![CDATA[
 <?php
-// multiple recipients
-$to  = 'aidan@example.com' . ', '; // note the comma
-$to .= 'wez@example.com';
+// Multiple recipients
+$to = 'johny@example.com, sally@example.com'; // note the comma
 
-// subject
+// Subject
 $subject = 'Birthday Reminders for August';
 
-// message
+// Message
 $message = '
 <html>
 <head>
- <title>Birthday Reminders for August</title>
+  <title>Birthday Reminders for August</title>
 </head>
 <body>
-<p>Here are the birthdays upcoming in August!</p>
-<table>
- <tr>
-  <th>Person</th><th>Day</th><th>Month</th><th>Year</th>
- </tr>
- <tr>
-  <td>Joe</td><td>3rd</td><td>August</td><td>1970</td>
- </tr>
- <tr>
-  <td>Sally</td><td>17th</td><td>August</td><td>1973</td>
- </tr>
-</table>
+  <p>Here are the birthdays upcoming in August!</p>
+  <table>
+    <tr>
+      <th>Person</th><th>Day</th><th>Month</th><th>Year</th>
+    </tr>
+    <tr>
+      <td>Johny</td><td>10th</td><td>August</td><td>1970</td>
+    </tr>
+    <tr>
+      <td>Sally</td><td>17th</td><td>August</td><td>1973</td>
+    </tr>
+  </table>
 </body>
 </html>
 ';
 
 // To send HTML mail, the Content-type header must be set
-$headers  = 'MIME-Version: 1.0' . "\r\n";
-$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+$headers[] = 'MIME-Version: 1.0';
+$headers[] = 'Content-type: text/html; charset=iso-8859-1';
 
 // Additional headers
-$headers .= 'To: Mary <mary@example.com>, Kelly <kelly@example.com>' . "\r\n";
-$headers .= 'From: Birthday Reminder <birthday@example.com>' . "\r\n";
-$headers .= 'Cc: birthdayarchive@example.com' . "\r\n";
-$headers .= 'Bcc: birthdaycheck@example.com' . "\r\n";
+$headers[] = 'To: Mary <mary@example.com>, Kelly <kelly@example.com>';
+$headers[] = 'From: Birthday Reminder <birthday@example.com>';
+$headers[] = 'Cc: birthdayarchive@example.com';
+$headers[] = 'Bcc: birthdaycheck@example.com';
 
 // Mail it
-mail($to, $subject, $message, $headers);
+mail($to, $subject, $message, implode("\r\n", $headers));
 ?>
 ]]>
     </programlisting>
@@ -379,6 +411,7 @@ mail($to, $subject, $message, $headers);
   &reftitle.seealso;
   <para>
    <simplelist>
+    <member><function>mb_send_mail</function></member>
     <member><function>imap_mail</function></member>
     <member><link xlink:href="&url.pear.package;Mail">PEAR::Mail</link></member>
     <member><link xlink:href="&url.pear.package;Mail_Mime">PEAR::Mail_Mime</link></member>
@@ -386,6 +419,7 @@ mail($to, $subject, $message, $headers);
   </para>
  </refsect1>
 </refentry>
+
 
 <!-- Keep this comment at the end of the file
 Local variables:
