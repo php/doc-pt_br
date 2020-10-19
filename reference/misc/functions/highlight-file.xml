@@ -1,117 +1,95 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: fernandoc Status: ready -->
-<!-- splitted from ./en/functions/misc.xml, last change in rev 1.22 -->
-  <refentry xml:id="function.highlight-file" xmlns="http://docbook.org/ns/docbook">
-   <refnamediv>
-    <refname>highlight_file</refname>
-    <refpurpose>Destaca a sintaxe de um arquivo</refpurpose>
-   </refnamediv>
-   <refsect1>
-    <title>Descrição</title>
-     <methodsynopsis>
-      <type>mixed</type><methodname>highlight_file</methodname>
-      <methodparam><type>string</type><parameter>filename</parameter></methodparam>
-      <methodparam
-      choice="opt"><type>bool</type><parameter>return</parameter></methodparam>
-     </methodsynopsis>
-    <simpara>
-     A função <function>highlight_file</function> mostra uma versão do código contido em
-      <parameter>filename</parameter> com a sintaxe destacada usando as cores definidas pelo
-      destacador de sintaxe do PHP.
-    </simpara>
-    <simpara>
-     Se o segundo parâmetro <parameter>return</parameter> for &true;
-     então <function>highlight_file</function> irá retornar o código como uma string
-     ao invés de mostrá-lo. Se o segundo parâmetro não for &true; 
-     então <function>highlight_file</function> irá retornar 
-     &true; se funcionar, &false; em caso de falha.
-    </simpara>
-    <note>
-     <simpara>
-      O parâmetro <parameter>return</parameter> tornou-se disponível no PHP
-      4.2.0. Antes disso é usado como o padrão, que é &false;.
-     </simpara>
-    </note>
-    <caution>
-     <simpara>
-      Deve se tomar cuidado quando usar as funções
-      <function>show_source</function> e
-      <function>highlight_file</function> para ter certeza que
-      você não irá inadvertidamente revelar informações sensíveis como
-      senhas ou outros tipos de informação que possam criar um risco de segurança em potencial.
-     </simpara>
-    </caution>
-    <note>
-     <simpara>
-      Desde o PHP 4.2.1 esta função também é afetada por <link
-      linkend="ini.safe-mode">safe_mode</link> e <link
-      linkend="ini.open-basedir">open_basedir</link>.
-     </simpara>
-    </note>
-    <simpara>
-       Para configurar uma url que possa fazer o destaque da sintaxe de qualquer script que você passar
-       para ela, nós iremos fazer uso da diretiva "ForceType" no
-       Apache para gerar um bom modelo de URL, e usar a função 
-       <function>highlight_file</function> para mostrar o código com uma boa aparência.
-      </simpara>
-    <para>
-     <example>
-      <title>Criando uma URL para destaque da sintaxe</title>
-      <simpara>
-       No seu &httpd.conf; você pode adicionar o seguinte:
-      </simpara>
-        <programlisting role="apache-conf">
+<!-- EN-Revision: b824e2b1086e94a1077bd071964547283616030a Maintainer: ae Status: ready --><!-- CREDITS: fernandoc,ae -->
+<refentry xml:id="function.highlight-file" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>highlight_file</refname>
+  <refpurpose>Destaca a sintaxe de um arquivo</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>mixed</type><methodname>highlight_file</methodname>
+   <methodparam><type>string</type><parameter>filename</parameter></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>return</parameter><initializer>&false;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Imprime ou retorna a versão com destaque de sintaxe do código contigo
+   no arquivo <parameter>filename</parameter> utilizando as cores definidas no
+   destacador de sintaxe nativo do PHP.
+  </para>
+  <para>
+   Muitos servidores são configurados para destacar automaticamente os arquivos
+   com extensão <emphasis>phps</emphasis>. Por exemplo, o arquivo
+   <filename>example.phps</filename> quando acessado irá mostrar
+   o código fonte com destaque de cores do arquivos. Para ativar isso, acrescente
+   a seguinte linha no &httpd.conf;:
+  </para>
+  <screen>
 <![CDATA[
-<Location /source>
-    ForceType application/x-httpd-php
-</Location>
+AddType application/x-httpd-php-source .phps
 ]]>
-        </programlisting>
-      <simpara>
-       E então faça um arquivo chamado <filename>source</filename> e coloque-o no seu
-       diretório raiz do servidor web.
-      </simpara>
-       <programlisting role="php">
-<![CDATA[
-<html>
-<head>
-<title>Mostrar Fonte</title>
-</head>
-<body bgcolor="white">
-<?php
-    $script = getenv ("PATH_TRANSLATED");
-    if(!$script) {
-       echo "<br><b>ERRO: Necessário o nome do script</b><br>";
-    } else {
-      if (ereg("(\\.php|\\.inc)$", $script)) {
-      echo "<h1>Source of: " . getenv("PATH_INFO") . "</h1>\n<hr />\n";
-      highlight_file($script);
-      } else {
-        echo "<h1>ERRO: Somente PHP ou script de inclusão(.inc) são permitidos</h1>";
-      }
-    }
-    echo "<hr />Processed: " . date("Y/M/d H:i:s", time());
-?>
-</body>
-</html>
-]]>
-       </programlisting>
-      <simpara>
-       Então você pode usar uma URL como a abaixo para mostrar uma versão
-       colorida do script localizado em "/caminho/para/script.php" no seu site web.
-      </simpara>
-     <screen>
-<![CDATA[
-http://www.example.com/source/caminho/para/script.php
-]]>
-    </screen>
-     </example>
-    </para>
-    <simpara>
-     Veja também <function>highlight_string</function>.
-    </simpara>
-   </refsect1>
-  </refentry>
+  </screen>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>filename</parameter></term>
+     <listitem>
+      <para>
+       Caminho do arquivo PHP a ser destacado.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>return</parameter></term>
+     <listitem>
+      <para>
+       Informe esse parâmetro como &true; para fazer essa função retornar
+       o código destacado (ao invés de imprimir).
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Se <parameter>return</parameter> for &true;, retorna o código destacado
+   como uma string ao invés de imprimir. Se não, irá retornar
+   &true; no sucesso e &false; no caso de falhas.
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <caution>
+   <para>
+    Cuidados devem ser toamdos quando utilizando a função <function>highlight_file</function>
+    para prevenir que você não revele informações sensíveis inadivertidamente,
+    como senhas e outros tipos de informações que possam criar
+    risco de seguranaça.
+   </para>
+  </caution>
+  &note.uses-ob;
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>highlight_string</function></member>
+    <member><link linkend="ini.syntax-highlighting">Diretivas INI de highlighting</link></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
 
 <!-- Keep this comment at the end of the file
 Local variables:
