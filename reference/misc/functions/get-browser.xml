@@ -1,110 +1,150 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: fernandoc Status: ready -->
-<!-- splitted from ./en/functions/misc.xml, last change in rev 1.2 -->
-  <refentry xml:id="function.get-browser" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
-   <refnamediv>
-    <refname>get_browser</refname>
-    <refpurpose>
-     Diz o que o browser do usuário pode fazer
-    </refpurpose>
-   </refnamediv>
-   <refsect1>
-    <title>Descrição</title>
-     <methodsynopsis>
-      <type>object</type><methodname>get_browser</methodname>
-      <methodparam choice="opt"><type>string</type><parameter>user_agent</parameter></methodparam>
-     </methodsynopsis>
-    <simpara>
-     <function>get_browser</function> tenta determinar as
-     capacidades do browser do usuário. Isto é feito procurando a informação do browser no
-     arquivo <filename>browscap.ini</filename>. Por padrão, o valor de
-      <varname>$_SERVER["HTTP_USER_AGENT"]</varname> é usado; em qualquer caso você pode alterar isto (ex., procurar
-     informação de outro browser) passando o parâmetro opcional
-     <parameter>user_agent</parameter> para a função <function>get_browser</function>.
-    </simpara>
-    <simpara>
-     A informação é retornada como um <type>objeto</type>, que contém vários
-     elementos com dados representando, por exemplo, os números de versão maior e menor, a string de ID, valores
-     &true;/&false; para coisas como frames, JavaScript, e cookies; e assim em diante.
-    </simpara>
-    <simpara>
-     Enquanto <filename>browscap.ini</filename> contém informações sobre vários browser,
-     ele precisa de atualizações para manter o banco de dados atual. 
-     O formato do arquivo é auto-explicatório.
-    </simpara>
-    <para>
-    O exemplo a seguir irá mostrar uma possível lista de toda
-    a informação disponível sobre o browser do usuário.
-     <example>
-      <title>Exemplo <function>get_browser</function></title>
-      <programlisting role="php">
-<![CDATA[
+<!-- EN-Revision: b8758b0605e80c4e3610137b7502a6abeea5c69b Maintainer: fernandoc Status: ready --><!-- CREDITS: adiel, fernandoc -->
+<refentry xml:id="function.get-browser" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>get_browser</refname>
+  <refpurpose>Diz o que o browser do usuário pode fazer</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>mixed</type><methodname>get_browser</methodname>
+   <methodparam choice="opt"><type>string</type><parameter>user_agent</parameter></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>return_array</parameter><initializer>&false;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Tenta determinar os recursos do navegador do usuário, consultando
+   as informações do navegador no arquivo
+   <filename>browscap.ini</filename>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>user_agent</parameter></term>
+     <listitem>
+      <para>
+       O agente do usuário a ser analisado. Por padrão, o valor do cabeçalho
+       HTTP User-Agent é usado; no entanto, você pode alterar isso (ou seja, procurar
+       outras informações do navegador) passando este parâmetro.
+      </para>
+      <para>
+       Você pode ignorar esse parâmetro com um valor &null;.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>return_array</parameter></term>
+     <listitem>
+      <para>
+       Se definido como &true;, esta função retornará um <type>array</type>,
+       em vez de um <type>object</type>.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   As informações são retornadas num objeto ou array que conterá
+   vários elementos de dados representando, por exemplo, os números de versão
+   principal e secundaria e a string ID; valores &true;/&false; para recursos
+   como frames, JavaScript e cookies; e assim por diante.
+  </para>
+  <para>
+   O valor <literal>cookies</literal> significa simplesmente que o navegador
+   é capaz de aceitar cookies e não significa que o usuário habilitou
+   ou não o navegador para aceitar cookies. A única maneira de testar se os
+   cookies são aceitos é definir um com <function>setcookie</function>,
+   recarregar, e verificar o valor.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Listando todas as informações sobre o navegador do usuário</title>
+    <programlisting role="php">
+     <![CDATA[
 <?php
-echo $_SERVER['HTTP_USER_AGENT'] . "<hr />\n";
-$browser = get_browser();
-foreach ($browser as $name => $value) {
-    echo "<b>$name</b> $value <br />\n";
-}
+echo $_SERVER['HTTP_USER_AGENT'] . "\n\n";
+
+$browser = get_browser(null, true);
+print_r($browser);
 ?>
 ]]>
-      </programlisting>
-    <simpara>
-    A saída do script acima deve ser algo como isto:
-    </simpara>
-    <screen role="html">
-<![CDATA[
-Mozilla/4.5 [en] (X11; U; Linux 2.2.9 i586)<hr />
-<b>browser_name_pattern:</b> Mozilla/4\.5.*<br />
-<b>parent:</b> Netscape 4.0<br />
-<b>platform:</b> Linux<br />
-<b>majorver:</b> 4<br />
-<b>minorver:</b> 5<br />
-<b>browser:</b> Netscape<br />
-<b>version:</b> 4<br />
-<b>frames:</b> 1<br />
-<b>tables:</b> 1<br />
-<b>cookies:</b> 1<br />
-<b>backgroundsounds:</b> <br />
-<b>vbscript:</b> <br />
-<b>javascript:</b> 1<br />
-<b>javaapplets:</b> 1<br />
-<b>activexcontrols:</b> <br />
-<b>beta:</b> <br />
-<b>crawler:</b> <br />
-<b>authenticodeupdate:</b> <br />
-<b>msn:</b> <br />
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+     <![CDATA[
+Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7) Gecko/20040803 Firefox/0.9.3
+
+Array
+(
+    [browser_name_regex] => ^mozilla/5\.0 (windows; .; windows nt 5\.1; .*rv:.*) gecko/.* firefox/0\.9.*$
+    [browser_name_pattern] => Mozilla/5.0 (Windows; ?; Windows NT 5.1; *rv:*) Gecko/* Firefox/0.9*
+    [parent] => Firefox 0.9
+    [platform] => WinXP
+    [browser] => Firefox
+    [version] => 0.9
+    [majorver] => 0
+    [minorver] => 9
+    [cssversion] => 2
+    [frames] => 1
+    [iframes] => 1
+    [tables] => 1
+    [cookies] => 1
+    [backgroundsounds] =>
+    [vbscript] =>
+    [javascript] => 1
+    [javaapplets] => 1
+    [activexcontrols] =>
+    [cdf] =>
+    [aol] =>
+    [beta] => 1
+    [win16] =>
+    [crawler] =>
+    [stripper] =>
+    [wap] =>
+    [netclr] =>
+)
 ]]>
     </screen>
-    </example>
-    </para>
-   <simpara>
-     Para que isto funcione, sua configuração do <link
-     linkend="ini.browscap">browscap</link> no
-     &php.ini; deve apontar para o local correto do arquivo
-     <filename>browscap.ini</filename> no seu sistema.
-     <filename>browscap.ini</filename> não vem com o PHP mas você deve 
-     encontrar uma versão atualizada <link xlink:href="&url.browscap.download;">
-     do arquivo browscap.ini</link>.  Por padrão,a diretiva
-     <link linkend="ini.browscap">browscap</link> esta comentada.
-    </simpara>
-     <simpara>
-      Os  valores de <literal>cookies</literal> simplesmente indicam que
-      que o browser é capaz de receber cookies e não indica que o usuário
-      permite ao browser receber ou não cookies. O unico meio de testar
-      se os cookies são aceitos é criar um com <function>setcookie</function>,
-      recarregar, e conferir o valor.
-     </simpara>
-    <note>
-     <simpara>
-      Em versões anteriores ao PHP 4.0.6, você tem que passar o
-      user agent via o parâmetro opcional <parameter>user_agent</parameter>
-      se a diretiva do PHP <link linkend="ini.register-globals">
-      register_globals</link> esta em <literal>off</literal>. Neste caso,
-      você irá passar <varname>$HTTP_SERVER_VARS['HTTP_USER_AGENT']</varname>.
-     </simpara>
-    </note>
-   </refsect1>
-  </refentry>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    Para que isso funcione, sua diretiva de configuração
+    <link linkend="ini.browscap">browscap</link> no
+    &php.ini; deve apontar para a localização correta do
+    arquivo <filename>browscap.ini</filename> no seu sistema.
+   </para>
+   <para>
+    O arquivo <filename>browscap.ini</filename> não vem com o PHP, mas você pode
+    encontrar um arquivo <link
+    xlink:href="&url.browscap.download;">php_browscap.ini</link> atualizado aqui.
+   </para>
+   <para>
+    Embora o arquivo <filename>browscap.ini</filename> contenha informações sobre
+    muitos navegadores, ele depende das atualizações dos usuários para manter o banco de dados
+    atualizado. O formato do arquivo é bastante autoexplicativo.
+   </para>
+  </note>
+ </refsect1>
+
+</refentry>
 
 <!-- Keep this comment at the end of the file
 Local variables:
