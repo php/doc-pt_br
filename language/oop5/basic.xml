@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 06df50f0b11dab8ad595fb8c544c478019ff1d17 Maintainer: fabioluciano Status: ready --><!-- CREDITS: ae, amandavale, narigone, fabioluciano -->
+<!-- EN-Revision: 9ee9eccf455188ab6eb352194eb6f9eb99e15606 Maintainer: ae Status: ready --><!-- CREDITS: ae,amandavale,narigone,fabioluciano -->
 
  <sect1 xml:id="language.oop5.basic" xmlns="http://docbook.org/ns/docbook">
   <title>O básico</title>
@@ -10,7 +10,7 @@
     A definição de uma classe começa com a
     palavra chave <literal>class</literal>, seguida do nome da classe,
     seguido de um par de colchetes que englobam as definições
-    de propriedades e métodos pertecentes à classe.
+    de propriedades e métodos pertencentes à classe.
    </para>
    <para>
     O nome de uma classe tem de ser válido, que não seja
@@ -18,7 +18,7 @@
     começa com uma letra ou sublinhado, seguido de qualquer sequência de
     letras, números e sublinhados. Como uma expressão regular,
     pode ser expressada assim:
-    <literal>^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$</literal>.
+    <code>^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$</code>.
    </para>
    <para>
     Uma classe pode conter suas
@@ -46,14 +46,16 @@ class SimpleClass
    </example>
    <para>
     A pseudo-variável <varname>$this</varname> está disponível quando um
-    método é chamado a partir de um contexto de
-    objeto. <varname>$this</varname> é uma referência ao objeto
-    chamado (normalmente o objeto ao qual o método pertence, mas
-    possivelmente outro objeto, se o método é chamado
-    <link linkend="language.oop5.static">estaticamente</link> a partir do contexto
-    de um objeto secundário).
+    método é chamado a partir de um contexto de um objeto.
+    <varname>$this</varname> é o valor do objeto chamado.
    </para>
-   <para>
+   <warning>
+    <para>
+     Chamar um método não estático de maneira estática lança um
+     <classname>Error</classname>.
+     Anteriormente ao PHP 8.0.0, isto iria gerar um aviso de chamada obsoleta,
+     e <varname>$this</varname> estaria indefinido.
+    </para>
     <example xml:id="language.oop5.basic.class.this">
      <title>Alguns exemplos da pseudo variável <varname>$this</varname></title>
      <programlisting role="php">
@@ -77,7 +79,6 @@ class B
 {
     function bar()
     {
-        // Nota: a próxima linha pode lançar um warning E_STRICT.
         A::foo();
     }
 }
@@ -85,27 +86,45 @@ class B
 $a = new A();
 $a->foo();
 
-// Nota: a próxima linha pode lançar um warning E_STRICT.
 A::foo();
+
 $b = new B();
 $b->bar();
 
-// Nota: a próxima linha pode lançar um warning E_STRICT.
 B::bar();
 ?>
 ]]>
      </programlisting>
-     &example.outputs;
+     &example.outputs.7;
      <screen>
 <![CDATA[
 $this está definida (A)
+
+Deprecated: Non-static method A::foo() should not be called statically in %s  on line 27
 $this não está definida.
-$this está definida (B)
+
+Deprecated: Non-static method A::foo() should not be called statically in %s  on line 20
+$this não está definida.
+
+Deprecated: Non-static method B::bar() should not be called statically in %s  on line 32
+
+Deprecated: Non-static method A::foo() should not be called statically in %s  on line 20
 $this não está definida.
 ]]>
      </screen>
+     &example.outputs.8;
+     <screen>
+<![CDATA[
+$this está definida (A)
+
+Fatal error: Uncaught Error: Non-static method A::foo() cannot be called statically in %s :27
+Stack trace:
+#0 {main}
+  thrown in %s  on line 27
+]]>
+     </screen>
     </example>
-   </para>
+   </warning>
   </sect2>
 
   <sect2 xml:id="language.oop5.basic.new">
@@ -124,6 +143,14 @@ $this não está definida.
     a classe estiver dentro de um namespace, o nome completo e qualificado deve ser utilizado
     para fazer isso.
    </para>
+
+   <note>
+    <para>
+     Se não há argumentos a serem passados para o construtor da classe,
+     os parenteses após o nome da classe podem ser omitidos.
+    </para>
+   </note>
+
    <example>
     <title>Criando uma instância</title>
     <programlisting role="php">
@@ -183,8 +210,7 @@ object(SimpleClass)#1 (1) {
     </screen>
    </example>
    <para>
-    O PHP 5.3.0 introduziu algumas novas formas de criar instâncias de
-    um objeto:
+    É possível usar algumas formas de criar instâncias de um objeto:
    </para>
    <example>
     <title>Criando novos objetos</title>
@@ -223,6 +249,34 @@ bool(true)
 ]]>
     </screen>
    </example>
+
+   <para>
+    É possível acessar um membro do objeto recém criado
+    em uma expressão simples:
+   </para>
+   <example>
+    <title>Access member of newly created object</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+echo (new DateTime())->format('Y');
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+2016
+]]>
+    </screen>
+   </example>
+
+   <note>
+    <simpara>
+     Anteriormente ao PHP 7.1, os argumentos não são avaliados se não houver
+     um construtor definido.
+    </simpara>
+   </note>
   </sect2>
 
   <sect2 xml:id="language.oop5.basic.properties-methods">
@@ -238,6 +292,7 @@ bool(true)
     <title>Acesso a propriedade vs. chamar um método</title>
     <programlisting role="php">
 <![CDATA[
+<?php
 class Foo
 {
     public $bar = 'propriedade';
@@ -263,13 +318,14 @@ método
     Isto significa que chamar diretamente uma <link linkend="functions.anonymous">função
     anônima</link> atribuída a uma propriedade não é possível.
     Em vez disso, por exemplo, a propriedade deve primeiro ser atribuída a uma
-    variável. A partir do PHP 7.0.0, é possível chamar uma propriedade diretamente
+    variável. É possível chamar uma propriedade diretamente
     a colocando entre parênteses.
    </para>
    <example>
     <title>Chamando uma função anônima armazenada em uma propriedade</title>
     <programlisting role="php">
 <![CDATA[
+<?php
 class Foo
 {
     public $bar;
@@ -283,11 +339,6 @@ class Foo
 
 $obj = new Foo();
 
-// a partir do PHP 5.3.0:
-$func = $obj->bar;
-echo $func(), PHP_EOL;
-
-// alternativamente, a partir do PHP 7.0.0:
 echo ($obj->bar)(), PHP_EOL;
 ]]>
     </programlisting>
@@ -301,28 +352,24 @@ echo ($obj->bar)(), PHP_EOL;
   </sect2>
 
   <sect2 xml:id="language.oop5.basic.extends">
+   <!-- TODO Example about class constant redefinition -->
+   <!-- TODO Split into it's own page? -->
    <title>extends</title>
    <para>
-    Uma classe pode herdar métodos e propriedades de outra classe usando a
+    Uma classe pode herdar constantes, métodos e propriedades de outra classe usando a
     palavra-chave <literal>extends</literal> na declaração
     da classe. Não é possível herdar múltiplas classes; uma
     classe só pode herdar uma classe base.
    </para>
    <para>
     Os métodos e propriedades herdados podem ser sobrescritos
-    redeclarando-os com o mesmo nome definido na classe
+    declarando-os com o mesmo nome definido na classe
     base. Entretanto, se o método foi definido na classe base
     como <link linkend="language.oop5.final">final</link> esse método
     não poderá ser sobrescrito. É possível acessar os métodos sobrescritos
     ou propriedades estáticas referenciado-os
     com <link linkend="language.oop5.paamayim-nekudotayim">parent::</link>.
   </para>
-   <para>
-    Ao sobrescrever métodos, a assinatura de parâmetros deve permanecer a mesma ou
-    o PHP gerará um erro de nível <constant>E_STRICT</constant>. Isto não se
-    aplica ao construtor, que permite a sobrescrita com parâmetros
-    diferentes.
-   </para>
    <example>
     <title>Herança da Classe Simples</title>
     <programlisting role="php">
@@ -351,16 +398,179 @@ um valor padrão
 ]]>
     </screen>
    </example>
+
+   <sect3 xml:id="language.oop.lsp">
+    <title>Regras de compatibilidade de assinaturas</title>
+    <para>
+     Quando sobrescrevendo um método, sua assinatura precisa ser compatível com
+     o método original. De outra forma um erro fatal é emitido, ou, anteriormente ao PHP 8.0.0, um aviso
+     <constant>E_WARNING</constant> seria gerado.
+     Uma assinatura é compatível se ela respeita as regas de
+     <link linkend="language.oop5.variance">variância</link>, se torna um
+     parâmetro obrigatório em opcional, ou se adiciona novos parâmetros opcionais.
+     Isso é conhecido como Princípio de Substituição de Liskov, ou LSP.
+     O <link linkend="language.oop5.decon.constructor">construtor</link>,
+     e membros <literal>private</literal> não precisam seguir essas regras de
+     compatibilidade, e portanto não há emissão de erros fatais no caso
+     se assinaturas incompatíveis.
+    </para>
+    <example>
+     <title>Métodos compatíveis</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+
+class Base
+{
+    public function foo(int $a) {
+        echo "Valid\n";
+    }
+}
+
+class Extend1 extends Base
+{
+    function foo(int $a = 5)
+    {
+        parent::foo($a);
+    }
+}
+
+class Extend2 extends Base
+{
+    function foo(int $a, $b = 5)
+    {
+        parent::foo($a);
+    }
+}
+
+$extended1 = new Extend1();
+$extended1->foo();
+$extended2 = new Extend2();
+$extended2->foo(1);
+]]>
+     </programlisting>
+     &example.outputs;
+     <screen>
+<![CDATA[
+Valid
+Valid
+]]>
+     </screen>
+    </example>
+
+    <para>
+     Os exemplos a seguir demonstram que um método derivado que remove um parâmetro, ou torna um parâmetro opcional
+     em mandatório não é compatível com o método original.
+    </para>
+    <example>
+     <title>Erro fata quando um método derivado remove um parâmetro</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+
+class Base
+{
+    public function foo(int $a = 5) {
+        echo "Válido?\n";
+    }
+}
+
+class Extend extends Base
+{
+    function foo()
+    {
+        parent::foo(1);
+    }
+}
+]]>
+     </programlisting>
+     &example.outputs.8.similar;
+     <screen>
+<![CDATA[
+Fatal error: Declaration of Extend::foo() must be compatible with Base::foo(int $a = 5) in /in/evtlq on line 13
+]]>
+     </screen>
+    </example>
+    <example>
+     <title>Erro falta quando um método derivado transforma um parâmetro opcional em mandatório</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+
+class Base
+{
+    public function foo(int $a = 5) {
+        echo "Válido?\n";
+    }
+}
+
+class Extend extends Base
+{
+    function foo(int $a)
+    {
+        parent::foo($a);
+    }
+}
+]]>
+     </programlisting>
+     &example.outputs.8.similar;
+     <screen>
+<![CDATA[
+Fatal error: Declaration of Extend::foo(int $a) must be compatible with Base::foo(int $a = 5) in /in/qJXVC on line 13
+]]>
+     </screen>
+    </example>
+
+    <warning>
+     <para>
+      Renomear um nome de parâmetro em uma classe derivada não é uma quebra
+      de assinatura. Entretanto isso é desencorajado porque ocasionará em um
+      <classname>Error</classname> se
+      <link linkend="functions.named-arguments">argumentos nomeados</link>
+      forem utilizados na chamada.
+     </para>
+     <example>
+      <title>Erro ao utilizar argumentos nomeados renomeados em uma classe derivada</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+
+class A {
+    public function test($foo, $bar) {}
+}
+
+class B extends A {
+    public function test($a, $b) {}
+}
+
+$obj = new B;
+
+// Passando parâmetros de acordo com o contrato de A::test()
+$obj->test(foo: "foo", bar: "bar"); // ERROR!
+]]>
+      </programlisting>
+      &example.outputs.similar;
+      <screen>
+<![CDATA[
+Fatal error: Uncaught Error: Unknown named parameter $foo in /in/XaaeN:14
+Stack trace:
+#0 {main}
+  thrown in /in/XaaeN on line 14
+]]>
+      </screen>
+     </example>
+    </warning>
+   </sect3>
   </sect2>
 
   <sect2 xml:id="language.oop5.basic.class.class">
    <title>::class</title>
 
    <para>
-    Desde o PHP 5.5, a palavra-chave <literal>class</literal> também pode ser utilizada para resolução
-    de nome de classes. Pode-se obter uma string contendo o nome completo e qualificado
-    da classe <literal>ClassName</literal> utilizando
-    <literal>ClassName::class</literal>. Isso é particularmente útil em classes com
+    A palavra-chave <literal>class</literal> também pode ser utilizada para resolução
+    de nome de classes.
+    Pode-se obter o nome completo e qualificado da classe <literal>ClassName</literal>
+    utilizando <literal>ClassName::class</literal>. Isso é particularmente útil em classes com
     <link linkend="language.namespaces">namespaces</link>.
    </para>
    <para>
@@ -387,15 +597,105 @@ NS\ClassName
     </example>
    </para>
    <note>
-    <para>A resolução de nomes de classe através de <literal>::class</literal> é uma
-     transformação em tempo de compilação. Significando que a string com nome
-     é criada antes que o autoloading tenha acontecido. Como consequência, os nomes de classe
-     são expandidos mesmo que a classe não exista. Neste caso, nenhum erro
-     será emitido.
+    <para>A resolução do nome de classe através de <literal>::class</literal> é
+     uma transformação em tempo de compilação. Isso significa que no momento que o texto do nome
+     da classe é criado o autoloading ainda não ocorreu. Como consequẽncia, nomes de classe
+     são expandidos mesmo se a classe não existir. Não é emitido erro nesses
+     casos.
     </para>
+    <example xml:id="language.oop5.basic.class.class.fail">
+     <title>Resolução de um nome de classe de classe ausente</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+print Does\Not\Exist::class;
+?>
+]]>
+     </programlisting>
+     &example.outputs;
+     <screen>
+<![CDATA[
+Does\Not\Exist
+]]>
+     </screen>
+    </example>
    </note>
+   <para>
+    A partir do PHP 8.0.0, a constante <literal>::class</literal> também pode ser utilizada em
+    objetos. Essa resolução acontece em tempo de execução, e não em tempo de compilação. O efeito é
+    o mesmo de chamar <function>get_class</function> em um objeto.
+   </para>
+   <example xml:id="language.oop5.basic.class.class.object">
+    <title>Resolução de nome de objeto</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+namespace NS {
+    class ClassName {
+    }
+}
+$c = new ClassName();
+print $c::class;
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+NS\ClassName
+]]>
+    </screen>
+   </example>
   </sect2>
- </sect1>
+ <sect2 xml:id="language.oop5.basic.nullsafe">
+  <title>Métodos e propriedades nullsafe</title>
+  <para>
+   A partir do PHP 8.0.0, propriedades e métodos também podem ser acessados com o operador
+   "nullsafe": <literal>?-></literal>. O operador nullsafe
+   funciona da mesma forma que os acessos de métodos e variáveis, exceto que se
+   o objeto referenciado é &null;, então &null;
+   será retornado ao invés de uma exceção ser lançada. Se o item &null; ser parte de uma
+   cadeia de chamada, o resto da cadeira é ignorado.
+  </para>
+  <para>
+   O resultado é similar a encapsular cada acesso dentro de um teste <function>is_null</function>,
+   mas mais compacto.
+  </para>
+  <para>
+   <example>
+    <title>Operador nullsafe</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+// A partir do PHP 8.0.0, esta linha:
+$result = $repository?->getUser(5)?->name;
+
+// É o equivalente ao seguinte código:
+if (is_null($repository)) {
+    $result = null;
+} else {
+    $user = $repository->getUser(5);
+    if (is_null($user)) {
+        $result = null;
+    } else {
+        $result = $user->name;
+    }
+}
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <note>
+   <para>
+    O operador nullsafe é melhor utilizado quando null é considerado um valor válido
+    e esperado de uma propriedade ou retorno de método. Para indicar um erro,
+    uma exceção lançada é preferível.
+   </para>
+  </note>
+ </sect2>
+</sect1>
 
 <!-- Keep this comment at the end of the file
 Local variables:
