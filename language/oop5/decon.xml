@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 664dfca34e287631fefb83032e810ea505a621e4 Maintainer: ae Status: ready --><!-- CREDITS: narigone, felipe, ae, fabioluciano -->
+<!-- EN-Revision: 9ee9eccf455188ab6eb352194eb6f9eb99e15606 Maintainer: ae Status: ready --><!-- CREDITS: narigone,felipe,ae,fabioluciano -->
  <sect1 xml:id="language.oop5.decon" xmlns="http://docbook.org/ns/docbook">
   <title>Construtores e Destrutores</title>
 
@@ -7,12 +7,11 @@
    <title>Construtores</title>
    <methodsynopsis xml:id="object.construct">
     <type>void</type><methodname>__construct</methodname>
-    <methodparam choice="opt"><type>mixed</type><parameter>args</parameter></methodparam>
-    <methodparam choice="opt"><parameter>...</parameter></methodparam>
+    <methodparam rep="repeat"><type>mixed</type><parameter>values</parameter><initializer>""</initializer></methodparam>
    </methodsynopsis>
    <para>
-    O PHP 5 permite aos desenvolvedores declararem métodos construtores para as classes.
-    Classes que tem um método construtor, chamam o método a cada
+    O PHP permite aos desenvolvedores declararem métodos construtores para as classes.
+    Classes que tem um método construtor chamam o método a cada
     objeto recém criado, sendo apropriado para qualquer inicialização que o
     objeto necessite antes de ser utilizado.
    </para>
@@ -27,21 +26,21 @@
     </simpara>
    </note>
    <example>
-    <title>Usando novos construtores unificados</title>
+    <title>Construtoras em herança</title>
     <programlisting role="php">
 <![CDATA[
 <?php
 class BaseClass {
-   function __construct() {
-       print "In BaseClass constructor\n";
-   }
+    function __construct() {
+        print "In BaseClass constructor\n";
+    }
 }
 
 class SubClass extends BaseClass {
-   function __construct() {
-       parent::__construct();
-       print "In SubClass constructor\n";
-   }
+    function __construct() {
+        parent::__construct();
+        print "In SubClass constructor\n";
+    }
 }
 
 class OtherSubClass extends BaseClass {
@@ -62,53 +61,181 @@ $obj = new OtherSubClass();
     </programlisting>
    </example>
    <para>
-    Para retrocompatibilidade com as versões do PHP 3 e 4, se o PHP não encontrar um
-    <link linkend="object.construct">__construct()</link> para uma determinada
-    classe, e a classe não herda um da classe, ele procurará
-    pela função construtora à moda-antiga, que tenha o mesmo nome da classe.
-    Efetivamente, isso significa que o único caso que pode gerar problemas de
-    compatibilidade será quando a classe tiver um método chamado
-    <link linkend="object.construct">__construct()</link> usado
-    em semântica diferente.
-   </para>
-   <!-- Not using an entity because I want specific wording here, since we're
-   not deprecating constructors in general. -->
-   <warning>
-    <simpara>
-     Construtores no estilo antigo se tornaram <emphasis>OBSOLETOS</emphasis> no PHP 7.0, e
-     serão removidos em uma versão futura. Deve-se sempre utilizar
-     <link linkend="object.construct">__construct()</link> em novos códigos.
-    </simpara>
-   </warning>
-   <para>
-    Diferente de outros métodos, o PHP não irá gerar uma mensagem de erro de nível
-    <constant>E_STRICT</constant> quando
-    <link linkend="object.construct">__construct()</link> é sobrescrito com parâmetros diferentes
-    do método <link linkend="object.construct">__construct()</link>da classe pai possuir.
+    Diferente de outros métodos, <link linkend="object.construct">__construct()</link>
+    não precisa seguir as regras usuais de
+    <link linkend="language.oop.lsp">compatibilidade de assinatura</link>
+    em objetos derivados.
    </para>
    <para>
-    A partir do PHP 5.3.3, métodos com o mesmo nome que o último elemento de uma
-    classe com namespace não serão tratados como construtor. Esta
-    modificação não afeta classe sem namespace.
+    Construtores são métodos ordinários que são chamados durante a criação
+    do objeto correspondente. Eles podem definir um número arbitrários de argumentos, quais
+    podem ser obrigatórios, podem ter um tipo, e podem ter valores padrão. Argumentos de construtores
+    são informados dentro de parênteses depois do nome da classe.
    </para>
    <example>
-    <title>Construtores em classes dentro de namespace</title>
+    <title>Utilizando argumentos de construtor</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-namespace Foo;
-class Bar {
-    public function Bar() {
-        // tratado como construtor no PHP 5.3.0-5.3.2
-        // tratado como método comum a partir do PHP 5.3.3
+class Point {
+    protected int $x;
+    protected int $y;
+
+    public function __construct(int $x, int $y = 0) {
+        $this->x = $x;
+        $this->y = $y;
     }
 }
+
+// Passagem de ambos os argumentos.
+$p1 = new Point(4, 5);
+// Passar somente o argumento obrigatório, $y terá o valor padrão zero.
+$p2 = new Point(4);
+// Com parâmetros nomeados (a partir do PHP 8.0):
+$p3 = new Point(y: 5, x: 4);
 ?>
 ]]>
     </programlisting>
    </example>
-  </sect2>
+   <para>
+    Se a classe não tem construtor, ou o construtor não tem argumentos obrigatórios, o parêntesis
+    pode ser omitido.
+   </para>
+   <sect3>
+    <title>Construtores obsoletos</title>
+    <para>
+     Anteriormente ao PHP 8.0.0 as classes no namespace global interpretam um método com o mesmo nome
+     da classe como sendo um construtor válido. Essa sintaxe é obsoleta,
+     e gerará um erro <constant>E_DEPRECATED</constant> embora ainda continue funcionando como um construtor.
+     Se ambos o <link linkend="object.construct">__construct()</link> e um método homônimo da classe
+     estiverem definidos, <link linkend="object.construct">__construct()</link> que será chamado.
+    </para>
+    <para>
+     Em classes dentro de namespaces, ou quaisquer classes a partir do PHP 8, um método
+     homônimo ao nome da classe não tem um significado especial.
+    </para>
+    <para>Sempre utilize <link linkend="object.construct">__construct()</link> em novos códigos.
+    </para>
+   </sect3>
+   <sect3 xml:id="language.oop5.decon.constructor.promotion">
+    <title>Promoção de propriedades no construtor</title>
+    <para>
+     A partir do PHP 8, parâmetros de construtores podem ser promovidos a uma propriedade
+     do objeto. Isto é bastante comum quando parâmetros do construtor de serem informados
+     em uma propriedade no construtor, sem nenhum processamento. Promoção de construtor
+     fornece uma sintaxe reduzida para esse caso. O exemplo acima pode ser reescrito assim:
+    </para>
+    <example>
+     <title>Utilizando promoção de propriedades no construtor</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+class Point {
+    public function __construct(protected int $x, protected int $y = 0) {
+    }
+}
+]]>
+     </programlisting>
+    </example>
+    <para>
+     Quanto um argumento de construtor incluir um modificador de visibilidade, o PHP interpretará como sendo
+     uma propriedade de objeto e como um argumento do construtor, e assimilará o valor do argumento
+     a uma propriedade de mesmo nome. O corpo do construtor pode estar vazio ou conter outras operações.
+     Quaisquer operações serão executados após os valores dos argumentos serem definidos
+     nas respectivas propriedades.
+    </para>
+    <para>
+     Nem todos os argumentos são promovidos. É possível misturar os argumentos promovidos e não promovidos
+     em qualquer ordem. Argumentos promovidos não têm impacto no código chamador do construtor.
+    </para>
+    <note>
+     <para>
+      Propriedades de objeto não podem ser do tipo <type>callable</type> dado uma ambiguidade que poderia
+      introduzir. Argumentos promovidos, portanto, não podem ser do tipo <type>callable</type>. Quaisquer
+      outra <link linkend="language.types.declarations">declaração de tipo</link> é permitida.
+     </para>
+    </note>
+    <note>
+     <para>
+      <link linkend="language.attributes">Atributos</link> informados em
+      um argumento promovido será replicado tanto na propriedade como no
+      no argumento.
+     </para>
+    </note>
+   </sect3>
+   <sect3 xml:id="language.oop5.decon.constructor.static">
+    <title>Métodos de criação estáticos</title>
+    <para>
+     O PHP suporta apenas um único construtor por classe. Em alguns casos pode ser
+     desejável de permitir a um objeto ser construído de maneiras diferentes, a partir de argumentos diferentes.
+     O método recomendado para realizar isso é através de métodos estáticos, utilizados como empacotadores do construtor.
+    </para>
+    <example>
+     <title>Utilizando métodos estáticos para construção</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+class Product {
 
+    private ?int $id;
+    private ?string $name;
+
+    private function __construct(?int $id = null, ?string $name = null) {
+        $this->id = $id;
+        $this->name = $name;
+    }
+
+    public static function fromBasicData(int $id, string $name): static {
+        $new = new static($id, $name);
+        return $new;
+    }
+
+    public static function fromJson(string $json): static {
+        $data = json_decode($json);
+        return new static($data['id'], $data['name']);
+    }
+
+    public static function fromXml(string $xml): static {
+        // Custom logic here.
+        $data = convert_xml_to_array($xml);
+        $new = new static();
+        $new->id = $data['id'];
+        $new->name = $data['name'];
+        return $new;
+    }
+}
+
+$p1 = Product::fromBasicData(5, 'Widget');
+$p2 = Product::fromJson($some_json_string);
+$p3 = Product::fromXml($some_xml_string);
+]]>
+     </programlisting>
+    </example>
+    <para>
+     O construtor pode ser private ou protected para evitar que ele seja chamado externamente.
+     Nesses casos apenas um construtor estático será capaz de instanciar a classe. Por eles estarem
+     nas mesma definição de classe, os métodos estáticos são capazes de instanciar o objeto, mesmo em
+     uma instância diferente. O construtor privado é opcional e pode não fazer sentido em
+     todos os casos.
+    </para>
+    <para>
+     Os três métodos estáticos a seguir demonstram as maneiras diferentes de instanciar um objeto.
+    </para>
+    <simplelist>
+     <member><code>fromBasicData()</code> obtém os exatos parâmetros que são necessários, e então cria
+     o objeto através da chamada do construtor e retorna o resultado</member>
+     <member><code>fromJson()</code> aceita uma string JSON, realiza algum pré-processamento para
+     converter os dados no formato necessário ao construtor. Só então retorna o novo objeto.</member>
+     <member><code>fromXml()</code> aceita uma string XML, pré-processa, e então cria um objeto
+     limpo. O construtor é chamado, mas com todos os parâmetros opcionais o método
+     os ignora. Por fim informa os valores nas propriedades do objeto antes de retornar o resultado.</member>
+    </simplelist>
+    <para>
+     Nos três casos, a palavra chave <code>static</code> é convertida no nome da classe onde o código reside.
+     Nesse caso a classe <code>Product</code>.
+    </para>
+   </sect3>
+  </sect2>
   <sect2 xml:id="language.oop5.decon.destructor">
    <title>Destrutor</title>
    <methodsynopsis xml:id="object.destruct">
@@ -116,7 +243,7 @@ class Bar {
     <void />
    </methodsynopsis>
    <para>
-    O PHP 5 introduz um conceito de destrutor similar ao de outras
+    O PHP introduz um conceito de destrutor similar ao de outras
     linguagens orientadas a objeto, como C++. O método destrutor será chamado
     assim que todas as referências a um objeto particular forem removidas ou quando
     o objeto for explicitamente destruído ou qualquer ordem na sequência de encerramento.
@@ -126,28 +253,29 @@ class Bar {
     <programlisting role="php">
 <![CDATA[
 <?php
-class MyDestructableClass {
-   function __construct() {
-       print "In constructor\n";
-       $this->name = "MyDestructableClass";
-   }
 
-   function __destruct() {
-       print "Destroying " . $this->name . "\n";
-   }
+class MyDestructableClass
+{
+    function __construct() {
+        print "In constructor\n";
+    }
+
+    function __destruct() {
+        print "Destroying " . __CLASS__ . "\n";
+    }
 }
 
 $obj = new MyDestructableClass();
-?> 
+
 ]]>
     </programlisting>
    </example>
    <para>
-    Como os construtores, destrutores da classe pai não serão chamados implicitamente pelo
-    motor. Para executar o destrutor pai, deve-se fazer uma chamada
-    explicita a <function>parent::__destruct</function> no corpo do
+    Assim como os construtores, os destrutores da classe pai não serão chamados implicitamente pelo
+    PHP. Para executar o destrutor pai, deve-se fazer uma chamada
+    explícita a <function>parent::__destruct</function> no corpo do
     destrutor. Assim como construtores, uma classe filha pode herdar o destrutor
-    pai caso não implemente um.
+    caso não implemente um.
    </para>
    <para>
     O destrutor será chamado mesmo se o script for terminado utilizando-se
@@ -156,21 +284,20 @@ $obj = new MyDestructableClass();
    </para>
    <note>
     <para>
-     Destrutores chamados durante o encerramento da execução do script tem os cabeçalhos HTTP
-     enviados. O diretório atual na fase de encerramento do script pode ser diferente
+     Destrutores chamados durante o encerramento da execução do script já enviaram os cabeçalhos HTTP.
+     O diretório atual na fase de encerramento do script pode ser diferente
      em alguns SAPIs (e.g. Apache).
     </para>
    </note>
    <note>
     <para>
      Tentar disparar uma exceção em um destrutor (chamado no término
-     do script), causará um erro fatal.
+     do script), lançará um erro fatal.
     </para>
    </note>
   </sect2>
 
  </sect1>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
