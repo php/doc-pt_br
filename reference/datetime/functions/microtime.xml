@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: e41aab5ecacf449e51179886c17f1d41735b0234 Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, surfmax, fabioluciano -->
+<!-- EN-Revision: 8cdc6621f9826d04abc3e50438c010804d7e8683 Maintainer: ae Status: ready --><!-- CREDITS: felipe,surfmax,fabioluciano,ae -->
 <refentry xml:id="function.microtime" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>microtime</refname>
-  <refpurpose>Retorna um timestamp Unix em microsegundos</refpurpose>
+  <refpurpose>Retorna um timestamp Unix com microsegundos</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>mixed</type><methodname>microtime</methodname>
-   <methodparam choice="opt"><type>bool</type><parameter>get_as_float</parameter></methodparam>
+   <type class="union"><type>string</type><type>float</type></type><methodname>microtime</methodname>
+   <methodparam choice="opt"><type>bool</type><parameter>as_float</parameter><initializer>&false;</initializer></methodparam>
   </methodsynopsis>
   <para>
-   A função <function>microtime</function> retorna o timestamp atual em microssegundos. Esta função
-   está disponível apenas em sistemas operacionais que suportam o chamada de sistema
-   gettimeofday().
+   A função <function>microtime</function> retorna o timestamp atual com
+   microssegundos. Esta função está disponível apenas em sistemas operacionais que suportam
+   a chamada de sistema gettimeofday().
+  </para>
+  <para>
+   Por questões de performance, utilize <function>hrtime</function>.
   </para>
  </refsect1>
 
@@ -24,7 +27,7 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>get_as_float</parameter></term>
+     <term><parameter>as_float</parameter></term>
      <listitem>
       <para>
        Se utilizada e definida como &true;, a função <function>microtime</function> retornará um
@@ -37,7 +40,7 @@
   </para>
  </refsect1>
 
-  <refsect1 role="returnvalues">
+ <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
    Por padrão, a função <function>microtime</function> retorna uma <type>string</type> no
@@ -47,7 +50,7 @@
    e também é expressada em segundos.
   </para>
   <para>
-   Se o parâmetro opcional <parameter>get_as_float</parameter> for definido para &true;
+   Se o parâmetro opcional <parameter>as_float</parameter> for definido para &true;
    então a função <function>microtime</function> retornará um <type>float</type>, que
    representa a hora atual em segundos desde Unix epoch com precisão
    de microssegundos.
@@ -58,34 +61,7 @@
   &reftitle.examples;
   <para>
    <example>
-    <title>Cronometrando a execução do script com <function>microtime</function></title>
-    <programlisting role="php">
-<![CDATA[
-<?php
-/**
- * Simple function to replicate PHP 5 behaviour
- */
-function microtime_float()
-{
-    list($usec, $sec) = explode(" ", microtime());
-    return ((float)$usec + (float)$sec);
-}
-
-$time_start = microtime_float();
-
-// Sleep for a while
-usleep(100);
-
-$time_end = microtime_float();
-$time = $time_end - $time_start;
-
-echo "Did nothing in $time seconds\n";
-?>
-]]>
-    </programlisting>
-   </example>
-   <example>
-    <title>Cronometrando a execução do script no PHP 5</title>
+    <title>Cronometrando a execução do script</title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -97,24 +73,24 @@ usleep(100);
 $time_end = microtime(true);
 $time = $time_end - $time_start;
 
-echo "Did nothing in $time seconds\n";
+echo "Fiz nada em $time segundo(s).\n";
 ?>
 ]]>
     </programlisting>
    </example>
    <example>
-    <title><function>microtime</function> e <literal>REQUEST_TIME_FLOAT</literal> (a partir do PHP 5.4.0)</title>
+    <title><function>microtime</function> e <literal>REQUEST_TIME_FLOAT</literal></title>
     <programlisting role="php">
 <![CDATA[
 <?php
 // Randomize sleeping time
 usleep(mt_rand(100, 10000));
 
-// As of PHP 5.4.0, REQUEST_TIME_FLOAT is available in the $_SERVER superglobal array.
-// It contains the timestamp of the start of the request with microsecond precision.
+// REQUEST_TIME_FLOAT está disponível no array superglobal $_SERVER.
+// Ele contém o timestamp de início da requisição com precisão de microsegundos.
 $time = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
 
-echo "Did nothing in $time seconds\n";
+echo "Fiz nada em $time segundo(s).\n";
 ?>
 ]]>
     </programlisting>
@@ -127,11 +103,11 @@ echo "Did nothing in $time seconds\n";
   <para>
    <simplelist>
     <member><function>time</function></member>
+    <member><function>hrtime</function></member>
    </simplelist>
   </para>
  </refsect1>
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
