@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: diogo Status: ready --><!-- CREDITS: narigone -->
+<!-- EN-Revision: e41806c30bf6975e452c0d4ce35ab0984c2fa68c Maintainer: diogo Status: ready --><!-- CREDITS: narigone,@lhsazevedo -->
 <refentry xml:id="function.file-put-contents" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>file_put_contents</refname>
-  <refpurpose>Escreve uma string para um arquivo</refpurpose>
+  <refpurpose>Escreve dados em um arquivo</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
@@ -12,7 +12,7 @@
    <type>int</type><methodname>file_put_contents</methodname>
    <methodparam><type>string</type><parameter>filename</parameter></methodparam>
    <methodparam><type>mixed</type><parameter>data</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>flags</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>flags</parameter><initializer>0</initializer></methodparam>
    <methodparam choice="opt"><type>resource</type><parameter>context</parameter></methodparam>
   </methodsynopsis>
   <para>
@@ -44,7 +44,7 @@
      <listitem>
       <para>
        Os dados a serem escritos. Pode ser uma <type>string</type>, um
-       <type>array</type> ou um recurso <type>stream</type> (explicado abaixo).
+       <type>array</type> ou um recurso <type>stream</type>.
       </para>
     <para>
      Se <parameter>data</parameter> for um recurso <type>stream</type>, o
@@ -63,8 +63,7 @@
      <listitem>
       <para>
        O valor de <parameter>flags</parameter> pode ser qualquer combinação das
-       seguintes flags (com algumas restrições), unidas com o operador binário OR
-       (<literal>|</literal>).
+       seguintes flags, unidas com o operador binário OR (<literal>|</literal>).
       </para>
       <para>
        <table>
@@ -93,7 +92,7 @@
            </entry>
            <entry>
         Se o arquivo <parameter>filename</parameter> já existir, acrescenta
-      os dados ao arquivo ao invés de sobrescrevê-lo.
+      os dados no arquivo ao invés de sobrescrevê-lo.
            </entry>
           </row>
           <row>
@@ -101,32 +100,11 @@
             <constant>LOCK_EX</constant>
            </entry>
            <entry>
-        Adquire um bloqueio exclusivo enquanto estiver escrevendo.
-           </entry>
-          </row>
-          <row>
-           <entry>
-            <constant>FILE_TEXT</constant>
-           </entry>
-           <entry>
-        Os dados de <parameter>data</parameter> são escritos em modo texto.
-      Se a semântica unicode estiver habilitada, o encoding padrão é UTF-8.
-            Você pode especificar um encoding diferente criando um
-      contexto personalizado ou alterando o encoding padrão utilizando
-      <function>stream_default_encoding</function>. Esta flag não pode ser
-      usada com <constant>FILE_BINARY</constant> e está disponível apenas
-      a partir do PHP 6.
-           </entry>
-          </row>
-          <row>
-           <entry>
-            <constant>FILE_BINARY</constant>
-           </entry>
-           <entry>
-            Os dados de <parameter>data</parameter> serão escritos em modo binário.
-      Esta é a opção padrão e não pode ser utilizada com
-            <constant>FILE_TEXT</constant>. Esta flag está disponível apenas a partir
-      do PHP 6.
+        Adquire uma trava exclusiva no arquivo ao prosseguir para a escrita. Em
+        outras palavras, uma chamada <function>flock</function> acontece entre
+        a chamada <function>fopen</function> e a chamada
+        <function>fwrite</function>. Isso não é idêntico à uma chamada
+        <function>fopen</function> com modo "x".
            </entry>
           </row>
          </tbody>
@@ -151,46 +129,48 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   A função retorna a quantidade de bytes que foi escrita no arquivo ou
+   Esta função retorna a quantidade de bytes que foi escrita no arquivo ou
    &false; em caso de falha.
   </para>
+
+  &return.falseproblem;
  </refsect1>
 
- <refsect1 role="changelog">
-  &reftitle.changelog;
+  <refsect1 role="examples">
+  &reftitle.examples;
   <para>
-   <informaltable>
-    <tgroup cols="2">
-     <thead>
-      <row>
-       <entry>&Version;</entry>
-       <entry>&Description;</entry>
-      </row>
-     </thead>
-     <tbody>
-      <row>
-       <entry>5.0.0</entry>
-       <entry>
-        Adicionado suporte a contexto
-       </entry>
-      </row>
-      <row>
-       <entry>5.1.0</entry>
-       <entry>
-      Adicionado suporte a <constant>LOCK_EX</constant> e a possibilidade de passar
-    um recurso de stream para o parâmetro <parameter>data</parameter>
-       </entry>
-      </row>
-      <row>
-       <entry>6.0.0</entry>
-       <entry>
-      Adicionado suporte às flags <constant>FILE_TEXT</constant> e
-        <constant>FILE_BINARY</constant>
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
+   <example>
+    <title>Exemplo de uso simples</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$file = 'people.txt';
+// Abre o arquivo para obter o conteúdo existente
+$current = file_get_contents($file);
+// Acrescenta a nova pessoa no arquivo
+$current .= "John Smith\n";
+// Escreve o conteúdo de volta no arquivo
+file_put_contents($file, $current);
+?>
+]]>
+    </programlisting>
+   </example>
+   <example>
+    <title>Usando flags</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$file = 'people.txt';
+// A nova pessoa para adicionar no arquivo
+$person = "John Smith\n";
+// Escreve o conteúdo no arquivo,
+// usando a flag FILE_APPEND para acrescentar o conteúdo no fim do arquivo
+// e a flag LOCK_EX para evitar que outra pessoa escreva no arquivo ao mesmo tempo
+file_put_contents($file, $person, FILE_APPEND | LOCK_EX);
+?>
+]]>
+    </programlisting>
+   </example>
   </para>
  </refsect1>
 
