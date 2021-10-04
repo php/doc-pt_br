@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: felipe Status: ready --><!-- CREDITS: rarruda, ae -->
-<refentry xml:id="function.unlink" xmlns="http://docbook.org/ns/docbook">
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 28fa285d52a9efaadb99be42e6597fdd8f59f31c Maintainer: ae Status: ready --><!-- CREDITS: rarruda,ae,felipe -->
+<refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.unlink">
  <refnamediv>
   <refname>unlink</refname>
   <refpurpose>Apaga um arquivo</refpurpose>
@@ -9,12 +9,14 @@
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>int</type><methodname>unlink</methodname>
+   <type>bool</type><methodname>unlink</methodname>
    <methodparam><type>string</type><parameter>filename</parameter></methodparam>
    <methodparam choice="opt"><type>resource</type><parameter>context</parameter></methodparam>
   </methodsynopsis>
   <para>
-   Deleta <parameter>filename</parameter>. Similar a função do C no Unix unlink().
+   Apaga o arquivo <parameter>filename</parameter>. Similar a função do C no Unix unlink().
+   Emite um erro <constant>E_WARNING</constant> level no caso de
+   falha.
   </para>
  </refsect1>
 
@@ -27,6 +29,10 @@
      <listitem>
       <para>
        Caminho para o arquivo.
+      </para>
+      <para>
+       Se o arquivo for um link simbólico, o link será apagado. No Windows, para apagar
+       um link para um diretório, deve ser utilizada a função <function>rmdir</function>.
       </para>
      </listitem>
     </varlistentry>
@@ -49,28 +55,46 @@
 
  <refsect1 role="changelog">
   &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>7.3.0</entry>
+      <entry>
+       No Windows, agora é possível realizar o <function>unlink</function> em arquivos
+       abertos, quando antes isso falhava. Entretanto, ainda não é possível de
+       recriar o arquivo apagado, até que o acessos ao arquivo anterior tenham sido
+       fechados.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
   <para>
-   <informaltable>
-    <tgroup cols="2">
-     <thead>
-      <row>
-       <entry>&Version;</entry>
-       <entry>&Description;</entry>
-      </row>
-     </thead>
-     <tbody>
-      <row>
-       <entry>5.0.0</entry>
-       <entry>
-        No PHP 5.0.0 <function>unlink</function> pode também ser usada com
-        <emphasis>alguns</emphasis> URL wrappers. Consulte <xref
-        linkend="wrappers"/> para uma listagem de wrappers que são suportados na
-        <function>unlink</function>.
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
+   <example>
+    <title>Exemplo de <function>unlink</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$fh = fopen('test.html', 'a');
+fwrite($fh, '<h1>Hello world!</h1>');
+fclose($fh);
+
+unlink('test.html');
+?>
+]]>
+    </programlisting>
+   </example>
   </para>
  </refsect1>
 
@@ -78,7 +102,7 @@
   &reftitle.seealso;
   <para>
    <simplelist>
-    <member><function>rmdir</function> for removing directories</member>
+    <member><function>rmdir</function></member>
    </simplelist>
   </para>
  </refsect1>
