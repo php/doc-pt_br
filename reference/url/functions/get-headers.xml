@@ -1,21 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: narigone Status: ready -->
-<refentry xml:id="function.get-headers" xmlns="http://docbook.org/ns/docbook">
+<!-- EN-Revision: 67dc0a5dfc5cdc65cce5d472ed0bba315b895f28 Maintainer: narigone Status: ready --><!-- CREDITS: narigone,@lhsazevedo -->
+
+<refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.get-headers">
  <refnamediv>
   <refname>get_headers</refname>
-  <refpurpose>Retorna todos os cabeçalhos enviados pelo servidor em resposta à requisição HTTP</refpurpose>
+  <refpurpose>Retorna todos os cabeçalhos enviados pelo servidor em resposta a uma requisição HTTP</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>array</type><methodname>get_headers</methodname>
+   <type class="union"><type>array</type><type>false</type></type><methodname>get_headers</methodname>
    <methodparam><type>string</type><parameter>url</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>format</parameter></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>associative</parameter><initializer>&false;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>resource</type><type>null</type></type><parameter>context</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
   <para>
-   <function>get_headers</function> retorna um array com os cabeçalhos enviados pelo
-   servidor em resposta à requisição HTTP.
+   <function>get_headers</function> retorna um array com os cabeçalhos enviados
+   pelo servidor em resposta a uma requisição HTTP.
   </para>
  </refsect1>
 
@@ -32,12 +34,21 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>format</parameter></term>
+     <term><parameter>associative</parameter></term>
      <listitem>
       <para>
-       Se o parâmetro opcional <parameter>format</parameter> tiver valor 1,
-       <function>get_headers</function> avalia a resposta e configura as 
-       chaves do array.
+       Se o parâmetro opcional <parameter>associative</parameter> estiver
+       definido como true, <function>get_headers</function> avalia a resposta e
+       define as chaves do array.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>context</parameter></term>
+     <listitem>
+      <para>
+       Um recurso de contexto válido criado com
+       <function>stream_context_create</function>.
       </para>
      </listitem>
     </varlistentry>
@@ -66,11 +77,16 @@
      </thead>
      <tbody>
       <row>
-       <entry>5.1.3</entry>
+       <entry>8.0.0</entry>
        <entry>
-        Essa função agora usa o contexto de streaming padrão, que pode ser
-        alterado com a função 
-        <function>stream_context_get_default</function>.
+        O parâmetro <parameter>associative</parameter> foi modificado de
+        <type>int</type> para <type>bool</type>.
+       </entry>
+      </row>
+      <row>
+       <entry>7.1.0</entry>
+       <entry>
+        O parâmetro <parameter>context</parameter> foi adicionado.
        </entry>
       </row>
      </tbody>
@@ -83,7 +99,7 @@
  &reftitle.examples;
   <para>
    <example>
-    <title>Exemplo de uso de <function>get_headers</function></title>
+    <title>Exemplo de <function>get_headers</function></title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -91,7 +107,7 @@ $url = 'http://www.example.com';
 
 print_r(get_headers($url));
 
-print_r(get_headers($url, 1));
+print_r(get_headers($url, true));
 ?>
 ]]>
     </programlisting>
@@ -126,6 +142,35 @@ Array
 ]]>
     </screen>
    </example>
+   <example>
+    <title>Exemplo de <function>get_headers</function> usando HEAD</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// Por padrão get_headers usa uma requisição GET para obter os cabeçalhos. Se
+// você quiser enviar uma requisição HEAD, pode fazer isso utilizando um contexo
+// de stream:
+stream_context_set_default(
+    array(
+        'http' => array(
+            'method' => 'HEAD'
+        )
+    )
+);
+$headers = get_headers('http://example.com');
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>apache_request_headers</function></member>
+   </simplelist>
   </para>
  </refsect1>
 
