@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<sect1 xml:id="install.windows.apache2" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Apache 2.x no Microsoft Windows</title>
+ <para>
+  Esta seção contém notas e dicas específicas para instalações do Apache 2.x
+  do PHP em sistemas Microsoft Windows.
+ </para>
+ <note>
+  <para>
+   Por favor, leia o <link linkend="install.windows.manual">manual
+   das etapas de instalação</link> primeiro!.
+  </para>
+ </note>
+
+ <para>
+  É altamente recomendável consultar a 
+  <link xlink:href="&url.apache2.docs;">Documentação Apache</link>
+  para obter uma compreensão básica do servidor Apache 2.x
+  Considere, também, a leitura das 
+  <link xlink:href="&url.apache2.windows;">notas específicas do Windows</link>
+  para Apache 2.x antes de continuar.
+ </para>
+
+ <para>
+  Baixa a versão mais recente do 
+  <link xlink:href= "&url.apachelounge.download;">Apache 2.x</link>
+  e uma versão adequada do PHP. Siga os 
+  <link linkend="install.windows.manual">passos do manual de instação</link>
+  e volte para prosseguir com a integração do PHP e Apache.
+ </para>
+
+ <para>
+  Existem três maneiras de configurar o PHP para funcionar com o Apache 2.x no Windows.
+  O PHP pode ser executado como um controlador, como um CGI ou em FastCGI.
+ </para>
+
+ &note.apache.slashes;
+
+ <sect2 xml:id="install.windows.apache2.module">
+  <title>Instalando como um controlador Apache</title>
+  <para>
+   Para carregar o módulo PHP para Apache 2.x, as seguintes linhas no
+    arquivo de configuração Apache &httpd.conf; precisam ser inseridas:
+   <example>
+    <title>PHP e Apache 2.x como controlador</title>
+    <programlisting role="apache-conf">
+<![CDATA[
+# antes do PHP 8.0.0 o nome do módulo era php7_module
+LoadModule php_module "c:/php/php8apache2_4.dll"
+<FilesMatch \.php$>
+    SetHandler application/x-httpd-php
+</FilesMatch>
+# configure caminho para php.ini
+PHPIniDir "C:/php"
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <note>
+   <simpara>
+    O caminho correto do PHP precisa ser substituído em vez de 
+    <filename>C:/php/</filename> nos exemplos acima.
+    Certifique-se de que o arquivo referenciado na diretiva <literal>LoadModule</literal> está no
+    local especificado. Use <filename>php7apache2_4.dll</filename>
+    para PHP 7, ou <filename>php8apache2_4.dll</filename> para PHP 8.
+   </simpara>
+  </note>
+ </sect2>
+
+ <sect2 xml:id="install.windows.apache2.cgi">
+  <title>Executando PHP como CGI</title>
+
+  <para>
+   É altamente recomendável consultar a
+   <link xlink:href="&url.apache.cgi;">documentação Apache CGI</link>
+   para uma compreensão mais completa da execução de CGI no Apache.
+  </para>
+
+  <para>
+   Para executar o PHP como CGI, os arquivos php-cgi precisarão ser colocados em um
+   diretório designado como um diretório CGI usando a diretiva ScriptAlias.
+  </para>
+
+  <para>
+   Uma linha iniciada com <literal>#!</literal> precisará ser colocada nos arquivos PHP
+   que apontam para a localização do binário do PHP:
+
+   <example>
+    <title>PHP e Apache 2.x como CGI</title>
+    <programlisting>
+<![CDATA[
+#!C:/php/php.exe
+<?php
+  phpinfo();
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  &warn.install.cgi;
+ </sect2>
+
+ <sect2 xml:id="install.windows.apache2.fastcgi">
+  <title>Executando PHP sobre FastCGI</title>
+
+  <para>
+   Executar o PHP no FastCGI tem uma série de vantagens sobre executá-lo como um
+   CGI. Configurá-lo dessa forma é bastante simples:
+  </para>
+  <para>
+   Baixe <literal>mod_fcgid</literal> de
+   <link xlink:href="&url.apachelounge.download;">&url.apachelounge;</link>.
+   Os binários do Win32 estão disponíveis para download nesse site.
+   Instale o módulo de acordo com as instruções que o acompanham.
+  </para>
+  <para>
+   Configure o seu servidor web conforme mostrado abaixo, tendo o cuidado de ajustar quaisquer caminhos
+   para refletir como você instalou em seu sistema específico:
+
+   <example>
+    <title>Configure o Apache para executar PHP como FastCGI</title>
+    <programlisting>
+<![CDATA[
+LoadModule fcgid_module modules/mod_fcgid.so
+# Onde está seu arquivo php.ini?
+FcgidInitialEnv PHPRC        "c:/php"
+<FilesMatch \.php$>
+    SetHandler fcgid-script
+</FilesMatch>
+FcgidWrapper "c:/php/php-cgi.exe" .php
+]]>
+    </programlisting>
+   </example>
+
+   Arquivos com extensão .php agora serão executados pelo interpretador PHP FastCGI.
+  </para>
+ </sect2>
+</sect1>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
