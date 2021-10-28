@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="utf-8"?> <!-- EN-Revision: 4d2479dcf35d82aca39ee61f8ab36ceed78a869c Maintainer: @lhsazevedo Status: ready -->
+<sect1 xml:id="migration81.deprecated">
+ <title>Funcionalidades depreciadas</title>
+
+ <sect2 xml:id="migration81.deprecated.core">
+  <title>PHP Core</title>
+
+  <sect3 xml:id="migration81.deprecated.core.serialize-interface">
+   <title>
+    Implementar <interfacename>Serializable</interfacename> sem
+    <function>__serialize</function> e <function>__unserialize</function>
+   </title>
+
+   <para>
+    Apenas os novos métodos devem ser implementados, se nenhum suporte para PHP
+    anterior à versão 7.4 for fornecido, ou ambos devem ser implementados.
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration81.deprecated.core.null-not-nullable-internal">
+   <title>Passar &null; para parâmetros não não-anuláveis de funções embutidas</title>
+
+   <para>
+    Tipos escalares para funções embutidas são anuláveis por padrão,
+    esse comportamento está depreciado para alinhar com o comportamento de funções definidas
+    pelo usuário, onde tipos escalares precisam ser explicitamente marcados como anuláveis.
+
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+<?php
+var_dump(str_contains("foobar", null));
+// Deprecated: Passing null to parameter #2 ($needle) of type string
+//             is deprecated
+?>
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration81.deprecated.core.implicit-float-conversion">
+   <title>Conversões &float; para &integer; incompatíveis implícitas</title>
+
+   <para>
+    A conversão implícita de &float; para &integer; que
+    leva a uma perda de precisão agora está depreciada.
+    Isso afeta chaves de &array;, Declarações do tipo &integer; no modo coercitivo,
+    e operadores trabalhando em &integer;s.
+
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+<?php
+$a = [];
+$a[15.5]; // depreciado, pois o valor da chave perde o componente de 0.5
+$a[15.0]; // ok, pois 15.0 == 15
+?>
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration81.deprecated.core.static-trait">
+   <title>Chamar o elemento <modifier>static</modifier> em um trait</title>
+
+   <para>
+    Chamar um método <modifier>static</modifier>, ou acessar uma
+    propriedade <modifier>static</modifier> diretamente em um trait está depreciado.
+    Métodos e propriedades estáticos devem ser acessados apenas em uma classe usando o trait.
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration81.deprecated.core.magic-sleep">
+   <title>Retornar um não-&array; da <function>__sleep</function></title>
+
+   <para>
+    Retornar um valor que não é um &array; da
+    <link linkend="object.sleep">__sleep()</link> agora gera um diagnóstico.
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration81.deprecated.core.void-by-ref">
+   <title>Retornar por referencia de uma função <type>void</type></title>
+
+   <para>
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+<?php
+function &test(): void {}
+?>
+]]>
+     </programlisting>
+    </informalexample>
+    Essa função é contraditória, e já emite o seguinte
+    <constant>E_NOTICE</constant> quando chamada:
+    <literal>Only variable references should be returned by reference</literal>.
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration81.deprecated.core.autovivification-false">
+   <title>Autovivificação a partir de &false;</title>
+   <para>
+    Autovivificação é o processo de criar um novo &array; ao
+    acrescentar um valor.
+    Autovivificação é proibida a partir de valores escalares, &false;, no entanto
+    era uma exceção. Isso está depreciado agora.
+
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+<?php
+$arr = false;
+$arr[] = 2;   // depreciado
+?>
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+   <note>
+    <para>
+     Autovivificação a partir de &null; e valores não indefinidos ainda é permitida:
+     <informalexample>
+      <programlisting role="php">
+<![CDATA[
+<?php
+// A partir de indefinido
+$arr[] = 'some value';
+$arr['doesNotExist'][] = 2;
+// A partir de null
+$arr = null;
+$arr[] = 2;
+?>
+]]>
+      </programlisting>
+     </informalexample>
+    </para>
+   </note>
+  </sect3>
+
+ </sect2>
+
+ <sect2 xml:id="migration81.deprecated.ctype">
+  <title>ctype</title>
+
+  <sect3 xml:id="migration81.deprecated.ctype.nonstring-arguments">
+   <title>Verificar argumentos não-string</title>
+
+   <para>
+    Passar um argumento não-string está depreciado.
+    No futuro, o argumento será interpretado como uma string em vez
+    de um codepoint ASCII.
+    Dependendo do comportamento pretendido, o argumento deve ser
+    convertido para &string; ou uma chamada explícita para
+    <function>chr</function> deve ser feita.
+    Todas as funções <literal>ctype_*()</literal> são afetadas.
+   </para>
+  </sect3>
+ </sect2>
+
+ <sect2 xml:id="migration81.deprecated.date">
+  <title>Data</title>
+
+  <para>
+   A <function>date_sunrise</function> e <function>date_sunset</function>
+   foram depreciadas em favor de <function>date_sun_info</function>.
+  </para>
+
+  <para>
+   A <function>strptime</function> foi depreciada.
+   Use <function>date_parse_from_format</function> em vez dela (para análise independente de localidade),
+   ou <methodname>IntlDateFormatter::parse</methodname> (para análise dependente de localidade).
+  </para>
+ </sect2>
+
+ <sect2 xml:id="migration81.deprecated.filter">
+  <title>Filtros</title>
+
+  <para>
+   Os filtros <constant>FILTER_SANITIZE_STRING</constant> e
+   <constant>FILTER_SANITIZE_STRIPPED</constant> estão depreciados.
+  </para>
+  <para>
+   A diretiva INI <link linkend="ini.filter.default">filter.default</link>
+   está depreciada.
+   <!-- TODO Check that filter.default_flags -->
+  </para>
+ </sect2>
+
+ <sect2 xml:id="migration81.deprecated.gd">
+  <title>GD</title>
+
+  <para>
+   O <parameter>num_points</parameter> da <function>imageopenpolygon</function>
+   e <function>imagefilledpolygon</function> foram depreciados.
+  </para>
+ </sect2>
+
+ <sect2 xml:id="migration81.deprecated.hash">
+  <title>Hash</title>
+
+  <para>
+   A <function>mhash</function>,
+   <function>mhash_keygen_s2k</function>,
+   <function>mhash_count</function>,
+   <function>mhash_get_block_size</function>,
+   e <function>mhash_get_hash_name</function> foram depreciadas.
+   Use as funções <literal>hash_*()</literal> em vez delas.
+  </para>
+ </sect2>
+
+ <sect2 xml:id="migration81.deprecated.imap">
+  <title>IMAP</title>
+
+  <para>
+   A constante <constant>NIL</constant> foi depreciada.
+   Use <literal>0</literal> em vez dela.
+  </para>
+ </sect2>
+
+ <sect2 xml:id="migration81.deprecated.intl">
+  <title>Intl</title>
+
+  <para>
+   Chamar <methodname>IntlCalendar::roll</methodname> com um
+   argumento &boolean; está depreciado.
+   Use <literal>1</literal> e <literal>-1</literal> em vez de
+   &true; e &false; respectivamente.
+  </para>
+ </sect2>
+
+ <sect2 xml:id="migration81.deprecated.mbstring">
+  <title>Multibyte String</title>
+
+  <para>
+   Chamar <function>mb_check_encoding</function> sem argumentos
+   está depreciado.
+  </para>
+ </sect2>
+
+ <sect2 xml:id="migration81.deprecated.mysqli">
+  <title>MySQLi</title>
+
+  <para>
+   A propriedade <property>mysqli_driver::$driver_version</property>
+   foi depreciada.
+   Ela era sem sentido e desatualizada, use <constant>PHP_VERSION_ID</constant>
+   em vez dela.
+  </para>
+
+  <para>
+   Chamar <methodname>mysqli::get_client_info</methodname> ou
+   <function>mysqli_get_client_info</function> com o
+   argumento <parameter>mysqli</parameter> foi depreciado.
+   Chame <function>mysqli_get_client_info</function> sem argumentos
+   para obter a informação de versão da biblioteca cliente.
+  </para>
+
+  <para>
+   O método <methodname>mysqli::init</methodname> foi depreciado.
+   Substitua chamadas para <methodname>parent::init</methodname> por
+   <methodname>parent::__construct</methodname>.
+  </para>
+ </sect2>
+
+ <sect2 xml:id="migration81.deprecated.oci8">
+  <title>OCI8</title>
+
+  <para>
+   A diretiva INI <link linkend="ini.oci8.old-oci-close-semantics">oci8.old_oci_close_semantics</link>
+   está depreciada.
+  </para>
+ </sect2>
+
+ <sect2 xml:id="migration81.deprecated.odbc">
+  <title>ODBC</title>
+
+  <para>
+   <function>odbc_result_all</function> foi depreciada.
+  </para>
+ </sect2>
+
+ <sect2 xml:id="migration81.deprecated.pdo">
+  <title>PDO</title>
+
+  <para>
+   O modo de busca <constant>PDO::FETCH_SERIALIZE</constant> foi depreciado.
+  </para>
+ </sect2>
+
+ <sect2 xml:id="migration81.deprecated.pgsql">
+  <title>PgSQL</title>
+
+  <para>
+   Não passar o argumento de conexão para todas as funções <literal>pgsql_*()</literal>
+   foi depreciado.
+  </para>
+ </sect2>
+
+ <sect2 xml:id="migration81.deprecated.soap">
+  <title>SOAP</title>
+
+  <para>
+   A opção <literal>ssl_method</literal> do
+   <methodname>SoapClient::__construct</methodname> foi depreciada
+   em favor das opções de contexto de stream SSL.
+   <!-- The direct equivalent would be
+    crypto_method, but min_proto_version/max_proto_version are recommended
+    instead. -->
+  </para>
+ </sect2>
+
+ <sect2 xml:id="migration81.deprecated.standard">
+  <title>Biblioteca Padrão</title>
+
+  <para>
+   Chamar <function>key</function>, <function>current</function>,
+   <function>next</function>, <function>prev</function>,
+   <function>reset</function>, ou <function>end</function>
+   em &object;s está depreciado.
+   Use <function>get_mangled_object_vars</function> no
+   objeto primeiro, ou use <classname>ArrayIterator</classname>.
+  </para>
+
+  <para>
+   A diretiva INI <link linkend="ini.auto-detect-line-endings">auto_detect_line_endings</link>
+   está depreciada.
+   Se necessário, em vez dela, lide com quebras de linha <literal>"\r"</literal> manualmente.
+  </para>
+
+  <para>
+   As constantes <constant>FILE_BINARY</constant> e
+   <constant>FILE_TEXT</constant> foram depreciadas.
+   Elas nunca tiveram nenhum efeito.
+  </para>
+ </sect2>
+
+</sect1>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
