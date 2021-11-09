@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: d082313568cd8c1a78fa4beaa58f29ba0fe72797 Maintainer: ae Status: ready --><!-- CREDITS: royopa,diegopires,narigone,ae -->
+<!-- EN-Revision: 4eeb07225f615fcde68cbefb84df2fc9bf278f1f Maintainer: ae Status: ready --><!-- CREDITS: royopa,diegopires,narigone,ae -->
 <chapter xml:id="configuration" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>Configuração em tempo de execução</title>
  
@@ -19,26 +19,31 @@
     <listitem>
      <simpara>
       Local específico do módulo SAPI (diretiva <literal>PHPIniDir</literal> 
-      no Apache 2, opção de linha de comando <literal>-c</literal> no CGI e CLI,
-      parâmetro <literal>php_ini</literal> no NSAPI,
-      variável de ambiente <literal>PHP_INI_PATH</literal> no THTTPD)
+      no Apache 2, opção de linha de comando <literal>-c</literal> no CGI e CLI)
      </simpara>
     </listitem>
     <listitem>
      <simpara>
-      A variável de ambiente <varname>PHPRC</varname>. Antes do PHP 5.2.0,
-      isso era verificado após as chaves do registro mencionada abaixo.
+      A variável de ambiente <varname>PHPRC</varname>.
      </simpara>
     </listitem>
     <listitem>
      <simpara>
-      A partir do PHP 5.2.0, a localização do arquivo <literal>php.ini</literal>
-      pode ser definida para versões diferentes do PHP. As seguintes chaves
-      do registro são examinadas na ordem:
+      A localização do arquivo <literal>php.ini</literal>
+      pode ser definida para versões diferentes do PHP. A raiz do registro depende da compilação em 32 ou 64 bits do sistema operacional (SO) e do PHP.
+      Para um PHP 32 bits em um SO de 32 bits ou um PHP de 64 bits em um SO de 64 bits use <literal>[(HKEY_LOCAL_MACHINE\SOFTWARE\PHP]</literal>, Para um PHP 32 bits em um SO de 64 bits use <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\PHP]</literal>].
+      Para sistema onde a compilação em bits coincida, as seguintes chaves
+      são examinadas, nessa ordem:
       <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\PHP\x.y.z]</literal>,
       <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\PHP\x.y]</literal> e
       <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\PHP\x]</literal>, onde
-      x, y e z significam a versão maior, menor e release do PHP. Se houver um valor
+      x, y e z significam os valores de versão PHP major, minor e release.
+      Para PHP versão 32 bits em um SO de 64 bits, as seguintes chaves são examinadas em ordem:
+      <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6421Node\PHP\x.y.z]</literal>,
+      <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6421Node\PHP\x.y]</literal> e
+      <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6421Node\PHP\x]</literal>, onde
+      x, y e z significam os valores de versão PHP major, minor e release.
+      Se houver um valor
       para <literal>IniFilePath</literal> nestas chaves, então o primeiro
       encontrado será utilizado para a localização do <literal>php.ini</literal>
       (apenas Windows).
@@ -46,7 +51,8 @@
     </listitem>
     <listitem>
      <simpara>
-      <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\PHP]</literal>, valor de 
+      <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\PHP]</literal> ou
+      <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\PHP]</literal>, valor de
       <literal>IniFilePath</literal> (Somente Windows).
      </simpara>
     </listitem>
@@ -90,7 +96,7 @@
     <title>&php.ini; Variáveis de ambiente</title>
      <programlisting role="ini">
 <![CDATA[
-; PHP_MEMORY_LIMIT is taken from environment
+; PHP_MEMORY_LIMIT é lido das variáveis de ambiente
 memory_limit = ${PHP_MEMORY_LIMIT}
 ]]>
      </programlisting>
@@ -111,18 +117,18 @@ memory_limit = ${PHP_MEMORY_LIMIT}
     <title>Exemplo de arquivo &php.ini;</title>
     <programlisting role="ini">
 <![CDATA[
-; any text on a line after an unquoted semicolon (;) is ignored
-[php] ; section markers (text within square brackets) are also ignored
-; Boolean values can be set to either:
+; qualquer texto após um ponto e virgula nú (;) é ignorado
+[php] ; marcadores de sessão (textos dentro de colchetes) também são ignorados
+; Valores booleanos podem ser:
 ;    true, on, yes
-; or false, off, no, none
+; ou false, off, no, none
 register_globals = off
 track_errors = yes
 
-; you can enclose strings in double-quotes
+; vocẽ pode organizar strings dentro de aspas
 include_path = ".:/usr/local/lib/php"
 
-; backslashes are treated the same as any other character
+; contrabarra é tradado como um caracter normal
 include_path = ".;c:\php\lib"
 ]]>
     </programlisting>
@@ -130,7 +136,7 @@ include_path = ".;c:\php\lib"
    </example>
   </para>
   <para>
-   A partir do PHP 5.1.0, é possível acessar as variáveis .ini
+   É possível acessar as variáveis .ini
    dentro dos arquivos .ini. Exemplo: <literal>open_basedir = ${open_basedir}
    ":/new/dir"</literal>.
   </para>
@@ -141,7 +147,7 @@ include_path = ".;c:\php\lib"
     É possível configurar o PHP para procurar por arquivos .ini em um diretório
     após a leitura do &php.ini;. Isto é possível na compilação pela configuração da opção
     <option role="configure">--with-config-file-scan-dir</option>. No
-    PHP 5.2.0 e posterior, o diretório de configuração pode ser sobrescrito em tempo de execução
+    O diretório de configuração pode ser sobrescrito em tempo de execução
     através da configuração da variável de ambiente <varname>PHP_INI_SCAN_DIR</varname>.
    </para>
 
@@ -157,7 +163,7 @@ include_path = ".;c:\php\lib"
 
    <para>
     Dentro de cada diretório o PHP irá pesquisar todos os arquivos terminados em
-    <literal>.ini</literal> em ordem alfabetica. A lista de arquivos
+    <literal>.ini</literal> em ordem alfabética. A lista de arquivos
     é carregada, e nessa ordem são interpretados com uma chamada a 
     <function>php_ini_scanned_files</function>, o por rodar o PHP com a opção
     <option>--ini</option>.
@@ -167,7 +173,7 @@ include_path = ".;c:\php\lib"
     <screen>
 <![CDATA[
 Assumindo que o PHP foi configurado com --with-config-file-scan-dir=/etc/php.d,
-e o separador de caminho é :
+e o separador de caminho é :...
 
 $ php
   PHP irá carregar todos os arquivos de configuração em in /etc/php.d/*.ini.
@@ -187,53 +193,16 @@ $ PHP_INI_SCAN_DIR=/usr/local/etc/php.d: php
     </screen>
    </informalexample>
   </sect2>
-  <sect2 xml:id="configuration.file.changelog">
-   &reftitle.changelog;
-
-   <para>
-    <informaltable>
-     <tgroup cols="2">
-      <thead>
-       <row>
-        <entry>&Version;</entry>
-        <entry>&Description;</entry>
-       </row>
-      </thead>
-      <tbody>
-       <row>
-        <entry>7.0.0</entry>
-        <entry>
-         Marcas de hash (<literal>#</literal>) não são mais consideradas comentários.
-        </entry>
-       </row>
-       <row>
-        <entry>5.3.0</entry>
-        <entry>
-         Marcas de hash (<literal>#</literal>) não devem ser ser utilizadas como comentários
-         e gerarão alertas.
-        </entry>
-       </row>
-       <row>
-        <entry>5.1.0</entry>
-        <entry>
-         É possível referenciar variáveis .ini existentes dentro de arquivos .ini .
-        </entry>
-       </row>
-      </tbody>
-     </tgroup>
-    </informaltable>
-   </para>
-  </sect2>
  </sect1>
  
  <sect1 xml:id="configuration.file.per-user">
   <title>Arquivos .user.ini</title>
   
   <simpara>
-   A partir do PHP 5.3.0, o PHP tem suporte para arquivos de configuração INI por 
+   O PHP tem suporte para arquivos de configuração INI por 
    cada diretório. Esses arquivos são processados <emphasis>apenas</emphasis> pelo
    CGI/FastCGI SAPI. Essa funcionalidade torna obsoleta a extensão PECL htscanner.
-   Se você está usando Apache, use arquivos &htaccess; para o mesmo
+   Se você estiver rodando o PHP como um módulo do Apache, use arquivos &htaccess; para obter o mesmo
    efeito.
   </simpara>
   
@@ -253,24 +222,20 @@ $ PHP_INI_SCAN_DIR=/usr/local/etc/php.d: php
   
   <simpara>
    Duas novas diretivas INI,
-   <literal>user_ini.filename</literal> e
-   <literal>user_ini.cache_ttl</literal>
-   <!--
-       <link linkend="ini.user-ini.filename">user_ini.filename</link> and
-       <link linkend="ini.user-ini.cache-ttl">user_ini.cache_ttl</link>
-   -->
+   <link linkend="ini.user-ini.filename">user_ini.filename</link> e
+   <link linkend="ini.user-ini.cache-ttl">user_ini.cache_ttl</link>
    controlam o uso de arquivos INI de usuário.
   </simpara>
   
   <simpara>
-   A <literal>user_ini.filename</literal> define o nome do arquivo que o PHP 
+   A diretiva <link linkend="ini.user-ini.filename">user_ini.filename</link> define o nome do arquivo que o PHP 
    procura em cada diretório; se for definido como uma string vazia, o PHP não
    fará a varredura em tudo. O padrão é <literal>.user.ini</literal>.
   </simpara>
   
   <simpara>
-   <literal>user_ini.cache_ttl</literal> controla a frequência de como os arquivos INI 
-   de usuário são relidos. O padrão é 300 segundos (5 minutos).
+   A diretiva <link linkend="ini.user-ini.cache-ttl">user_ini.cache_ttl</link> controla a frequência de como os arquivos INI 
+   de usuário são relidos. O padrão é de 300 segundos (5 minutos).
   </simpara>
  </sect1>
  
@@ -279,7 +244,7 @@ $ PHP_INI_SCAN_DIR=/usr/local/etc/php.d: php
   
   <para>
    Estes modos determinam quando e onde uma diretiva do PHP pode ou não pode
-   ser definida, e cada diretiva no manual faz referencia a um destes modos.
+   ser definida, e cada diretiva no manual faz referência a um destes modos.
    Por exemplo, algumas definições podem ser feitas em um script PHP
    usando <function>ini_set</function>, enquanto outras só podem ser feitas no 
    &php.ini; ou &httpd.conf;.
@@ -311,14 +276,13 @@ $ PHP_INI_SCAN_DIR=/usr/local/etc/php.d: php
        <entry>
         A entrada pode ser definida nos scripts do usuário (com <function>ini_set</function>)
         ou no <link linkend="configuration.changes.windows">registro do Windows</link>.
-        Desde o PHP 5.3 a entrada pode ser definida no &user-ini;
+        A entrada pode ser definida no &user-ini;
        </entry>
       </row>
       <row>
        <entry><literal>PHP_INI_PERDIR</literal></entry>
        <entry>
         A entrada pode ser definida no &php.ini;, &htaccess;, &httpd.conf; ou &user-ini;
-        (desde o PHP 5.3)
        </entry>
       </row>
       <row>
@@ -464,15 +428,16 @@ $ PHP_INI_SCAN_DIR=/usr/local/etc/php.d: php
     <literal>HKLM\SOFTWARE\PHP\Per Directory Values</literal>,
     nas sub-chaves correspondentes aos caminhos dos diretórios. Por exemplo,
     valores para o diretório <literal>c:\inetpub\wwwroot</literal> estariam
-    armazenados na chave 
-    <literal>HKLM\SOFTWARE\PHP\Per Directory Values\c\inetpub\wwwroot</literal>. 
-    As configurações para o diretório estariam ativas para qualquer script rodando
-    nesse diretório ou qualquer subdiretório dele. Os valores na chave
+    armazenados na chave <literal>HKLM\SOFTWARE\PHP\Per Directory Values\c\inetpub\wwwroot</literal>.
+    As configurações para o
+    diretório estarão ativas para qualquer script rodando neste
+    diretório ou qualquer subdiretório dele. Os valores na chave
     devem ter o nome da diretiva de configuração do PHP e um
-    valor string. Constantes PHP nos valores não são parseados.
-    Entretanto, apenas valores de configuração modificáveis no
+    valor string. Constantes PHP nos valores não são interpretados.
+    Apenas valores de configuração modificáveis no
     <constant>PHP_INI_USER</constant> podem ser definidos
-    desta forma, valores <constant>PHP_INI_PERDIR</constant> não podem.
+    desta forma, e valores do <constant>PHP_INI_PERDIR</constant> não podem,
+    pois esses valores são recarregados em cada request.
    </simpara>
   </sect2>
   
