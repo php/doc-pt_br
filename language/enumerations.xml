@@ -104,7 +104,7 @@ $a instanceof Naipe;  // true
 
    <para>
     Esse tipo de caso, sem dados relacionados, é chamado de "Caso Puro". Uma Enum que contém
-    apenas Casos Puros é chamada de Enum Pura.
+    apenas Casos Puros é chamada de Pure Enum (enum pura).
    </para>
 
    <para>
@@ -128,11 +128,11 @@ print Naipe::Espadas->name;
   </sect1>
 
  <sect1 xml:id="language.enumerations.backed">
-  <title>Enumerações lastreadas (backed)</title>
+  <title>Backed enums</title>
 
   <para>
-   Por padrão, Casos Enumerados não possuem um equivalente escalar. Eles são apenas objetos singleton. No entanto,
-   existem muitos casos em que um Caso Enumerado precisa ser capaz de fazer fazer uma viagem de ida e volta para um banco de dados ou
+   Por padrão, os Casos não possuem um equivalente escalar. Eles são apenas objetos singleton. No entanto,
+   existem muitos casos em que um Caso Enumerado precisa ser capaz de fazer fazer uma conversão de ida e volta para um banco de dados ou
    um armazenamento de dados semelhante, então ter um escalar embutido (e, portanto, trivialmente serializável) equivalente definido
    intrinsecamente é útil.
   </para>
@@ -154,13 +154,13 @@ enum Naipe: string
   </programlisting>
 
   <para>
-   Um caso que possui um equivalente escalar é chamado de Caso Lastreado, e é "Lastreado"
-   por um valor mais simples. Uma Enum que possui todos Casos Lastreados é chamada "Enum Lastreada".
-   Uma Enum Lastreada pode conter apenas Casos Lastreados. Uma Enum Pura pode conter apenas Casos Puros.
+   Um caso que possui um equivalente escalar é chamado de Backed Case, sendo "Backed" no sentido de lastreado, suportado,
+   por um valor mais simples. Uma Enum que possui todos Casos Lastreados é chamada Backed Enum.
+   Uma Backed Enum pode conter apenas Backed Case. Uma Enum Pura pode conter apenas Casos Puros.
   </para>
 
   <para>
-   Uma Enumeração Lastreada pode ser lastreada por tipos de <literal>int</literal> ou <literal>string</literal>,
+   Uma Backed Enum pode associar valores de tipos <literal>int</literal> ou <literal>string</literal>,
    e uma determinada enumeração suporta apenas um único tipo de cada vez (isto é, sem união de <literal>int|string</literal>).
    Se uma enumeração for marcada como tendo um equivalente escalar, então todos os casos devem possuir um escalar equivalente
    único definido explicitamente. Não existem equivalentes escalares gerados automaticamente
@@ -176,7 +176,7 @@ enum Naipe: string
   </para>
 
   <para>
-   Casos Lastreados possuem uma propriedade somente leitura adicional, <literal>value</literal>, que é o valor
+   Backed Cases possuem uma propriedade somente leitura adicional, <literal>value</literal>, que é o valor
    especificado na definição.
   </para>
 
@@ -205,19 +205,19 @@ $ref = &$naipe->value;
   </programlisting>
 
   <para>
-   Enums lastreados implementam uma interface interna <interfacename>BackedEnum</interfacename>,
+   Backed Enums implementam uma interface interna <interfacename>BackedEnum</interfacename>,
    que expõe dois métodos adicionais:
   </para>
 
   <simplelist>
    <member>
-    <literal>from(int|string): self</literal> levará uma escalar e retornará o Caso Enum
+    <literal>from(int|string): self</literal> recebe uma escalar e retornará o Caso Enum
     correspondente. Se um não for encontrado, ela lançará um <classname>ValueError</classname>. Isso é útil
-    principalmente em casos onde o escalar de entrada é confiável e um valor enum ausente deve ser
+    principalmente nas situações somente valores previstos são permitidos e um valor enum ausente deve ser
     considerado um erro de interrupção de aplicação.
    </member>
    <member>
-    <literal>tryFrom(int|string): ?self</literal> levará uma escalar e retornará o
+    <literal>tryFrom(int|string): ?self</literal> recebe uma escalar e retornará o
     Caso Enum correspondente. Se um não for encontrado, ela retornará <literal>null</literal>.
     Isso é útil principalmente em casos onde o escalar de entrada não é confiável e o chamador quer
     implementar sua própria lógica de manipulação de erros ou de valor padrão.
@@ -228,9 +228,9 @@ $ref = &$naipe->value;
    Os métodos <literal>from()</literal> e <literal>tryFrom()</literal> seguem as regras
    padrão de tipagem fraca/forte. No modo de tipagem fraca, passar um inteiro ou string é aceitável
    e o sistema irá coagir o valor de acordo. Passar um float também irá funcionar e será
-   coagido. No modo de tipagem estrita, passar um inteiro para <literal>from()</literal> em uma
-   enum lastreada por string (ou vice-versa) irá resultar em um <classname>TypeError</classname>,
-   assim como um float irá em todas as circunstâncias. Todos os outros tipos de parâmetro lançarão um TypeError
+   convertido. No modo de tipagem estrita, passar um inteiro para <literal>from()</literal> em uma
+   enum associada a strings (ou vice-versa) irá resultar em um <classname>TypeError</classname>,
+   assim como um float irá lançar um erro em todas as circunstâncias. Todos os outros tipos de parâmetro lançarão um TypeError
    em ambos os modos.
   </para>
 
@@ -251,7 +251,7 @@ print $naipe->value;
 ]]>
   </programlisting>
 
-  <para>Definir manualmente um método <literal>from()</literal> ou <literal>tryFrom()</literal> em uma Enum Lastreada irá resultar em um erro fatal.</para>
+  <para>Definir manualmente um método <literal>from()</literal> ou <literal>tryFrom()</literal> em uma Backed Enum irá resultar em um erro fatal.</para>
 
   </sect1>
 
@@ -259,7 +259,7 @@ print $naipe->value;
   <title>Métodos de enumerações</title>
 
   <para>
-   Enums (tanto Enums Puras quanto Enums Lastreadas (Backed)) podem conter métodos, e podem implementar interfaces.
+   Enums (tanto Puras quanto Backed) podem conter métodos, e podem implementar interfaces.
    Se uma Enum implementa uma interface, então qualquer verificação de tipo para aquela interface também aceitará
    todos os casos daquela Enum.
   </para>
@@ -311,7 +311,7 @@ print Naipe::Ouros->shape(); // imprime "Retângulo"
   </para>
 
   <para>
-   Em uma Enum Lastreada, a declaração de interface vai após a declaração do tipo de lastro.
+   Em uma Backed Enum, a declaração de interface vai após a declaração do tipo de lastro.
   </para>
 
   <programlisting role="php">
@@ -353,7 +353,7 @@ enum Naipe: string implements Colorido
   </para>
 
   <para>
-   Note que nesse caso, seria uma prática melhor de modelagem de dados definir também um
+   Note que nesse caso, uma prática melhor de modelagem de dados seria definir também um
    Tipo Enum <literal>CorDeNaipe</literal> com valores Preto e Vermelho e retornar isso no seu lugar.
    No entanto, isso complicaria esse exemplo.
   </para>
@@ -405,7 +405,7 @@ final class Naipe implements UnitEnum, Colorido
 
   <para>
    Métodos podem ser públicos, privados, ou protegidos, apesar dos privados e
-   protegidos serem equivalentes na prática pois herança não é permitida.
+   protegidos serem equivalentes na prática, pois herança não é permitida.
   </para>
 
  </sect1>
@@ -442,7 +442,7 @@ enum Tamanho
 
   <para>
    Métodos estáticos podem ser públicos, privados, ou protegidos apesar dos privados e
-   protegidos serem equivalentes na prática pois herança não é permitida.
+   protegidos serem equivalentes na prática, pois herança não é permitida.
   </para>
 
  </sect1>
@@ -451,8 +451,8 @@ enum Tamanho
   <title>Constantes de enumeração</title>
 
   <para>
-   Enumerações podem incluir constantes, que podem ser públicas, privadas ou protegidas, 
-   apesar das privadas e protegidas serem equivalentes na prática pois herança não é permitida.
+   Enumerações podem incluir constantes, que podem ser públicas, privadas ou protegidas,
+   apesar das privadas e protegidas serem equivalentes na prática, pois herança não é permitida.
   </para>
 
   <para>Uma constante de enum pode se referir a um caso enum:</para>
@@ -476,7 +476,7 @@ enum Tamanho
  <sect1 xml:id="language.enumerations.traits">
   <title>Traits</title>
 
-  <para>Enumerações podem aproveitar traits, que se comportarão da mesma maneira que nas classes.
+  <para>Enumerações podem utilizar traits, que se comportarão da mesma maneira que nas classes.
    A limitação é que usados em uma enum não podem conter propriedades.
    Eles podem incluir apenas métodos e métodos estáticos. Um trait com propriedades
    resultará em um erro fatal.
@@ -632,7 +632,7 @@ $ferraduras = (new ReflectionClass(Naipe::class))->newInstanceWithoutConstructor
   <title>Listagem de valores</title>
 
   <para>
-   Tanto Enums Puras quanto Enums Lastreadas (Backed) implementam uma interface interna chamada
+   Tanto Pure Enums quanto Backed Enums implementam uma interface interna chamada
    <interfacename>UnitEnum</interfacename>.  <literal>UnitEnum</literal> inclui um método estático
    <literal>cases()</literal>. <literal>cases()</literal> retorna um array embalado com
    todos os Casos definidos na ordem de declaração.
@@ -675,8 +675,8 @@ print serialize(Naipe::Copas);
    serializado, um aviso será emitido e <literal>false</literal> retornado.</para>
 
   <para>
-   Se uma Enum Pure for serializada para JSON, um erro será lançado. Se uma Enum Lastreada (Backed)
-   for serializada para JSON, ela será representada por seu valor escalar apenas, no
+   Se uma Pure Enum for serializada para JSON, um erro será lançado. Se uma Backed Enum
+   for serializada para JSON, ela será representada apenas por seu valor escalar, no
    tipo apropriado. O comportamento de ambas pode ser sobrescrito ao implementar
    <classname>JsonSerializable</classname>.
   </para>
