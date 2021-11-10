@@ -1,0 +1,822 @@
+<?xml version="1.0" encoding="utf-8"?> <!-- EN-Revision: 963efb2602d91165ffb7ee37d5757ced7766fd91 Maintainer: @lhsazevedo Status: ready -->
+ <chapter xml:id="language.enumerations" xmlns="http://docbook.org/ns/docbook">
+  <title>Enumerações</title>
+  <sect1 xml:id="language.enumerations.overview">
+   <title>Visão geral das Enumerações</title>
+   <?phpdoc print-version-for="enumerations"?>
+
+   <para>
+    Enumerações, ou "Enums" permitem um desenvolvedor definir um tipo personalizado que está limitado a um
+    número discreto de valores possíveis. Isso pode ser especialmente útil ao definir um
+    modelo de domínio, pois permite "tornar estados inválidos irrepresentáveis."
+   </para>
+
+   <para>
+    Enums aparecem em muitas linguagens com uma variedade de recursos diferentes. No PHP,
+    Enums são um tipo especial de objeto. A Enum em si é uma classe, e seus possíveis
+    casos são todos objetos de instância única dessa classe. Isso significa que casos Enum são
+    objetos válidos e podem ser usados em qualquer lugar em que um objeto pode ser usado, incluindo verificações de tipo.
+   </para>
+
+   <para>
+    O exemplo mais popular de enumerações é o tipo embutido booleano, que é um
+    tipo enumerado com valores válidos &true; e &false;.
+    Enums permitem que os desenvolvedores definam suas próprias enumerações arbitrariamente robustas.
+   </para>
+  </sect1>
+  <sect1 xml:id="language.enumerations.basics">
+   <title>Enumerações básicas</title>
+
+   <para>
+    Enums são similares às classes, e compartilham o mesmo namespaces que as classes, interfaces, e traits.
+    Elas também podem ser carregadas automaticamente da mesma maneira. Uma Enum define um novo tipo, que possui um número fixo
+    e limitado de valores legais possíveis.
+   </para>
+
+
+   <programlisting role="php">
+<![CDATA[
+<?php
+enum Naipe
+{
+    case Copas;
+    case Ouros;
+    case Paus;
+    case Espadas;
+}
+?>
+]]>
+   </programlisting>
+
+   <para>
+    Essa declaração cria um novo tipo enumerado chamado <literal>Naipe</literal>, que possui
+    quatro e apenas quatro valores permitidos: <literal>Naipe::Copas</literal>, <literal>Naipe::Ouros</literal>,
+    <literal>Naipe::Paus</literal>, e <literal>Naipe::Espadas</literal>. Variáveis podem ser atribuídas
+    a um desses valores permitidos. Uma função pode ser tipada contra um tipo enumerado,
+    caso em que apenas os valores desse tipo podem ser passados.
+   </para>
+
+   <programlisting role="php">
+<![CDATA[
+<?php
+function pegar_uma_carta(Naipe $naipe) { ... }
+
+$val = Naipe::Ouros;
+
+// OK
+pegar_uma_carta($val);
+// OK
+pegar_uma_carta(Naipe::Paus);
+// TypeError: pegar_uma_carta(): Argument #1 ($naipe) must be of type Naipe, string given
+pegar_uma_carta('Espadas');
+?>
+]]>
+   </programlisting>
+
+   <para>
+    Uma enumeração pode ter zero ou mais definições <literal>case</literal>, sem limite máximo.
+    Uma enum sem nenhum caso é sintaticamente válida, embora inútil.
+   </para>
+
+   <para>
+    Por padrão, casos não são intrinsecamente associados a um valor escalar. Isto é, <literal>Naipe::Copas</literal>
+    não é igual a <literal>"0"</literal>. Em vez disso, cada caso é associado a um objeto singleton com este nome. Isso significa que:
+   </para>
+
+   <programlisting role="php">
+<![CDATA[
+<?php
+$a = Naipe::Espadas;
+$b = Naipe::Espadas;
+
+$a === $b; // true
+
+$a instanceof Naipe;  // true
+?>
+]]>
+   </programlisting>
+
+   <para>
+    Isso também significa que os valores enum nunca são <literal>&lt;</literal> ou <literal>&gt;</literal> do que o outro,
+    uma vez que essas comparações não fazem sentido em objetos. Essas comparações sempre retornarão
+    falso ao trabalhar com valores enum.
+   </para>
+
+   <para>
+    Esse tipo de caso, sem dados relacionados, é chamado de "Caso Puro". Uma Enum que contém
+    apenas Casos Puros é chamada de Enum Pura.
+   </para>
+
+   <para>
+    Todos os Casos Puros são implementados como instâncias de seus tipos enum. O tipo enum é representado internamente como uma classe.
+   </para>
+
+   <para>
+    Todos os Casos têm uma propriedade somente leitura, <literal>name</literal>, que é o nome (sensível a maiúsculas e minúsculas)
+    do próprio caso. Isso às vezes pode ser útil para fins de depuração.
+   </para>
+
+   <programlisting role="php">
+<![CDATA[
+<?php
+print Naipe::Espadas->name;
+// imprime "Espadas"
+?>
+]]>
+   </programlisting>
+
+  </sect1>
+
+ <sect1 xml:id="language.enumerations.backed">
+  <title>Enumerações lastreadas (backed)</title>
+
+  <para>
+   Por padrão, Casos Enumerados não possuem um equivalente escalar. Eles são apenas objetos singleton. No entanto,
+   existem muitos casos em que um Caso Enumerado precisa ser capaz de fazer fazer uma viagem de ida e volta para um banco de dados ou
+   um armazenamento de dados semelhante, então ter um escalar embutido (e, portanto, trivialmente serializável) equivalente definido
+   intrinsecamente é útil.
+  </para>
+
+  <para>Para definir um equivalente escalar para uma Enumeração, a sintaxe é a seguinte:</para>
+
+  <programlisting role="php">
+<![CDATA[
+<?php
+enum Naipe: string
+{
+    case Copas = 'C';
+    case Ouros = 'O';
+    case Paus = 'P';
+    case Espadas = 'E';
+}
+?>
+]]>
+  </programlisting>
+
+  <para>
+   Um caso que possui um equivalente escalar é chamado de Caso Lastreado, e é "Lastreado"
+   por um valor mais simples. Uma Enum que possui todos Casos Lastreados é chamada "Enum Lastreada".
+   Uma Enum Lastreada pode conter apenas Casos Lastreados. Uma Enum Pura pode conter apenas Casos Puros.
+  </para>
+
+  <para>
+   Uma Enumeração Lastreada pode ser lastreada por tipos de <literal>int</literal> ou <literal>string</literal>,
+   e uma determinada enumeração suporta apenas um único tipo de cada vez (isto é, sem união de <literal>int|string</literal>).
+   Se uma enumeração for marcada como tendo um equivalente escalar, então todos os casos devem possuir um escalar equivalente
+   único definido explicitamente. Não existem equivalentes escalares gerados automaticamente
+   (p. ex.: inteiros sequenciais). Casos lastreados devem ser únicos; dois casos enum lastreados não podem
+   ter o mesmo equivalente escalar. No entanto, uma constante pode se referir a um caso, efetivamente
+   criando um apelido. Veja <link linkend="language.enumerations.constants">Constantes de enumeração</link>.
+  </para>
+
+  <para>
+   Valores equivalentes devem ser literais ou expressões literais. Constantes e expressões constantes
+   não são suportadas. Isto é, <literal>1 + 1</literal> é permitido, mas <literal>1 + SOME_CONST</literal>
+   não é.
+  </para>
+
+  <para>
+   Casos Lastreados possuem uma propriedade somente leitura adicional, <literal>value</literal>, que é o valor
+   especificado na definição.
+  </para>
+
+  <programlisting role="php">
+<![CDATA[
+<?php
+print Naipe::Paus->value;
+// Imprime "P"
+?>
+]]>
+  </programlisting>
+
+  <para>
+   Para impor a propriedade <literal>value</literal> como somente leitura, uma variável não pode
+   ser atribuída como uma referência para ela. Isto é, o seguinte lança um erro:
+  </para>
+
+  <programlisting role="php">
+<![CDATA[
+<?php
+$naipe = Naipe::Paus;
+$ref = &$naipe->value;
+// Error: Cannot acquire reference to property Naipe::$value
+?>
+]]>
+  </programlisting>
+
+  <para>
+   Enums lastreados implementam uma interface interna <interfacename>BackedEnum</interfacename>,
+   que expõe dois métodos adicionais:
+  </para>
+
+  <simplelist>
+   <member>
+    <literal>from(int|string): self</literal> levará uma escalar e retornará o Caso Enum
+    correspondente. Se um não for encontrado, ela lançará um <classname>ValueError</classname>. Isso é útil
+    principalmente em casos onde o escalar de entrada é confiável e um valor enum ausente deve ser
+    considerado um erro de interrupção de aplicação.
+   </member>
+   <member>
+    <literal>tryFrom(int|string): ?self</literal> levará uma escalar e retornará o
+    Caso Enum correspondente. Se um não for encontrado, ela retornará <literal>null</literal>.
+    Isso é útil principalmente em casos onde o escalar de entrada não é confiável e o chamador quer
+    implementar sua própria lógica de manipulação de erros ou de valor padrão.
+   </member>
+  </simplelist>
+
+  <para>
+   Os métodos <literal>from()</literal> e <literal>tryFrom()</literal> seguem as regras
+   padrão de tipagem fraca/forte. No modo de tipagem fraca, passar um inteiro ou string é aceitável
+   e o sistema irá coagir o valor de acordo. Passar um float também irá funcionar e será
+   coagido. No modo de tipagem estrita, passar um inteiro para <literal>from()</literal> em uma
+   enum lastreada por string (ou vice-versa) irá resultar em um <classname>TypeError</classname>,
+   assim como um float irá em todas as circunstâncias. Todos os outros tipos de parâmetro lançarão um TypeError
+   em ambos os modos.
+  </para>
+
+  <programlisting role="php">
+<![CDATA[
+<?php
+$registro = obter_coisas_do_banco_de_dados($id);
+print $registro['naipe'];
+
+$naipe = Naipe::from($registro['naipe']);
+// Dados inválidos lançam um ValueError: "X" is not a valid scalar value for enum "Naipe"
+print $naipe->value;
+
+$naipe = Naipe::tryFrom('A') ?? Naipe::Espadas;
+// Dados invalidos retornam null, então Naipe::Espadas em seu lugar.
+print $naipe->value;
+?>
+]]>
+  </programlisting>
+
+  <para>Definir manualmente um método <literal>from()</literal> ou <literal>tryFrom()</literal> em uma Enum Lastreada irá resultar em um erro fatal.</para>
+
+  </sect1>
+
+ <sect1 xml:id="language.enumerations.methods">
+  <title>Métodos de enumerações</title>
+
+  <para>
+   Enums (tanto Enums Puras quanto Enums Lastreadas (Backed)) podem conter métodos, e podem implementar interfaces.
+   Se uma Enum implementa uma interface, então qualquer verificação de tipo para aquela interface também aceitará
+   todos os casos daquela Enum.
+  </para>
+
+  <programlisting role="php">
+<![CDATA[
+<?php
+interface Colorido
+{
+    public function cor(): string;
+}
+
+enum Naipe implements Colorido
+{
+    case Copas;
+    case Ouros;
+    case Paus;
+    case Espadas;
+
+    // Cumpre o contrato da interface.
+    public function cor(): string
+    {
+        return match($this) {
+            Naipe::Copas, Naipe::Ouros => 'Vermelho',
+            Naipe::Paus, Naipe::Espadas => 'Preto',
+        };
+    }
+
+    // Não faz parte de uma interface; tudo bem.
+    public function forma(): string
+    {
+        return "Retângulo";
+    }
+}
+
+function pintar(Colorido $c) { ... }
+
+pintar(Naipe::Paus);  // Funciona
+
+print Naipe::Ouros->shape(); // imprime "Retângulo"
+?>
+]]>
+  </programlisting>
+
+  <para>
+   Nesse exemplo, todas as quatro instâncias de  <literal>Naipe</literal> possuem dois métodos,
+   <literal>cor()</literal> e <literal>forma()</literal>. Até onde o código chamador
+   e as checagens de tipo sabem, elas se comportam exatamente da mesma forma que qualquer outra instância de objeto.
+  </para>
+
+  <para>
+   Em uma Enum Lastreada, a declaração de interface vai após a declaração do tipo de lastro.
+  </para>
+
+  <programlisting role="php">
+   <![CDATA[
+<?php
+interface Colorido
+{
+    public function cor(): string;
+}
+
+enum Naipe: string implements Colorido
+{
+    case Copas = 'C';
+    case Ouros = 'O';
+    case Paus = 'P';
+    case Espadas = 'E';
+
+    // Cumpre o contrato da interface.
+    public function cor(): string
+    {
+        return match($this) {
+            Naipe::Copas, Naipe::Ouros => 'Vermelho',
+            Naipe::Paus, Naipe::Espadas => 'Preto',
+        };
+    }
+}
+?>
+]]>
+  </programlisting>
+
+  <para>
+   Dentro de um método, a variável <literal>$this</literal> é definida e se refere à instância do Caso.
+  </para>
+
+  <para>
+   Métodos podem ser arbitrariamente complexos, mas na prática geralmente retornam um valor estático ou
+   <link linkend="control-structures.match">match</link> no <literal>$this</literal> para fornecer
+   resultados diferentes para casos diferentes.
+  </para>
+
+  <para>
+   Note que nesse caso, seria uma prática melhor de modelagem de dados definir também um
+   Tipo Enum <literal>CorDeNaipe</literal> com valores Preto e Vermelho e retornar isso no seu lugar.
+   No entanto, isso complicaria esse exemplo.
+  </para>
+
+  <para>
+   A hierarquia acima é logicamente similar a seguinte estrutura de classes
+   (embora esse não seja o código real que é executado):
+  </para>
+
+  <programlisting role="php">
+<![CDATA[
+<?php
+interface Colorido
+{
+    public function cor(): string;
+}
+
+final class Naipe implements UnitEnum, Colorido
+{
+    public const Copas = new self('Copas');
+    public const Ouros = new self('Ouros');
+    public const Paus = new self('Paus');
+    public const Espadas = new self('Espadas');
+
+    private function __construct(public readonly string $nome) {}
+
+    public function cor(): string
+    {
+        return match($this) {
+            Naipe::Copas, Naipe::Ouros => 'Vermelho',
+            Naipe::Paus, Naipe::Espadas => 'Preto',
+        };
+    }
+
+    public function forma(): string
+    {
+        return "Retângulo";
+    }
+
+    public static function cases(): array
+    {
+        // Método ilegal, porque definir manualmente um método cases() em uma Enum não é permitido.
+        // Veja também a seção "Listagem de valores".
+    }
+}
+?>
+]]>
+  </programlisting>
+
+  <para>
+   Métodos podem ser públicos, privados, ou protegidos, apesar dos privados e
+   protegidos serem equivalentes na prática pois herança não é permitida.
+  </para>
+
+ </sect1>
+
+ <sect1 xml:id="language.enumerations.static-methods">
+  <title>Métodos estáticos de enumerações</title>
+
+  <para>
+   Enumerações também podem ter métodos estáticos. O uso para métodos estáticos na
+   própria enumeração é primariamente para construtores alternativos.  P. ex.:
+  </para>
+
+  <programlisting role="php">
+<![CDATA[
+<?php
+enum Tamanho
+{
+    case Pequeno;
+    case Medio;
+    case Grande;
+
+    public static function deComprimento(int $cm): static
+    {
+        return match(true) {
+            $cm < 50 => static::Pequeno,
+            $cm < 100 => static::Medio,
+            default => static::Grande,
+        };
+    }
+}
+?>
+]]>
+  </programlisting>
+
+  <para>
+   Métodos estáticos podem ser públicos, privados, ou protegidos apesar dos privados e
+   protegidos serem equivalentes na prática pois herança não é permitida.
+  </para>
+
+ </sect1>
+
+ <sect1 xml:id="language.enumerations.constants">
+  <title>Constantes de enumeração</title>
+
+  <para>
+   Enumerações podem incluir constantes, que podem ser públicas, privadas ou protegidas, 
+   apesar das privadas e protegidas serem equivalentes na prática pois herança não é permitida.
+  </para>
+
+  <para>Uma constante de enum pode se referir a um caso enum:</para>
+
+  <programlisting role="php">
+<![CDATA[
+<?php
+enum Tamanho
+{
+    case Pequeno;
+    case Medio;
+    case Grande;
+
+    public const Enorme = self::Grande;
+}
+?>
+]]>
+  </programlisting>
+ </sect1>
+
+ <sect1 xml:id="language.enumerations.traits">
+  <title>Traits</title>
+
+  <para>Enumerações podem aproveitar traits, que se comportarão da mesma maneira que nas classes.
+   A limitação é que usados em uma enum não podem conter propriedades.
+   Eles podem incluir apenas métodos e métodos estáticos. Um trait com propriedades
+   resultará em um erro fatal.
+  </para>
+
+  <programlisting role="php">
+<![CDATA[
+<?php
+interface Colorido
+{
+    public function cor(): string;
+}
+
+trait Retangulo
+{
+    public function shape(): string {
+        return "Retângulo";
+    }
+}
+
+enum Naipe implements Colorido
+{
+    use Retangulo;
+
+    case Copas;
+    case Ouros;
+    case Paus;
+    case Espadas;
+
+    public function cor(): string
+    {
+        return match($this) {
+            Naipe::Copas, Naipe::Ouros => 'Vermelho',
+            Naipe::Paus, Naipe::Espadas => 'Preto',
+        };
+    }
+}
+?>
+]]>
+  </programlisting>
+ </sect1>
+
+ <sect1 xml:id="language.enumerations.expressions">
+  <title>Valores enum em expressões constantes</title>
+
+  <para>
+   Como os casos são representados como constantes no próprio enum, eles podem ser usados como valores
+   estáticos na maioria das expressões constantes: padrões de propriedades, padrões de variáveis estáticas, padrões
+   de parâmetros, valores constantes globais e de classes. Eles não podem ser usados em outros valores de caso enum, mas
+   constantes normais podem se referir a um caso enum.
+  </para>
+
+  <para>
+   No entanto, chamadas implícitas de métodos mágicos como <classname>ArrayAccess</classname> em enums não são permitidas em definições estáticas
+   ou de constantes já que não podemos garantir absolutamente que o valor resultante é determinístico
+   ou que a invocação do método é livre de efeitos colaterais. Chamadas de funções, chamadas de métodos e
+   acesso à propriedades continuam a ser operações inválidas em expressões constantes.
+  </para>
+
+  <programlisting role="php">
+<![CDATA[
+<?php
+// Esta é uma definição de Enum perfeitamente legal.
+enum Direcao implements ArrayAccess
+{
+    case Cima;
+    case Baixo;
+
+    public function offsetGet($val) { ... }
+    public function offsetExists($val) { ... }
+    public function offsetSet($val) { throw new Exception(); }
+    public function offsetUnset($val) { throw new Exception(); }
+}
+
+class Foo
+{
+    // Isto é permitido.
+    const Bar = Direcao::Baixo;
+
+    // Isto não é permitido, pois pode não ser determinístico.
+    const Bar = Direcao::Cima['curta'];
+    // Fatal error: Cannot use [] on enums in constant expression
+}
+
+// Isto é perfeitamente legal, porque não é uma expressão constante.
+$x = Direcao::Cima['curta'];
+?>
+]]>
+  </programlisting>
+ </sect1>
+
+ <sect1 xml:id="language.enumerations.object-differences">
+  <title>Diferenças de objetos</title>
+
+  <para>
+   Apesar de Enums serem construídas sobre classes e objetos, elas não suportam todas as funcionalidades relacionadas a objetos.
+   Em particular, casos Enum são proibidos de ter estado.
+  </para>
+
+  <simplelist>
+   <member>Construtores e Destrutores são proibidos.</member>
+   <member>Herança não é suportada. Enums não podem estender ou ser estendidos.</member>
+   <member>Propriedades estáticas ou de objeto não são permitidas.</member>
+   <member>Clonar um caso Enum não é suportado, pois os casos devem ser instâncias singleton.</member>
+   <member><link linkend="language.oop5.magic">Métodos mágicos</link>, exceto para aqueles listados abaixo, não são permitidos.</member>
+  </simplelist>
+
+  <para>As seguintes funcionalidades de objeto estão disponíveis, e se comportam exatamente como em qualquer outro objeto:</para>
+
+  <simplelist>
+   <member>Métodos públicos, privados e protegidos.</member>
+   <member>Métodos estáticos públicos, privados e protegidos.</member>
+   <member>Constantes públicas, privadas e protegidas.</member>
+   <member>Enums podem implementar qualquer número de interfaces.</member>
+   <member>
+    Enums e casos podem ter <link linkend="language.attributes">atributos</link> anexados
+    a eles. O filtro de alvo <constant>TARGET_CLASS</constant>
+    inclui as próprias Enums. O filtro de alvo <constant>TARGET_CLASS_CONST</constant>
+    inclui Casos Enum.
+   </member>
+   <member>
+    Os métodos mágicos <link linkend="object.call">__call</link>, <link linkend="object.callstatic">__callStatic</link>,
+    e <link linkend="object.invoke">__invoke</link>
+   </member>
+   <member>Constantes <constant>__CLASS__</constant> e <constant>__FUNCTION__</constant> se comportam normalmente</member>
+  </simplelist>
+
+  <para>
+   A constante mágica <literal>::class</literal> em um tipo Enum avalia ao nome
+   do tipo incluindo qualquer namespace, exatamente o mesmo que um objeto. A constante mágica <literal>::class</literal>
+   em uma instância de Caso também avalia para o tipo Enum, pois ele é uma
+   instância daquele tipo.
+  </para>
+
+  <para>
+   Adicionalmente, casos não podem ser instanciados diretamente com <literal>new</literal>, nem com
+   <methodname>ReflectionClass::newInstanceWithoutConstructor</methodname> em reflexão. Ambos resultarão em um erro.
+  </para>
+
+  <programlisting role="php">
+<![CDATA[
+<?php
+$trevos = new Naipe();
+// Error: Cannot instantiate enum Naipe
+$ferraduras = (new ReflectionClass(Naipe::class))->newInstanceWithoutConstructor()
+// Error: Cannot instantiate enum Naipe
+?>
+]]>
+  </programlisting>
+ </sect1>
+
+ <sect1 xml:id="language.enumerations.listing">
+  <title>Listagem de valores</title>
+
+  <para>
+   Tanto Enums Puras quanto Enums Lastreadas (Backed) implementam uma interface interna chamada
+   <interfacename>UnitEnum</interfacename>.  <literal>UnitEnum</literal> inclui um método estático
+   <literal>cases()</literal>. <literal>cases()</literal> retorna um array embalado com
+   todos os Casos definidos na ordem de declaração.
+  </para>
+
+  <programlisting role="php">
+<![CDATA[
+<?php
+Naipe::cases();
+// Produz: [Naipe::Copas, Naipe::Ouros, Naipe::Paus, Naipe:Espadas]
+?>
+]]>
+  </programlisting>
+
+  <para>Definir manualmente um método <literal>cases()</literal> em uma Enum resultará em um erro fatal.</para>
+ </sect1>
+
+ <sect1 xml:id="language.enumerations.serialization">
+  <title>Serialização</title>
+
+  <para>
+   Enumerações são serializadas de maneira diferente dos objetos. Especificamente, elas têm um novo código de serialização,
+   <literal>"E"</literal>, que especifica o nome do caso enum. A rotina de desserialização pode
+   então usar isso para definir uma variável para o valor singleton existente. Isso garante que:
+  </para>
+
+  <programlisting role="php">
+<![CDATA[
+<?php
+Naipe::Copas === unserialize(serialize(Naipe::Copas));
+
+print serialize(Naipe::Copas);
+// E:11:"Naipe:Copas";
+?>
+]]>
+  </programlisting>
+
+  <para>
+   Na desserialização, se uma enum e caso não podem ser encontrados para combinar com um valor
+   serializado, um aviso será emitido e <literal>false</literal> retornado.</para>
+
+  <para>
+   Se uma Enum Pure for serializada para JSON, um erro será lançado. Se uma Enum Lastreada (Backed)
+   for serializada para JSON, ela será representada por seu valor escalar apenas, no
+   tipo apropriado. O comportamento de ambas pode ser sobrescrito ao implementar
+   <classname>JsonSerializable</classname>.
+  </para>
+
+  <para>Para <function>print_r</function>, a saída de um caso enum é ligeiramente diferente
+   dos objetos para minimizar confusões.
+  </para>
+
+  <programlisting role="php">
+<![CDATA[
+<?php
+enum Foo {
+    case Bar;
+}
+
+enum Baz: int {
+    case Beep = 5;
+}
+
+print_r(Foo::Bar);
+print_r(Baz::Beep);
+
+/* Produz
+
+Foo Enum (
+    [name] => Bar
+)
+Baz Enum:int {
+    [name] => Beep
+    [value] => 5
+}
+*/
+?>
+]]>
+  </programlisting>
+ </sect1>
+
+ <sect1 xml:id="language.enumerations.examples">
+  &reftitle.examples;
+
+  <para>
+   <example>
+    <title>Valores limitados básicos</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+enum Ordem
+{
+    case ASC;
+    case DESC;
+}
+
+function consulta($campos, $filtros, Ordem $ordem = Ordem::ASC) { ... }
+?>
+]]>
+    </programlisting>
+    <para>
+     A função <literal>consulta()</literal> agora pode prosseguir segura, sabendo que a
+     <literal>$ordem</literal> tem garantia de ser <literal>Ordem::ASC</literal>
+     ou <literal>Ordem::DESC</literal>. Qualquer outro valor resultaria em um
+     <classname>TypeError</classname>, então nenhuma verificação ou teste de erro é necessária.
+    </para>
+   </example>
+  </para>
+
+  <para>
+
+   <example>
+    <title>Valores exclusivos avançados</title>
+
+    <programlisting role="php">
+<![CDATA[
+<?php
+enum EstadoDeUsuario: string
+{
+    case Pendente = 'P';
+    case Ativo = 'A';
+    case Suspenso = 'S';
+    case CanceladoPeloUsuario = 'C';
+
+    public function rotulo(): string
+    {
+        return match($this) {
+            static::Pendente => 'Pendente',
+            static::Ativo => 'Ativo',
+            static::Suspenso => 'Suspenso',
+            static::CanceladoPeloUsuario => 'Cancelado pelo usuário',
+        };
+    }
+}
+?>
+]]>
+    </programlisting>
+
+    <para>
+     Neste exemplo, o estado de um usuário pode ser, exclusivamente, <literal>EstadoDeUsuario::Pendente</literal>,
+     <literal>EstadoDeUsuario::Ativo</literal>, <literal>EstadoDeUsuario::Suspenso</literal>, ou
+     <literal>EstadoDeUsuario::CanceladoPeloUsuario</literal>. Uma função pode tipar um parâmetro contra
+     <literal>EstadoDeUsuario</literal> e aceitar então apenas aqueles quatro valores, ponto final.
+    </para>
+
+    <para>
+     Todos os quatros valores possuem um método <literal>rotulo()</literal>, que retorna uma string legível para humanos.
+     Essa string é independente da string equivalente escalar do "nome de máquina", que pode ser usado em,
+     por exemplo, um campo de banco de dados um uma caixa de seleção HTML.
+    </para>
+
+    <programlisting role="php">
+<![CDATA[
+<?php
+foreach (EstadoDeUsuario::cases() as $caso) {
+    printf('<option value="%s">%s</option>\n', $caso->value, $caso->label());
+}
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+
+ </sect1>
+
+ </chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
