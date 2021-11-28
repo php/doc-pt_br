@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 9ee9eccf455188ab6eb352194eb6f9eb99e15606 Maintainer: ae Status: ready --><!-- CREDITS: fabioluciano,ae -->
+<!-- EN-Revision: d73c3dcbd6e2b085781115aa42d17b80ea285b9e Maintainer: ae Status: ready --><!-- CREDITS: fabioluciano,ae -->
  <sect1 xml:id="language.oop5.properties" xmlns="http://docbook.org/ns/docbook">
   <title>Propriedades</title>
 
@@ -182,6 +182,143 @@ string(7) "círculo"
 Fatal error: Uncaught Error: Typed property Forma::$numeroDeLados must not be accessed before initialization
 ]]>
      </screen>
+    </example>
+   </para>
+  </sect2>
+
+  <sect2 xml:id="language.oop5.properties.readonly-properties">
+   <title>Propriedades somente leitura</title>
+   <para>
+    A partir do PHP 8.1.0, uma propriedade pode ser declarada com o modificador <code>readonly</code>, o que previne modificação da propriedade após a inicialização.
+    <example>
+     <title>Exemplo de propriedade somente leitura</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+
+class Test {
+   public readonly string $prop;
+
+   public function __construct(string $prop) {
+       // Inicialização permitida.
+       $this->prop = $prop;
+   }
+}
+
+$test = new Test("foobar");
+// Legal read.
+var_dump($test->prop); // string(6) "foobar"
+
+// Modificação ilegal. Não importa que o valor seja o mesmo.
+$test->prop = "foobar";
+// Error: Cannot modify readonly property Test::$prop
+?>
+]]>
+     </programlisting>
+    </example>
+    <note>
+     <para>
+      O modificador readonly somente pode ser aplicado a <link linkend="language.oop5.properties.typed-properties">propriedades tipadas</link>.
+      Uma propriedade somente leitura sem restrições de tipo pode ser declarada utilizando o tipo <xref linkend="language.types.declarations.mixed" />.
+     </para>
+    </note>
+    <note>
+     <para>
+      Propriedades estáticas não são suportadas.
+     </para>
+    </note>
+   </para>
+   <para>
+    Uma propriedade somente leitura somente pode ser inicializada uma única vez, e somente do escopo onde ela foi declarada. Quaisquer outras modificações da propriedade resultam em um <classname>Error</classname>.
+    <example>
+     <title>Inicilização ilegal de propriedades somente leitura.</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+class Test1 {
+    public readonly string $prop;
+}
+
+$test1 = new Test1;
+// Inicialização ilegal fora do escopo privado.
+$test1->prop = "foobar";
+// Error: Cannot initialize readonly property Test1::$prop from global scope
+?>
+]]>
+     </programlisting>
+    </example>
+   </para>
+   <note>
+    <para>
+     Especificar um valor default para uma propriedade somente leitura não é permitido, porque uma propriedade com um valor default é essencialmente uma constante, e portanto não tem outro propósito.
+     <example>
+      <programlisting role="php">
+<![CDATA[
+<?php
+
+class Test {
+    // Fatal error: Readonly property Test::$prop cannot have default value
+    public readonly int $prop = 42;
+}
+?>
+]]>
+      </programlisting>
+     </example>
+    </para>
+   </note>
+   <note>
+    <para>
+     Propriedades somente leitura não podem ser <function>unset</function> depois de inicializadas. Entretanto é possível realizar essa operação antes da inicialização, dentro do escopo onde a variável foi declarada.
+    </para>
+   </note>
+   <para>
+    Nenhum tipo de modificação é permitido, e o seguintes casos resultarão em um <classname>Error</classname>:
+    <example>
+     <programlisting role="php">
+<![CDATA[
+<?php
+
+class Test {
+    public function __construct(
+        public readonly int $i = 0,
+        public readonly array $ary = [],
+    ) {}
+}
+
+$test = new Test;
+$test->i += 1;
+$test->i++;
+++$test->i;
+$test->ary[] = 1;
+$test->ary[0][] = 1;
+$ref =& $test->i;
+$test->i =& $ref;
+byRef($test->i);
+foreach ($test as &$prop);
+?>
+]]>
+     </programlisting>
+    </example>
+   </para>
+   <para>
+    Entretanto, propriedades somente leitura não proíbem mutação. Objetos ou recursos armazenados em propriedades somente leitura ainda podem ser modificados internamente:
+    <example>
+     <programlisting role="php">
+<![CDATA[
+<?php
+
+class Test {
+    public function __construct(public readonly object $obj) {}
+}
+
+$test = new Test(new stdClass);
+// Modificação interna permitida
+$test->obj->foo = 1;
+// Reinicialização proibida.
+$test->obj = new stdClass;
+?>
+]]>
+     </programlisting>
     </example>
    </para>
   </sect2>
