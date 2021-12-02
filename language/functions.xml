@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: ae956cd678e63a4c5c47d9aa23f68ac552581a09 Maintainer: ae Status: ready --><!-- CREDITS: fabioluciano,ae,geekcom -->
+<!-- EN-Revision: 14e006b4eea529ce9c3df9e550b27fb507aaa44c Maintainer: ae Status: ready --><!-- CREDITS: fabioluciano,ae,geekcom -->
 <chapter xml:id="language.functions" xmlns="http://docbook.org/ns/docbook">
   <title>Funções</title>
 
@@ -15,7 +15,7 @@
      <programlisting role="php">
 <![CDATA[
 <?php
-function foo ($arg_1, $arg_2, /* ..., */ $arg_n)
+function foo($arg_1, $arg_2, /* ..., */ $arg_n)
 {
     echo "Exemplo de função.\n";
     return $valor_retornado;
@@ -38,7 +38,7 @@ function foo ($arg_1, $arg_2, /* ..., */ $arg_n)
     regular, seria expressado com:
     <code>^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$</code>.
    </para>
-    &tip.userlandnaming;
+   &tip.userlandnaming;
    <simpara>
     As funções não precisam ser criadas antes de serem referenciadas,
     <emphasis>exceto</emphasis> quando uma função é condicionalmente definida
@@ -175,7 +175,8 @@ function recursion($a)
    <simpara>
     Informações podem ser passadas para funções através da lista de argumentos, que é uma
     lista de expressões delimitados por vírgulas. Os argumentos são avaliados
-    da esquerda para a direita.
+    da esquerda para a direita, e antes que a função seja efetivamente chamada
+    (avaliação antecipada <emphasis>eager</emphasis>).
    </simpara>
 
    <para>
@@ -501,7 +502,7 @@ echo add(...$a);
      É também possível adicionar um
      <link linkend="language.types.declarations">type hint</link> antes do indicador
      <literal>...</literal>. Se presente então todos os argumentos
-     capturados por <literal>...</literal> deverão ser objetos da classe informada.
+     capturados por <literal>...</literal> deverão conformar com o tipo do parâmetro.
 
      <example>
       <title>Argumentos variáveis com type hint</title>
@@ -585,7 +586,7 @@ echo sum(1, 2, 3, 4);
    </sect2>
 
    <sect2 xml:id="functions.named-arguments">
-    <title>Named Arguments</title>
+    <title>Argumentos nomeados</title>
 
     <para>
      O PHP 8.0.0 introduziu argumentos nomeados como uma extensão aos
@@ -641,7 +642,7 @@ array_fill(start_index: 0, count: 100, value: 50);
      <programlisting role="php">
       <![CDATA[
 <?php
-array_fill(value: 50, num: 100, start_index: 0);
+array_fill(value: 50, count: 100, start_index: 0);
 ?>
 ]]>
      </programlisting>
@@ -661,7 +662,7 @@ array_fill(value: 50, num: 100, start_index: 0);
 <?php
 htmlspecialchars($string, double_encode: false);
 // Mesmo que
-htmlspecialchars($string, ENT_COMPAT | ENT_HTML401, 'UTF-8', false);
+htmlspecialchars($string, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8', false);
 ?>
 ]]>
      </programlisting>
@@ -716,11 +717,11 @@ foo(1, param: 2);
       <programlisting role="php">
 <![CDATA[
 <?php
-function quadrado ($num)
+function quadrado($num)
 {
     return $num * $num;
 }
-echo quadrado (4);   // imprime '16'.
+echo quadrado(4); // imprime '16'.
 ?>
 ]]>
       </programlisting>
@@ -737,11 +738,16 @@ echo quadrado (4);   // imprime '16'.
       <programlisting role="php">
 <![CDATA[
 <?php
-function numeros_pequenos()
+function primeiros_numeros()
 {
-    return array (0, 1, 2);
+    return [0, 1, 2];
 }
-list ($zero, $um, $dois) = numeros_pequenos();
+// Desconstruir o array coleta cada item individualmente
+[$zero, $one, $two] = primeiros_numeros();
+
+// Anteriormente ao 7.1.0 a única alternativa era usar list()
+list($zero, $one, $two) = primeiros_numeros();
+
 ?>
 ]]>
       </programlisting>
@@ -969,6 +975,8 @@ $func(); // prints "bar"
      o valor de retorno da função é indefinido. Neste caso provavelmente
      irá retornar &null; mas isto é apenas uma convenção, e
      você não pode depender disso.
+     A partir do PHP 8.0.0, uma exceção <classname>TypeError</classname> é lançada
+     nesses casos.
     </simpara>
    </note>
 
@@ -1043,6 +1051,8 @@ $greet('PHP');
     variáveis precisam ser referenciadas utilizando a instrução <literal>use</literal>.
     A partir do PHP 7.1, essas variáveis não devem incluir &link.superglobals;,
     <varname>$this</varname>, ou variáveis com o mesmo nome como um parâmetro.
+    A declaração de tipo de retonro de uma função deve ser posicionada
+    <emphasis>depois</emphasis> de uma instrução <literal>use</literal>.
    </simpara>
 
    <example>
@@ -1088,6 +1098,12 @@ $example = function ($arg) use ($message) {
     var_dump($arg . ' ' . $message);
 };
 $example("hello");
+
+// Declaração de tipo de retorno após a instrução 'use'
+$example = function () use ($message): string {
+    return "hello $message";
+};
+var_dump($example());
 ?>
 ]]>
     </programlisting>
@@ -1100,6 +1116,7 @@ string(5) "hello"
 string(5) "hello"
 string(5) "hello"
 string(5) "world"
+string(11) "hello world"
 string(11) "hello world"
 ]]>
     </screen>
@@ -1159,7 +1176,7 @@ class Cart
             };
 
         array_walk($this->products, $callback);
-        return round($total, 2);;
+        return round($total, 2);
     }
 }
 
