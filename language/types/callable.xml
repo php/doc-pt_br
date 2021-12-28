@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 95bdd6883b5dde9504701777ba81b3c5f15df52b Maintainer: fabioluciano Status: ready --><!-- CREDITS: lcobucci, fabioluciano, geekcom -->
+<!-- EN-Revision: 0b005cfe4e7075d8f7c7472545eaee2b7f38526e Maintainer: @lhsazevedo Status: ready --><!-- CREDITS: lcobucci, fabioluciano, geekcom, @lhsazevedo -->
 <sect1 xml:id="language.types.callable">
  <title>Callbacks / Callables</title>
 
  <para>
-  Callbacks podem ser representadas pela declaração de tipo <type>callable</type> a partir do PHP 5.4.
-  Esta documentação utiliza o tipo <type>callback</type> para referenciar a
-  mesma coisa.
+  Callbacks podem ser representadas pela declaração de tipo <type>callable</type>.
  </para>
 
  <para>
@@ -38,16 +36,27 @@
 
   <para>
    Métodos estáticos também podem ser passados sem a instância de um
-   <type>objeto</type> dessa classe ao passar o nome da classe ao invés de um
-   <type>objeto</type> no índice 0.
-   A partir do PHP 5.2.3, também é possível utilizar
+   <type>objeto</type> dessa classe ao passar um nome da classe
+   em vez de um <type>objeto</type> no índice 0, ou passando
    <literal>'NomeDaClasse::nomeDoMetodo'</literal>.
   </para>
 
   <para>
    Além de funções comuns definidas pelo usuário,
-   <link linkend="functions.anonymous">funções anônimas</link> também podem ser
+   <link linkend="functions.anonymous">funções anônimas</link> e
+   <link linkend="functions.arrow">arrow functions</link> também podem ser
    passadas como um parâmetro de callback.
+  </para>
+
+  <note>
+   <para>
+    A partir do PHP 8.1.0, funções anônimas também podem ser criadas usando a <link linkend="functions.first_class_callable_syntax">sintaxe de callable de primeira classe</link>.
+   </para>
+  </note>
+
+  <para>
+   Geralmente, qualquer objeto implementando <link linkend="object.invoke">__invoke()</link> também pode
+   ser passado para um parâmetro callback.
   </para>
 
   <para>
@@ -60,49 +69,49 @@
 <?php
 
 // Exemplo de função de callback
-function my_callback_function() {
-    echo 'hello world!';
+function minha_funcao_callback() {
+    echo 'olá mundo!';
 }
 
 // Exemplo de método de callback
-class MyClass {
-    static function myCallbackMethod() {
-        echo 'Hello World!';
+class MinhaClasse {
+    static function meuMetodoCallback() {
+        echo 'Olá Mundo!';
     }
 }
 
 // Tipo 1: Calback simples
-call_user_func('my_callback_function');
+call_user_func('minha_funcao_callback');
 
-// Tipo 2: Chamada à métodos estáticos
-call_user_func(array('MyClass', 'myCallbackMethod'));
+// Tipo 2: Chamada a métodos estáticos
+call_user_func(array('MinhaClasse', 'meuMetodoCallback'));
 
-// Tipo 3: Chamada à métodos de objetos
-$obj = new MyClass();
-call_user_func(array($obj, 'myCallbackMethod'));
+// Tipo 3: Chamada a métodos de objetos
+$obj = new MinhaClasse();
+call_user_func(array($obj, 'meuMetodoCallback'));
 
-// Tipo 4: Chamada à métodos estáticos (a partir do PHP 5.2.3)
-call_user_func('MyClass::myCallbackMethod');
+// Tipo 4: Chamada a métodos estáticos
+call_user_func('MinhaClasse::meuMetodoCallback');
 
-// Tipo 5: Chamada relativa à métodos estáticos (a partir do PHP 5.3.0)
+// Tipo 5: Chamada relativa a métodos estáticos
 class A {
-    public static function who() {
+    public static function quem() {
         echo "A\n";
     }
 }
 
 class B extends A {
-    public static function who() {
+    public static function quem() {
         echo "B\n";
     }
 }
 
-call_user_func(array('B', 'parent::who')); // A
+call_user_func(array('B', 'parent::quem')); // A
 
-// Type 6: Objetos que implementam __invoke podem ser utilizados como callables (desde o PHP 5.3)
+// Type 6: Objetos que implementam __invoke podem ser utilizados como callables
 class C {
-    public function __invoke($name) {
-        echo 'Hello ', $name, "\n";
+    public function __invoke($nome) {
+        echo 'Olá ', $nome, "\n";
     }
 }
 
