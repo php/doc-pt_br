@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 9caf16a8ba22366befab30e1d4d5759a4cd406f3 Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe,lucasr,fabioluciano,ae -->
+<!-- EN-Revision: d042804100d34f5389fe122b0e1cd41087fd94ba	Maintainer: @lhsazevedo Status: ready --><!-- CREDITS: felipe,lucasr,fabioluciano,ae,@lhsazevedo -->
 <refentry xml:id="function.array-map" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>array_map</refname>
@@ -10,18 +10,21 @@
   &reftitle.description;
   <methodsynopsis>
    <type>array</type><methodname>array_map</methodname>
-   <methodparam><type>callable</type><parameter>callback</parameter></methodparam>
-   <methodparam><type>array</type><parameter>array1</parameter></methodparam>
-   <methodparam choice="opt"><type>array</type><parameter>...</parameter></methodparam>
+   <methodparam><type class="union"><type>callable</type><type>null</type></type><parameter>callback</parameter></methodparam>
+   <methodparam><type>array</type><parameter>array</parameter></methodparam>
+   <methodparam rep="repeat"><type>array</type><parameter>arrays</parameter></methodparam>
   </methodsynopsis>
   <para>
-   <function>array_map</function> retorna um array contendo todos
-   os elementos de <parameter>array1</parameter> depois de aplicada
-   uma determinada função <parameter>callback</parameter> em cada um.
+   <function>array_map</function> retorna um &array; contendo
+   os resultados da aplicação do <parameter>callback</parameter>
+   ao índice correspondente do <parameter>array</parameter>
+   (e <parameter>arrays</parameter> se mais arrays forem fornecidos)
+   usados como argumentos para a função de callback.
    O número de parâmetros que a função <parameter>callback</parameter>
-   aceita deve coincidir com
-   o número de arrays passados para a função
-   <function>array_map</function>
+   aceita deve coincidir com o número de arrays
+   passados para <function>array_map</function>. Arrays
+   de entrada excedentes são ignorados. Um <classname>ArgumentCountError</classname>
+   é lançado se um número insuficiente de argumentos é fornecido.
   </para>
  </refsect1>
 
@@ -33,15 +36,13 @@
      <term><parameter>callback</parameter></term>
      <listitem>
       <para>
-       Função callback para executar para cada elementos dos arrays.
+       Um <type>callable</type> para executar para cada elemento em cada array.
       </para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><parameter>array1</parameter></term>
-     <listitem>
       <para>
-       Um array para percorrer chamando função <parameter>callback</parameter>.
+        &null; pode ser passado como um valor para <parameter>callback</parameter>
+        para realizar uma operação zip em múltiplos arrays.
+        Se apenas <parameter>array</parameter> for fornecido,
+        <methodname>array_map</methodname> retornará o array de entrada.
       </para>
      </listitem>
     </varlistentry>
@@ -49,8 +50,16 @@
      <term><parameter>array</parameter></term>
      <listitem>
       <para>
-       Variável lista de argumentos array para percorrer chamando a função
-       <parameter>callback</parameter>.
+       Um array para percorrer chamando função <parameter>callback</parameter>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>arrays</parameter></term>
+     <listitem>
+      <para>
+       Lista variável suplementar de argumentos array para passar pela
+       função <parameter>callback</parameter>.
       </para>
      </listitem>
     </varlistentry>
@@ -61,8 +70,15 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna um array contendo todos elementos de <parameter>array1</parameter>
-   depois de ter aplicado a função <parameter>callback</parameter> para cada um.
+   Retorna um array contendo os resultados da aplicação da função <parameter>callback</parameter>
+   ao índice correspondente do <parameter>array</parameter>
+   (e <parameter>arrays</parameter> se mais arrays forem fornecidos)
+   usados como argumentos para o callback.
+  </para>
+  <para>
+   O array retornado irá preservar as chaves do argumento array se e somente
+   se exatamente um array for passado. Se mais de um array for passado, o
+   array retornado terá chaves inteiras sequenciais.
   </para>
  </refsect1>
 
@@ -74,13 +90,13 @@
     <programlisting role="php">
 <![CDATA[
 <?php
-function cube($n)
+function cubo($n)
 {
-    return($n * $n * $n);
+    return ($n * $n * $n);
 }
 
-$a = array(1, 2, 3, 4, 5);
-$b = array_map("cube", $a);
+$a = [1, 2, 3, 4, 5];
+$b = array_map('cubo', $a);
 print_r($b);
 ?>
 ]]>
@@ -104,15 +120,20 @@ Array
   </para>
   <para>
    <example>
-    <title>Utilizando uma função lambda com a função <function>array_map</function> (a partir do PHP 5.3.0)</title>
+    <title><function>array_map</function> utilizando uma função lambda</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-$func = function($value) {
-    return $value * 2;
+$func = function($valor): int {
+    return $valor * 2;
 };
 
 print_r(array_map($func, range(1, 5)));
+
+// Ou a partir do PHP 7.4.0:
+
+print_r(array_map(fn($valor): int => $valor * 2, range(1, 5)));
+
 ?>
 ]]>
     </programlisting>
@@ -136,23 +157,23 @@ Array
     <programlisting role="php">
 <![CDATA[
 <?php
-function mostrar_Espanhol($n, $m)
+function mostrar_Espanhol(int $n, string $m): string
 {
-    return "O número $n é chamado de $m na Espanha";
+    return "O número {$n} é chamado de {$m} em espanhol";
 }
 
-function map_Espanhol($n, $m)
+function map_Espanhol(int $n, string $m): array
 {
-    return array($n => $m);
+    return [$n => $m];
 }
 
-$a = array(1, 2, 3, 4, 5);
-$b = array("uno", "dos", "tres", "cuatro", "cinco");
+$a = [1, 2, 3, 4, 5];
+$b = ["uno", "dos", "tres", "cuatro", "cinco"];
 
-$c = array_map("mostrar_Espanhol", $a, $b);
+$c = array_map('mostrar_Espanhol', $a, $b);
 print_r($c);
 
-$d = array_map("map_Espanhol", $a , $b);
+$d = array_map('map_Espanhol', $a , $b);
 print_r($d);
 ?>
 ]]>
@@ -163,11 +184,11 @@ print_r($d);
 // Saída de $c
 Array
 (
-    [0] => O número 1 é chamado de uno na Espanha
-    [1] => O número 2 é chamado de dos na Espanha
-    [2] => O número 3 é chamado de tres na Espanha
-    [3] => O número 4 é chamado de cuatro na Espanha
-    [4] => O número 5 é chamado de cinco na Espanha
+    [0] => O número 1 é chamado de uno em espanhol
+    [1] => O número 2 é chamado de dos em espanhol
+    [2] => O número 3 é chamado de tres em espanhol
+    [3] => O número 4 é chamado de cuatro em espanhol
+    [4] => O número 5 é chamado de cinco em espanhol
 )
 
 // Saída de $d
@@ -217,13 +238,13 @@ Array
   </para>
   <para>
    <example>
-    <title>Criando um array de arrays</title>
+    <title>Realizando uma operação zip de arrays</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-$a = array(1, 2, 3, 4, 5);
-$b = array("um", "dois", "tres", "quatro", "cinco");
-$c = array("uno", "dos", "tres", "cuatro", "cinco");
+$a = [1, 2, 3, 4, 5];
+$b = ["um", "dois", "tres", "quatro", "cinco"];
+$c = ["uno", "dos", "tres", "cuatro", "cinco"];
 
 $d = array_map(null, $a, $b, $c);
 print_r($d);
@@ -275,10 +296,35 @@ Array
     </screen>
    </example>
   </para>
+
   <para>
-   O array retornado conterá chaves string se e somente
-   se exatamente um array é passado. Se mais que um argumento é passado,
-   então o array retornado sempre terá chaves inteiras.
+   <example>
+    <title>
+     <parameter>callback</parameter> &null; apenas com
+     <parameter>array</parameter>
+    </title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$array = [1, 2, 3];
+var_dump(array_map(null, $array));
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+array(3) {
+  [0]=>
+  int(1)
+  [1]=>
+  int(2)
+  [2]=>
+  int(3)
+}
+]]>
+    </screen>
+   </example>
   </para>
   <para>
    <example>
@@ -286,15 +332,15 @@ Array
     <programlisting role="php">
 <![CDATA[
 <?php
-$arr = array("stringkey" => "value");
+$arr = ["chaveString" => "valor"];
 function cb1($a) {
-    return array ($a);
+    return [$a];
 }
 function cb2($a, $b) {
-    return array ($a, $b);
+    return [$a, $b];
 }
-var_dump(array_map("cb1", $arr));
-var_dump(array_map("cb2", $arr, $arr));
+var_dump(array_map('cb1', $arr));
+var_dump(array_map('cb2', $arr, $arr));
 var_dump(array_map(null,  $arr));
 var_dump(array_map(null, $arr, $arr));
 ?>
@@ -304,33 +350,68 @@ var_dump(array_map(null, $arr, $arr));
     <screen>
 <![CDATA[
 array(1) {
-  ["stringkey"]=>
+  ["chaveString"]=>
   array(1) {
     [0]=>
-    string(5) "value"
+    string(5) "valor"
   }
 }
 array(1) {
   [0]=>
   array(2) {
     [0]=>
-    string(5) "value"
+    string(5) "valor"
     [1]=>
-    string(5) "value"
+    string(5) "valor"
   }
 }
 array(1) {
-  ["stringkey"]=>
-  string(5) "value"
+  ["chaveString"]=>
+  string(5) "valor"
 }
 array(1) {
   [0]=>
   array(2) {
     [0]=>
-    string(5) "value"
+    string(5) "valor"
     [1]=>
-    string(5) "value"
+    string(5) "valor"
   }
+}
+]]>
+    </screen>
+   </example>
+   <example>
+    <title><function>array_map</function> - arrays associativos</title>
+    <para>
+     Enquanto <function>array_map</function> não suporta diretamente
+     o uso da chave do array como entrada, isso pode ser simulado usando <function>array_keys</function>.
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$arr = [
+    'v1' => 'Primeiro lançamento',
+    'v2' => 'Segundo lançamento',
+    'v3' => 'Terceiro lançamento',
+];
+// Nota: Antes da 7.4.0, use a sintaxe mais longa para funções anônimas.
+$callback = fn(string $k, string $v): string => "$k foi o $v";
+$result = array_map($callback, array_keys($arr), array_values($arr));
+var_dump($result);
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+array(3) {
+  [0]=>
+  string(24) "v1 foi o Primeiro lançamento"
+  [1]=>
+  string(25) "v2 foi o Segundo lançamento"
+  [2]=>
+  string(24) "v3 foi o Terceiro lançamento"
 }
 ]]>
     </screen>
@@ -345,7 +426,6 @@ array(1) {
     <member><function>array_filter</function></member>
     <member><function>array_reduce</function></member>
     <member><function>array_walk</function></member>
-    <member>&seealso.callback;</member>
    </simplelist>
   </para>
  </refsect1>
