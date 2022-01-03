@@ -1,20 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: amandavale Status: ready-->
-
+<!-- EN-Revision: 9e0f03ac354d797d1d16c0fcc1663e5e170f2727 Maintainer: @lhsazevedo Status: ready--><!-- CREDITS: amandavale, @lhsazevedo -->
 <refentry xml:id="function.array-udiff" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>array_udiff</refname>
-  <refpurpose>Computa a diferença de arrays usando uma função de callback para
-   comparação dos dados</refpurpose>
+  <refpurpose>Computa a diferença de arrays usando uma função de callback para comparação dos dados</refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>array</type><methodname>array_udiff</methodname>
-   <methodparam><type>array</type><parameter>array1</parameter></methodparam>
-   <methodparam><type>array</type><parameter>array2</parameter></methodparam>
-   <methodparam choice="opt"><type>array</type><parameter> ...</parameter></methodparam>
-   <methodparam><type>callback</type><parameter>data_compare_func</parameter></methodparam>
+   <methodparam><type>array</type><parameter>array</parameter></methodparam>
+   <methodparam rep="repeat"><type>array</type><parameter>arrays</parameter></methodparam>
+   <methodparam><type>callable</type><parameter>value_compare_func</parameter></methodparam>
   </methodsynopsis>
   <para>
    Computa a diferença de arrays usando uma função de callback para comparação
@@ -27,7 +24,7 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>array1</parameter></term>
+     <term><parameter>array</parameter></term>
      <listitem>
       <para>
        O primeiro array.
@@ -35,25 +32,23 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>array2</parameter></term>
+     <term><parameter>arrays</parameter></term>
      <listitem>
       <para>
-       O segundo array.
+       Arrays para comparar.
       </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>data_compare_func</parameter></term>
+     <term><parameter>value_compare_func</parameter></term>
      <listitem>
       <para>
        A função de callback de comparação.
       </para>
       <para>
-       A função de callback fornecida pelo usuário é usada para comparação.
-       Ela deve retornar um inteiro menor que, igual a, ou maior que zero se o
-       primeiro argumento é considerado respectivamente, menor que, igual a,
-       ou maior que o segundo.
+       &return.callbacksort;
       </para>
+      &callback.cmp;
      </listitem>
     </varlistentry>
    </variablelist>
@@ -62,36 +57,50 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna um array contendo todos os valores de <parameter>array1</parameter>
+   Retorna um array contendo todos os valores de <parameter>array</parameter>
    que não estão presentes em qualquer dos outros argumentos.
   </para>
  </refsect1>
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
-   <example>
-    <title>Exemplo de <function>array_udiff</function></title>
+    <example>
+    <title>Exemplo de <function>array_udiff</function> usando Objetos stdClass</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-class cr {
-    private $priv_member;
-    function cr($val)
-    {
-        $this->priv_member = $val;
-    }
+// Arrays para comprar
+$array1 = array(new stdclass, new stdclass,
+                new stdclass, new stdclass,
+               );
 
-    static function comp_func_cr($a, $b)
-    {
-        if ($a->priv_member === $b->priv_member) return 0;
-        return ($a->priv_member > $b->priv_member)? 1:-1;
+$array2 = array(
+                new stdclass, new stdclass,
+               );
+
+// Define algumas propriedades para cada objeto
+$array1[0]->largura = 11; $array1[0]->altura = 3;
+$array1[1]->largura = 7;  $array1[1]->altura = 1;
+$array1[2]->largura = 2;  $array1[2]->altura = 9;
+$array1[3]->largura = 5;  $array1[3]->altura = 7;
+
+$array2[0]->largura = 7;  $array2[0]->altura = 5;
+$array2[1]->largura = 9;  $array2[1]->altura = 2;
+
+function comparar_por_area($a, $b) {
+    $areaA = $a->largura * $a->altura;
+    $areaB = $b->largura * $b->altura;
+    
+    if ($areaA < $areaB) {
+        return -1;
+    } elseif ($areaA > $areaB) {
+        return 1;
+    } else {
+        return 0;
     }
 }
-$a = array("0.1" => new cr(9), "0.5" => new cr(12), 0 => new cr(23), 1=> new cr(4), 2 => new cr(-15),);
-$b = array("0.2" => new cr(9), "0.5" => new cr(22), 0 => new cr(3), 1=> new cr(4), 2 => new cr(-15),);
 
-$result = array_udiff($a, $b, array("cr", "comp_func_cr"));
-print_r($result);
+print_r(array_udiff($array1, $array2, 'comparar_por_area'));
 ?>
 ]]>
     </programlisting>
@@ -100,17 +109,102 @@ print_r($result);
 <![CDATA[
 Array
 (
-    [0.5] => cr Object
+    [0] => stdClass Object
         (
-            [priv_member:private] => 12
+            [largura] => 11
+            [altura] => 3
         )
 
-    [0] => cr Object
+    [1] => stdClass Object
         (
-            [priv_member:private] => 23
+            [largura] => 7
+            [altura] => 1
         )
 
 )
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Exemplo de <function>array_udiff</function> usando Objetos DateTime</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+class MeuCalendario {
+    public $livres = array();
+    public $reservadas = array();
+
+    public function __construct($semana = 'now') {
+        $inicio = new DateTime($semana);
+        $inicio->modify('Monday this week midnight');
+        $fim = clone $inicio;
+        $fim->modify('Friday this week midnight');
+        $intervalo = new DateInterval('P1D');
+        foreach (new DatePeriod($inicio, $intervalo, $fim) as $tempoLivre) {
+            $this->livres[] = $tempoLivre;
+        }
+    }
+
+    public function marcarCompromisso(DateTime $data, $nota) {
+        $this->reservadas[] = array('data' => $data->modify('midnight'), 'nota' => $nota);
+    }
+
+    public function checarDisponibilidade() {
+        return array_udiff($this->livres, $this->reservadas, array($this, 'compararPersonalizado'));
+    }
+    
+    public function compararPersonalizado($livres, $reservadas) {
+        if (is_array($livres)) $a = $livres['data'];
+        else $a = $livres;
+        if (is_array($reservadas)) $b = $reservadas['data'];
+        else $b = $reservadas;
+        if ($a == $b) {
+            return 0;
+        } elseif ($a > $b) {
+            return 1;
+        } else {
+            return -1;
+        }
+    }
+}
+
+// Cria um calendário para compromissos semanais
+$meuCalendario = new MeuCalendario;
+
+// Marca alguns compromissos para esta semana
+$meuCalendario->marcarCompromisso(new DateTime('Monday this week'), "Limpando apartamento do GoogleGuy.");
+$meuCalendario->marcarCompromisso(new DateTime('Wednesday this week'), "Fazendo uma viagem de snowboarding.");
+$meuCalendario->marcarCompromisso(new DateTime('Friday this week'), "Corrigindo código bugado.");
+
+// Checar disponibilidade de dias comparando datas $reservadas com datas $livres
+echo "Estou disponível nos seguintes dias desta semana...\n\n";
+foreach ($meuCalendario->checarDisponibilidade() as $livre) {
+    echo $livre->format('l'), "\n"; 
+}
+echo "\n\n";
+echo "Estou ocupado(a) nos seguintes dias desta semana...\n\n";
+foreach ($meuCalendario->reservadas as $reservada) {
+    echo $reservada['data']->format('l'), ": ", $reservada['nota'], "\n"; 
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Estou disponível nos seguintes dias desta semana...
+
+Tuesday
+Thursday
+
+
+Estou ocupado(a) nos seguintes dias desta semana...
+
+Monday: Limpando apartamento do GoogleGuy.
+Wednesday: Fazendo uma viagem de snowboarding.
+Friday: Corrigindo código bugado.
 ]]>
     </screen>
    </example>
