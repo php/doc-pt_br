@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 8074326ff6e250660978a8065659ba15d02f3724 Maintainer: ae Status: ready --><!-- CREDITS: lucasr,amandavale,ae -->
+<!-- EN-Revision: 6a6f43d1c490a57b452656db285de6d136055ed2 Maintainer: ae Status: ready --><!-- CREDITS: lucasr,amandavale,ae,@lhsazevedo -->
 <refentry xml:id="function.array-multisort" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>array_multisort</refname>
@@ -12,7 +12,7 @@
    <methodparam><type>array</type><parameter role="reference">array1</parameter></methodparam>
    <methodparam choice="opt"><type>mixed</type><parameter>array1_sort_order</parameter><initializer>SORT_ASC</initializer></methodparam>
    <methodparam choice="opt"><type>mixed</type><parameter>array1_sort_flags</parameter><initializer>SORT_REGULAR</initializer></methodparam>
-   <methodparam choice="opt"><type>mixed</type><parameter>...</parameter></methodparam>
+   <methodparam rep="repeat"><type>mixed</type><parameter>rest</parameter></methodparam>
   </methodsynopsis>
   <para>
    <function>array_multisort</function> pode ser usada para ordenar
@@ -23,6 +23,8 @@
    Chaves associativas (<type>string</type>) serão mantidas, mas chaves
    númericas serão reindexadas.
   </para>
+  &note.sort-unstable;
+  &note.reset-index;
  </refsect1>
 
  <refsect1 role="parameters">
@@ -100,7 +102,7 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>...</parameter></term>
+     <term><parameter>rest</parameter></term>
      <listitem>
       <para>
        Outros arrays, podendo informar também ordem e flags de ordenação. Somente elementos
@@ -117,38 +119,6 @@
   &reftitle.returnvalues;
   <para>
    &return.success;
-  </para>
- </refsect1>
-
- <refsect1 role="changelog">
-  &reftitle.changelog;
-  <para>
-   <informaltable>
-    <tgroup cols="2">
-     <thead>
-      <row>
-       <entry>&Version;</entry>
-       <entry>&Description;</entry>
-      </row>
-     </thead>
-     <tbody>
-      <row>
-       <entry>5.4.0</entry>
-       <entry>
-        <constant>SORT_NATURAL</constant> e <constant>SORT_FLAG_CASE</constant>
-        foram adicionados em <parameter>array1_sort_flags</parameter>.
-       </entry>
-      </row>
-      <row>
-       <entry>5.3.0</entry>
-       <entry>
-        <constant>SORT_LOCALE_STRING</constant> foi adicionado em
-        <parameter>array1_sort_flags</parameter>.
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
   </para>
  </refsect1>
 
@@ -250,7 +220,7 @@ array(2) {
     </para>
     <screen>
 <![CDATA[
-volume | edition
+volume | edição
 -------+--------
     67 |       2
     86 |       1
@@ -267,18 +237,18 @@ volume | edition
     <programlisting role="php">
 <![CDATA[
 <?php
-$data[] = array('volume' => 67, 'edition' => 2);
-$data[] = array('volume' => 86, 'edition' => 1);
-$data[] = array('volume' => 85, 'edition' => 6);
-$data[] = array('volume' => 98, 'edition' => 2);
-$data[] = array('volume' => 86, 'edition' => 6);
-$data[] = array('volume' => 67, 'edition' => 7);
+$data[] = array('volume' => 67, 'edicao' => 2);
+$data[] = array('volume' => 86, 'edicao' => 1);
+$data[] = array('volume' => 85, 'edicao' => 6);
+$data[] = array('volume' => 98, 'edicao' => 2);
+$data[] = array('volume' => 86, 'edicao' => 6);
+$data[] = array('volume' => 67, 'edicao' => 7);
 ?>
 ]]>
     </programlisting>
     <para>
      Vamos ordenar <varname>volume</varname> decrescente e
-     <varname>edition</varname> crescente.
+     <varname>edicao</varname> crescente.
     </para>
     <para>
      Aqui temos um array de registros, mas <function>array_multisort</function>
@@ -291,12 +261,16 @@ $data[] = array('volume' => 67, 'edition' => 7);
 // Obtain a list of columns
 foreach ($data as $key => $row) {
     $volume[$key]  = $row['volume'];
-    $edition[$key] = $row['edition'];
+    $edicao[$key] = $row['edicao'];
 }
 
-// Ordena os dados por volume decrescente, edition crescente.
+// Você pode usar array_column() em vez do código acima
+$volume  = array_column($data, 'volume');
+$edicao = array_column($data, 'edicao');
+
+// Ordena os dados por volume decrescente, edição crescente.
 // Adiciona $data como último parâmetro, para ordenar por uma chave comum.
-array_multisort($volume, SORT_DESC, $edition, SORT_ASC, $data);
+array_multisort($volume, SORT_DESC, $edicao, SORT_ASC, $data);
 ?>
 ]]>
     </programlisting>
@@ -305,7 +279,7 @@ array_multisort($volume, SORT_DESC, $edition, SORT_ASC, $data);
     </para>
     <screen>
 <![CDATA[
-volume | edition
+volume | edição
 -------+--------
     98 |       2
     86 |       1
