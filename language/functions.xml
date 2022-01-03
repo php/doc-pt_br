@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 0219f62dcd220d3c02911891b6946d82af232171 Maintainer: ae Status: ready --><!-- CREDITS: fabioluciano,ae,geekcom -->
+<!-- EN-Revision: 5c2678e02f0eb135946799eed02d884de1bcf4ad Maintainer: @lhsazevedo Status: ready --><!-- CREDITS: fabioluciano,ae,geekcom,@lhsazevedo -->
 <chapter xml:id="language.functions" xmlns="http://docbook.org/ns/docbook">
   <title>Funções</title>
 
@@ -1502,6 +1502,127 @@ var_export($x);  // Imprime 1
      </simpara>
     </note>
    </sect2>
+  </sect1>
+
+  <sect1 xml:id="functions.first_class_callable_syntax">
+   <title>Sintaxe de Callable de Primeira Classe</title>
+
+   <para>
+    A sintaxe de callable de primeira classe é introduzida a partir do PHP 8.1.0, como uma maneira de criar <link linkend="functions.anonymous">funções anônimas</link> a partir de <link linkend="language.types.callable">callable</link>.
+    Ela substitui a sintaxe de callable existente usando strings e arrays.
+    A vantagem dessa sintaxe é que ela é acessível à análise estática, e usa o escopo no ponto onde o callable é adquirido.
+   </para>
+
+   <para>
+    A sintaxe <code>ExprCallable(...)</code> é usada para criar um objeto <classname>Closure</classname> a partir de callable. <code>ExprCallable</code> aceita qualquer expressão que possa ser diretamente chamada na gramática do PHP:
+    <example>
+     <title>Sintaxe de callable de primeira classe simples</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+
+class Foo {
+   public function metodo() {}
+   public static function metodoestatico() {}
+   public function __invoke() {}
+}
+
+$obj = new Foo();
+$strClasse = 'Foo';
+$strMetodo = 'metodo';
+$strMetodoestatico = 'metodoestatico';
+
+
+$f1 = strlen(...);
+$f2 = $obj(...);  // objeto invocável
+$f3 = $obj->metodo(...);
+$f4 = $obj->$strMetodo(...);
+$f5 = Foo::metodoestatico(...);
+$f6 = $strClasse::$strMetodoestatico(...);
+
+// Callable tradicional usando string, array
+$f7 = 'strlen'(...);
+$f8 = [$obj, 'metodo'](...);
+$f9 = [Foo::class, 'metodoestatico'](...);
+?>
+]]>
+     </programlisting>
+    </example>
+   </para>
+
+   <note>
+    <para>
+      As <code>...</code> são parte da sintáxe, e não uma omissão.
+    </para>
+   </note>
+
+   <para>
+    <code>ExprCallable</code> tem a mesma semântica que <methodname>Closure::fromCallable</methodname>.
+    Isto é, That is, ao contrário de callable usando string e array, <code>ExprCallable(...)</code> respeita o escopo no ponto onde ela é criada:
+    <example>
+     <title>Comparação de escopo de <code>ExprCallable(...)</code> e callable tradicional</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+
+class Foo {
+    public function obterMetodoPrivado() {
+        return [$this, 'metodoPrivado'];
+    }
+
+    private function metodoPrivado() {
+        echo __METHOD__, "\n";
+    }
+}
+
+$foo = new Foo;
+$metodoPrivado = $foo->obterMetodoPrivado();
+$metodoPrivado();
+// Fatal error: Call to private method Foo::metodoPrivado() from global scope
+// Isso acontece porque a chamada é realizada fora de Foo e a visibilidade será verificada a partir desse ponto.
+
+class Foo1 {
+    public function obterMetodoPrivado() {
+        // Usa o escopo onde o callable é adquirido.
+        return $this->metodoPrivado(...); // Idêntico a Closure::fromCallable([$this, 'metodoPrivado']);
+    }
+
+    private function metodoPrivado() {
+        echo __METHOD__, "\n";
+    }
+}
+
+$foo1 = new Foo1;
+$metodoPrivado = $foo1->obterMetodoPrivado();
+$metodoPrivado();  // Foo1::metodoPrivado
+?>
+]]>
+     </programlisting>
+    </example>
+
+   </para>
+
+   <note>
+    <para>
+     Criação de objetos por essa sintaxe (por exemplo <code>new Foo(...)</code>) não é suportada, porque a sintaxe <code>new Foo()</code> não é considerada uma chamada.
+    </para>
+   </note>
+
+   <note>
+    <para>
+     A sintaxe de callable de primeira classe não pode ser combinada com o operador nullsafe. Ambos os resultados a seguir reultam em um erro de tempo de compilação:
+     <example>
+      <programlisting role="php">
+<![CDATA[
+<?php
+$obj?->metodo(...);
+$obj?->prop->metodo(...);
+?>
+]]>
+      </programlisting>
+     </example>
+    </para>
+   </note>
   </sect1>
 
  </chapter>
