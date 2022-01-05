@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: c5c902b47755cf0c0761e90cce4cc8ee1eb9426e Maintainer: diegopires Status: ready --><!-- CREDITS: diegopires, ae, fabioluciano -->
+<!-- EN-Revision: ffbe6525350c91d58e1d5b7a52c46c911035c8e0 Maintainer: @lhsazevedo Status: ready --><!-- CREDITS: diegopires, ae, fabioluciano, @lhsazevedo -->
 
 <sect1 xml:id="function.include" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>include</title>
  <?phpdoc print-version-for="include"?>
  <simpara>
-  A declaração <literal>include</literal> inclui e avalia
+  A expressão <literal>include</literal> inclui e avalia
   o arquivo informado.
  </simpara>
  <simpara>
@@ -14,21 +14,27 @@
  <simpara>
   Os arquivos são incluídos baseando-se no caminho do arquivo informado ou, se não informado, o
   <link linkend="ini.include-path">include_path</link> especificado. Se o arquivo
-  não for encontrado no <link linkend="ini.include-path">include_path</link>, a declaração
+  não for encontrado no <link linkend="ini.include-path">include_path</link>,
   <literal>include</literal> checará no diretório do script que o executa
-  e no diretório de trabalho corrente, antes de falhar. O construtor <literal>include</literal> emitirá um
-  <link linkend="errorfunc.constants.errorlevels.e-warning">aviso</link> se
+  e no diretório de trabalho corrente, antes de falhar. O
+  construtor <literal>include</literal> emitirá um
+  <constant>E_WARNING</constant> se
   não localizar o arquivo; possui um comportamento diferente do
-  construtor <function>require</function>, que emitirá um
-  <link linkend="errorfunc.constants.errorlevels.e-error">erro fatal</link>.
+  <function>require</function>, que emitirá um
+  <constant>E_ERROR</constant>.
+ </simpara>
+ <simpara>
+  Note que ambas <literal>include</literal> e <literal>require</literal>
+  emitem <constant>E_WARNING</constant>s adicionais, se o arquivo não puder ser
+  acessado, antes de emitir o <constant>E_WARNING</constant> ou
+  <constant>E_ERROR</constant> final, respectivamente.
  </simpara>
  <simpara>
   Se um caminho for definido — seja absoluto (iniciando com a letra do drive
   ou <literal>\</literal> no Windows, ou <literal>/</literal> no Unix/Linux
   ), ou relativo ao diretório atual (começando com
   <literal>.</literal> ou <literal>..</literal>) — o
-  <link linkend="ini.include-path">include_path</link> será
-  completamente
+  <link linkend="ini.include-path">include_path</link> será completamente
   ignorado. Por exemplo, se o nome do arquivo iniciar com <literal>../</literal>,
   o interpretador irá procurar pelo arquivo no diretório pai.
  </simpara>
@@ -138,25 +144,19 @@ echo "A $color $fruit";   // A green
 <![CDATA[
 <?php
 
-/* This example assumes that www.example.com is configured to parse .php
-* files and not .txt files. Also, 'Works' here means that the variables
-* $foo and $bar are available within the included file. */
+/* Este exemplo assume que www.exemplo.com.br está configurado para processar
+* arquivos .php e não arquivos .txt. Além disso, 'Funciona' aqui significa
+* que as variáveis $foo e $bar estão disponíveis dentro do arquivo incluído. */
 
-// Won't work; file.txt wasn't handled by www.example.com as PHP
-include 'http://www.example.com/file.txt?foo=1&bar=2';
+// Não vai funcionar; arquivo.txt não foi tratado por www.exemplo.com.br como PHP
+include 'http://www.exemplo.com.br/arquivo.txt?foo=1&bar=2';
 
-// Won't work; looks for a file named 'file.php?foo=1&bar=2' on the
-// local filesystem.
-include 'file.php?foo=1&bar=2';
+// Não vai funcionar; procura por um arquivo chamado 'arquivo.php?foo=1&bar=2' no
+// sistema de arquivos local.
+include 'arquivo.php?foo=1&bar=2';
 
-// Works.
-include 'http://www.example.com/file.php?foo=1&bar=2';
-
-$foo = 1;
-$bar = 2;
-include 'file.txt';  // Works.
-include 'file.php';  // Works.
-
+// Funciona.
+include 'http://www.exemplo.com.br/arquivo.php?foo=1&bar=2';
 ?>
 ]]>
    </programlisting>
@@ -203,12 +203,12 @@ include 'file.php';  // Works.
    <programlisting role="php">
 <![CDATA[
 <?php
-// won't work, evaluated as include(('vars.php') == TRUE), i.e. include('')
+// não vai funcionar, avaliado como include(('vars.php') == TRUE), isto é: include('1')
 if (include('vars.php') == TRUE) {
     echo 'OK';
 }
 
-// works
+// funciona
 if ((include 'vars.php') == TRUE) {
     echo 'OK';
 }
@@ -243,11 +243,11 @@ testreturns.php
 
 $foo = include 'return.php';
 
-echo $foo; // prints 'PHP'
+echo $foo; // imprime 'PHP'
 
 $bar = include 'noreturn.php';
 
-echo $bar; // prints 1
+echo $bar; // imprime 1
 
 ?>
 ]]>
@@ -264,9 +264,8 @@ echo $bar; // prints 1
  <para>
   Se funções forem definidas no arquivo incluído, elas podem ser utilizadas
   no arquivo principal independente se estão antes ou depois do <function>return</function>.
-  Se o mesmo arquivo for incluído duas vezes, o PHP 5 emitirá um erro fatal, pois as funções
-  já foram declaradas, enquanto que no PHP 4 não se queixa de funções
-  definidas depois do <function>return</function>.
+  Se o arquivo for incluído duas vezes, o PHP emitirá um erro fatal, pois as
+  funções já foram declaradas.
   É recomendado usar o <function>include_once</function> ao invés de
   verificar se o arquivo já foi incluído manualmente dentro
   do arquivo incluído.

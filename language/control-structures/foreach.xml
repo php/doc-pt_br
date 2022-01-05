@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 75fb719c3c051fdd62a704bc110197edcba8f532 Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano, geekcom -->
+<!-- EN-Revision: e49940b757b35b8ef26bb64380c231eda7b49fc4 Maintainer: @lhsazevedo Status: ready --><!-- CREDITS: fabioluciano, geekcom, @lhsazevedo -->
 
 <sect1 xml:id="control-structures.foreach" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
- <title><literal>foreach</literal></title>
+ <title>foreach</title>
  <?phpdoc print-version-for="foreach"?>
  <para>
   O construtor <literal>foreach</literal> fornece uma maneira fácil de
@@ -13,61 +13,47 @@
   <informalexample>
    <programlisting>
 <![CDATA[
-foreach (array_expression as $value)
+foreach (iterable_expression as $valor)
     statement
-foreach (array_expression as $key => $value)
+foreach (iterable_expression as $chave => $valor)
     statement
 ]]>
    </programlisting>
   </informalexample>
  </para>
  <simpara>
-  A primeira forma, itera sobre arrays informados na
-  <literal>array_expression</literal>. A cada iteração, o valor
-  do elemento atual é atribuído a <literal>$value</literal> e
-  o ponteiro interno do array avança uma posição (então, na próxima
-  iteração, se estará olhando para o próximo elemento).
+  A primeira forma percorre o iterável dado por
+  <literal>iterable_expression</literal>. A cada iteração, o valor
+  do elemento atual é atribuído a <literal>$valor</literal>.
  </simpara>
  <simpara>
   A segunda forma var, adicionalmente, atribuir a chave do elemento corrente a
-  variável <literal>$key</literal> a cada iteração.
+  variável <literal>$chave</literal> a cada iteração.
+ </simpara>
+ <simpara>
+  Note que o <literal>foreach</literal> não modifica o ponteiro interno
+  do array, que é usado por funções como <function>current</function>
+  e <function>key</function>.
  </simpara>
  <simpara>
   É possível
   <link linkend="language.oop5.iterations">customizar a iteração em objetos</link>.
  </simpara>
- <para>
-  <note>
-   <para>
-    No PHP 5, quando o <literal>foreach</literal> inicia sua primeira execução, o
-    ponteiro interno do array é automaticamente redefinido para o primeiro
-    elemento. Isso indica que não é necessário chamar a função <function>reset</function>
-    antes de um laço <literal>foreach</literal>.
-   </para>
-   <para>
-    Como o <literal>foreach</literal> depende do ponteiro interno do array no PHP
-    5, modificá-lo dentro de um laço pode levar a comportamentos inesperados.
-   </para>
-   <para>
-    No PHP 7, o <literal>foreach</literal> não utiliza o ponteiro interno
-    do array.
-   </para>
-  </note>
- </para>
+
  <para>
   Para modificar diretamente elementos de um array dentro de um laço, preceda
- <literal>$value</literal> com  &amp;. Neste caso, o valor será atribuído por
+ <literal>$valor</literal> com  &amp;. Neste caso, o valor será atribuído por
  <link linkend="language.references">referência</link>.
   <informalexample>
    <programlisting role="php">
 <![CDATA[
 <?php
 $arr = array(1, 2, 3, 4);
-foreach ($arr as &$value) {
-    $value = $value * 2;
+foreach ($arr as &$valor) {
+    $valor = $valor * 2;
 }
 // $arr is now array(2, 4, 6, 8)
-unset($value); // break the reference with the last element
+unset($valor); // quebra a referência com o último elemento
 ?>
 ]]>
    </programlisting>
@@ -75,7 +61,7 @@ unset($value); // break the reference with the last element
  </para>
  <warning>
   <para>
-   A referência ao <literal>$value</literal> e o último elemento do array
+   A referência ao <literal>$valor</literal> e o último elemento do array
    permanecerá inalterado mesmo após a iteração do <literal>foreach</literal>.
    É recomendado destruí-lo utilizando a função <function>unset</function>.
    Caso contrário você experienciará o seguinte comportamento:
@@ -85,16 +71,16 @@ unset($value); // break the reference with the last element
 <![CDATA[
 <?php
 $arr = array(1, 2, 3, 4);
-foreach ($arr as &$value) {
-    $value = $value * 2;
+foreach ($arr as &$valor) {
+    $valor = $valor * 2;
 }
-// $arr is now array(2, 4, 6, 8)
+// $arr agora é array(2, 4, 6, 8)
 
-// sem um unset($value), $value continuará como referência ao último item: $arr[3]
+// sem um unset($valor), $valor continuará como referência ao último item: $arr[3]
 
-foreach ($arr as $key => $value) {
+foreach ($arr as $chave => $valor) {
     // $arr[3] será atualizado com cada valor de $arr...
-    echo "{$key} => {$value} ";
+    echo "{$chave} => {$valor} ";
     print_r($arr);
 }
 // ...até que, o segundo e último valor é copiado para o último valor
@@ -110,14 +96,13 @@ foreach ($arr as $key => $value) {
   </informalexample>
  </warning>
  <para>
-  Em versões anteriores ao PHP 5.5.0, a referência a <literal>$value</literal> só é possível se o array iterado puder ser
-  referenciado (isso é, se ele for uma variável). O código a seguir só funcionará em versões do PHP superiores a 5.5.0:
+  É possível iterar o valor de um array constante por referência
   <informalexample>
    <programlisting role="php">
 <![CDATA[
 <?php
-foreach (array(1, 2, 3, 4) as &$value) {
-    $value = $value * 2;
+foreach (array(1, 2, 3, 4) as &$valor) {
+    $valor = $valor * 2;
 }
 ?>
 ]]>
@@ -128,7 +113,8 @@ foreach (array(1, 2, 3, 4) as &$value) {
   <note>
    <para>
     O <literal>foreach</literal> não possui suporte a habilidade
-    de suprimir mensagens de erro utilizando o '@'.
+    de suprimir mensagens de erro utilizando
+    <literal linkend="language.operators.errorcontrol">@</literal>.
    </para>
   </note>
  </para>
@@ -199,7 +185,7 @@ foreach (array(1, 2, 3, 4, 5) as $v) {
   <?phpdoc print-version-for="foreach.list"?>
 
   <para>
-   O PHP 5.5 adicionou a habilidade de iterar sobre array de arrays e desempacotar
+   É possível iterar sobre um array de arrays e desempacotar
    arrays aninhados em variáveis do laço fornecendo o construtor <function>list</function>
    como valor.
   </para>
@@ -217,8 +203,8 @@ $array = [
 ];
 
 foreach ($array as list($a, $b)) {
-    // $a contains the first element of the nested array,
-    // and $b contains the second element.
+    // $a contém o primeiro elemento do array aninhado,
+    // e $b contém o segundo elemento.
     echo "A: $a; B: $b\n";
 }
 ?>
@@ -296,43 +282,6 @@ A: 3; B: 4; C:
 ]]>
     </screen>
    </informalexample>
-  </para>
- </sect2>
-
- <sect2 role="changelog">
-  &reftitle.changelog;
-  <para>
-   <informaltable>
-    <tgroup cols="2">
-     <thead>
-      <row>
-       <entry>&Version;</entry>
-       <entry>&Description;</entry>
-      </row>
-     </thead>
-     <tbody>
-      <row>
-       <entry>7.0.0</entry>
-       <entry>
-        <literal>foreach</literal> não utiliza mais o o ponteiro interno do array.
-       </entry>
-      </row>
-      <row>
-       <entry>5.5.0</entry>
-       <entry>
-        Referências a <literal>$value</literal> são suportadas em expressões.
-        Em versões anteriores, apenas variáveis eram suportadas.
-       </entry>
-      </row>
-      <row>
-       <entry>5.5.0</entry>
-       <entry>
-        Desempacotar arrays aninhados com a função <function>list</function> é suportado.
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
   </para>
  </sect2>
 
