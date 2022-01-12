@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 9ee9eccf455188ab6eb352194eb6f9eb99e15606 Maintainer: ae Status: ready --><!-- CREDITS: ae,amandavale,narigone,fabioluciano -->
+<!-- EN-Revision: c36ce0b514faa2efce1427ae87ba9ea25cc038ad Maintainer: ae Status: ready --><!-- CREDITS: ae,amandavale,narigone,fabioluciano,@lhsazevedo -->
 
  <sect1 xml:id="language.oop5.basic" xmlns="http://docbook.org/ns/docbook">
   <title>O básico</title>
@@ -164,6 +164,53 @@ $instance = new $className(); // new SimpleClass()
 ?>
 ]]>
     </programlisting>
+   </example>
+   <para>
+    A partir do PHP 8.0.0, usar <literal>new</literal> com expressões arbitrárias
+    é suportado. Isso permite instanciação mais complexa se a expressão
+    produzir uma <type>string</type>. As expressões devem ser envolvidas em parênteses.
+   </para>
+   <example>
+    <title>Criando uma instância usando uma expressão arbitrária</title>
+    <para>
+     No exemplo fornecido mostramos múltiplos exemplos de expressões arbitrárias válidas que produzem um nome de classe.
+     Isto mostra uma chamada para uma função, concatenação de string, e a constant <constant>::class</constant>.
+    </para>
+    <programlisting role="php">
+     <![CDATA[
+<?php
+
+class ClasseA extends \stdClass {}
+class ClasseB extends \stdClass {}
+class ClasseC extends ClasseB {}
+class ClasseD extends ClasseA {}
+
+function obterAlgumaClasse(): string
+{
+    return 'ClasseA';
+}
+
+var_dump(new (obterAlgumaClasse()));
+var_dump(new ('Classe' . 'B'));
+var_dump(new ('Classe' . 'C'));
+var_dump(new (ClasseD::class));
+?>
+]]>
+    </programlisting>
+    &example.outputs.8;
+    <screen>
+     <![CDATA[
+object(ClasseA)#1 (0) {
+}
+object(ClasseB)#1 (0) {
+}
+object(ClasseC)#1 (0) {
+}
+object(ClasseD)#1 (0) {
+}
+
+]]>
+    </screen>
    </example>
    <para>
     No contexto da classe, é possível criar um novo objeto com
@@ -364,12 +411,17 @@ echo ($obj->bar)(), PHP_EOL;
    <para>
     Os métodos e propriedades herdados podem ser sobrescritos
     declarando-os com o mesmo nome definido na classe
-    base. Entretanto, se o método foi definido na classe base
-    como <link linkend="language.oop5.final">final</link> esse método
-    não poderá ser sobrescrito. É possível acessar os métodos sobrescritos
+    base. Entretanto, se a classe pai definiu um método ou constante
+    como <link linkend="language.oop5.final">final</link>,
+    eles não poderão ser sobrescritos. É possível acessar os métodos sobrescritos
     ou propriedades estáticas referenciado-os
     com <link linkend="language.oop5.paamayim-nekudotayim">parent::</link>.
-  </para>
+   </para>
+   <note>
+    <simpara>
+     A partir do PHP 8.1.0, constantes podem ser declaradas como finais.
+    </simpara>
+   </note>
    <example>
     <title>Herança da Classe Simples</title>
     <programlisting role="php">
