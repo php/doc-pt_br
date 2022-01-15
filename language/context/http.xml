@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 73b8b5c0299a67b34a77afd1929b953feb128ce1 Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano -->
+<!-- EN-Revision: d8d0b3cdf8568571bcb79203a32118ba3e78185e Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano, @lhsazevedo -->
 
 <refentry xml:id="context.http" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" role="noversion">
  <refnamediv>
@@ -44,7 +44,10 @@
        Cabeçalhos adicionais que deverrão ser enviados durante a requisição. Valores
        nesta opção sobrescreverão outros valores (como
        <literal>User-agent:</literal>, <literal>Host:</literal>,
-       e <literal>Authentication:</literal>).
+       e <literal>Authentication:</literal>),
+       mesmo ao seguir redirecionamentos <literal>Location:</literal>.
+       Portanto não é recomendado definir um cabeçalho <literal>Host:</literal>,
+       se <parameter>follow_location</parameter> estiver habilitada.
       </para>
      </listitem>
     </varlistentry>
@@ -93,7 +96,7 @@
     <varlistentry xml:id="context.http.request-fulluri">
      <term>
       <parameter>request_fulluri</parameter>
-      <type>boolean</type>
+      <type>bool</type>
      </term>
      <listitem>
       <para>
@@ -111,7 +114,7 @@
     <varlistentry xml:id="context.http.follow-location">
      <term>
       <parameter>follow_location</parameter>
-      <type>integer</type>
+      <type>int</type>
      </term>
      <listitem>
       <para>
@@ -126,7 +129,7 @@
     <varlistentry xml:id="context.http.max-redirects">
      <term>
       <parameter>max_redirects</parameter>
-      <type>integer</type>
+      <type>int</type>
      </term>
      <listitem>
       <para>
@@ -148,15 +151,9 @@
        Versão do protocolo HTTP.
       </para>
       <para>
-       <literal>1.0</literal> como padrão.
+       O padrão é <literal>1.1</literal> a partir do PHP 8.0.0;
+       antes dessa versão o padrão era <literal>1.0</literal>.
       </para>
-      <note>
-       <para>
-        Em versões do PHP inferiores a 5.3.0 não era implementada a decodificação de transferência fragmentada.
-        Se este valor estiver definido com <literal>1.1</literal>, é de sua
-        responsabilidade fazer que seja compatível com a versão <literal>1.1</literal>.
-       </para>
-      </note>
      </listitem>
     </varlistentry>
     <varlistentry xml:id="context.http.timeout">
@@ -179,7 +176,7 @@
     <varlistentry xml:id="context.http.ignore-errors">
      <term>
       <parameter>ignore_errors</parameter>
-      <type>boolean</type>
+      <type>bool</type>
      </term>
      <listitem>
       <para>
@@ -191,73 +188,6 @@
      </listitem>
     </varlistentry>
    </variablelist>
-  </para>
- </refsect1><!-- }}} -->
-
- <refsect1 role="changelog"><!-- {{{ -->
-  &reftitle.changelog;
-  <para>
-   <informaltable>
-    <tgroup cols="2">
-     <thead>
-      <row>
-       <entry>&Version;</entry>
-       <entry>&Description;</entry>
-      </row>
-     </thead>
-     <tbody>
-      <row>
-       <entry>5.3.4</entry>
-       <entry>
-        Adicionado o parâmetro <parameter>follow_location</parameter>.
-       </entry>
-      </row>
-      <row>
-       <entry>5.3.0</entry>
-       <entry>
-        O parâmetro <parameter>protocol_version</parameter> suporta decodificação de transferência
-        fragmentada quando definido como <literal>1.1</literal>..
-       </entry>
-      </row>
-      <row>
-       <entry>5.2.10</entry>
-       <entry>
-        Adicionado o parâmetro <parameter>ignore_errors</parameter>.
-       </entry>
-      </row>
-      <row>
-       <entry>5.2.10</entry>
-       <entry>
-        O parâmetro <parameter>header</parameter> tornou-se um <type>array</type> numericamente indexado.
-       </entry>
-      </row>
-      <row>
-       <entry>5.2.1</entry>
-       <entry>
-        Adicionado o parâmetro <parameter>timeout</parameter>.
-       </entry>
-      </row>
-      <row>
-       <entry>5.1.0</entry>
-       <entry>
-        Adicionada a possibilidade de se fazer proxies HTTPS em proxies HTTP.
-       </entry>
-      </row>
-      <row>
-       <entry>5.1.0</entry>
-       <entry>
-        Adicionado o parâmetro <parameter>max_redirects</parameter>.
-       </entry>
-      </row>
-      <row>
-       <entry>5.1.0</entry>
-       <entry>
-        Adicionado o parâmetro <parameter>protocol_version</parameter>.
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
   </para>
  </refsect1><!-- }}} -->
 
@@ -355,7 +285,7 @@ fclose($stream);
 array (
   'wrapper_data' =>
   array (
-    0 => 'HTTP/1.0 301 Moved Permantenly',
+    0 => 'HTTP/1.0 301 Moved Permanently',
     1 => 'Cache-Control: no-cache',
     2 => 'Connection: close',
     3 => 'Location: http://example.com/foo.jpg',
