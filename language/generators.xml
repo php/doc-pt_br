@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 8c3557271d9ae71bbc8ec2a47ad83960d4272184 Maintainer: royopa Status: ready --><!-- CREDITS: royopa, ae, fabioluciano -->
+<!-- EN-Revision: 1fb0ef23d7be0d8ecd9604fce16ee1e0842c6ef6 Maintainer: royopa Status: ready --><!-- CREDITS: royopa, ae, fabioluciano, @lhsazevedo -->
 <chapter xml:id="language.generators" xmlns="http://docbook.org/ns/docbook">
  <title>Generators</title>
 
@@ -49,9 +49,9 @@
 <![CDATA[
 <?php
 function xrange($start, $limit, $step = 1) {
-    if ($start < $limit) {
+    if ($start <= $limit) {
         if ($step <= 0) {
-            throw new LogicException('Step must be +ve');
+            throw new LogicException('Step must be positive');
         }
 
         for ($i = $start; $i <= $limit; $i += $step) {
@@ -59,7 +59,7 @@ function xrange($start, $limit, $step = 1) {
         }
     } else {
         if ($step >= 0) {
-            throw new LogicException('Step must be -ve');
+            throw new LogicException('Step must be negative');
         }
 
         for ($i = $start; $i >= $limit; $i += $step) {
@@ -98,7 +98,7 @@ Single digit odd numbers from xrange(): 1 3 5 7 9
   <sect2 xml:id="language.generators.object">
    <title><classname>Generator</classname> objects</title>
    <para>
-    Quando uma função geradora é chamada uma primeira vez, um objeto interno
+    Quando uma função geradora é chamada, um objeto interno
     de tipo <classname>Generator</classname> é retornado. Este objeto
     implementa a interface <classname>Iterator</classname> que um objeto
     somente leitura de uma direção implementaria, provendo também métodos que
@@ -114,27 +114,27 @@ Single digit odd numbers from xrange(): 1 3 5 7 9
   <para>
    Uma função generator se parece com uma função normal, exceto que ao invés
    de retornar um valor, um generator pode entregar o resultado quantas vezes forem necessárias.
+   Qualquer função que contenha &yield; é uma função generator.
   </para>
 
   <para>
    Quando uma função generator é chamada, ela retorna um objeto que pode ser
    iterado. Quando você itera através desse objeto (por exemplo, por um loop
-   &foreach;), o PHP irá chamar a função generator toda vez que precisar de
+   &foreach;), o PHP irá chamar os métodos de iteração do objeto toda vez que precisar de
    um valor, em seguida salva o estado do generator quando o valor é produzido,
    de modo que possa ser retomado quando o próximo valor for necessário.
   </para>
 
   <para>
-   Uma vez que não há mais valores a serem produzidos, a função generator pode
+   Uma vez que não há mais valores a serem produzidos, a generator pode
    simplesmente sair, e a chamada de código continua como se um array tivesse
    executado os valores.
   </para>
 
   <note>
    <para>
-    Um generator não pode retornar um valor: isso resultará num erro de
-    compilação. Um <command>retorno</command> vazio é uma sintaxe válida e
-    fará com que o generator seja encerrado.
+    Um generator pode retornar valores, que podem ser recuperados usando
+    <methodname>Generator::getReturn</methodname>.
    </para>
   </note>
 
@@ -187,38 +187,9 @@ foreach ($generator as $value) {
 
    <caution>
     <para>
-     Se você usar um yield em um contexto da expressão (por exemplo, a direita
-     de uma atribuição), você deve colocar a declaração yield entre parênteses
-     no PHP 5. Por exemplo, isso é válido:
-    </para>
-
-    <informalexample>
-     <programlisting role="php">
-<![CDATA[
-      $data = (yield $value);
-]]>
-     </programlisting>
-    </informalexample>
-
-    <para>
-     Mas isso não é válido terá como resultado um parse error no PHP 5:
-    </para>
-
-    <informalexample>
-     <programlisting role="php">
-<![CDATA[
-      $data = yield $value;
-]]>
-     </programlisting>
-    </informalexample>
-
-    <para>
-     Os parênteses não são necessário no PHP 7.
-    </para>
-
-    <para>
-     A sintaxe pode ser usada em conjunto com o método
-     <methodname>Generator::send</methodname>.
+     O valor que será atribuido à <varname>$data</varname> é o valor
+     passado para <methodname>Generator::send</methodname>, ou &null; se
+     <methodname>Generator::next</methodname> for chamado no lugar dele.
     </para>
    </caution>
 
@@ -388,7 +359,7 @@ foreach (gen_reference() as &$number) {
     <title>Delegação de gerador via<command>yield from</command></title>
 
     <para>
-     No PHP 7 a delegação de gerador permite retornar valores de outro
+     A delegação de gerador permite retornar valores de outro
      gerador, objeto <classname>Traversable</classname> ou um
      <type>array</type> utilizando para isso a instrução <command>yield from</command>.
      O gerador externo retornará todos os valores do gerador interno,
@@ -426,14 +397,14 @@ foreach (gen_reference() as &$number) {
        <programlisting role="php">
 <![CDATA[
 <?php
-function from() {
+function inner() {
     yield 1; // key 0
     yield 2; // key 1
     yield 3; // key 2
 }
 function gen() {
     yield 0; // key 0
-    yield from from(); // keys 0-2
+    yield from inner(); // keys 0-2
     yield 4; // key 1
 }
 // passar false como segundo parâmetro para obter um array [0, 1, 2, 3, 4]
@@ -622,6 +593,16 @@ class LineIterator implements Iterator {
    Isso também significa que o generator não pode ser iterado múltiplas vezes:
    o generator precisará ser reconstruído chamando a função generator novamente.
   </para>
+
+  <simplesect role="seealso">
+   &reftitle.seealso;
+   <para>
+    <simplelist>
+     <member><link linkend="language.oop5.iterations">Iteração de Objetos</link></member>
+    </simplelist>
+   </para>
+  </simplesect>
+
  </sect1>
 </chapter>
 
