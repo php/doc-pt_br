@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: a0ae28d3bc85f927c22649ebd9a590b921534b7d Maintainer: royopa Status: ready --><!-- CREDITS: Davi Crystal, royopa, diegopires, geekcom, adiel -->
+<!-- EN-Revision: 92673cc45aefdb6085b332cb381675825926a519 Maintainer: @lhsazevedo Status: ready --><!-- CREDITS: Davi Crystal, royopa, diegopires, geekcom, adiel, @lhsazevedo -->
  <chapter xml:id="features.file-upload" xmlns="http://docbook.org/ns/docbook">
   <title>Gerenciar o upload de arquivos</title>
 
@@ -129,6 +129,15 @@
        <para>
         O <link linkend="features.file-upload.errors">código de erro</link>
         associado a esse upload de arquivo.
+       </para>
+      </listitem>
+     </varlistentry>
+     <varlistentry>
+      <term><varname>$_FILES['userfile']['full_path']</varname></term>
+      <listitem>
+       <para>
+        O caminho completo conforme enviado pelo navegador. Esse valor nem sempre contém uma estrutura de diretórios real, e não se pode confiar nele.
+        Disponível a partir do PHP 8.1.0.
        </para>
       </listitem>
      </varlistentry>
@@ -462,6 +471,42 @@ foreach ($_FILES["pictures"]["error"] as $key => $error) {
      seu formulário não tentará enviar mais arquivos que o limite definido.
     </simpara>
    </warning>
+   <para>
+    <example>
+     <title>Carregando um diretório inteiro</title>
+     <simpara>
+      Nos campos de carregamento de arquivo HTML, é possível carregar um diretório inteiro com o atributo <literal>webkitdirectory</literal>.
+      Essa recurso é suportado na maioria dos navegadores modernos.
+     </simpara>
+     <simpara>
+      Com a informação <literal>full_path</literal>, é possível armazenar os caminhos relativos,
+      ou reconstruir o mesmo diretório no servidor.
+     </simpara>
+     <programlisting role="html">
+<![CDATA[
+<form action="file-upload.php" method="post" enctype="multipart/form-data">
+  Enviar este diretório:<br />
+  <input name="userfile[]" type="file" webkitdirectory multiple />
+  <input type="submit" value="Enviar arquivos" />
+</form>
+]]>
+     </programlisting>
+    </example>
+
+    <warning>
+     <simpara>
+      O atributo <literal>webkitdirectory</literal> não é padronizado e não está no roteiro de padronização.
+      Não utilize-o em sites em produção voltados para a Web: ele não funcionará para todos os usuários.
+      Também podem haver grandes incompatibilidades entre implementações e o comportamento pode mudar no futuro.
+     </simpara>
+     <simpara>
+      O PHP analisa apenas a informação de caminho relativo enviada pelo navegador/user-agent,
+      e passa essa informação para o array <varname>$_FILES</varname>.
+      Não há garantia de que os valores no array <literal>full_path</literal> contenham uma estrutura de diretórios real,
+      e a aplicação PHP não deve confiar nesta informação.
+     </simpara>
+    </warning>
+   </para>
   </sect1>
 
   <sect1 xml:id="features.file-upload.put-method">
