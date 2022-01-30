@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 2ef03df114cbcb863b26c8d967e808e8ca3e4606 Maintainer: none Status: ready -->
+<!-- EN-Revision: d530899344cd881b6d09ff188e24252651c2f394 Maintainer: @rafaelbernard Status: ready --><!-- CREDITS: @rafaelbernard -->
 
 <refentry xml:id="zmqsocket.recv" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
@@ -11,12 +11,12 @@
   &reftitle.description;
   <methodsynopsis>
    <modifier>public</modifier> <type>string</type><methodname>ZMQSocket::recv</methodname>
-   <methodparam choice="opt"><type>integer</type><parameter>mode</parameter><initializer>0</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>mode</parameter><initializer>0</initializer></methodparam>
   </methodsynopsis>
   <para>
-   Recebe uma mensagem a partir de um socket. Por padrão a recepção será bloqueada até que uma mensagem esteja disponível, a menos que
-   a constante <constant>ZMQ::MODE_NOBLOCK</constant> seja usada. A constante <constant>ZMQ::SOCKOPT_RCVMORE</constant>
-   pode ser usada para receber mensagens com várias partes. Consulte <function>ZMQSocket::setSockOpt</function>
+   Recebe uma mensagem a partir de um socket. Por padrão a recepção será bloqueada até que uma mensagem esteja disponível a menos que
+   a constante <constant>ZMQ::MODE_DONTWAIT</constant> seja usada. A constante <constant>ZMQ::SOCKOPT_RCVMORE</constant>
+   pode ser usada para receber mensagens de múltiplas partes. Consulte <function>ZMQSocket::setSockOpt</function>
    para mais informações.
   </para>
  </refsect1>
@@ -29,7 +29,7 @@
      <term><parameter>mode</parameter></term>
      <listitem>
       <para>
-       Passa indicadores para a recepção de mensagens com várias partes ou oerações não bloqueantes.
+       Passa indicadores para a recepção de mensagens de múltiplas partes ou operações não bloqueantes.
        Consulte as constantes <constant>ZMQ::MODE_*</constant>.
       </para>
      </listitem>
@@ -38,11 +38,26 @@
   </para>
  </refsect1>
 
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna a mensagem. Se <constant>ZMQ::MODE_DONTWAIT</constant>
+   for usada e a operação for bloqueante, &false; deve ser retornado.
+  </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <para>
+   Lança <classname>ZMQSocketException</classname> em erros.
+  </para>
+ </refsect1>
+
  <refsect1 role="examples">
  &reftitle.examples;
   <para>
    <example>
-    <title>A exemplo de envio/recepção</title>
+    <title>Um exemplo de envio/recepção</title>
     <para>
      Envio / recepção não bloqueantes
     </para>
@@ -64,10 +79,10 @@ do {
         /* Tenta enviar / receber */
         if ($enviando) {
             echo "Enviando mensagem\n";
-            $fila->send("Isso é uma mensagem", ZMQ::MODE_NOBLOCK);
+            $fila->send("Isso é uma mensagem", ZMQ::MODE_DONTWAIT);
             $enviando = false;
         } else {
-            echo "Obteve resposta: " . $fila->recv(ZMQ::MODE_NOBLOCK) . "\n";
+            echo "Obteve resposta: " . $fila->recv(ZMQ::MODE_DONTWAIT) . "\n";
             break;
         }
     } catch (ZMQSocketException $e) {
@@ -95,16 +110,6 @@ Obteve resposta: Isso é uma mensagem
    </example>
   </para>
  </refsect1>
-
- <refsect1 role="returnvalues">
-  &reftitle.returnvalues;
-  <para>
-   Retorna a mensagem. Lança uma exceção ZMQSocketException caso haja erro.
-   Se a constante <constant>ZMQ::MODE_NOBLOCK</constant> for usada e  operação seja
-   bloqueada, &boolean; falso é retornado.
-  </para>
- </refsect1>
-
 
 </refentry>
 
