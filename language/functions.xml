@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 5c2678e02f0eb135946799eed02d884de1bcf4ad Maintainer: @lhsazevedo Status: ready --><!-- CREDITS: fabioluciano,ae,geekcom,@lhsazevedo -->
+<!-- EN-Revision: 0bafd5454e7c54de5b9e455f997bec3ecf89cfdb Maintainer: @lhsazevedo Status: ready --><!-- CREDITS: fabioluciano,ae,geekcom,@lhsazevedo -->
 <chapter xml:id="language.functions" xmlns="http://docbook.org/ns/docbook">
   <title>Funções</title>
 
@@ -227,28 +227,6 @@ function takes_many_args(
 ]]>
     </programlisting>
    </example>
-   <para>
-    A partir do PHP 8.0.0, declarar argumentos mandatórios após argumentos opcionais
-    é obsoleto. Isso geralmente pode ser resolvido através da eliminação dos argumentos opcionais.
-    Uma exceção são os argumentos na forma
-    <code>Tipo $param = null</code>, onde o &null; padrão torna o tipo implicitamente
-    nullable. Esta forma permanece permitida, entretanto é recomendável um tipo
-    explicitamente nullable nesses casos.
-   </para>
-   <example>
-    <title>Declarando argumentos opcionais depois de argumentos obrigatórios</title>
-    <programlisting role="php">
-<![CDATA[
-<?php
-function foo($a = [], $b) {} // Antes
-function foo($a, $b) {}      // Depois
-
-function bar(A $a = null, $b) {} // Ainda permitido
-function bar(?A $a, $b) {}       // Recomendado
-?>
-]]>
-    </programlisting>
-   </example>
 
    <sect2 xml:id="functions.arguments.by-reference">
     <title>Passando argumentos por referência</title>
@@ -289,8 +267,10 @@ echo $str;    // imprime 'Isto é uma string, e alguma coisa mais.'
     <title>Valores padrão de argumentos</title>
 
     <para>
-     Uma função pode definir valores padrão no estilo C++ para argumentos escalares, como
-     a seguir:
+     Uma função pode definir valores padrão para argumentos usando sintaxe similar
+     a atribuição de uma variável. O padrão é usado apenas quando o parâmetro não
+     é especificado. Em particular, note que passar &null; <emphasis>não</emphasis>
+     atribui o valor padrão.
     </para>
     <para>
      <example>
@@ -312,15 +292,16 @@ echo makecoffee("espresso");
       <screen>
 <![CDATA[
 Fazendo uma xícara de café cappuccino.
-Fazendo uma xícara de café .
+Fazendo uma xícara de café.
 Fazendo uma xícara de café espresso.
 ]]>
       </screen>
      </example>
     </para>
     <para>
-     O PHP também permite o uso def <type>array</type>s e do tipo especial &null;
-     como valores padrões, por exemplo:
+     Valores padrões de parâmetro podem ser valores escalares, <type>array</type>s,
+     o tipo especial &null; e, a partir do PHP 8.1.0, objetos usando a
+     sintaxe <link linkend="language.oop5.basic.new">new ClassName()</link>.
     </para>
     <para>
      <example>
@@ -328,27 +309,52 @@ Fazendo uma xícara de café espresso.
       <programlisting role="php">
 <![CDATA[
 <?php
-function makecoffee($types = array("cappuccino"), $coffeeMaker = NULL)
+function fazercafe($tipos = array("cappuccino"), $cafeteira = NULL)
 {
-    $device = is_null($coffeeMaker) ? "hands" : $coffeeMaker;
-    return "Making a cup of ".join(", ", $types)." with $device.\n";
+    $dispositivo = is_null($cafeteira) ? "mãos" : $cafeteira;
+    return "Fazendo uma xícara de ".join(", ", $tipos)." com $dispositivo.\n";
 }
-echo makecoffee();
-echo makecoffee(array("cappuccino", "lavazza"), "teapot");
+echo fazercafe();
+echo fazercafe(array("cappuccino", "lavazza"), "chaleira");?>
+]]>
+      </programlisting>
+     </example>
+    </para>
+    <para>
+     <example>
+      <title>Usando objetos como valores padrão (a partir do PHP 8.1.0)</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+class CafeteiraPadrao {
+    public function preparar() {
+        return 'Fazendo café.';
+    }
+}
+class CafeteiraChique {
+    public function preparar() {
+        return 'Preparando um belo café só para você.';
+    }
+}
+function fazercafe($cafeteira = new CafeteiraPadrao)
+{
+    return $cafeteira->preparar();
+}
+echo fazercafe();
+echo fazercafe(new CafeteiraChique);
 ?>
 ]]>
       </programlisting>
      </example>
-
     </para>
     <simpara>
      O valor padrão precisa ser uma expressão constante, não (por
      exemplo) uma variável, um membro de classe ou uma chamada de função.
     </simpara>
     <para>
-     Note que usando argumentos padrão, qualquer padrão deve vir após
-     os argumentos sem padrão: caso contrário, as coisas não funcionarão
-     como esperado. Considere o seguinte trecho de código:
+     Note que quaisquer argumentos opcionais devem ser especificados após os
+     argumentos obrigatórios, caso contrário, eles não podem ser omitidos das chamadas.
+     Considere o seguinte exemplo:
     </para>
     <para>
      <example>
@@ -356,21 +362,20 @@ echo makecoffee(array("cappuccino", "lavazza"), "teapot");
       <programlisting role="php">
 <![CDATA[
 <?php
-function iogurtera ($tipo = "azeda", $sabor)
+function fazeriogurte($recipiente = "tigela", $sabor)
 {
-    return "Fazendo uma taça de $sabor $tipo.\n";
+    return "Fazendo um(a) $recipiente de iogurte de $sabor.\n";
 }
 
-echo iogurtera ("framboesa");   // não funciona como esperado
+echo fazeriogurte("framboesa"); // "framboesa" é $recipiente, não $sabor
 ?>
 ]]>
       </programlisting>
       &example.outputs;
       <screen>
 <![CDATA[
-Warning: Missing argument 2 in call to makeyogurt() in
-/usr/local/etc/httpd/htdocs/phptest/functest.html on line 41
-Fazendo uma taça de framboesa.
+Fatal error: Uncaught ArgumentCountError: Too few arguments
+ to function fazeriogurte(), 1 passed in example.php on line 42
 ]]>
       </screen>
      </example>
@@ -384,23 +389,80 @@ Fazendo uma taça de framboesa.
       <programlisting role="php">
 <![CDATA[
 <?php
-function iogurtera ($sabor, $tipo = "azeda")
+function fazeriogurte($sabor, $recipiente = "tigela")
 {
-    return "Fazendo uma taça de $sabor $tipo.\n";
+    return "Fazendo um(a) $recipiente de iogurte de $sabor.\n";
 }
 
-echo iogurtera ("framboesa");   // funciona
+echo fazeriogurte("framboesa"); // "framboesa" é $sabor
 ?>
 ]]>
       </programlisting>
       &example.outputs;
       <screen>
 <![CDATA[
-Fazendo uma taça de framboesa azeda.
+Fazendo um(a) tigela de iogurte de framboesa.
 ]]>
       </screen>
      </example>
     </para>
+    <para>
+     A partir do PHP 8.0.0, <link linkend="functions.named-arguments">argumentos nomeados</link>
+     podem ser usados para pular vários parâmetros opcionais.
+    </para>
+    <para>
+     <example>
+      <title>Uso correto de argumentos padrão de função</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+function fazeriogurte($recipiente = "tigela", $sabor = "framboesa", $estilo = "Grego")
+{
+    return "Fazendo um(a) $recipiente de iogurte $estilo de $sabor.\n";
+}
+
+echo fazeriogurte(estilo: "natural");
+?>
+]]>
+      </programlisting>
+      &example.outputs;
+      <screen>
+<![CDATA[
+Fazendo um(a) tigela de iogurte natural de framboesa.
+]]>
+      </screen>
+     </example>
+    </para>
+    <para>
+     A partir do PHP 8.0.0, declarar argumentos obrigatórios após argumentos opcionais
+     está <emphasis>depreciado</emphasis>. Isso geralmente pode ser resolvido descartando
+     o valor padrão, pois nunca será usado.
+     Uma exceção a essa regra são argumentos no formato
+     <code>Type $param = null</code>, onde o padrão &null; torna o tipo implicitamente
+     anulável. Este uso continua permitido, embora seja recomendado usar um
+     <link linkend="language.types.declarations.nullable">tipo anulável</link> explícito.
+     <example>
+      <title>Declarando argumentos opcionais após argumentos obrigatórios</title>
+      <programlisting role="php">
+<![CDATA[
+ <?php
+ function foo($a = [], $b) {} // Padrão não utilizado; depreciado a partir do PHP 8.0.0
+ function foo($a, $b) {}      // Funcionalmente equivalente, sem notícia de depreciação
+
+ function bar(A $a = null, $b) {} // Ainda permitido; $a é obrigatório porém anulável
+ function bar(?A $a, $b) {}       // Recomendado
+ ?>
+ ]]>
+      </programlisting>
+     </example>
+    </para>
+    <note>
+     <simpara>
+      A partir do PHP 7.1.0, omitir um parâmetro que não especifica um padrão
+      lança um <classname>ArgumentCountError</classname>; em versões anteriores
+      isso emitia um Aviso.
+     </simpara>
+    </note>
     <note>
      <simpara>
       Argumentos passados por referência podem ter um valor padrão.
@@ -606,7 +668,7 @@ echo sum(1, 2, 3, 4);
     <example>
      <title>Sintaxe dos argumentos nomeados</title>
      <programlisting role="php">
-      <![CDATA[
+<![CDATA[
 <?php
 minhaFuncao(nomeParametro: $valor);
 array_foobar(array: $value);
@@ -621,7 +683,7 @@ nome_funcao($variaveoQueGuardaNomeDoParametro: $valor);
     <example>
      <title>Comparando argumentos posicionais e nomeados</title>
      <programlisting role="php">
-      <![CDATA[
+<![CDATA[
 <?php
 // Utilizando argumentos posicionais:
 array_fill(0, 100, 50);
@@ -640,7 +702,7 @@ array_fill(start_index: 0, count: 100, value: 50);
     <example>
      <title>Mesmo exemplo com argumentos em ordem diferente</title>
      <programlisting role="php">
-      <![CDATA[
+<![CDATA[
 <?php
 array_fill(value: 50, count: 100, start_index: 0);
 ?>
@@ -658,7 +720,7 @@ array_fill(value: 50, count: 100, start_index: 0);
     <example>
      <title>Combinando argumentos posicionais e nomeados</title>
      <programlisting role="php">
-      <![CDATA[
+<![CDATA[
 <?php
 htmlspecialchars($string, double_encode: false);
 // Mesmo que
@@ -673,9 +735,9 @@ htmlspecialchars($string, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8', fa
     </para>
 
     <example>
-     <title>Exceção ao passar o mesmo argumento nomeado mais de uma vez</title>
+     <title>Erro lançado ao passar o mesmo argumento nomeado mais de uma vez</title>
      <programlisting role="php">
-      <![CDATA[
+<![CDATA[
 <?php
 function foo($param) { ... }
 
