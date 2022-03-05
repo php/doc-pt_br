@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?> <!-- EN-Revision: 9c21d93b4c2659081f995fcf63b7b7133b753f84 Maintainer: @lhsazevedo Status: ready --><!-- CREDITS: @lhsazevedo, @ABDALAZARD -->
+<?xml version="1.0" encoding="utf-8"?> <!-- EN-Revision: a6a4d6ad6e4ac5e1361044cf5ec6bdd730e529ae Maintainer: @lhsazevedo Status: ready --><!-- CREDITS: @lhsazevedo, @ABDALAZARD -->
 <sect1 xml:id="migration81.incompatible" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>Alterações incompatíveis com versões anteriores</title>
 
@@ -55,6 +55,63 @@ var_dump(B::counter()); // int(4), anteriormente int(2)
    </para>
   </sect3>
 
+  <sect3 xml:id="migration81.incompatible.core.optional-before-required">
+   <title>Parâmetros opcionais especificados antes de parâmetros obrigatórios</title>
+
+   <para>
+    Um <link linkend="functions.arguments.default">parâmetro opcional</link>
+    especificado antes de parâmetros obrigatórios agora é sempre tratado como obrigatório,
+    mesmo ao chamar usando
+    <link linkend="functions.named-arguments">argumentos nomeados</link>.
+    A partir do PHP 8.0.0, mas antes do PHP 8.1.0, a função abaixo emite uma notícia de depreciação
+    na definição, mas executa com sucesso quando chamada. A partir do PHP 8.1.0, um erro
+    da classe <classname>ArgumentCountError</classname> é lançado, assim como seria lançado ao
+    chamar argumentos posicionais.
+    <informalexample>
+
+     <programlisting role="php">
+<![CDATA[
+<?php
+function fazeriogurte($recipiente = "tigela", $sabor)
+{
+    return "Fazendo um(a) $recipiente de iogurte de $sabor.\n";
+}
+try
+{
+    echo fazeriogurte(sabor: "framboesa");
+}
+catch (Error $e)
+{
+    echo get_class($e), ' - ', $e->getMessage(), "\n";
+}
+?>
+]]>
+     </programlisting>
+     &example.outputs.80;
+     <screen>
+<![CDATA[
+Deprecated: Required parameter $sabor follows optional parameter $recipiente
+ in example.php on line 3
+Fazendo um(a) tigela de iogurte de framboesa.
+]]>
+     </screen>
+     &example.outputs.81;
+     <screen>
+<![CDATA[
+Deprecated: Optional parameter $recepiente declared before required parameter
+ $sabor is implicitly treated as a required parameter in example.php on line 3
+ArgumentCountError - fazeriogurte(): Argument #1 ($recepiente) not passed
+]]>
+     </screen>
+    </informalexample>
+   </para>
+   <para>
+    Note que um valor padrão de &null; pode ser usado antes de parâmetros obrigatórios para
+    especificar um <link linkend="language.types.declarations.nullable">tipo anulável</link>,
+    mas o parâmetro ainda será obrigatório.
+   </para>
+  </sect3>
+
   <sect3 xml:id="migration81.incompatible.core.type-compatibility-internal">
    <title>Compatibilidade de Tipo de Retorno com Classes Internas</title>
 
@@ -74,6 +131,10 @@ var_dump(B::counter()); // int(4), anteriormente int(2)
    <para>
     <literal>readonly</literal> agora é uma palavra-chave. No entanto, ela ainda pode ser usada
     como nome de função.
+   </para>
+   <para>
+    <literal>never</literal> agora é uma palavra reservada, então ela não pode ser usada para nomear uma classe,
+    interface ou trait, e também é proibida de ser usada em namespaces.
    </para>
   </sect3>
  </sect2>
