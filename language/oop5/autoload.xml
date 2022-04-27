@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 9ee9eccf455188ab6eb352194eb6f9eb99e15606 Maintainer: @lhsazevedo Status: ready --><!-- CREDITS: felipe, amandavale, machado, fabioluciano, @lhsazevedo -->
+<!-- EN-Revision: fca50d321ce57036f3786f278887abe58cd41de8 Maintainer: @lhsazevedo Status: ready --><!-- CREDITS: felipe, amandavale, machado, fabioluciano, @lhsazevedo -->
  <sect1 xml:id="language.oop5.autoload" xmlns="http://docbook.org/ns/docbook">
   <title>Autoloading Classes</title>
   <para>
@@ -14,6 +14,10 @@
    se elas não ainda não foram definidas. Ao registrar autoloaders, o PHP têm uma última chance
    de carregar classes e interfaces antes que falhem com um erro.
   </para>
+  <para>
+   Qualquer construto tipo classe pode ser automaticamente carregado do mesmo jeito. Isso inclui classes,
+   interfaces, traits, and enumerações.
+  </para>
   <caution>
    <para>
     Antes do PHP 8.0.0. era possível usar <function>__autoload</function>
@@ -23,6 +27,15 @@
     a partir do PHP 8.0.0.
    </para>
   </caution>
+  <note>
+   <para>
+    <function>spl_autoload_register</function> pode ser chamada várias vezes para
+    registrar múltiplos autoloaders. No entando, lançar uma exceção em uma função de autoload
+    interromperá esse processo e não permitirá que outras funções de autoload sejam
+    executadas. Por esse motivo, o lançamento de exceções em funções de autoload é altamente
+    desencorajado.
+   </para>
+  </note>
   <para>
    <example>
     <title>Exemplo de Autoload</title>
@@ -68,66 +81,6 @@ Fatal error: Interface 'ITest' not found in ...
 ?>
 ]]>
     </programlisting>
-   </example>
-   <example>
-    <title>Autoload com manipulação de exceções</title>
-    <para>
-     Este exemplo lançará uma exceção e demonstrará o bloco try/catch.
-    </para>
-    <programlisting role="php">
-<![CDATA[
-<?php
-spl_autoload_register(function ($name) {
-    echo "Want to load $name.\n";
-    throw new Exception("Unable to load $name.");
-});
-
-try {
-    $obj = new NonLoadableClass();
-} catch (Exception $e) {
-    echo $e->getMessage(), "\n";
-}
-?>
-]]>
-    </programlisting>
-    &example.outputs;
-    <screen>
-<![CDATA[
-Want to load NonLoadableClass.
-Unable to load NonLoadableClass.
-]]>
-    </screen>
-   </example>
-   <example>
-    <title>Autoload com manipulação de exceções - Faltando exceção customizada.</title>
-    <para>
-     Este exemplo dispara uma exceção para uma exceção customizada não carregável.
-    </para>
-    <programlisting role="php">
-<![CDATA[
-<?php
-spl_autoload_register(function ($name) {
-    echo "Want to load $name.\n";
-    throw new MissingException("Unable to load $name.");
-});
-
-try {
-    $obj = new NonLoadableClass();
-} catch (Exception $e) {
-    echo $e->getMessage(), "\n";
-}
-?>
-]]>
-    </programlisting>
-    &example.outputs;
-    <screen>
-<![CDATA[
-Want to load NonLoadableClass.
-Want to load MissingException.
-
-Fatal error: Class 'MissingException' not found in testMissingException.php on line 4
-]]>
-    </screen>
    </example>
   </para>
 
