@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 5fabd07880ab15b0ad2cf7eb055c7c2b36d7120f Maintainer: @lhsazevedo Status: ready --><!-- CREDITS: amandavale, lucasr, fabioluciano, @lhsazevedo -->
+<!-- EN-Revision: ce882c196dce81bf6bd4d94af4fa4110ddc49ef4 Maintainer: lhsazevedo Status: ready --><!-- CREDITS: amandavale, lucasr, fabioluciano, lhsazevedo -->
 <refentry xml:id="function.array-fill" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>array_fill</refname>
@@ -37,7 +37,8 @@
        Se <parameter>start_index</parameter> for negativo,
        o primeiro índice do array retornado será
        <parameter>start_index</parameter>, e os índices
-       seguintes começarão do zero
+       seguintes começarão do zero antes do PHP 8.0.0.
+       A partir do PHP 8.0.0, chaves negativas são incrementadas normalmente
        (veja o <link linkend="function.array-fill.example.basic">exemplo</link>).
       </para>
      </listitem>
@@ -48,7 +49,7 @@
      <listitem>
       <para>
        Número de elementos a inserir.
-       Deve ser maior ou igual a zero.
+       Deve ser maior ou igual a zero, e menor ou igual a <literal>2147483647</literal>.
       </para>
      </listitem>
     </varlistentry>
@@ -76,9 +77,33 @@
  <refsect1 role="errors">
   &reftitle.errors;
   <para>
-   Dispara um <constant>E_WARNING</constant> se <parameter>count</parameter> é
-   menor que um.
+   Lança um <classname>ValueError</classname> se <parameter>count</parameter> estiver
+   fora do alcance.
   </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       <function>array_fill</function> agora lança um <classname>ValueError</classname>
+       se <parameter>count</parameter> estiver fora de alance; anteriormente um <constant>E_WARNING</constant>
+       era disparado, e a função retornava &false;.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
  </refsect1>
 
  <refsect1 role="examples">
@@ -90,9 +115,7 @@
 <![CDATA[
 <?php
 $a = array_fill(5, 6, 'banana');
-$b = array_fill(-2, 4, 'pera');
 print_r($a);
-print_r($b);
 ?>
 ]]>
     </programlisting>
@@ -108,6 +131,24 @@ Array
     [9]  => banana
     [10] => banana
 )
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example xml:id="function.array-fill.example.negative-start-index">
+    <title>Exemplo da <function>array_fill</function> com um índice de início negativo</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$a = array_fill(-2, 4, 'pera');
+print_r($a);
+?>
+]]>
+    </programlisting>
+    &example.outputs.7;
+    <screen>
+<![CDATA[
 Array
 (
     [-2] => pera
@@ -117,7 +158,22 @@ Array
 )
 ]]>
     </screen>
+    &example.outputs.8;
+    <screen>
+<![CDATA[
+Array
+(
+    [-2] => pera
+    [-1] => pera
+    [0] => pera
+    [1] => pera
+)
+]]>
+    </screen>
    </example>
+  </para>
+  <para>
+   Note que o índice <literal>-1</literal> não está presente antes do PHP 8.0.0.
   </para>
  </refsect1>
 
