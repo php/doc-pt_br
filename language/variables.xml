@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 165718f97f983da66504dbe547900b7e5d54fdb5 Maintainer: ae Status: ready --><!-- CREDITS: ae,felipe,fabioluciano,adiel,@gabrielsanva -->
+<!-- EN-Revision: 19e8122137a1d42ed60f17fe2c0c2b69b0b2d16b Maintainer: ae Status: ready --><!-- CREDITS: ae,felipe,fabioluciano,adiel,@gabrielsanva -->
  <chapter xml:id="language.variables" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Variáveis</title>
 
@@ -148,7 +148,7 @@ var_dump($unset_str);
 $unset_int += 25; // 0 + 25 => 25
 var_dump($unset_int);
 
-// Uso de float/double; imprime 'float(1.25)'
+// Uso de float; imprime 'float(1.25)'
 $unset_float += 1.25;
 var_dump($unset_float);
 
@@ -171,7 +171,7 @@ var_dump($unset_obj);
     nome.
     Erros de nível <link linkend="errorfunc.constants.errorlevels.e-notice">E_NOTICE</link> serão emitidos no caso de
     ter variáveis não inicializadas, contudo não no caso de adicionar
-    elementos a um array não inicializado. O construtor da linguagem <function>isset</function>
+    elementos a um array não inicializado. A instrução da linguagem <function>isset</function>
     pode ser usado para detectar se uma variável não foi inicializada.
    </para>
   </sect1>
@@ -487,6 +487,34 @@ function foo(){
     </example>
    </para>
 
+   <para>
+    A partir do PHP 8.1.0, quando um método com variáveis estáticas é herdado (mas não sobrescrito),
+    o método herdado não compartilhará as variáveis estáticas do método acima.
+    Isso significa que variáveis estáticas nos métodos agora se comportam da mesma forma que propriedades estáticas.
+   </para>
+
+   <example>
+    <title>Uso de variáveis estáticas em métodos herdados</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+class Foo {
+    public static function counter() {
+        static $counter = 0;
+        $counter++;
+        return $counter;
+    }
+}
+class Bar extends Foo {}
+var_dump(Foo::counter()); // int(1)
+var_dump(Foo::counter()); // int(2)
+var_dump(Bar::counter()); // int(3), e antes do PHP 8.1.0 int(1)
+var_dump(Bar::counter()); // int(4), e antes do PHP 8.1.0 int(2)
+?> 
+]]>
+    </programlisting>
+   </example>
+
    <note>
     <para>
      Declarações estáticas são resolvidas em tempo de compilação.
@@ -554,11 +582,11 @@ object(stdClass)#1 (0) {
 function &get_instance_ref() {
     static $obj;
 
-    echo 'Objeto estatico: ';
+    echo 'Objeto estático: ';
     var_dump($obj);
     if (!isset($obj)) {
         $new = new stdclass;
-        // Assimila uma referencia a variavel estatica
+        // Assimila uma referencia a variável estática
         $obj = &$new;
     }
     if (!isset($obj->property)) {
@@ -572,11 +600,11 @@ function &get_instance_ref() {
 function &get_instance_noref() {
     static $obj;
 
-    echo "Objeto estatico: ";
+    echo "Objeto estático: ";
     var_dump($obj);
     if (!isset($obj)) {
         $new = new stdclass;
-        // Assimila o objeto para a veriavel estatica
+        // Assimila o objeto para a variável estática
         $obj = $new;
     }
     if (!isset($obj->property)) {
@@ -927,7 +955,7 @@ if ($_POST) {
     <note>
      <simpara>
       A partir dos PHP 7.2.34, 7.3.23 e 7.4.11, respectivamente, os <emphasis>nomes</emphasis>
-      dos coockies não url-coded por razões de segurança.
+      dos cookies não url-coded por razões de segurança.
      </simpara>
     </note>
 
