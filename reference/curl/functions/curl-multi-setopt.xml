@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 265c283cb55ce37c571561ea75fcc79e6ea67be0 Maintainer: none Status: ready --><!-- CREDITS: andersonmamede -->
+<!-- EN-Revision: b7f8c11e56ff1c57a2993e2ed7e5c5ace18637fd Maintainer: none Status: ready --><!-- CREDITS: andersonmamede,resolvendobug -->
 
 <refentry xml:id="function.curl-multi-setopt" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
@@ -11,7 +11,7 @@
   &reftitle.description;
   <methodsynopsis>
    <type>bool</type><methodname>curl_multi_setopt</methodname>
-   <methodparam><type>resource</type><parameter>mh</parameter></methodparam>
+   <methodparam><type>CurlMultiHandle</type><parameter>multi_handle</parameter></methodparam>
    <methodparam><type>int</type><parameter>option</parameter></methodparam>
    <methodparam><type>mixed</type><parameter>value</parameter></methodparam>
   </methodsynopsis>
@@ -27,7 +27,7 @@
   &reftitle.parameters;
   <variablelist>
    <varlistentry>
-    <term><parameter>mh</parameter></term>
+     <term><parameter>multi_handle</parameter></term>
     <listitem>
      <para>
       
@@ -70,6 +70,9 @@
             segunda requisição será transmitida ("piped") na mesma conexão.
             A partir do cURL 7.43.0 você também pode passar 2 para tentar fazer a nova
             transferência usando uma conexão HTTP/2 já existente se for possível.
+            Passar 3 instrui o cURL a solicitar pipelining e multiplexação
+             independentemente um do outro.
+             A partir do cURL 7.62.0, definir o bit de pipelining não tem efeito.
             Ao invés de usar números inteiros literalmente, você pode usar as constantes CURLPIPE_*
             quando disponíveis.
            </entry>
@@ -120,6 +123,48 @@
             abertas simultaneamentes.
            </entry>
           </row>
+          <row>
+           <entry valign="top"><constant>CURLMOPT_PUSHFUNCTION</constant></entry>
+           <entry valign="top">
+            Passe um <type>callable</type> que será registrado para manipular o servidor
+             pushes e deve ter a seguinte assinatura:
+            <methodsynopsis>
+             <type>int</type><methodname><replaceable>pushfunction</replaceable></methodname>
+             <methodparam><type>resource</type><parameter>parent_ch</parameter></methodparam>
+             <methodparam><type>resource</type><parameter>pushed_ch</parameter></methodparam>
+             <methodparam><type>array</type><parameter>headers</parameter></methodparam>
+            </methodsynopsis>
+            <variablelist>
+             <varlistentry>
+              <term><parameter>parent_ch</parameter></term>
+              <listitem>
+               <para>
+               O manipulador cURL pai (a solicitação feita pelo cliente).
+               </para>
+              </listitem>
+             </varlistentry>
+             <varlistentry>
+              <term><parameter>pushed_ch</parameter></term>
+              <listitem>
+               <para>
+                Um novo identificador cURL para a solicitação enviada.
+               </para>
+              </listitem>
+             </varlistentry>
+             <varlistentry>
+              <term><parameter>headers</parameter></term>
+              <listitem>
+               <para>
+                Os cabeçalhos de promessa push.
+               </para>
+              </listitem>
+             </varlistentry>
+            </variablelist>
+            A função push deve retornar
+            <constant>CURL_PUSH_OK</constant>se ele pode lidar com o push, ou
+            <constant>CURL_PUSH_DENY</constant> para rejeitá-lo.
+           </entry>
+          </row>
          </tbody>
         </tgroup>
        </informaltable>
@@ -128,14 +173,12 @@
    </varlistentry>
   </variablelist>
  </refsect1>
-
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
    &return.success;
   </para>
  </refsect1>
-
  <refsect1 role="changelog">
   &reftitle.changelog;
   <para>
@@ -148,6 +191,12 @@
       </row>
      </thead>
      <tbody>
+      <row>
+       <entry>7.1.0</entry>
+       <entry>
+        Introduced <constant>CURLMOPT_PUSHFUNCTION</constant>.
+       </entry>
+      </row>
       <row>
        <entry>7.0.7</entry>
        <entry>
