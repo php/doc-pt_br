@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 9ee9eccf455188ab6eb352194eb6f9eb99e15606 Maintainer: ae Status: ready --><!-- CREDITS: narigone,felipe,ae,fabioluciano -->
+<!-- EN-Revision: 18b39f03ef77080a349f6cd2d82112dd43f904c2 Maintainer: ae Status: ready --><!-- CREDITS: narigone,felipe,ae,fabioluciano -->
  <sect1 xml:id="language.oop5.decon" xmlns="http://docbook.org/ns/docbook">
   <title>Construtores e Destrutores</title>
 
@@ -138,7 +138,7 @@ class Point {
      </programlisting>
     </example>
     <para>
-     Quanto um argumento de construtor incluir um modificador de visibilidade, o PHP interpretará como sendo
+     Quanto um argumento de construtor incluir um modificador de visibilidade, o PHP interpreta como sendo
      uma propriedade de objeto e como um argumento do construtor, e assimilará o valor do argumento
      a uma propriedade de mesmo nome. O corpo do construtor pode estar vazio ou conter outras operações.
      Quaisquer operações serão executados após os valores dos argumentos serem definidos
@@ -163,6 +163,54 @@ class Point {
      </para>
     </note>
    </sect3>
+
+   <sect3 xml:id="language.oop5.decon.constructor.new">
+    <title>New em inicializadores de parâmetros</title>
+    <para>
+     A partir do PHP 8.1.0, objetos podem ser utilizados como valores padrão de parâmetros,
+     variáveis estáticas e constantes globais, assim como argumentos de atributos.
+     Novos objetos também podem ser passados na instrução <function>define</function>.
+    </para>
+    <note>
+     <para>
+      Não é permitido nomes de classe não-string ou classes anônimas.
+      Não é permitido o espalhamento de argumentos.
+      Não é permitido o uso de expressões.
+     </para>
+    </note>
+    <example>
+     <title>New em inicializações</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+
+// Permitido:
+static $x = new Foo;
+
+const C = new Foo;
+ 
+function test($param = new Foo) {}
+ 
+#[AnAttribute(new Foo)]
+class Test {
+    public function __construct(
+        public $prop = new Foo,
+    ) {}
+}
+
+// Não permitido, resultad em erro de compilação:
+function test(
+    $a = new (CLASS_NAME_CONSTANT)(), // Nome dinâmico de classe
+    $b = new class {}, // Classe anônima
+    $c = new A(...[]), // Espalhamento de argumento
+    $d = new B($abc), // Expressão
+) {}
+?>
+]]>
+     </programlisting>
+    </example>
+   </sect3>
+   
    <sect3 xml:id="language.oop5.decon.constructor.static">
     <title>Métodos de criação estáticos</title>
     <para>
@@ -228,7 +276,7 @@ $p3 = Product::fromXml($some_xml_string);
      converter os dados no formato necessário ao construtor. Só então retorna o novo objeto.</member>
      <member><code>fromXml()</code> aceita uma string XML, pré-processa, e então cria um objeto
      limpo. O construtor é chamado, mas com todos os parâmetros opcionais o método
-     os ignora. Por fim informa os valores nas propriedades do objeto antes de retornar o resultado.</member>
+     os ignora. Por fim, os valores nas propriedades do objeto são associados antes de retornar o resultado.</member>
     </simplelist>
     <para>
      Nos três casos, a palavra chave <code>static</code> é convertida no nome da classe onde o código reside.
