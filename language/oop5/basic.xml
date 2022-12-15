@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: c36ce0b514faa2efce1427ae87ba9ea25cc038ad Maintainer: ae Status: ready --><!-- CREDITS: ae,amandavale,narigone,fabioluciano,@lhsazevedo -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 512670405c88acf7f0c9124f98c249e530ecd3cb Maintainer: ae Status: ready --><!-- CREDITS: ae,amandavale,narigone,fabioluciano,lhsazevedo -->
 
  <sect1 xml:id="language.oop5.basic" xmlns="http://docbook.org/ns/docbook">
   <title>O básico</title>
@@ -125,6 +125,72 @@ Stack trace:
      </screen>
     </example>
    </warning>
+
+   <sect3 xml:id="language.oop5.basic.class.readonly">
+    <title>Classes somente leitura</title>
+    <para>
+     A partir do PHP 8.2.0, uma classe pode ser marcada com o modificador
+     <modifier>readonly</modifier>.
+     Marcar uma classe como <modifier>readonly</modifier> irá acrescentar o modificador
+     <link linkend="language.oop5.properties.readonly-properties"><modifier>readonly</modifier></link>
+     em cada propriedade declarada, e prevenir a criação de
+     <link linkend="language.oop5.properties.dynamic-properties">propriedades dinâmicas</link>.
+     Além disso será impossível de acrescentar suportes a propriedades dinâmicas utilizando o atributo
+     <classname>AllowDynamicProperties</classname>. Acrescentar o atributo em classes somente leitura
+     irá disparar um erro de compilação.
+    </para>
+    <example>
+     <programlisting role="php">
+<![CDATA[
+<?php
+#[AllowDynamicProperties]
+readonly class Foo {
+}
+
+// Fatal error: Cannot apply #[AllowDynamicProperties] to readonly class Foo
+?>
+]]>
+     </programlisting>
+    </example>
+
+    <para>
+     As neither untyped, nor static properties can be marked with the
+     <literal>readonly</literal> modifier, readonly classes cannot declare
+     them either:
+    </para>
+    <example>
+     <programlisting role="php">
+<![CDATA[
+<?php
+readonly class Foo
+{
+    public $bar;
+}
+
+// Fatal error: Readonly property Foo::$bar must have type
+?>
+]]>
+     </programlisting>
+     <programlisting role="php">
+<![CDATA[
+<?php
+readonly class Foo
+{
+    public static int $bar;
+}
+
+// Fatal error: Readonly class Foo cannot declare static properties
+?>
+]]>
+     </programlisting>
+    </example>
+    <para>
+     Uma classe <modifier>readonly</modifier> pode ser
+     <link linkend="language.oop5.basic.extends">estendida</link>
+     se, e somente se, a classe filha também ser uma classe
+     <modifier>readonly</modifier>.
+    </para>
+   </sect3>
   </sect2>
 
   <sect2 xml:id="language.oop5.basic.new">
@@ -147,7 +213,7 @@ Stack trace:
    <note>
     <para>
      Se não há argumentos a serem passados para o construtor da classe,
-     os parenteses após o nome da classe podem ser omitidos.
+     os parênteses após o nome da classe podem ser omitidos.
     </para>
    </note>
 
@@ -457,14 +523,14 @@ um valor padrão
      Quando sobrescrevendo um método, sua assinatura precisa ser compatível com
      o método original. De outra forma um erro fatal é emitido, ou, anteriormente ao PHP 8.0.0, um aviso
      <constant>E_WARNING</constant> seria gerado.
-     Uma assinatura é compatível se ela respeita as regas de
+     Uma assinatura é compatível se ela respeita as regras de
      <link linkend="language.oop5.variance">variância</link>, se torna um
      parâmetro obrigatório em opcional, ou se adiciona novos parâmetros opcionais.
      Isso é conhecido como Princípio de Substituição de Liskov, ou LSP.
      O <link linkend="language.oop5.decon.constructor">construtor</link>,
      e membros <literal>private</literal> não precisam seguir essas regras de
      compatibilidade, e portanto não há emissão de erros fatais no caso
-     se assinaturas incompatíveis.
+     de assinaturas incompatíveis.
     </para>
     <example>
      <title>Métodos compatíveis</title>
@@ -515,7 +581,7 @@ Valid
      em mandatório não é compatível com o método original.
     </para>
     <example>
-     <title>Erro fata quando um método derivado remove um parâmetro</title>
+     <title>Erro fatal quando um método derivado remove um parâmetro</title>
      <programlisting role="php">
 <![CDATA[
 <?php

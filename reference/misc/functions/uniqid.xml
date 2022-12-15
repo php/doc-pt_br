@@ -1,65 +1,125 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: fernandoc Status: ready -->
-<!-- splitted from ./en/functions/misc.xml, last change in rev 1.2 -->
-  <refentry xml:id="function.uniqid" xmlns="http://docbook.org/ns/docbook">
-   <refnamediv>
-    <refname>uniqid</refname>
-    <refpurpose>Gera um ID unico</refpurpose>
-   </refnamediv>
-   <refsect1>
-    <title>Descrição</title>
-     <methodsynopsis>
-      <type>string</type><methodname>uniqid</methodname>
-      <methodparam><type>string</type><parameter>prefix</parameter></methodparam>
-      <methodparam choice="opt"><type>bool</type><parameter>lcg</parameter></methodparam>
-     </methodsynopsis>
-    <simpara>
-     <function>uniqid</function> retorna um identificador unico prefixado
-     baseado no tempo atual em milionésimos de segundo. O Prefixo pode ser 
-     usado se você gera identificadores em vários servidores simultaneamente
-     pode acontecer de gerar o identificador no mesmo milionésimo de segundo.
-     <parameter>Prefix</parameter> pode ter até 114 caracteres.
-    </simpara>
-    <simpara>
-     Se o parâmetro <parameter>lcg</parameter>, que é opcional, for &true;,
-     <function>uniqid</function> irá adicionar a entropia "LCG combinada"
-     ao final do valor retornado, o que deve fazer o resultado mais unico.
-    </simpara>
-    <simpara>
-     Com o parâmetro <parameter>prefix</parameter> vazio, a string retornada terá 13 caracteres.
-     Se o parâmetro <parameter>lcg</parameter> for &true;, terá 23 caracteres.
-    </simpara>
-    <note>
-     <simpara>
-      O parâmetro <parameter>lcg</parameter> somente esta disponivel no PHP 4 e PHP 3.0.13 e posterior.
-     </simpara>
-    </note>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: b8758b0605e80c4e3610137b7502a6abeea5c69b Maintainer: ae Status: ready --><!-- CREDITS: fernandoc,ae -->
+<refentry xml:id="function.uniqid" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>uniqid</refname>
+  <refpurpose>Gera um ID único</refpurpose>
+ </refnamediv>
+ 
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>string</type><methodname>uniqid</methodname>
+   <methodparam choice="opt"><type>string</type><parameter>prefix</parameter><initializer>""</initializer></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>more_entropy</parameter><initializer>&false;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Obtém um identificador prefixado único baseado no tempo atual
+   em microsegundos.
+  </para>
+  &caution.cryptographically-insecure;
+  <warning>
     <para>
-     Se você precisa um identificador unico e pretende dar o seu
-     identificador via rede(ex. cookies de seção),
-     é recomendado que você use algo como
-     </para>
-     <para>
-     <informalexample>
-      <programlisting role="php">
+     Esta função não garante a repetição do valor
+     retornado. Isso ocorre porque muitos sistemas ajustam seus relógios utilizando o NTP ou similares
+     de forma que o horário do sistema é alterado constantemente. Portanto é possível que
+     esta função não retorna um ID único mesmo no nível
+     do processo ou thread. Utilize Use <parameter>more_entropy</parameter> para
+     aumentar as chances de não repetição.
+    </para>
+  </warning>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>prefix</parameter></term>
+     <listitem>
+      <para>
+       Útil para gerar identificadores
+       simultaneamente em vários servidores, que poderiam gerar o
+       mesmo identificador no mesmo microsegundo.
+      </para>
+      <para>
+       Com um <parameter>prefix</parameter> vazio, a string retornada terá
+       13 caracteres. Se <parameter>more_entropy</parameter> for
+       &true;, a string terá 23 caracteres.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>more_entropy</parameter></term>
+     <listitem>
+      <para>
+       Se informado como &true;, <function>uniqid</function> irá adicionar
+       entropia (utilizando um gerador linear congruente) ao final do
+       do valor retornado, o que aumentará as chances que o resultado seja
+       globalmente único.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna um identificador único baseado no timestamp, como uma string.
+  </para>
+  <warning>
+   <para>
+     Esta função tenta criar um identificador único, mas não
+     garante a unicidade global em 100% dos casos.
+   </para>
+  </warning>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title><function>uniqid</function> Example</title>
+    <programlisting role="php">
 <![CDATA[
 <?php
-// sem prefixo
-$token = md5(uniqid(""));
+/* Um identificador, por exemplo: 4b3403665fea6 */
+printf("uniqid(): %s\r\n", uniqid());
 
-// melhor, dificil de adivinhar
-$better_token = md5(uniqid(rand(), true));
+/* Também pode prefixar o identificador, que é o mesmo que
+ * fazer:
+ *
+ * $uniqid = $prefix . uniqid();
+ * $uniqid = uniqid($prefix);
+ */
+printf("uniqid('php_'): %s\r\n", uniqid('php_'));
+
+/* Pode-se também ativar o parâmetro more_entropy, o que
+ * é exigido em alguns sistemas, como o Cygwin. Isto faz que uniqid()
+ * produza um valor como: 4b340550242239.64159797
+ */
+printf("uniqid('', true): %s\r\n", uniqid('', true));
 ?>
 ]]>
-      </programlisting>
-     </informalexample>
-    </para>
-    <simpara>
-     Isto irá criar um identificador de 32 caracteres(a 128 bit hex number)
-     que é extremamente dificil de prever.
-    </simpara>
-   </refsect1>
-  </refentry>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    Sob o Cygwin, o parâmetro <parameter>more_entropy</parameter> deve ser configurado
+    como &true; para que essa função funcione.
+   </para>
+  </note>
+
+ </refsect1>
+
+</refentry>
 
 <!-- Keep this comment at the end of the file
 Local variables:

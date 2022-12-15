@@ -1,59 +1,117 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: fernandoc Status: ready -->
-  <refentry xml:id="function.getopt" xmlns="http://docbook.org/ns/docbook">
-   <refnamediv>
-    <refname>getopt</refname>
-    <refpurpose>Obtém opções da lista de argumentos da linha de comando</refpurpose>
-   </refnamediv>
- 
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 4d02fe98ddc684a0d82a3921ef189a71b98f4f04 Maintainer: ae Status: ready --><!-- CREDITS: fernandoc,ae -->
+<refentry xml:id="function.getopt" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>getopt</refname>
+  <refpurpose>Obtêm opções da linha de comando</refpurpose>
+ </refnamediv>
+
  <refsect1 role="description">
   &reftitle.description;
-     <methodsynopsis>
-      <type>array</type><methodname>getopt</methodname>
-      <methodparam><type>string</type><parameter>options</parameter></methodparam>
-      <methodparam choice="opt"><type>array</type><parameter>longopts</parameter></methodparam>
-     </methodsynopsis>
-    <para>
-     Retorna uma matriz associativa das opções/argumentos baseada no formato especificado no 
-     parâmetro <parameter>options</parameter>, ou &false; em caso de erro.
-    </para>
+  <methodsynopsis>
+   <type class="union"><type>array</type><type>false</type></type><methodname>getopt</methodname>
+   <methodparam><type>string</type><parameter>short_options</parameter></methodparam>
+   <methodparam choice="opt"><type>array</type><parameter>long_options</parameter><initializer>[]</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter role="reference">rest_index</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Extrai as opções passadas para o script.
+  </para>
  </refsect1>
 
  <refsect1 role="parameters">
   &reftitle.parameters;
-    <para>
+  <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>options</parameter></term>
+     <term><parameter>short_options</parameter></term>
      <listitem>
-    <para>
-     O parâmetro <parameter>options</parameter> deve conter os seguintes elementos:
-     caracteres individuais, e caracteres individuais seguidos por dois pontos para 
-     indicar uma opção com um argumento a seguir. Por exemplo, a string de opção
-     <literal>x</literal> reconhece uma opção <literal>-x</literal>, e uma string de
-     opção <literal>x:</literal> reconhece uma opção e um argumento
-     <literal>-x argumento</literal>. Não importa se o argumento tem espaço no início.
-    </para>
+      <simpara>
+       Cada caracter nessa string será usada como uma opção e
+       comparada contra as opções passadas para o script prefixadas com um
+       único hífen (<literal>-</literal>).
+      </simpara>
+      <simpara>
+       Por exemplo, a string <literal>"x"</literal> reconhece a
+       opção <literal>-x</literal>.
+      </simpara>
+      <simpara>
+       Somente a-z, A-Z e 0-9 são permitidos.
+      </simpara>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>longopts</parameter></term>
+     <term><parameter>long_options</parameter></term>
      <listitem>
-      <para>
-      </para>
+      <simpara>
+       Um array de opções. Cada elemento desse array será usado como uma string de
+       opção e comparada contra as opções passadas para o script com dois
+       hífens (<literal>--</literal>).
+      </simpara>
+      <simpara>
+       Por exemplo, um elemento longopts <literal>"opt"</literal> reconhece a
+       opção <literal>--opt</literal>.
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>rest_index</parameter></term>
+     <listitem>
+      <simpara>
+       Se o parâmetro <parameter>rest_index</parameter> estiver presente, então o
+       índice onde a interpretação de argumentos parou será escrita nessa variável.
+      </simpara>
      </listitem>
     </varlistentry>
    </variablelist>
   </para>
+  <para>
+   O parâmetro <parameter>short_options</parameter> pode conter os elementos
+   a seguir:
+   <simplelist>
+    <member>Letras individuais (não aceita valores)</member>
+    <member>Letras seguidas de um dois pontos (parâmetro requer valores)</member>
+    <member>Letras seguidas de dois dois pontos(valor opcional)</member>
+   </simplelist>
+   Valores de opções são o primeiro argumento depois da string. Se o valor é exigido
+   então não importa se o valor tem um espaço na frente ou não. Veja nota.
+   <note>
+    <simpara>
+     Valores opcionais não aceitam <literal>" "</literal> (espaço) como separador.
+    </simpara>
+   </note>
+  </para>
+  <para>
+    O array <parameter>long_options</parameter> pode conter:
+    <simplelist>
+      <member>String (parâmetro que não aceita valores)</member>
+      <member>String seguida por único dois pontos parãmetro requer valor)</member>
+      <member>String seguida por dois dois pontos (valor opcional)</member>
+    </simplelist>
+  </para>
+  <note>
+   <para>
+    O formado para <parameter>short_options</parameter> e
+    <parameter>long_options</parameter> é quase o mesmo, com a única diferença sendo
+    que <parameter>long_options</parameter> é informado como um array de opções (onde cada
+    elemento é a opção), enquanto <parameter>short_options</parameter> é informado como uma
+    string (onde cada caracter é um opção).
+   </para>
+  </note>
  </refsect1>
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-    <para>
-     Esta função irá retornar uma matriz de opções/argumentos . Se uma opção não tiver argumento
-     o valor definido será &false;.
-    </para>
-   </refsect1>
+  <para>
+   Esta função retorna um array de pares de opções e argumentos, &return.falseforfailure;.
+  </para>
+  <note>
+   <para>
+    A interpretação de opções irá parar na primeira opção desconhecida, e
+    tudo o mais será descartado.
+   </para>
+  </note>
+ </refsect1>
 
  <refsect1 role="changelog">
   &reftitle.changelog;
@@ -68,9 +126,9 @@
      </thead>
      <tbody>
       <row>
-       <entry>5.3.0</entry>
+       <entry>7.1.0</entry>
        <entry>
-        Esta função não depende mais do sistema e funcionando também em Windows.
+        Acrescentando o parâmetro <parameter>rest_index</parameter>.
        </entry>
       </row>
      </tbody>
@@ -82,28 +140,162 @@
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
-   <example>
-    <title>Exemplo da <function>getopt</function></title>
+   <example xml:id="getopt.examples-1">
+    <title>Exemplo básico de <function>getopt</function></title>
     <programlisting role="php">
 <![CDATA[
 <?php
-// parse the command line ($GLOBALS['argv'])
+// Script example.php
 $options = getopt("f:hp:");
+var_dump($options);
 ?>
 ]]>
     </programlisting>
+    <programlisting role="shell">
+<![CDATA[
+shell> php example.php -fvalue -h
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+array(2) {
+  ["f"]=>
+  string(5) "value"
+  ["h"]=>
+  bool(false)
+}
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example xml:id="getopt.examples-2">
+    <title>Exemplo de <function>getopt</function> com opções longas</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// Script example.php
+$shortopts  = "";
+$shortopts .= "f:";  // Valor exigido
+$shortopts .= "v::"; // Valor opcional
+$shortopts .= "abc"; // Essas opções não aceitam valores
+
+$longopts  = array(
+    "required:",     // Valor exigido
+    "optional::",    // Valor opcional
+    "option",        // Sem valor
+    "opt",           // Sem valor
+);
+$options = getopt($shortopts, $longopts);
+var_dump($options);
+?>
+]]>
+    </programlisting>
+    <programlisting role="shell">
+<![CDATA[
+shell> php example.php -f "value for f" -v -a --required value --optional="optional value" --option
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+array(6) {
+  ["f"]=>
+  string(11) "value for f"
+  ["v"]=>
+  bool(false)
+  ["a"]=>
+  bool(false)
+  ["required"]=>
+  string(5) "value"
+  ["optional"]=>
+  string(14) "optional value"
+  ["option"]=>
+  bool(false)
+}
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example xml:id="getopt.examples-3">
+    <title><function>getopt</function> example: Passing multiple options as one</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// Script example.php
+$options = getopt("abc");
+var_dump($options);
+?>
+]]>
+    </programlisting>
+    <programlisting role="shell">
+<![CDATA[
+shell> php example.php -aaac
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+array(2) {
+  ["a"]=>
+  array(3) {
+    [0]=>
+    bool(false)
+    [1]=>
+    bool(false)
+    [2]=>
+    bool(false)
+  }
+  ["c"]=>
+  bool(false)
+}
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example xml:id="getopt.examples-4">
+    <title>Exemplo de <function>getopt</function> com <parameter>rest_index</parameter></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// Script example.php
+$rest_index = null;
+$opts = getopt('a:b:', [], $rest_index);
+$pos_args = array_slice($argv, $rest_index);
+var_dump($pos_args);
+]]>
+    </programlisting>
+    <programlisting role="shell">
+<![CDATA[
+shell> php example.php -a 1 -b 2 -- test
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+array(1) {
+  [0]=>
+  string(4) "test"
+}
+]]>
+    </screen>
    </example>
   </para>
  </refsect1>
 
-<!--
- <refsect1 role="notes">
-  &reftitle.notes;
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><link linkend="reserved.variables.argv"><varname>$argv</varname></link></member>
+   </simplelist>
+  </para>
  </refsect1>
--->
 
-  </refentry>
-
+</refentry>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

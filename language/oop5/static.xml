@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 7e52ec86851a62d1d00109ccffa5dab5c73e5cc2 Maintainer: ae Status: ready --><!-- CREDITS: narigone, thiago, felipe, ae, fabioluciano -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 8e7cce7b98ed33cda72ce0a77b1368ab396f6e09 Maintainer: ae Status: ready --><!-- CREDITS: narigone,thiago,felipe,ae,fabioluciano -->
  <sect1 xml:id="language.oop5.static" xmlns="http://docbook.org/ns/docbook">
   <title>Palavra-Chave 'static'</title>
 
@@ -18,40 +18,27 @@
 
   <para>
    Declarar propriedades ou métodos de uma classe como estáticos faz deles
-   acessíveis sem a necessidade de instanciar a classe. Um membro declarados como
-   estático não pode ser acessado com um objeto instanciado da classe (embora
-   métodos estáticos podem).
-  </para>
-
-  <para>
-   Por compatibilidade com o PHP 4, se nenhuma declaração de <link
-   linkend="language.oop5.visibility">visibilidade</link> for utilizada,
-   a propriedade ou método será tratado
-   como se declarado como <literal>public</literal>.
+   acessíveis sem a necessidade de instanciar a classe. Um membro declarado como
+   estático não pode ser acessado através de uma instância da classe.
   </para>
 
   <sect2 xml:id="language.oop5.static.methods">
    <title>Métodos estáticos</title>
 
    <para>
-    Como métodos estáticos podem ser chamados sem uma instancia
+    Como métodos estáticos podem ser chamados sem uma instância
     do objeto criada, a pseudo-variável <varname>$this</varname> não
     está disponível dentro de um método declarado como estático.
    </para>
 
-   <caution>
-    <simpara>
-     No PHP 5, chamar métodos não estáticos estaticamente gerará um alerta
-     de nível <constant>E_STRICT</constant>.
-    </simpara>
-   </caution>
-
    <warning>
-    <simpara>
-     No PHP 7, chamar métodos não estáticos estaticamente foi depreciado, e gerará
-     um alerta de nível <constant>E_DEPRECATED</constant>. O suporte a
-     chamada de métodos não estáticos estaticamente pode ser removido no futuro.
-    </simpara>
+    <para>
+     Chamar métodos não estáticos, estaticamente, lança um <classname>Error</classname>.
+    </para>
+    <para>
+     Anteriormente ao PHP 8.0.0, chamar um método não estático estaticamente estava obsoleto, e
+     gerava um aviso <constant>E_DEPRECATED</constant>.
+    </para>
    </warning>
 
    <example>
@@ -67,7 +54,7 @@ class Foo {
 
 Foo::aStaticMethod();
 $classname = 'Foo';
-$classname::aStaticMethod(); // As of PHP 5.3.0
+$classname::aStaticMethod();
 ?>
 ]]>
      </programlisting>
@@ -78,20 +65,14 @@ $classname::aStaticMethod(); // As of PHP 5.3.0
    <title>Propriedades estáticas</title>
 
    <para>
-    Propriedades estáticas não podem ser acessadas através do
-    operador -&gt;.
+    Propriedades estáticas são acessíveis utilizando o
+    <link linkend="language.oop5.paamayim-nekudotayim">Operador de Resolução de Escopo</link>
+    (<literal>::</literal>) e não podem ser acessados através do operador de objeto
+    (<literal>-&gt;</literal>).
    </para>
 
    <para>
-    Como qualquer outra variável estática do PHP, propriedades estáticas podem ser
-    inicializadas, até o PHP 5.6, somente usando um valor literal ou constante; expressões não são
-    permitidas. No PHP 5.6 e em versões superiores, as mesmas regras aplicadas a expressões
-    &const;: algumas expressões limitadas são possíveis, se fornecidas serão
-    avaliadas em tempo de compilação.
-   </para>
-
-   <para>
-    A partir do 5.3.0, é possível referenciar a classe usando uma variável.
+    É possível referenciar a classe usando uma variável.
     O valor da variável não pode ser uma palavra chave (por exemplo, <literal>self</literal>,
     <literal>parent</literal> e <literal>static</literal>).
    </para>
@@ -103,41 +84,56 @@ $classname::aStaticMethod(); // As of PHP 5.3.0
 <?php
 class Foo
 {
-    public static $meu_estatico = 'foo';
+    public static $my_static = 'foo';
 
-    public function valorEstatico() {
-        return self::$meu_estatico;
+    public function staticValue() {
+        return self::$my_static;
     }
 }
 
 class Bar extends Foo
 {
-    public function fooEstatico() {
-        return parent::$meu_estatico;
+    public function fooStatic() {
+        return parent::$my_static;
     }
 }
 
 
-print Foo::$meu_estatico . "\n";
+print Foo::$my_static . "\n";
 
 $foo = new Foo();
-print $foo->valorEstatico() . "\n";
-print $foo->$meu_estatico . "\n";      // "Propriedade" Indefinida $meu_estatico
+print $foo->staticValue() . "\n";
+print $foo->my_static . "\n"; // "Propriedade" não definida, my_static 
 
-print $foo::$meu_estatico . "\n";
+print $foo::$my_static . "\n";
 $classname = 'Foo';
-print $classname::$meu_estatico . "\n"; // No PHP 5.3.0
+print $classname::$my_static . "\n";
 
-print Bar::$meu_estatico . "\n";
+print Bar::$my_static . "\n";
 $bar = new Bar();
-print $bar->fooEstatico() . "\n";
+print $bar->fooStatic() . "\n";
 ?>
 ]]>
     </programlisting>
+    &example.outputs.8.similar;
+    <screen>
+<![CDATA[
+foo
+foo
+
+Notice: Accessing static property Foo::$my_static as non static in /in/V0Rvv on line 23
+
+Warning: Undefined property: Foo::$my_static in /in/V0Rvv on line 23
+
+foo
+foo
+foo
+foo
+]]>
+    </screen>
    </example>
   </sect2>
  </sect1>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
