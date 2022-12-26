@@ -1,0 +1,40 @@
+# See https://docs.github.com/en/actions.
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      # See https://github.com/actions/checkout.
+      - name: Checkout doc-pt_br
+        uses: actions/checkout@v3
+        with:
+          path: pt_br
+
+      - name: Checkout doc-en
+        uses: actions/checkout@v3
+        with:
+          repository: php/doc-en
+          path: en
+
+      - name: Checkout doc-base
+        uses: actions/checkout@v3
+        with:
+          repository: php/doc-base
+          path: doc-base
+
+      - name: Quality Assurance scripts
+        run: php doc-base/scripts/qa/extensions.xml.php --check
+
+      - name: Build documentation for pt_br
+        run: php doc-base/configure.php --disable-libxml-check --enable-xml-details --redirect-stderr-to-stdout --with-lang=pt_br
