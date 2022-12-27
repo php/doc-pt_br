@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 2ff6e6bcad9700adaf50f9e1639c6d7d7d1f059d Maintainer: ae Status: ready --><!-- CREDITS: felipe,fabioluciano,rogeriopradoj,geekcom,ae,gabrielsanva -->
+<!-- EN-Revision: 5d775e7df53dd224004ca057dadbd2e8083e229a Maintainer: ae Status: ready --><!-- CREDITS: felipe,fabioluciano,rogeriopradoj,geekcom,ae,gabrielsanva -->
 <sect1 xml:id="language.types.array">
  <title>Arrays</title>
 
@@ -375,9 +375,6 @@ function getArray() {
 }
 
 $secondElement = getArray()[1];
-
-// or
-list(, $secondElement) = getArray();
 ?>
 ]]>
     </programlisting>
@@ -387,8 +384,9 @@ list(, $secondElement) = getArray();
     <para>
       Tentativas de acesso a uma chave de array que não foi definida é
       o mesmo que acessar qualquer outra variável indefinida:
-      uma mensagem de erro de nível <constant>E_NOTICE</constant> será
-      emitida, e o resultado será  &null;.
+      uma mensagem de erro de nível <constant>E_NOTICE</constant>
+      (<constant>E_NOTICE</constant> anteriormente ao PHP 8.0.0) será
+      emitida, e o resultado será &null;.
     </para>
    </note>
    <note>
@@ -415,7 +413,7 @@ list(, $secondElement) = getArray();
     de colchetes (<literal>[]</literal>).
    </para>
 
-    <synopsis>
+   <synopsis>
 $arr[<replaceable>chave</replaceable>] = <replaceable>valor</replaceable>;
 $arr[] = <replaceable>valor</replaceable>;
 // <replaceable>chave</replaceable> pode ser tanto um <type>int</type> quanto uma <type>string</type>
@@ -540,6 +538,139 @@ Array
    </note>
 
   </sect3>
+
+  <sect3 xml:id="language.types.array.syntax.destructuring">
+   <title>Desconstruindo arrays</title>
+
+   <para>
+    Arrays podem ser desconstruídos utilizando <literal>[]</literal> (a partir do PHP 7.1.0) ou
+    <function>list</function>. Esses
+    constructos podem ser utilizados para desconstruir o array em variáveis distintas.
+   </para>
+
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$source_array = ['foo', 'bar', 'baz'];
+
+[$foo, $bar, $baz] = $source_array;
+
+echo $foo;    // imprime "foo"
+echo $bar;    // imprime "bar"
+echo $baz;    // imprime "baz"
+?>
+]]>
+    </programlisting>
+   </informalexample>
+
+   <para>
+    A desconstrução de arrays pode ser utilizada no &foreach; para desconstruir
+    um array multidimensional enquanto o percorre.
+   </para>
+
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$source_array = [
+    [1, 'John'],
+    [2, 'Jane'],
+];
+
+foreach ($source_array as [$id, $name]) {
+    // Aqui $id e $name podem ser utilizados
+}
+?>
+]]>
+    </programlisting>
+   </informalexample>
+
+   <para>
+    Elementos de arrays serão ignorados se a variável não for providenciada. Desconstrução
+    de arrays sempre iniciam no índice <literal>0</literal>.
+   </para>
+
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$source_array = ['foo', 'bar', 'baz'];
+
+// Atribui o elemento de índice 2 na variável $baz
+[, , $baz] = $source_array;
+
+echo $baz;    // imprime "baz"
+?>
+]]>
+    </programlisting>
+   </informalexample>
+
+   <para>
+    A partir do PHP 7.1.0, é possível desconstruir arrays associativos. Isto
+    permite fácil seleção do elemento correto de uma forma indexada numericamente
+    dado que os índices podem ser especificados.
+   </para>
+
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$source_array = ['foo' => 1, 'bar' => 2, 'baz' => 3];
+
+// Atribui o elemento de índice 'baz' na variável $three
+['baz' => $three] = $source_array;
+
+echo $three;    // imprime 3
+
+$source_array = ['foo', 'bar', 'baz'];
+
+// Atribui o elemento de índice 2 na variável $baz
+[2 => $baz] = $source_array;
+
+echo $baz;    // imprime "baz"
+?>
+]]>
+    </programlisting>
+   </informalexample>
+
+   <para>
+    Desconstrução de arrays podem ser utilizados para trocar duas variáveis.
+   </para>
+
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$a = 1;
+$b = 2;
+
+[$b, $a] = [$a, $b];
+
+echo $a;    // imprime 2
+echo $b;    // imprime 1
+?>
+]]>
+    </programlisting>
+   </informalexample>
+
+   <note>
+    <para>
+      O operador de espalhamento (<literal>...</literal>) não é suportado em atribuições.
+    </para>
+   </note>
+
+   <note>
+    <para>
+      Tentar acessar uma chave indefinida têm o mesmo efeito de
+      acessar uma variável indefinida:
+      um aviso <constant>E_WARNING</constant>
+      (<constant>E_NOTICE</constant> anteriormente ao PHP 8.0.0) será
+      emitido, e o resultado será &null;.
+    </para>
+   </note>
+  </sect3>
+
  </sect2><!-- end syntax -->
 
  <sect2 xml:id="language.types.array.useful-funcs">
@@ -597,10 +728,10 @@ $b = array_values($a);
     <literal>$foo['bar']</literal> está correto, enquanto que
     <literal>$foo[bar]</literal>, não está. Mas porque? É comum encontrar
     essa sintaxe em scripts antigos:
-  </para>
+   </para>
 
-    <informalexample>
-     <programlisting role="php">
+   <informalexample>
+    <programlisting role="php">
 <![CDATA[
 <?php
 $foo[bar] = 'inimigo';
@@ -608,8 +739,8 @@ echo $foo[bar];
 // etc
 ?>
 ]]>
-     </programlisting>
-    </informalexample>
+    </programlisting>
+   </informalexample>
 
    <para>
     Isto está errado, mas funciona. A razão é que este código possui uma
@@ -662,7 +793,7 @@ for ($i = 0; $i < $count; $i++) {
      </programlisting>
     </informalexample>
     &example.outputs;
-     <screen>
+    <screen>
 <![CDATA[
 Verificando 0:
 Notice: Undefined index:  $i in /path/to/script.html on line 9
@@ -680,7 +811,7 @@ Notice: Undefined index:  $i in /path/to/script.html on line 11
 Ruim:
 Bom: 2
 ]]>
-     </screen>
+    </screen>
    </note>
 
    <para>
@@ -776,8 +907,8 @@ $error_descriptions[E_WARNING] = "O PHP emitiu um alarme";
 $error_descriptions[E_NOTICE] = "Apenas um aviso informal";
 ?>
 ]]>
-     </programlisting>
-    </informalexample>
+    </programlisting>
+   </informalexample>
 
    <para>
     Note que <literal>E_ERROR</literal> também é um identificador válido, assim como
@@ -785,8 +916,8 @@ $error_descriptions[E_NOTICE] = "Apenas um aviso informal";
     o mesmo que escrever:
    </para>
 
-    <informalexample>
-     <programlisting role="php">
+   <informalexample>
+    <programlisting role="php">
 <![CDATA[
 <?php
 $error_descriptions[1] = "Um erro fatal ocorreu";
@@ -794,8 +925,8 @@ $error_descriptions[2] = "O PHP emitiu um alarme";
 $error_descriptions[8] = "Apenas um aviso informal";
 ?>
 ]]>
-     </programlisting>
-    </informalexample>
+    </programlisting>
+   </informalexample>
 
    <para>
     porque <literal>E_ERROR</literal> é igual a <literal>1</literal>, e assim por diante.
@@ -1041,8 +1172,8 @@ $arr6 = [...$arr4, ...$arr5]; // works. [1, 2, 3, 4, 5]
    O tipo array do PHP é muito versátil. Temos aqui alguns exemplos:
   </para>
 
-    <informalexample>
-     <programlisting role="php">
+  <informalexample>
+   <programlisting role="php">
 <![CDATA[
 <?php
 // Isso:
@@ -1074,8 +1205,8 @@ $b[] = 'c';
 // array(0 => 'a', 1 => 'b', 2 => 'c'), ou simplesmente array('a', 'b', 'c').
 ?>
 ]]>
-     </programlisting>
-    </informalexample>
+   </programlisting>
+  </informalexample>
 
   <example>
    <title>Utilizando array()</title>
@@ -1270,9 +1401,9 @@ $fruits = array ( "frutas"  => array ( "a" => "laranja",
                 );
 
 // Alguns exemplo de endereços dos valores do array acima
-echo $fruits["buracos"][5];   // prints "segundo"
-echo $fruits["frutas"]["a"];  // prints "laranja"
-unset($fruits["buracos"][0]); // remove "primeiro"
+echo $fruits["buracos"][5];   // imprime "segundo"
+echo $fruits["frutas"]["a"];  // imprime "laranja"
+unset($fruits["buracos"][0]); // remove  "primeiro"
 
 // Criando um novo array multidimensional
 $sucos["maca"]["verde"] = "bom";
@@ -1287,8 +1418,8 @@ $sucos["maca"]["verde"] = "bom";
    <type>array</type> por referência.
   </para>
 
-   <informalexample>
-    <programlisting role="php">
+  <informalexample>
+   <programlisting role="php">
 <![CDATA[
 <?php
 $arr1 = array(2, 3);
@@ -1300,8 +1431,8 @@ $arr3 = &$arr1;
 $arr3[] = 4; // agora $arr1 e $arr3 sao os mesmos
 ?>
 ]]>
-    </programlisting>
-   </informalexample>
+   </programlisting>
+  </informalexample>
 
  </sect2>
 </sect1>
