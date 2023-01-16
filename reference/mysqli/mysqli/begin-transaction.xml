@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 035c126c0393fe154bac46e2c3c489ebadce48a5 Maintainer: marcosmarcolin Status: ready --><!-- CREDITS: marcosmarcolin -->
+<refentry xml:id="mysqli.begin-transaction" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>mysqli::begin_transaction</refname>
+  <refname>mysqli_begin_transaction</refname>
+  <refpurpose>Inicia uma transação</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <para>&style.oop;</para>
+  <methodsynopsis role="mysqli">
+   <modifier>public</modifier> <type>bool</type><methodname>mysqli::begin_transaction</methodname>
+   <methodparam choice="opt"><type>int</type><parameter>flags</parameter><initializer>0</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>string</type><type>null</type></type><parameter>name</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>&style.procedural;:</para>
+  <methodsynopsis>
+   <type>bool</type><methodname>mysqli_begin_transaction</methodname>
+   <methodparam><type>mysqli</type><parameter>mysql</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>flags</parameter><initializer>0</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>string</type><type>null</type></type><parameter>name</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Inicia uma transação. Requer o mecanismo InnoDB
+   (é ativado por padrão). Para detalhes adicionais sobre como as transações do MySQL
+   funcionam, consulte <link xlink:href="&url.mysql.docs.commit;">&url.mysql.docs.commit;</link>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    &mysqli.link.description;
+    <varlistentry>
+     <term><parameter>flags</parameter></term>
+     <listitem>
+      <para>
+       As flags válidas são:
+      </para>
+      <itemizedlist>
+       <listitem>
+        <para>
+         <constant>MYSQLI_TRANS_START_READ_ONLY</constant>:
+         Inicia a transação como "START TRANSACTION READ ONLY".
+         Requer MySQL 5.6 e superior.
+        </para>
+       </listitem>
+       <listitem>
+        <para>
+         <constant>MYSQLI_TRANS_START_READ_WRITE</constant>:
+         Inicia a transação como "START TRANSACTION READ WRITE".
+         Requer MySQL 5.6 e superior.
+        </para>
+       </listitem>
+       <listitem>
+        <para>
+         <constant>MYSQLI_TRANS_START_WITH_CONSISTENT_SNAPSHOT</constant>:
+         Inicia a transação como "START TRANSACTION WITH CONSISTENT SNAPSHOT".
+        </para>
+       </listitem>
+      </itemizedlist>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>name</parameter></term>
+     <listitem>
+      <para>
+       Nome do ponto de salvamento para a transação.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.success;
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       <parameter>name</parameter> agora é anulável. is now nullable.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example xml:id="mysqli.begin-transaction.example.basic">
+   <title><methodname>mysqli::begin_transaction</methodname> exemplo</title>
+   <para>&style.oop;</para>
+   <programlisting role="php">
+    <![CDATA[
+<?php
+
+/* Diga ao mysqli para lançar uma exceção se ocorrer um erro */
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+$mysqli = new mysqli("localhost", "my_user", "my_password", "world");
+
+/* O mecanismo de tabela deve suportar transações */
+$mysqli->query("CREATE TABLE IF NOT EXISTS language (
+    Code text NOT NULL,
+    Speakers int(11) NOT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+/* Inicia transação */
+$mysqli->begin_transaction();
+
+try {
+    /* Insira alguns valores */
+    $mysqli->query("INSERT INTO language(Code, Speakers) VALUES ('DE', 42000123)");
+
+    /* Tente inserir valores inválidos */
+    $language_code = 'FR';
+    $native_speakers = 'Unknown';
+    $stmt = $mysqli->prepare('INSERT INTO language(Code, Speakers) VALUES (?,?)');
+    $stmt->bind_param('ss', $language_code, $native_speakers);
+    $stmt->execute();
+
+    /* Se o código atingir esse ponto sem erros, confirme os dados no banco de dados */
+    $mysqli->commit();
+} catch (mysqli_sql_exception $exception) {
+    $mysqli->rollback();
+
+    throw $exception;
+}
+]]>
+   </programlisting>
+   <para>&style.procedural;</para>
+   <programlisting role="php">
+    <![CDATA[
+<?php
+
+/* Diga ao mysqli para lançar uma exceção se ocorrer um erro */
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+$mysqli = mysqli_connect("localhost", "my_user", "my_password", "world");
+
+/* O mecanismo de tabela deve suportar transações */
+mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS language (
+    Code text NOT NULL,
+    Speakers int(11) NOT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+/* Inicia transação */
+mysqli_begin_transaction($mysqli);
+
+try {
+    /* Insira alguns valores */
+    mysqli_query($mysqli, "INSERT INTO language(Code, Speakers) VALUES ('DE', 42000123)");
+
+    /* Tente inserir valores inválidos */
+    $language_code = 'FR';
+    $native_speakers = 'Unknown';
+    $stmt = mysqli_prepare($mysqli, 'INSERT INTO language(Code, Speakers) VALUES (?,?)');
+    mysqli_stmt_bind_param($stmt, 'ss', $language_code, $native_speakers);
+    mysqli_stmt_execute($stmt);
+
+    /* Se o código atingir esse ponto sem erros, confirme os dados no banco de dados */
+    mysqli_commit($mysqli);
+} catch (mysqli_sql_exception $exception) {
+    mysqli_rollback($mysqli);
+
+    throw $exception;
+}
+]]>
+   </programlisting>
+  </example>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    Esta função não funciona com tipos de tabelas não transacionais (como
+    MyISAM ou ISAM).
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>mysqli_autocommit</function></member>
+    <member><function>mysqli_commit</function></member>
+    <member><function>mysqli_rollback</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
