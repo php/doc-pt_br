@@ -1,0 +1,764 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 161dde4fe721309398dd324edbf02aec409f127b Maintainer: marcosmarcolin Status: ready --><!-- CREDITS: marcosmarcolin -->
+<sect1 xml:id="language.types.declarations">
+ <title>Declarações de tipo</title>
+
+ <para>
+  As declarações de tipo podem ser adicionadas a argumentos de função, valores de retorno e,
+  a partir do PHP 7.4.0, propriedades de classe. Eles garantem que o valor
+  seja do tipo especificado no momento da chamada, caso contrário, um
+  <classname>TypeError</classname>  é lançado.
+ </para>
+
+ <para>
+  Cada tipo que o PHP suporta, com exceção de
+  <type>resource</type>, pode ser usado dentro de uma declaração de tipo de usuário.
+  Esta página contém um changelog de disponibilidade dos diferentes tipos
+  e documentação sobre o uso deles em declarações de tipo.
+ </para>
+
+ <note>
+  <para>
+   Quando uma classe implementa um método de interface ou reimplementa um método
+   já definido por uma classe pai, ela deve ser compatível com a
+   definição acima.
+   Um método é compatível se segue as
+   regras de <link linkend="language.oop5.variance">variância</link>.
+  </para>
+ </note>
+
+ <sect2 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.2.0</entry>
+      <entry>
+       O suporte para tipos <acronym>DNF</acronym> foi adicionado.
+      </entry>
+     </row>
+     <row>
+      <entry>8.2.0</entry>
+      <entry>
+       O suporte para o tipo literal <type>true</type> foi adicionado.
+      </entry>
+     </row>
+     <row>
+      <entry>8.2.0</entry>
+      <entry>
+       Os tipos <type>null</type> e <type>false</type> agora podem ser usados de forma independente.
+      </entry>
+     </row>
+     <row>
+      <entry>8.1.0</entry>
+      <entry>
+       O suporte para tipos de interseção foi adicionado.
+      </entry>
+     </row>
+     <row>
+      <entry>8.1.0</entry>
+      <entry>
+       Retornar por referência de uma função <type>void</type> agora está obsoleto.
+      </entry>
+     </row>
+     <row>
+      <entry>8.1.0</entry>
+      <entry>
+       O suporte para o tipo somente retorno <type>never</type> foi adicionado.
+      </entry>
+     </row>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       O suporte para <type>mixed</type> foi adicionado.
+      </entry>
+     </row>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       O suporte para o tipo de retorno apenas <type>static</type> foi adicionado.
+      </entry>
+     </row>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       O suporte para tipos de união foi adicionado.
+      </entry>
+     </row>
+     <row>
+      <entry>7.2.0</entry>
+      <entry>
+       Suporte para <type>object</type> foi adicionado.
+      </entry>
+     </row>
+     <row>
+      <entry>7.1.0</entry>
+      <entry>
+       Suporte para <type>iterable</type>  foi adicionado.
+      </entry>
+     </row>
+     <row>
+      <entry>7.1.0</entry>
+      <entry>
+       Suporte para <type>void</type> foi adicionado.
+      </entry>
+     </row>
+     <row>
+      <entry>7.1.0</entry>
+      <entry>
+       O suporte para tipos anuláveis foi adicionado.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </sect2>
+
+ <sect2 xml:id="language.types.declarations.base">
+  <title>Tipos Base Notas de Uso</title>
+
+  <simpara>
+   Os tipos básicos têm um comportamento direto com algumas ressalvas menores que
+   são descritas nesta seção.
+  </simpara>
+
+  <sect3 xml:id="language.types.declarations.base.scalar">
+   <title>Tipos escalares</title>
+   <warning>
+    <para>
+     Aliases de nome para tipos escalares (<type>bool</type>, <type>int</type>,
+     <type>float</type>, <type>string</type>) não são suportados.
+     Em vez disso, eles são tratados como nomes de classe ou interface.
+     Por exemplo, usar <literal>boolean</literal> como uma declaração
+     de tipo exigirá que o valor seja uma &instanceof; da classe ou interface
+     <literal>boolean</literal>, em vez do tipo <type>bool</type>:
+    </para>
+    <example>
+     <programlisting role="php">
+<![CDATA[
+<?php
+    function test(boolean $param) {}
+    test(true);
+?>
+]]>
+     </programlisting>
+     &example.outputs.8;
+     <screen>
+<![CDATA[
+Warning: "boolean" will be interpreted as a class name. Did you mean "bool"? Write "\boolean" to suppress this warning in /in/9YrUX on line 2
+
+Fatal error: Uncaught TypeError: test(): Argument #1 ($param) must be of type boolean, bool given, called in - on line 3 and defined in -:2
+Stack trace:
+#0 -(3): test(true)
+#1 {main}
+  thrown in - on line 2
+]]>
+     </screen>
+    </example>
+   </warning>
+  </sect3>
+
+  <sect3 xml:id="language.types.declarations.void">
+   <title>void</title>
+   <note>
+    <para>
+     Retornar por referência de uma função <type>void</type> está obsoleto a partir do PHP 8.1.0,
+     porque tal função é contraditória.
+     Anteriormente, ele já emitia o seguinte
+     <constant>E_NOTICE</constant> quando chamado:
+     <literal>Somente referências de variáveis devem ser retornadas por referência</literal>.
+     <informalexample>
+      <programlisting role="php">
+<![CDATA[
+<?php
+function &test(): void {}
+?>
+]]>
+      </programlisting>
+     </informalexample>
+    </para>
+   </note>
+  </sect3>
+
+  <sect3 xml:id="language.types.declarations.base.function">
+   <title>Tipos que podem ser chamados</title>
+   <para>
+    Este tipo não pode ser usado como uma declaração de tipo de propriedade de classe.
+   </para>
+
+   <note>
+    <simpara>
+     Não é possível especificar a assinatura da função.
+    </simpara>
+   </note>
+  </sect3>
+
+  <sect3 xml:id="language.types.declarations.references">
+   <title>Declarações de tipo em parâmetros de passagem por referência</title>
+
+   <simpara>
+    Se um parâmetro de passagem por referência tiver uma declaração de tipo, o tipo da
+    variável só é verificado na entrada da função, no início da chamada, mas não
+    quando a função retorna.
+    Isso significa que uma função pode alterar o tipo de referência de variável.
+   </simpara>
+   <example>
+    <title>Parâmetros de passagem por referência digitados</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+function array_baz(array &$param)
+{
+    $param = 1;
+}
+$var = [];
+array_baz($var);
+var_dump($var);
+array_baz($var);
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+int(1)
+
+Fatal error: Uncaught TypeError: array_baz(): Argument #1 ($param) must be of type array, int given, called in - on line 9 and defined in -:2
+Stack trace:
+#0 -(9): array_baz(1)
+#1 {main}
+  thrown in - on line 2
+]]>
+    </screen>
+   </example>
+  </sect3>
+ </sect2>
+
+ <sect2 xml:id="language.types.declarations.composite">
+  <title>Composite Types Usage Notes</title>
+  <para>
+   As declarações de tipo composto estão sujeitas a algumas restrições e
+   realizarão uma verificação de redundância no tempo de compilação para evitar erros simples.
+  </para>
+
+  <caution>
+   <simpara>
+    Antes do PHP 8.2.0 e da introdução dos tipos <acronym>DNF</acronym>,
+    não era possível combinar tipos de interseção com tipos de união.
+   </simpara>
+  </caution>
+
+  <sect3 xml:id="language.types.declarations.composite.union">
+   <title>Uniao de tipos</title>
+   <warning>
+    <simpara>
+     Não é possível combinar os dois tipos literais <literal>false</literal>
+     e <literal>true</literal> juntos em um tipo de união.
+     Em vez disso, use <type>bool</type>.
+    </simpara>
+   </warning>
+
+   <caution>
+    <simpara>
+     Antes do PHP 8.2.0, como <literal>false</literal> e <type>null</type>
+     não podiam ser usados como tipos autônomos, um tipo de união composto
+     apenas por esses tipos não era permitido. Isso inclui os seguintes tipos:
+     <literal>false</literal>, <literal>false|null</literal>,
+     e <literal>?false</literal>.
+    </simpara>
+   </caution>
+
+   <sect4 xml:id="language.types.declarations.nullable">
+    <title>Açúcar sintático de tipo anulável</title>
+
+    <para>
+     Uma única declaração de tipo base pode ser marcada como anulável prefixando o
+     tipo com um ponto de interrogação (<literal>?</literal>).
+     Assim, <literal>?T</literal> e <literal>T|null</literal> são idênticos.
+    </para>
+
+    <note>
+     <simpara>
+      Esta sintaxe é suportada a partir do PHP 7.1.0, e é anterior ao suporte generalizado
+      de tipos de união.
+     </simpara>
+    </note>
+
+    <note>
+     <para>
+      Também é possível obter argumentos anuláveis tornando
+      <literal>null</literal>  o valor padrão.
+      Isso não é recomendado, pois se o valor padrão for alterado em uma classe
+      filha, uma violação de compatibilidade de tipo será gerada, pois o tipo
+      <type>null</type> precisará ser adicionado à declaração de tipo.
+     </para>
+     <example>
+      <title>Maneira antiga de tornar os argumentos anuláveis</title>
+      <programlisting role="php">
+<![CDATA[
+<?php
+class C {}
+
+function f(C $c = null) {
+    var_dump($c);
+}
+
+f(new C);
+f(null);
+?>
+]]>
+      </programlisting>
+      &example.outputs;
+      <screen>
+<![CDATA[
+object(C)#1 (0) {
+}
+NULL
+]]>
+      </screen>
+     </example>
+    </note>
+   </sect4>
+  </sect3>
+
+  <sect3 xml:id="language.types.declarations.composite.redundant">
+   <title>Tipos duplicados e redundantes</title>
+   <para>
+    Para capturar bugs simples em declarações de tipo composto, tipos redundantes que
+    podem ser detectados sem executar o carregamento de classe resultarão em um
+    erro de tempo de compilação. Isso inclui:
+
+    <itemizedlist>
+     <listitem>
+      <simpara>
+       Cada tipo resolvido por nome pode ocorrer apenas uma vez. Tipos como
+       <literal>int|string|INT</literal> ou
+       <literal>Countable&amp;Traversable&amp;COUNTABLE</literal>
+       resultam em erro.
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       O uso <type>mixed</type> resulta em erro.
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>Para tipos de união:</simpara>
+      <itemizedlist>
+       <listitem>
+        <simpara>
+         Se <type>bool</type> for usado, <type>false</type> ou <type>true</type>
+         não pode ser usado adicionalmente.
+        </simpara>
+       </listitem>
+       <listitem>
+        <simpara>
+         Se <type>object</type> for usado, os tipos de classe não podem ser usados adicionalmente.
+        </simpara>
+       </listitem>
+       <listitem>
+        <simpara>
+         Se <type>iterable</type> for usado, <type>array</type>
+         e <classname>Traversable</classname> não podem ser usados adicionalmente.
+        </simpara>
+       </listitem>
+      </itemizedlist>
+     </listitem>
+     <listitem>
+      <simpara>Para interseção de tipos:</simpara>
+      <itemizedlist>
+       <listitem>
+        <simpara>
+         Usar um tipo que não é um tipo de classe resulta em erro.
+        </simpara>
+       </listitem>
+       <listitem>
+        <simpara>
+         O uso de <type>self</type>, <type>parent</type> ou
+         <type>static</type> resulta em erro.
+        </simpara>
+       </listitem>
+      </itemizedlist>
+     </listitem>
+     <listitem>
+      <simpara>Para tipos <acronym>DNF</acronym>:</simpara>
+      <itemizedlist>
+       <listitem>
+        <simpara>
+         Se um tipo mais genérico for usado, o mais restritivo será redundante.
+        </simpara>
+       </listitem>
+       <listitem>
+        <simpara>
+         Usando dois tipos de interseção idênticos.
+        </simpara>
+       </listitem>
+      </itemizedlist>
+     </listitem>
+    </itemizedlist>
+   </para>
+
+   <note>
+    <simpara>
+     Isso não garante que o tipo seja “mínimo”, porque isso exigiria o
+     carregamento de todos os tipos de classe usados.
+    </simpara>
+   </note>
+
+   <para>
+    Por exemplo, se <literal>A</literal> e <literal>B</literal> são aliases de
+    classe, <literal>A|B</literal> continua sendo um tipo de união legal, mesmo
+    que possa ser reduzido a <literal>A</literal> ou
+    <literal>B</literal>.
+    Da mesma forma, se a classe <code>B extends A {}</code>, <literal>A|B</literal>
+    também é um tipo de união legal, embora pudesse ser reduzida a apenas
+    <literal>A</literal>.
+
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+<?php
+function foo(): int|INT {} // Proibido
+function foo(): bool|false {} // Proibido
+function foo(): int&Traversable {} // Proibido
+function foo(): self&Traversable {} // Proibido
+
+use A as B;
+function foo(): A|B {} // Não permitido ("use" faz parte da resolução de nomes)
+function foo(): A&B {} // Não permitido ("use" faz parte da resolução de nomes)
+
+class_alias('X', 'Y');
+function foo(): X|Y {} // Permitido (a redundância só é conhecida em tempo de execução)
+function foo(): X&Y {} // Permitido (a redundância só é conhecida em tempo de execução)
+?>
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+  </sect3>
+ </sect2>
+
+ <sect2 xml:id="language.types.declarations.examples">
+  &reftitle.examples;
+  <example>
+   <title>Declaração de tipo de classe básica</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class C {}
+class D extends C {}
+
+// Isso não estende C.
+class E {}
+
+function f(C $c) {
+    echo get_class($c)."\n";
+}
+
+f(new C);
+f(new D);
+f(new E);
+?>
+]]>
+   </programlisting>
+   &example.outputs.8;
+   <screen>
+<![CDATA[
+C
+D
+
+Fatal error: Uncaught TypeError: f(): Argument #1 ($c) must be of type C, E given, called in /in/gLonb on line 14 and defined in /in/gLonb:8
+Stack trace:
+#0 -(14): f(Object(E))
+#1 {main}
+  thrown in - on line 8
+]]>
+   </screen>
+  </example>
+
+  <example>
+   <title>Declaração de tipo de interface básica</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+interface I { public function f(); }
+class C implements I { public function f() {} }
+
+// Isso não implementa I.
+class E {}
+
+function f(I $i) {
+    echo get_class($i)."\n";
+}
+
+f(new C);
+f(new E);
+?>
+]]>
+   </programlisting>
+   &example.outputs.8;
+   <screen>
+<![CDATA[
+C
+
+Fatal error: Uncaught TypeError: f(): Argument #1 ($i) must be of type I, E given, called in - on line 13 and defined in -:8
+Stack trace:
+#0 -(13): f(Object(E))
+#1 {main}
+  thrown in - on line 8
+]]>
+   </screen>
+  </example>
+
+  <example>
+   <title>Declaração de tipo de retorno básico</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+function sum($a, $b): float {
+    return $a + $b;
+}
+
+// Observe que um float será retornado.
+var_dump(sum(1, 2));
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+float(3)
+]]>
+   </screen>
+  </example>
+
+  <example>
+   <title>Retornando um objeto</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class C {}
+
+function getC(): C {
+    return new C;
+}
+
+var_dump(getC());
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+object(C)#1 (0) {
+}
+]]>
+   </screen>
+  </example>
+
+  <example>
+   <title>Declaração de tipo de argumento anulável</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class C {}
+
+function f(?C $c) {
+    var_dump($c);
+}
+
+f(new C);
+f(null);
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+object(C)#1 (0) {
+}
+NULL
+]]>
+   </screen>
+  </example>
+
+  <example>
+   <title>Declaração de tipo de retorno anulável</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+function get_item(): ?string {
+    if (isset($_GET['item'])) {
+        return $_GET['item'];
+    } else {
+        return null;
+    }
+}
+?>
+]]>
+   </programlisting>
+  </example>
+ </sect2>
+
+ <!-- TODO Move this into its own declare page -->
+ <sect2 xml:id="language.types.declarations.strict">
+  <title>Tipagem estrita</title>
+
+  <para>
+   Por padrão, o PHP forçará valores do tipo errado na declaração de tipo
+   escalar esperada, se possível. Por exemplo, uma função que recebe
+   um <type>int</type> para um parâmetro que espera uma <type>string</type>
+   obterá uma variável do tipo <type>string</type>.
+  </para>
+
+  <para>
+   É possível ativar o modo estrito por arquivo. No modo estrito,
+   apenas um valor correspondente exatamente à declaração do tipo será
+   aceito, caso contrário, um <classname>TypeError</classname> será lançado.
+   A única exceção a essa regra é que um valor <type>int</type> passará por
+   uma declaração do tipo <type>float</type>.
+  </para>
+
+  <warning>
+   <simpara>
+    Chamadas de função dentro de funções internas não serão afetadas pela
+    declaração <literal>strict_types</literal>.
+   </simpara>
+  </warning>
+
+  <para>
+   Para habilitar o modo estrito, a &declare; é usada com a
+   declaração <literal>strict_types</literal>:
+  </para>
+
+  <note>
+   <para>
+    A digitação estrita se aplica a chamadas de função feitas de
+    <emphasis>dentro</emphasis> do arquivo com tipagem estrita habilitada, não para
+    as funções declaradas dentro desse arquivo. Se um arquivo sem tipagem
+    estrita habilitada fizer uma chamada para uma função que foi definida em um arquivo
+    com tipagem estrita, a preferência do chamador (tipagem coercitiva) será
+    respeitada e o valor será coagido.
+   </para>
+  </note>
+
+  <note>
+   <para>
+    A tipagem estrita é definida apenas para declarações de tipo escalar.
+   </para>
+  </note>
+
+  <example>
+   <title>Tipagem estrita para valores de argumentos</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+declare(strict_types=1);
+
+function sum(int $a, int $b) {
+    return $a + $b;
+}
+
+var_dump(sum(1, 2));
+var_dump(sum(1.5, 2.5));
+?>
+]]>
+   </programlisting>
+   &example.outputs.8;
+   <screen>
+<![CDATA[
+int(3)
+
+Fatal error: Uncaught TypeError: sum(): Argument #1 ($a) must be of type int, float given, called in - on line 9 and defined in -:4
+Stack trace:
+#0 -(9): sum(1.5, 2.5)
+#1 {main}
+  thrown in - on line 4
+]]>
+   </screen>
+  </example>
+
+  <example>
+   <title>Tipagem coercitiva para valores de argumento</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+function sum(int $a, int $b) {
+    return $a + $b;
+}
+
+var_dump(sum(1, 2));
+
+// Estes serão convertidos em números inteiros: observe a saída abaixo!
+var_dump(sum(1.5, 2.5));
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+int(3)
+int(3)
+]]>
+   </screen>
+  </example>
+
+  <example>
+   <title>Tipagem estrita para valores de retorno</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+declare(strict_types=1);
+
+function sum($a, $b): int {
+    return $a + $b;
+}
+
+var_dump(sum(1, 2));
+var_dump(sum(1, 2.5));
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+int(3)
+
+Fatal error: Uncaught TypeError: sum(): Return value must be of type int, float returned in -:5
+Stack trace:
+#0 -(9): sum(1, 2.5)
+#1 {main}
+  thrown in - on line 5
+]]>
+   </screen>
+  </example>
+ </sect2>
+
+</sect1>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
