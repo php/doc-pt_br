@@ -8,10 +8,10 @@
 
 ## Contribuindo
 
-Veja como participar [na nossa wiki][wiki].
+Veja como participar [na nossa _wiki_][wiki].
 
-Pequenas correções e sugestões podem ser feitas por *issues* ou pelo processo
-convencional de *pull requests* pelo GitHub mesmo.
+Pequenas correções e sugestões podem ser feitas por _issues_ ou pelo processo
+convencional de _pull requests_ pelo GitHub mesmo.
 
 [build-action]: https://github.com/php/doc-pt_br/actions/workflows/build.yaml
 
