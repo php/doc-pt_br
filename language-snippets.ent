@@ -2859,24 +2859,353 @@ local: {
 <!-- strings snippets -->
 <!ENTITY strings.parameter.encoding '
  <para xmlns="http://docbook.org/ns/docbook">
-  Argumento opcional definindo a codificação utilizada na conversão de caracteres.
+  Um argumento opcional que define a codificação usada ao converter caracteres.
  </para>
 
  <para xmlns="http://docbook.org/ns/docbook">
-  Se omitido o valor padrão de <parameter>encoding</parameter> varia
-  dependendo da versão do PHP em uso. No PHP 5.6 e posteriores a configuração
-  <link linkend="ini.default-charset">default_charset</link>
-  é utilizada como valor padrão. No PHP 5.4 e 5.5 será utilizado
-  <literal>UTF-8</literal> como padrão. Versões anteriores utilizarão
-  <literal>ISO-8859-1</literal>.
+  Se omitido, <parameter>encoding</parameter> assume como padrão o valor da
+  opção de configuração <link linkend="ini.default-charset">default_charset
+  </link>.
  </para>
 
  <para xmlns="http://docbook.org/ns/docbook">
-  Embora esse parâmetro seja tecnicamente opcional, é altamente recomendável
-  especificar o valor correto em seu código se estiver utilizando o PHP 5.5 ou anteriores,
-  ou se a opção <link linkend="ini.default-charset">default_charset</link>
-  estiver incorretamente configurada para uma entrada específico.
+  Embora este argumento seja tecnicamente opcional, especificar o valor correto
+  para seu código é altamente encorajado
+  se a opção de configuração <link linkend="ini.default-charset">default_charset</link>
+  puder ser definida incorretamente para a entrada fornecida.
  </para>
+'>
+
+<!ENTITY strings.parameter.format '
+<varlistentry xmlns="http://docbook.org/ns/docbook">
+ <term><parameter>format</parameter></term>
+ <listitem>
+  <para>
+   A string de formato é composta de zero ou mais diretivas:
+   caracteres comuns (excluindo <literal>&#37;</literal>) que são
+   copiados diretamente para o resultado e <emphasis>especificações
+   de conversão</emphasis>, cada uma das quais resulta na busca de seu
+   próprio parâmetro.
+  </para>
+
+  <para>
+   Uma especificação de conversão segue este protótipo:
+   <literal>&#37;[argnum$][flags][width][.precision]especificador</literal>.
+  </para>
+
+  <formalpara>
+   <title>Argnum</title>
+   <para>
+    Um número inteiro seguido por um cifrão <literal>$</literal>,
+    para especificar qual o número de argumento a tratar na conversão.
+   </para>
+  </formalpara>
+
+  <para>
+   <table>
+    <title>Flags</title>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>Flag</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry><literal>-</literal></entry>
+       <entry>
+        Justificar à esquerda dentro da largura de campo especificada;
+        A justificação à direita é o padrão.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>+</literal></entry>
+       <entry>
+        Prefixa números positivos com um sinal de mais
+        <literal>+</literal>; Por padrão, apenas negativos
+        são prefixados com um sinal negativo.
+       </entry>
+      </row>
+      <row>
+       <entry><literal> </literal>(espaço)</entry>
+       <entry>
+        Preenche o resultado com espaços.
+        Este é o padrão.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>0</literal></entry>
+       <entry>
+        Preenche números com zeros apenas à esquerda.
+        Com os especificadores <literal>s</literal>, também pode
+        preencher com zeros à direita.
+      </row>
+      <row>
+       <entry><literal>&apos;</literal>(char)</entry>
+       <entry>
+        Preenche o resultado com o caractere (char).
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </table>
+  </para>
+
+  <formalpara>
+   <title>Width</title>
+   <para>
+    Um número inteiro que define em quantos caracteres (mínimo)
+    essa conversão deve resultar.
+   </para>
+  </formalpara>
+
+  <formalpara>
+   <title>Precision</title>
+   <para>
+    Um ponto <literal>.</literal> seguido por um número inteiro
+    cujo significado depende do especificador:
+    <itemizedlist>
+     <listitem>
+      <simpara>
+       Para os especificadores <literal>e</literal>, <literal>E</literal>,
+       <literal>f</literal> e <literal>F</literal>:
+       este é o número de dígitos a serem impressos
+       após o ponto decimal (por padrão, é 6).
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       Para os especificadores <literal>g</literal>, <literal>G</literal>,
+       <literal>h</literal> e <literal>H</literal>:
+       este é o número máximo de dígitos
+       significativos a serem impressos.
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       Para o especificador <literal>s</literal>: atua como um ponto de corte,
+       definindo um limite máximo de caracteres para a string.
+      </simpara>
+     </listitem>
+    </itemizedlist>
+    <note>
+     <simpara>
+      Se o ponto for especificado sem um valor explícito para precisão,
+      0 é assumido.
+     </simpara>
+    </note>
+   </para>
+  </formalpara>
+
+  <note>
+   <simpara>
+    Tentar usar um especificador de posição maior que
+    <constant>PHP_INT_MAX</constant> irá gerar avisos.
+   </simpara>
+  </note>
+
+  <para>
+   <table>
+    <title>Especificadores</title>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>Especificador</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry><literal>&#37;</literal></entry>
+       <entry>
+        Um caractere literal de porcentagem. Nenhum argumento é necessário.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>b</literal></entry>
+       <entry>
+        O argumento é tratado como um número inteiro e apresentado
+        como um número binário.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>c</literal></entry>
+       <entry>
+        O argumento é tratado como um número inteiro e apresentado
+        como o caractere com aquele código ASCII.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>d</literal></entry>
+       <entry>
+        O argumento é tratado como um número inteiro e apresentado
+        como um número decimal (com sinal).
+       </entry>
+      </row>
+      <row>
+       <entry><literal>e</literal></entry>
+       <entry>
+        O argumento é tratado como notação científica (por exemplo, 1.2e+2).
+       </entry>
+      </row>
+      <row>
+       <entry><literal>E</literal></entry>
+       <entry>
+        Como o especificador <literal>e</literal>, mas usa
+        letra maiúscula (por exemplo, 1.2E+2).
+       </entry>
+      </row>
+      <row>
+       <entry><literal>f</literal></entry>
+       <entry>
+        O argumento é tratado como um float e apresentado
+        como um número de ponto flutuante (com reconhecimento da localidade).
+       </entry>
+      </row>
+      <row>
+       <entry><literal>F</literal></entry>
+       <entry>
+        O argumento é tratado como um float e apresentado
+        como um número de ponto flutuante (sem reconhecimento da localidade).
+       </entry>
+      </row>
+      <row>
+       <entry><literal>g</literal></entry>
+       <entry>
+        <para>
+         Formato geral.
+        </para>
+        <para>
+         Deixa P igual à precisão se for diferente de zero, 6 se a precisão for omitida,
+         ou 1 se a precisão for zero.
+         Então, se uma conversão com estilo E tivesse um expoente de X:
+        </para>
+        <para>
+         Se P > X ≥ −4, a conversão é com estilo f e precisão P − (X + 1).
+         Caso contrário, a conversão é com estilo e e precisão P − 1.
+        </para>
+       </entry>
+      </row>
+      <row>
+       <entry><literal>G</literal></entry>
+       <entry>
+        Como o especificador <literal>g</literal>, mas usa
+        <literal>E</literal> e <literal>f</literal>.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>h</literal></entry>
+       <entry>
+        Como o especificador <literal>g</literal>, mas usa <literal>F</literal>.
+        Disponível a partir do PHP 8.0.0.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>H</literal></entry>
+       <entry>
+        Como o especificador <literal>g</literal>, mas usa
+        <literal>E</literal> e <literal>F</literal>. Disponível a partir do PHP 8.0.0.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>o</literal></entry>
+       <entry>
+        O argumento é tratado como um número inteiro e apresentado
+        como um número octal.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>s</literal></entry>
+       <entry>
+        O argumento é tratado e apresentado como uma string.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>u</literal></entry>
+       <entry>
+        O argumento é tratado como um número inteiro e apresentado
+        como um número decimal sem sinal.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>x</literal></entry>
+       <entry>
+        O argumento é tratado como um número inteiro e apresentado
+        como um número hexadecimal (com letras minúsculas).
+       </entry>
+      </row>
+      <row>
+       <entry><literal>X</literal></entry>
+       <entry>
+        O argumento é tratado como um número inteiro e apresentado
+        como um número hexadecimal (com letras maiúsculas).
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </table>
+  </para>
+
+  <warning>
+   <para>
+    O especificador de tipo <literal>c</literal> ignora preenchimento e largura.
+   </para>
+  </warning>
+
+  <warning>
+   <para>
+    Tentar usar uma combinação dos especificadores de string e largura com conjuntos de caracteres que requerem mais de um byte por caractere pode resultar em resultados inesperados.
+   </para>
+  </warning>
+
+  <para>
+   As variáveis serão forçadas a um tipo adequado para o especificador:
+   <table>
+    <title>Tratamento de Tipos</title>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>Tipo</entry>
+       <entry>Especificadores</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry><type>string</type></entry>
+       <entry><literal>s</literal></entry>
+      </row>
+      <row>
+       <entry><type>int</type></entry>
+       <entry>
+        <literal>d</literal>,
+        <literal>u</literal>,
+        <literal>c</literal>,
+        <literal>o</literal>,
+        <literal>x</literal>,
+        <literal>X</literal>,
+        <literal>b</literal>
+       </entry>
+      </row>
+      <row>
+       <entry><type>float</type></entry>
+       <entry>
+        <literal>e</literal>,
+        <literal>E</literal>,
+        <literal>f</literal>,
+        <literal>F</literal>,
+        <literal>g</literal>,
+        <literal>G</literal>,
+        <literal>h</literal>,
+        <literal>H</literal>
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </table>
+  </para>
+ </listitem>
+</varlistentry>
 '>
 
 <!ENTITY strings.scanf.parameter.format '
@@ -2886,7 +3215,7 @@ local: {
       <para>
        O formato interpretado para <parameter>string</parameter>, que é
        descrito na documentação para <function>sprintf</function> com
-       seguintes diferenças:
+       as seguintes diferenças:
        <simplelist>
         <member>
          A função não reconhece a localidade.
@@ -2902,19 +3231,30 @@ local: {
          <literal>i</literal> significa inteiro com detecção de base.
         </member>
         <member>
-         <literal>n</literal> representa o número de caracteres processados até agora.
+         <literal>n</literal> representa o número de caracteres processados até o momento.
         </member>
         <member>
          <literal>s</literal> pára de ler em qualquer caractere de espaço em branco.
         </member>
         <member>
-         <literal>*</literal> ao invés de <literal>argnum$</literal> suprime
+         <literal>*</literal> em vez de <literal>argnum$</literal> suprime
          a atribuição desta especificação de conversão.
         </member>
        </simplelist>
       </para>
      </listitem>
     </varlistentry>
+'>
+
+<!ENTITY strings.parameter.needle.non-string '
+ <para xmlns="http://docbook.org/ns/docbook">
+  Antes do PHP 8.0.0, se <parameter>needle</parameter> não for uma string, ela será convertida
+  para um número inteiro e aplicada como o valor ordinal de um caractere.
+  Este comportamento tornou-se obsoleto a partir do PHP 7.3.0, e depender dele é altamente
+  desaconselhado. Dependendo do comportamento pretendido, o parâmetro
+  <parameter>needle</parameter> deve ser explicitamente convertido em string
+  ou uma chamada explícita para <function>chr</function> deve ser realizada.
+ </para>
 '>
 
 <!ENTITY strings.changelog.ascii-case-conversion '
@@ -2931,8 +3271,8 @@ local: {
  <row xmlns="http://docbook.org/ns/docbook">
   <entry>8.2.0</entry>
   <entry>
-   A dobragem de caixa não depende mais da localidade definida com
-   <function>setlocale</function>. Somente a dobragem de maiúsculas e minúsculas ASCII será feita.
+   A redução de todas as letras a maiúsculas ou minúsculas não depende mais da localidade definida com
+   <function>setlocale</function>. Somente a redução de todas as letras ASCII a maiúsculas ou minúsculas será feita.
    Os bytes não ASCII serão comparados por seu valor de byte.
   </entry>
  </row>
