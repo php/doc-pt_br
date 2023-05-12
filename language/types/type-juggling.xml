@@ -1,277 +1,457 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 4fc282f33eb0b461f1d6c206d523bcbbb395109e Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe,fabioluciano,geekcom,gabrielsanva -->
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: a652c1fbfe0d46ca2e92c8e97abc11f1701439e2 Maintainer: ae Status: ready --><!-- CREDITS: felipe,fabioluciano,geekcom,gabrielsanva,ae -->
 <sect1 xml:id="language.types.type-juggling">
- <title>Manipulação de tipos</title>
+ <title>Conversão automática de tipos</title>
 
  <simpara>
-  O PHP não obriga (ou suporta) a definição de tipo explícita na declaração de
-  variáveis: o tipo de uma variável é determinado pelo contexto em que a variável é
-  utilizada. Isto significa que, atribuir um valor <type>string</type>
-  a variável <varname>$var</varname>, fará <varname>$var</varname> se tornar uma
-  <type>string</type>. Se um valor <type>inteiro</type> for atribuído a
-  <varname>$var</varname>, ela se torna um <type>inteiro</type>.
+  O PHP não requer a tipagem explícita em declarações de variáveis.
+  Nesse caso, o tipo de uma variável é determinado pelo valor armazenado.
+  Ou seja, se uma <type>string</type> é armazenada numa variável
+  <varname>$var</varname>, então <varname>$var</varname> terá o tipo
+  <type>string</type>. Se após isso um valor <type>int</type> value é armazenado
+  em <varname>$var</varname>, ele será do tipo <type>int</type>.
  </simpara>
 
  <para>
-  Um exemplo de conversão automática do PHP é o operador de multiplicação '*'.
-  Se qualquer um dos operandos for <type>float</type>, todos
-  os operadores serão avaliados como <type>float</type>, e o resultado será um
-  <type>float</type>. De outra forma, se os operadores forem interpretados como
-  <type>inteiros</type>s, o resultado será um <type>inteiro</type>. Note que isso
-  <emphasis>não</emphasis> muda os tipos dos operadores: apenas muda como
-  esses operadores são avaliados e qual o tipo da expressão.
- </para>
-
- <informalexample>
-  <programlisting role="php">
-<![CDATA[
-<?php
-$foo = "1";  // $foo é string (ASCII 49)
-$foo *= 2;   // $foo é agora um inteiro (2)
-$foo = $foo * 1.3;  // $foo é agora um float (2.6)
-$foo = 5 * "10 pequenos porcos"; // $foo é  um inteiro (50)
-$foo = 5 * "10 minúsculos porcos";     // $foo é um inteiro (50)
-?>
-]]>
-<!-- bad example, no real operator (must be used with variable, modifies it too)
-$foo++;      // $foo is the string "2" (ASCII 50)
-
-TODO: explain ++/- - behaviour with strings
-
-examples:
-
-++'001' = '002'
-++'abc' = 'abd'
-++'xyz' = 'xza'
-++'9.9' = '9.0'
-++'-3'  = '-4'
-- -'9'   = 8 (integer!)
-- -'5.5' = '5.5'
-- -'-9'  = -10 (integer)
-- -'09'  = 8 (integer)
-- -'abc' = 'abc'
-
--->
-  </programlisting>
- </informalexample>
-
- <simpara>
-  Se os últimos dois exemplos lhe parecerem estranhos, veja a <link
-  linkend="language.types.string">Conversão de
-  strings para números</link>.
- </simpara>
-
- <simpara>
-  Para forçar uma variável ser avaliada como um certo tipo, veja a seção
-  <link linkend="language.types.typecasting">Conversão de tipo</link>. Se desejar mudar o tipo de uma variável, veja
-  a função <function>settype</function>.
- </simpara>
-
- <para>
-  Para testar qualquer um dos exemplo desta seção, você pode
-  usar a função <function>var_dump</function>.
+  O PHP pode tentar converter o tipo de um valor em outro, automaticamente,
+  em alguns contextos. Esses contextos são:
+  <itemizedlist>
+   <listitem>
+    <simpara>Numérico</simpara>
+   </listitem>
+   <listitem>
+    <simpara>String</simpara>
+   </listitem>
+   <listitem>
+    <simpara>Lógico</simpara>
+   </listitem>
+   <listitem>
+    <simpara>Inteiro e string</simpara>
+   </listitem>
+   <listitem>
+    <simpara>Comparação</simpara>
+   </listitem>
+   <listitem>
+    <simpara>Função</simpara>
+   </listitem>
+  </itemizedlist>
  </para>
 
  <note>
-  <para>
-   O comportamento de uma conversão automática para <type>array</type> é atualmente
-   indefinida.
-  </para>
-
-  <para>
-   O PHP também suporta indexação em <type>string</type>s via índice usando a
-   mesma sintaxe de <type>array</type>, o seguinte exemplo é válido
-   para todas versões do PHP:
-  </para>
-
-  <informalexample>
-   <programlisting role="php">
-<![CDATA[
-<?php
-$a    = 'car'; // $a é uma string
-$a[0] = 'b';   // $a é ainda uma string
-echo $a;       // bar
-?>
-]]>
-   </programlisting>
-  </informalexample>
-
-  <para>
-   Veja a seção intitulada <link linkend="language.types.string.substr">Acessando
-   caracteres da string</link> para mais informações.
-  </para>
+  <simpara>
+   Quando um valor precisa ser interpretado como um tipo diferente, o valor
+   em si <emphasis>não</emphasis> se altera, apenas uma "cópia" é convertido.
+  </simpara>
  </note>
 
- <sect2 xml:id="language.types.typecasting">
-  <title>Conversão de Tipos</title>
+ <simpara>
+  Para forçar uma variável ser avaliada como um certo tipo, veja a seção
+  <link linkend="language.types.typecasting">Conversão de tipo</link>. Se
+  desejar mudar o tipo de uma variável, veja a função <function>settype</function>.
+ </simpara>
+
+ <sect2>
+  <title>Contexto numérico</title>
+
+  <simpara>
+   Esse é contexto quando da utilização de
+   <link linkend="language.operators.arithmetic">operadores aritméticos</link>.
+  </simpara>
+
+  <simpara>
+   Esse contexto ocorre se um dos operandos é um <type>float</type> (e não
+   interpretável como <type>int</type>), se ambos os operandos são interpretados como
+   <type>float</type>, ou se o resultado é um <type>float</type>.
+   Se não, se os operandos são interpretados como <type>int</type>,
+   ou o resultado é um <type>int</type>.
+   A partir do 8.0.0, se um dos operandos não pode ser reinterpretado, um erro do tipo
+   <classname>TypeError</classname> é lançado.
+  </simpara>
+ </sect2>
+
+ <sect2>
+  <title>Contextos string</title>
+
+  <simpara>
+   Esse contexto ocorre ao se utilizar <function>echo</function>,
+   <function>print</function>,
+   <link linkend="language.types.string.parsing">interpolação de strings</link>,
+   o
+   <link linkend="language.operators.string">operador de concatenação</link>.
+  </simpara>
+
+  <simpara>
+   Nesse contexto, o valor será interpretado como <type>string</type>.
+   Se o valor não puder ser interpretado, então <classname>TypeError</classname> é lançado.
+   Anteriormente ao 7.4.0, um alerta <constant>E_RECOVERABLE_ERROR</constant> era emitido.
+  </simpara>
+ </sect2>
+
+ <sect2>
+  <title>Contextos lógicos</title>
+
+  <simpara>
+   Este contexto ocorre em instruções condicionais, no uso do
+   <link linkend="language.operators.comparison.ternary">operador ternário</link>,
+   ou em uma <link linkend="language.operators.logical">operação lógica</link>.
+  </simpara>
+
+  <simpara>
+   Nesse contexto, o valor será interpretado como <type>bool</type>.
+  </simpara>
+ </sect2>
+
+ <sect2>
+  <title>Contextos inteiros e string</title>
+
+  <simpara>
+   Este contexto ocorre quando utilizando 
+   <link linkend="language.operators.bitwise">operadores bitwise</link>.
+  </simpara>
+
+  <simpara>
+   Este contexto ocorre se todos os operandos são do tipo <type>string</type>,
+   ou o valor retornado é <type>string</type>.
+   Se não, os operados são interpretados como <type>int</type>,
+   ou o resultado é um <type>int</type>.
+   A partir do PHP 8.0.0, se um dos operandos não puder ser reinterpretado, então
+   <classname>TypeError</classname> é lançado.
+  </simpara>
+ </sect2>
+
+ <sect2>
+  <title>Contextos de comparação</title>
+
+  <simpara>
+   Este contexto ocorre quando utilizando
+   <link linkend="language.operators.comparison">operadores de comparação</link>.
+  </simpara>
+
+  <simpara>
+   As conversões de tipo que ocorrem nesse contexto são explicados na
+   tabela de sobre comparação entre vários tipos, explicadas
+   <link linkend="language.operators.comparison.types">aqui</link>.
+  </simpara>
+ </sect2>
+
+ <sect2 xml:id="language.types.type-juggling.function">
+  <title>Contextos de função</title>
+
+  <simpara>
+   Este contexto ocorre quando um valor é um parâmetro tipado, ou quando uma propriedade
+   ou valor retornado de uma função declara um tipo.
+  </simpara>
 
   <para>
-   A conversão de tipos no PHP funciona como no C: o nome de um
-   tipo desejado é escrito entre parênteses antes da variável que se deseja converter.
+   Nesse contexto, o valor precisa do tipo informado.
+   Duas alternativas existem. A primeira: se o valor é do tipo
+   <type>int</type> e o tipo declarado é <type>float</type>, então o
+   inteiro é convertido num número de ponto flutuante.
+   A segunda alternativa: se o tipo declarado é um <emphasis>escalar</emphasis>,
+   <!-- e.g. An object that implements __toString will pass a string type -->
+   e o valor é conversível no tipo escalar, juntamente com
+   o modo de conversão coercivo no estado ativo
+   (o padrão), o valor pode ser convertido no valor escalar.
+   Veja abaixo uma descrição detalhada desse comportamento.
   </para>
+
+  <warning>
+   <simpara>
+    <link linkend="functions.internal">Funções internas</link>
+    convertem automaticamente &null; para tipos escalares, mas
+    mas esse comportamento é <emphasis>OBSOLETO</emphasis> desde o PHP 8.1.0.
+   </simpara>
+  </warning>
+
+  <sect3 xml:id="language.types.type-juggling.function.simple">
+   <title>Coerção de tipos com tipos declarados</title>
+   <itemizedlist>
+    <listitem>
+     <simpara>
+      Declaração <type>bool</type>: o valor é convertido para <type>bool</type>.
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      Declaração <type>int</type>: o valor é convertido para <type>int</type>
+      caso possível. Por exemplo, quando uma string é
+      <link linkend="language.types.numeric-strings">numérica</link>.
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      Declaração <type>float</type>: o valor é convertido para <type>float</type>
+      caso possível. Por exemplo, quando uma string é
+      <link linkend="language.types.numeric-strings">numérica</link>.
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      Declaração <type>string</type>: o valor é convertido para <type>string</type>.
+     </simpara>
+    </listitem>
+   </itemizedlist>
+  </sect3>
+
+  <sect3 xml:id="language.types.type-juggling.function.union">
+   <title>Conversão de tipos em tipos union</title>
+   <para>
+    Quando <literal>strict_types</literal> está desativado, declarações de tipos escalares
+    estão sujeitas a conversões implícitas e limitadas.
+    Se o tipo exato do valor não é parte da união, então o tipo final da conversão
+    é escolhido na seguinte ordem de preferência:
+
+    <orderedlist>
+     <listitem>
+      <simpara>
+       <type>int</type>
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       <type>float</type>
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       <type>string</type>
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       <type>bool</type>
+      </simpara>
+     </listitem>
+    </orderedlist>
+
+    Se o tipo existe na união e o valor puder ser convertido pela mesma
+    semântica do PHP, então esse tipo é escolhido.
+    Senão, um tipo seguinte é tentado.
+   </para>
+
+   <caution>
+    <para>
+     Existe uma exceção, no caso do valor ser uma string, e ambos int e float serem partes
+     da união, o tipo preferido será determinado pela semântica de
+     <link linkend="language.types.numeric-strings">strings numéricas</link>.
+     
+     Por exemplo, para <literal>"42"</literal> o tipo <type>int</type> é escolhido,
+     enquanto que para <literal>"42.0"</literal> o tipo escolhido é <type>float</type>.
+    </para>
+   </caution>
+
+   <note>
+    <para>
+     Tipos que não são parte da lista acima não são elegíveis para destinos
+     da conversão implícita. Em particular, não existem conversões implícitas para
+     os tipos <type>null</type>, <type>false</type> e <type>true</type>.
+     
+    </para>
+   </note>
+
+   <example>
+    <title>Exemplo de tipos que podem ser convertidos em tipos union</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// int|string
+42    --> 42          // tipo exato
+"42"  --> "42"        // tipo exato
+new ObjectWithToString --> "Resultado de __toString()"
+                      // e objero não compatível com int, padrão para string
+42.0  --> 42          // float compatível com int
+42.1  --> 42          // float compatível com int
+1e100 --> "1.0E+100"  // float muito grande para int, padrão para string
+INF   --> "INF"       // float muito grande para int, padrão para string
+true  --> 1           // bool compatível com int
+[]    --> TypeError   // array não é compatível com int ou string
+
+// int|float|bool
+"45"    --> 45        // string numérica int
+"45.0"  --> 45.0      // string numérica float
+
+"45X"   --> true      // string não numérica, padrão para bool
+""      --> false     // string não numérica, padrão para bool
+"X"     --> true      // string não numérica, padrão para bool
+[]      --> TypeError // array não é compatível com int, float ou bool
+?>
+]]>
+    </programlisting>
+   </example>
+  </sect3>
+
+ </sect2>
+
+ <sect2 xml:id="language.types.typecasting">
+  <title>Conversão explícita (cast)</title>
+
+  <simpara>
+   Converte o valor do tipo para o tipo escolhido através da escrita do tipo
+   entre parênteses, antes do valor a ser convertido.
+  </simpara>
 
   <informalexample>
    <programlisting role="php">
 <![CDATA[
 <?php
-$foo = 10;             // $foo é um inteiro
-$bar = (boolean) $foo; // $bar é um booleano
+$foo = 10;           // $foo é int
+$bar = (bool) $foo;  // $bar é bool
 ?>
 ]]>
    </programlisting>
   </informalexample>
 
-  <para>
-   As conversões permitidas são:
-  </para>
+  <simpara>
+   As conversões previstas são:
+  </simpara>
 
-  <itemizedlist>
-   <listitem>
-    <simpara>(int), (integer) - molde para inteiro</simpara>
-   </listitem>
-   <listitem>
-    <simpara>(bool), (boolean) - converte para booleano</simpara>
-   </listitem>
-   <listitem>
-    <simpara>(float), (double), (real) - converte para número de ponto flutuante</simpara>
-   </listitem>
-   <listitem>
-    <simpara>(string) - converte para string</simpara>
-   </listitem>
-   <listitem>
-    <simpara>(array) - converte para array</simpara>
-   </listitem>
-   <listitem>
-    <simpara>(object) - converte para objeto</simpara>
-   </listitem>
-   <listitem>
-    <simpara>(unset) - converte para <type>NULL</type></simpara>
-   </listitem>
-  </itemizedlist>
+  <simplelist>
+   <member><literal>(int)</literal> - converte para <type>int</type></member>
+   <member><literal>(bool)</literal> - converte para <type>bool</type></member>
+   <member><literal>(float)</literal> - converte para <type>float</type></member>
+   <member><literal>(string)</literal> - converte para <type>string</type></member>
+   <member><literal>(array)</literal> - converte para <type>array</type></member>
+   <member><literal>(object)</literal> - converte para <type>object</type></member>
+   <member><literal>(unset)</literal> - converte para <type>NULL</type></member>
+  </simplelist>
 
-  <para>
-   (binary) e o prefixo b foram adicionados no PHP 5.2.1. Note que
-   (binary) é essencialmente o mesmo que (string), mas não deve ser
-   invocado
-  </para>
+  <note>
+   <para>
+    <literal>(integer)</literal> converte igual a <literal>(int)</literal>.
+    <literal>(boolean)</literal> converte igual a <literal>(bool)</literal>.
+    <literal>(binary)</literal> converte igual a <literal>(string)</literal>.
+    <literal>(double)</literal> e <literal>(real)</literal> converte igual a
+    <literal>(float)</literal>.
+    Esses casts alternativas não são recomendados, ainda que existentes.
+   </para>
+  </note>
 
-  <para>
-   Conversão (unset) está depreciada a partir do PHP 7.2.0. Note que (unset)
-   é o mesmo que atribuir <type>NULL</type> a variável ou chamada. Conversão
-   (unset) será removida a partir do PHP 8.0.0.
-  </para>
+  <warning>
+   <simpara>
+    O cast <literal>(real)</literal> está obsoleto desde o PHP 8.0.0.
+   </simpara>
+  </warning>
 
-  <para>
-   Note que tabulações e espaços são permitidos dentro dos parênteses, então
-   o seguinte são funcionalmente equivalentes:
-  </para>
+  <warning>
+   <simpara>
+    O cast <literal>(unset)</literal> está obsoleto desde o PHP 7.2.0.
+    Note que o cast <literal>(unset)</literal> tem o mesmo efeito que
+    informar o valor <type>NULL</type> para a variável ou chamada de função.
+    O cast <literal>(unset)</literal> foi removido no PHP 8.0.0.
+   </simpara>
+  </warning>
 
-  <informalexample>
-   <programlisting role="php">
+  <caution>
+   <simpara>
+    O cast <literal>(binary)</literal> e prefixo <literal>b</literal> ainda existem
+    para compatibilidade. Atualmente <literal>(binary)</literal> e
+    <literal>(string)</literal> são idênticos, no entanto isso pode mudar
+    e não deve ser considera estável
+   </simpara>
+  </caution>
+
+  <note>
+   <para>
+    Espaços são ignorados dentro dos parênteses de um cast.
+    Portanto, as linhas seguintes são equivalentes:
+    <informalexample>
+     <programlisting role="php">
 <![CDATA[
 <?php
 $foo = (int) $bar;
 $foo = ( int ) $bar;
 ?>
 ]]>
-    </programlisting>
+     </programlisting>
+    </informalexample>
+   </para>
+  </note>
 
-    <para>
-     Convertendo <type>string</type>s literais e variáveis para <type>string</type>s
-     binárias:
-    </para>
+  <informalexample>
+   <simpara>
+    Convertendo <type>string</type> e variáveis para
+    <type>string</type>s binárias:
+   </simpara>
 
-    <programlisting role="php">
+   <programlisting role="php">
 <![CDATA[
 <?php
-$binary = (binary)$string;
+$binary = (binary) $string;
 $binary = b"binary string";
 ?>
 ]]>
    </programlisting>
   </informalexample>
 
+  <!-- TODO Remove or move into string context section? -->
   <note>
-   <para>
-    Em vez de converter uma variável para <type>string</type>, pode-se também englobar
-    a variável entre aspas duplas.
-   </para>
+   <simpara>
+    Em vez de converter uma variável para <type>string</type>, é possível
+    empacotar a variável dentro de aspas.
+   </simpara>
 
    <informalexample>
     <programlisting role="php">
 <![CDATA[
 <?php
-$foo = 10;            // $foo é um interio
-$str = "$foo";        // $str é uma string
-$fst = (string) $foo; // $fst tambem é uma string
+$foo = 10;            // $foo é int
+$str = "$foo";        // $str é string
+$fst = (string) $foo; // $fst também é string
 
-// Isto imprimirah "eles são o mesmo"
+// Isto imprive "são iguais"
 if ($fst === $str) {
-    echo "eles são o mesmo";
+    echo "são iguais";
 }
 ?>
 ]]>
-   </programlisting>
-  </informalexample>
+    </programlisting>
+   </informalexample>
   </note>
-
+   
   <para>
-   Pode não ser tão óbvio o que ocorre exatamente quando se converte
-   entre certos tipos. Para mais informações, veja essas seções:
+   Não é tão óbvio o que acontece quando convertendo entre certos
+   tipos. Para mais informações, veja as seções:
+   <simplelist>
+    <member><link linkend="language.types.boolean.casting">Convertendo para boolean</link></member>
+    <member><link linkend="language.types.integer.casting">Convertendo para integer</link></member>
+    <member><link linkend="language.types.float.casting">Convertendo para float</link></member>
+    <member><link linkend="language.types.string.casting">Convertendo para string</link></member>
+    <member><link linkend="language.types.array.casting">Convertendo para array</link></member>
+    <member><link linkend="language.types.object.casting">Convertendo para object</link></member>
+    <member><link linkend="language.types.resource.casting">Convertendo para resource</link></member>
+    <member><link linkend="language.types.null.casting">Convertendo para NULL</link></member>
+    <member><link linkend="types.comparisons">A tabela de conversão de tipos</link></member>
+   </simplelist>
   </para>
-
-  <itemizedlist>
-   <listitem>
-    <simpara>
-      <link linkend="language.types.boolean.casting">Convertendo para booleano</link>
-    </simpara>
-   </listitem>
-   <listitem>
-    <simpara>
-      <link linkend="language.types.integer.casting">Convertendo para inteiro</link>
-    </simpara>
-   </listitem>
-   <listitem>
-    <simpara>
-      <link linkend="language.types.float.casting">Convertendo para ponto flutuante</link>
-    </simpara>
-   </listitem>
-   <listitem>
-    <simpara>
-      <link linkend="language.types.string.casting">Convertendo para string</link>
-    </simpara>
-   </listitem>
-   <listitem>
-    <simpara>
-      <link linkend="language.types.array.casting">Convertendo para array</link>
-    </simpara>
-   </listitem>
-   <listitem>
-    <simpara>
-      <link linkend="language.types.object.casting">Convertendo para objeto</link>
-    </simpara>
-   </listitem>
-   <listitem>
-    <simpara>
-      <link linkend="language.types.resource.casting">Convertendo para
-      recurso</link>
-    </simpara>
-   </listitem>
-   <listitem>
-    <simpara>
-     <link linkend="language.types.null.casting">Convertendo para NULL</link>
-    </simpara>
-   </listitem>
-   <listitem>
-    <simpara>
-     <link linkend="types.comparisons">Tabelas de comparação entre tipos</link>
-    </simpara>
-   </listitem>
-  </itemizedlist>
-
  </sect2>
-</sect1>
 
+ <simplesect>
+  <note>
+   <simpara>
+    O PHP suporta a indexação de <type>string</type> utilizando
+    a mesma sintaxe de <type>array</type>s, de forma que o exemplo seguinte
+    é válido em todas as versões do PHP:
+   </simpara>
+
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$a    = 'car'; // $a é uma string
+$a[0] = 'b';   // $a ainda é uma string
+echo $a;       // bar
+?>
+]]>
+    </programlisting>
+   </informalexample>
+
+   <simpara>
+    Veja a seção sobre <link linkend="language.types.string.substr">Acesso a caracteres
+    da string</link> para mais informações.
+   </simpara>
+  </note>
+ </simplesect>
+
+</sect1>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
