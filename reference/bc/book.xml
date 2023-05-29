@@ -1,18 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 1634a886415d0ab4df195fe49d18a1c150b70758 Maintainer: ae Status: ready --><!-- CREDITS: felipe,ae -->
+<!-- EN-Revision: 1d61be1ed9edb9b8191206768f2640aa9c7623ae Maintainer: ae Status: ready --><!-- CREDITS: felipe,ae -->
 
 <book xml:id="book.bc" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <?phpdoc extension-membership="bundled" ?>
- <title>BCMath Funções Matemáticas de Precisão Arbitrária</title>
+ <?phpdoc extension-membership="bundled" ?>
+ <title>BCMath, funções matemáticas de precisão arbitrária</title>
  <titleabbrev>BC Math</titleabbrev>
 
  <!-- {{{ preface -->
  <preface xml:id="intro.bc">
   &reftitle.intro;
   <para>
-    Para matemática de precisão arbitrária, o PHP oferece uma calculadora binária com
-    suporte a números de qualquer tamanho e precisão, representados como strings.
+   Para matemática de precisão arbitrária, o PHP oferece BCMath, que
+   suporta números de qualquer tamanho e com precisão de até <literal>2147483647</literal> (ou <literal>0x7FFFFFFF</literal>) dígitos decimais,
+   até a memória disponível, representadas como strings.
   </para>
+  <para>
+   Numéros válido (ou bem formados) são strings que concordam com a expressão regular
+   <literal>/^[+-]?[0-9]*(\.[0-9]*)?$/</literal>.
+  </para>
+  <caution>
+   <para>
+    Passar valores de tipo <type>float</type> para uma função BCMatch, que espera
+    um operando <type>string</type> pode não funcionar como esperado dado que
+    o PHP converte valores <type>float</type> para <type>string</type>, especificamente
+    que a <type>string</type> convertida pode estar numa notação exponencial (que não é
+    suportado no BCMath), e dado que, anteriormente ao PHP 8.0.0, o separador decimal depende da locale configurada
+    (enquanto BCMath sempre trabalho com ponto).
+   </para>
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$num1 = 0; // (string) 0 => '0'
+$num2 = -0.000005; // (string) -0.000005 => '-5.05E-6'
+echo bcadd($num1, $num2, 6); // => '0.000000'
+
+setlocale(LC_NUMERIC, 'de_DE'); // uses a decimal comma
+$num2 = 1.2; // (string) 1.2 => '1,2'
+echo bcsub($num1, $num2, 1); // => '0.0'
+?>
+]]>
+    </programlisting>
+   </informalexample>
+  </caution>
  </preface>
  <!-- }}} -->
  
