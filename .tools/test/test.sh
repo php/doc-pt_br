@@ -5,7 +5,10 @@ if [[ $# -ne 1 ]]; then
     exit 1
 fi
 
-rm patch.txt
+rm -f list.txt
+rm -f merge.txt
+rm -f patch.txt
+
 wget "https://patch-diff.githubusercontent.com/raw/php/doc-pt_br/pull/$1.diff" -O patch.txt
 
 if ! $(cd pt_BR; git apply --check ../patch.txt); then
@@ -15,6 +18,8 @@ if ! $(cd pt_BR; git apply --check ../patch.txt); then
 else
 
     (cd pt_BR; git apply ../patch.txt 2>&1 | tee ../merge.txt;)
+    (cd pt_BR; git diff --name-only > ../list.txt )
+
     php doc-base/configure.php --with-lang=pt_BR --enable-xml-details    
     (cd pt_BR; git status)
     (cd pt_BR; git diff)
