@@ -1,9 +1,9 @@
 <?php
 
+wsfix ( $argv[1] );
+
 function wsfix( $filename )
 {
-    $strict = false;
-    
     $filename = trim( $filename );
     if ( strpos( $filename , 'en' ) === 0 )
         $filename = substr( $filename , 2 );
@@ -11,55 +11,59 @@ function wsfix( $filename )
         $filename = substr( $filename , 5 );
     if ( strpos( $filename , '/' ) === 0 )
         $filename = substr( $filename , 1 );
-    
-    $enname = 'en/' . $filename;
-    $brname = 'pt_BR/' . $filename;
-    
-    $entext = file_get_contents( $enname );
-    $brtext = file_get_contents( $brname );
-    
-    $enlines = explode( "\n" , $entext );
-    $brlines = explode( "\n" , $brtext );
-    
-    if ( $strict )
+
+    $srcName = 'en/' . $filename;
+    $dstName = 'pt_BR/' . $filename;
+
+    $srcText = file_get_contents( $srcName );
+    $dstText = file_get_contents( $dstName );
+
+    $srcLines = explode_lines( $srcText );
+    $dstLines = explode_lines( $dstText );
+
+    if ( count( $srcLines ) != count( $dstLines ) )
+        print "Line count mismatch: $filename\n";
+
+    $srcCount = count( array_filter( $srcLines , "non_empty" ) );
+    $dstLines = array_filter( $dstLines , "non_empty" );
+
+    if ( $srcCount != count( $dstLines ) )
+        die( "Text lines mismatch: $filename\n" );
+
+    foreach ( $srcLines as $srcLine )
     {
-        if ( count( $enlines ) != count( $brlines ) )
-            die( "Line strict count differs.\n" );
-    }
-    else
-    {
-        if ( count( explode( "\n" , rtrim( $entext ) ) ) != count( explode( "\n" , rtrim( $brtext ) ) ) )
-            die( "Line loose count differs.\n" );
-    }
-    
-    $i = 0;
-    $l = count( $enlines );
-    for ( $i = 0 ; $i < $l ; $i++ )
-    {
-        if ( array_key_exists( $i , $enlines ) == false )
+        if ( strlen( trim( $srcLine ) ) == 0 )
+        {
+            $dstLines[] = "";
             continue;
-        if ( array_key_exists( $i , $brlines ) == false )
-            continue;
-        
-        $en = $enlines[$i];
-        $br = $brlines[$i];
-        
+        }
+
+        $dstLine = array_shift( $dstLines );
+
         $ws = "";
-        $chars = str_split( $en );
+        $chars = str_split( $srcLine );
         foreach( $chars as $char )
             if ( $char == ' ' )
                 $ws .= ' ';
             else
                 break;
-        
-        $br = $ws . trim( $br );
-        $br = rtrim( $br );
-        
-        $brlines[$i] = $br;
+
+        $dstLine = $ws . trim( $dstLine );
+        $dstLines[] = $dstLine;
     }
-    
-    $brtext = implode( "\n" , $brlines );
-    file_put_contents( $brname , $brtext );
+
+    $dstText = implode( "\n" , $dstLines );
+    file_put_contents( $dstName , $dstText );
 }
 
-wsfix ( $argv[1] );
+function explode_lines( $text )
+{
+    $text = str_replace( "\r\n" , "\n" , $text );
+    $text = str_replace( "\r"   , "\n" , $text );
+    return explode( "\n" , $text );
+}
+
+function non_empty( $text )
+{
+    return strlen( trim( $text ) ) > 0;
+}
