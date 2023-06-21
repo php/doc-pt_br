@@ -15,14 +15,16 @@ function wsfix( $filename )
     $srcName = 'en/' . $filename;
     $dstName = 'pt_BR/' . $filename;
 
+    if ( ! file_exists( $srcName ) )
+        die( "File not exists: $srcName\n" );
+    if ( ! file_exists( $dstName ) )
+        die( "File not exists: $dstName\n" );
+
     $srcText = file_get_contents( $srcName );
     $dstText = file_get_contents( $dstName );
 
     $srcLines = explode_lines( $srcText );
     $dstLines = explode_lines( $dstText );
-
-    if ( count( $srcLines ) != count( $dstLines ) )
-        print "Line count mismatch: $filename\n";
 
     $srcCount = count( array_filter( $srcLines , "non_empty" ) );
     $dstLines = array_filter( $dstLines , "non_empty" );
