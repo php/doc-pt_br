@@ -1,23 +1,24 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 53b6f116ed5f8649ca540c38dfe0ce30619d0dd9 Maintainer: ae Status: ready --><!-- CREDITS: rarruda, thiago -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: b0b19b66183b28cebc1ffbcf1e2b8763f9d9c7b3 Maintainer: ae Status: ready --><!-- CREDITS: rarruda, thiago -->
 <!-- splitted from ./en/functions/dir.xml, last change in rev 1.2 -->
-  <refentry xml:id="function.opendir" xmlns="http://docbook.org/ns/docbook">
-   <refnamediv>
-    <refname>opendir</refname>
-    <refpurpose>Abre um manipulador de diretório</refpurpose>
-   </refnamediv>
+<refentry xml:id="function.opendir" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>opendir</refname>
+  <refpurpose>Abre um manipulador de diretório</refpurpose>
+ </refnamediv>
+
  <refsect1 role="description">
   &reftitle.description;
-     <methodsynopsis>
-      <type>resource</type><methodname>opendir</methodname>
-      <methodparam><type>string</type><parameter>path</parameter></methodparam>
-       <methodparam choice="opt"><type>resource</type><parameter>context</parameter></methodparam>
-     </methodsynopsis>
-    <para>
-     Abre um manipulador de diretório para ser usado em chamadas
-     subsequentes a <function>closedir</function>,
-     <function>readdir</function>, e <function>rewinddir</function>.
-    </para>
+  <methodsynopsis>
+   <type class="union"><type>resource</type><type>false</type></type><methodname>opendir</methodname>
+   <methodparam><type>string</type><parameter>directory</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>resource</type><type>null</type></type><parameter>context</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Abre um handle de diretório para ser usado em chamadas subsequentes de
+   <function>closedir</function>, <function>readdir</function>, e
+   <function>rewinddir</function>.
+  </para>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -25,7 +26,7 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>path</parameter></term>
+     <term><parameter>directory</parameter></term>
      <listitem>
       <para>
        O caminho do diretório a ser aberto
@@ -49,57 +50,54 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna um manipulador de diretório <type>resource</type> em sucesso, ou
-   &false; em falha.
+   Retorna um manipulador de diretório <type>resource</type> em sucesso,
+   &return.falseforfailure;
   </para>
-    <para>
-     Se <parameter>path</parameter> não é um diretório válido, ou se o
-     diretório não pode ser aberto devido a restrições de permissões ou
-     por erro no sistema de arquivos, <function>opendir</function> retorna &false; e
-     gera um erro PHP de nível <link linkend="errorfunc.constants">
-     E_WARNING</link>. Você pode suprimir a exibição da mensagem de erro de
-     <function>opendir</function> acrescentando um
-     '<link linkend="language.operators.errorcontrol">@</link>' na
-     frente do nome da função.
-    </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  &fs.emits.warning.on.failure;
+  <para>
+   Isto pode ocorrer se <parameter>directory</parameter> não for um nome de diretório válido,
+   o diretório não pode ser aberto por restrições de permissão,
+   ou por erros no sistema de arquivos.
+  </para>
  </refsect1>
 
  <refsect1 role="changelog">
   &reftitle.changelog;
-  <para>
-   <informaltable>
-    <tgroup cols="2">
-     <thead>
-      <row>
-       <entry>&Version;</entry>
-       <entry>&Description;</entry>
-      </row>
-     </thead>
-     <tbody>
-      <row>
-       <entry>5.0.0</entry>
-       <entry>
-        <parameter>path</parameter> suporta <literal>ftp://</literal>
-        URL wrapper.
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-  </para>
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       <parameter>context</parameter> pode ser null.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
  </refsect1>
 
  <refsect1 role="examples">
   &reftitle.examples;
-    <para>
-     <example>
-      <title>exemplo de <function>opendir</function></title>
-      <programlisting role="php">
+  <para>
+   <example>
+    <title>exemplo de <function>opendir</function></title>
+    <programlisting role="php">
 <![CDATA[
 <?php
 $dir = "/etc/php5/";
 
-// Abre um diretorio conhecido, e faz a leitura de seu conteudo
+// Abre um diretorio existente, e faz a leitura de seu conteudo
 if (is_dir($dir)) {
     if ($dh = opendir($dir)) {
         while (($file = readdir($dh)) !== false) {
@@ -110,7 +108,7 @@ if (is_dir($dir)) {
 }
 ?>
 ]]>
-      </programlisting>
+    </programlisting>
     &example.outputs.similar;
     <screen>
 <![CDATA[
@@ -121,22 +119,21 @@ filename: cgi : filetype: dir
 filename: cli : filetype: dir
 ]]>
     </screen>
-     </example>
-    </para>
+   </example>
+  </para>
  </refsect1>
 
  <refsect1 role="seealso">
   &reftitle.seealso;
-    <para>
-     <simplelist>
-      <member><function>is_dir</function></member>
-      <member><function>readdir</function></member>
-      <member><function>dir</function></member>
-     </simplelist>
-     </para>
-   </refsect1>
-  </refentry>
-
+  <para>
+   <simplelist>
+    <member><function>is_dir</function></member>
+    <member><function>readdir</function></member>
+    <member><function>dir</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
