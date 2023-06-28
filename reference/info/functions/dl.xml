@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 8373b869c3a0726f809cf4ba0b011ea547221033 Maintainer: ae Status: ready --><!-- CREDITS: fernandoc -->
+<!-- EN-Revision: a89c6d71c7b65e3de84f26230fbf72c9b8948adf Maintainer: ae Status: ready --><!-- CREDITS: fernandoc -->
 <refentry xml:id="function.dl" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>dl</refname>
   <refpurpose>Carrega uma extensão do PHP durante a execução</refpurpose>
  </refnamediv>
- 
+
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>bool</type><methodname>dl</methodname>
-   <methodparam><type>string</type><parameter>library</parameter></methodparam>
+   <methodparam><type>string</type><parameter>extension_filename</parameter></methodparam>
   </methodsynopsis>
   <para>
    Carrega a extensão do PHP indicada pelo parâmetro
-   <parameter>library</parameter>. 
+   <parameter>extension_filename</parameter>.
   </para>
   <para>
    Use <function>extension_loaded</function> para testar se uma extensão está
@@ -24,8 +24,8 @@
   </para>
   <warning>
    <simpara>
-    Esta função foi removida de algumas SAPIs no PHP 5.3 e removida
-    do PHP-FPM no PHP 7.0.0.
+    Esta função está disponível apenas nas <acronym>SAPI</acronym>s <acronym>CLI</acronym>
+    e <acronym>SAPI</acronym>, e nas <acronym>CGI</acronym> <acronym>SAPI</acronym> quando executado da linha de comando.
    </simpara>
   </warning>
  </refsect1>
@@ -35,11 +35,11 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>library</parameter></term>
+     <term><parameter>extension_filename</parameter></term>
      <listitem>
       <para>
        Este parâmetro é <emphasis>somente</emphasis> o nome do arquivo da
-       exdtensão a carregar o qual também depende da sua plataforma. Por exemplo,
+       extensão a carregar o qual também depende da sua plataforma. Por exemplo,
        a extensão <link linkend="ref.sockets">sockets</link> (se compilada
        como módulo compartilhado, não o padrão!) seria chamada
        <filename>sockets.so</filename> em plataformas Unix enquanto é chamada
@@ -51,8 +51,7 @@
       </para>
       <para>
        Windows - Se não for explicitamente definido no &php.ini;, a extensão é carregada
-       a partir de <filename>C:\php4\extensions\</filename> (PHP 4) ou
-       <filename>C:\php5\</filename> (PHP 5) por padrão.
+       a partir de <filename>C:\php5\</filename> por padrão.
       </para>
       <para>
        Unix - Se não for explicitamente definido no &php.ini;, o diretório
@@ -66,14 +65,14 @@
         </listitem>
         <listitem>
          <simpara>
-          se o PHP foi compilado com suporte (experimental) ZTS (Zend Thread Safety)
+          se o PHP foi compilado com suporte ZTS (Zend Thread Safety)
           ou não
          </simpara>
         </listitem>
         <listitem>
          <simpara>
           O <literal>ZEND_MODULE_API_NO</literal> (o número Zend
-          internal module API, o que é basicamente a data onde houve uma mudança maior na  
+          internal module API, o que é basicamente a data onde houve uma mudança maior na
           API ex. <literal>20010901</literal>)
          </simpara>
         </listitem>
@@ -90,20 +89,20 @@
    </variablelist>
   </para>
  </refsect1>
- 
+
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
    &return.success; Se a funcionalidade de carregar módulos não estiver disponível
-   ou foi desabilitada (por desligar
-   <link linkend="ini.enable-dl">enable_dl</link>
+   ou foi desabilitada (por configurar
+   <link linkend="ini.enable-dl">enable_dl</link> como off
    no &php.ini;) então um erro <constant>E_ERROR</constant> é disparado
-   e a execução é interrompida. Se <function>dl</function> falhar porque a 
+   e a execução é interrompida. Se <function>dl</function> falhar porque a
    biblioteca especificada não puder ser carregada, além de retornar &false; uma
    mensagem <constant>E_WARNING</constant> é emitida.
   </para>
  </refsect1>
-  
+
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
@@ -112,7 +111,7 @@
     <programlisting role="php">
 <![CDATA[
 <?php
-// Example loading an extension based on OS
+// Exemplo de carregar umas extensção com base no sistema operacional
 if (!extension_loaded('sqlite')) {
     if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
         dl('php_sqlite.dll');
@@ -133,59 +132,11 @@ if (!extension_loaded('sqlite')) {
   </para>
  </refsect1>
 
- <refsect1 role="changelog">
-  &reftitle.changelog;
-  <para>
-   <informaltable>
-    <tgroup cols="2">
-     <thead>
-      <row>
-       <entry>&Version;</entry>
-       <entry>&Description;</entry>
-      </row>
-     </thead>
-     <tbody>
-      <row>
-       <entry>7.0.0</entry>
-       <entry>
-        <function>dl</function> foi desabilitado do PHP-FPM.
-       </entry>
-      </row>
-      <row>
-       <entry>5.3.9</entry>
-       <entry>
-        <function>dl</function> está habilitado no PHP-FPM, mas com o uso desencorajado.
-       </entry>
-      </row>
-      <row>
-       <entry>5.3.0</entry>
-       <entry>
-        <function>dl</function> foi desabilitada em algumas SAPIs por conta
-        de problemas de estabilidade. Somente as SAPIs que
-        permitem <function>dl</function> são a CLI e Embed. Utilize
-        a <link linkend="ini.extension">Extension Loading
-        Directives</link> nos demais casos.
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-  </para>
- </refsect1>
- 
  <refsect1 role="notes">
   &reftitle.notes;
   <note>
    <para>
-    <function>dl</function> <emphasis>não</emphasis> é suportada no
-    PHP compilado com suporte ZTS support. Utilize as 
-    the <link linkend="ini.extension">diretivas de carregamento de
-    extensões</link> nesse caso.
-   </para>
-  </note>
-  <note>
-   <para>
-    <function>dl</function> é sensível maiúsculas/minúsculas nas plataformas Unix.
+    <function>dl</function> diferencia maiúsculas e minúsculas em sistemas Unix.
    </para>
   </note>
  </refsect1>
@@ -201,7 +152,6 @@ if (!extension_loaded('sqlite')) {
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
