@@ -30,7 +30,7 @@ function wsfix( $filename )
     $dstLines = array_filter( $dstLines , "non_empty" );
 
     if ( $srcCount != count( $dstLines ) )
-        die( "Text lines mismatch: $filename\n" );
+        die( "Text line count mismatch: $filename\n" );
 
     foreach ( $srcLines as $srcLine )
     {
@@ -54,8 +54,11 @@ function wsfix( $filename )
         $dstLines[] = $dstLine;
     }
 
-    $dstText = implode( "\n" , $dstLines );
-    file_put_contents( $dstName , $dstText );
+    $dstTextNew = implode( "\n" , $dstLines );
+    file_put_contents( $dstName , $dstTextNew );
+
+    if ( $dstText != $dstTextNew )
+        fwrite( STDERR , "Whitespace changed: $filename\n" );
 }
 
 function explode_lines( $text )
