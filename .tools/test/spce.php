@@ -30,7 +30,37 @@ function wsfix( $filename )
     $dstLines = array_filter( $dstLines , "non_empty" );
 
     if ( $srcCount != count( $dstLines ) )
-        die( "Text line count mismatch: $filename\n" );
+    {
+        // On line mismatch, warn and ...
+
+        $srcLines = explode_lines( $srcText );
+        $dstLines = explode_lines( $dstText );
+
+        fwrite( STDERR , "Text line count mismatch: $filename\n" );
+        for ( $l = 0 ; $l < min ( count( $srcLines ), count( $dstLines ) ) ; $l++ )
+        {
+            $fillcount = 0;
+            $fillcount += strlen( trim( $srcLines[$l] ) ) > 0 ? 1 : 0 ;
+            $fillcount += strlen( trim( $dstLines[$l] ) ) > 0 ? 1 : 0 ;
+            if ( $fillcount == 1 )
+            {
+                $l1 = $l + 1;
+                fwrite( STDERR , "First mismatch at line {$l1}.\n" );
+                break;
+            }
+        }
+
+        // ... do a simple dos2unix
+
+        for( $l = 0 ; $l < count( $dstLines ) ; $l++ )
+            $dstLines[$l] = rtrim( $dstLines[$l] );
+        $unxText = implode( "\n" , $dstLines );
+        if ( $dstText != $unxText )
+            file_put_contents( $dstName , $unxText );
+        return;
+    }
+
+    // Otherwise, full ws prefix and empty line sync
 
     foreach ( $srcLines as $srcLine )
     {
@@ -55,10 +85,11 @@ function wsfix( $filename )
     }
 
     $dstTextNew = implode( "\n" , $dstLines );
-    file_put_contents( $dstName , $dstTextNew );
-
     if ( $dstText != $dstTextNew )
+    {
         fwrite( STDERR , "Whitespace changed: $filename\n" );
+        file_put_contents( $dstName , $dstTextNew );
+    }
 }
 
 function explode_lines( $text )
