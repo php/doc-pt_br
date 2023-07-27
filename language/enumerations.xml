@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?> <!-- EN-Revision: bcffb58bc051f428347da68d4554af87cc08002f Maintainer: ae Status: ready --><!-- CREDITS: lhsazevedo,ae,ABDALAZARD -->
+<?xml version="1.0" encoding="utf-8"?> <!-- EN-Revision: 16b11ae4604f3c38f9011c46137ddcbf9238154b Maintainer: ae Status: ready --><!-- CREDITS: lhsazevedo,ae,ABDALAZARD -->
  <chapter xml:id="language.enumerations" xmlns="http://docbook.org/ns/docbook">
   <title>Enumerações</title>
   <sect1 xml:id="language.enumerations.overview">
@@ -84,7 +84,7 @@ pegar_uma_carta('Espadas');
    </para>
 
    <para>
-    Por padrão os casos não são internamente associados por um valor escalar. Ou seja, <literal>Suit::Copas</literal>
+    Por padrão, os casos não são internamente associados por um valor escalar. Ou seja, <literal>Suit::Copas</literal>
     is not equal to <literal>"0"</literal>. Instead, each case is backed by a singleton object of that name. That means that:
    </para>
 
@@ -129,6 +129,13 @@ print Naipe::Espadas->name;
 ?>
 ]]>
    </programlisting>
+
+   <para>
+    É possível também utilizar as funções <function>defined</function> e <function>constant</function>
+    para verificar a existência ou ler um item de enum se o nome for obtido dinamicamente.
+    Isto é desencorajado, já que utilizar <link linkend="language.enumerations.backed">Backed enums</link>
+    funciona para a maioria dos casos.
+   </para>
 
   </sect1>
 
@@ -250,7 +257,7 @@ $naipe = Naipe::from($registro['naipe']);
 print $naipe->value;
 
 $naipe = Naipe::tryFrom('A') ?? Naipe::Espadas;
-// Dados invalidos retornam null, então Naipe::Espadas em seu lugar.
+// Dados inválidos retornam null, então Naipe::Espadas em seu lugar.
 print $naipe->value;
 ?>
 ]]>
@@ -353,7 +360,7 @@ enum Naipe: string implements Colorido
 
   <para>
    Métodos podem ser arbitrariamente complexos, mas na prática geralmente retornam um valor estático ou
-   <link linkend="control-structures.match">match</link> no <literal>$this</literal> para fornecer
+   &match; no <literal>$this</literal> para fornecer
    resultados diferentes para casos diferentes.
   </para>
 
@@ -447,7 +454,7 @@ enum Tamanho
 
   <para>
    Métodos estáticos podem ser públicos, privados, ou protegidos apesar dos privados e
-   protegidos serem equivalentes na prática, pois herança não é permitida.
+   protegidos são equivalentes na prática, pois herança não é permitida.
   </para>
 
  </sect1>
@@ -457,7 +464,7 @@ enum Tamanho
 
   <para>
    Enumerações podem incluir constantes, que podem ser públicas, privadas ou protegidas,
-   apesar das privadas e protegidas serem equivalentes na prática, pois herança não é permitida.
+   apesar das privadas e protegidas são equivalentes na prática, pois herança não é permitida.
   </para>
 
   <para>Uma constante de enum pode se referir a um caso enum:</para>
@@ -660,7 +667,7 @@ Naipe::cases();
   <title>Serialização</title>
 
   <para>
-   Enumerações são serializadas de maneira diferente dos objetos. Especificamente, elas têm um novo código de serialização,
+   As enumerações são serializadas de maneira diferente dos objetos. Especificamente, elas têm um novo código de serialização,
    <literal>"E"</literal>, que especifica o nome do caso enum. A rotina de desserialização pode
    então usar isso para definir uma variável para o valor singleton existente. Isso garante que:
   </para>
@@ -678,7 +685,7 @@ print serialize(Naipe::Copas);
 
   <para>
    Na desserialização, se uma enum e caso não podem ser encontrados para combinar com um valor
-   serializado, um aviso será emitido e <literal>false</literal> retornado.</para>
+   serializado, um aviso será emitido e &false; retornado.</para>
 
   <para>
    Se uma Pure Enum for serializada para JSON, um erro será lançado. Se uma Backed Enum
@@ -718,6 +725,103 @@ Baz Enum:int {
 ?>
 ]]>
   </programlisting>
+ </sect1>
+
+ <sect1 xml:id="language.enumerations.object-differences.inheritance">
+
+  <title>Porque enums não são extensíveis</title>
+
+  <simpara>
+   Classes possuem contratos em seus métodos:
+  </simpara>
+
+  <programlisting role="php">
+<![CDATA[
+<?php
+
+class A {}
+class B extends A {}
+
+function foo(A $a) {}
+
+function bar(B $b) {
+    foo($b);
+}
+?>
+]]>
+ </programlisting>
+
+  <simpara>
+   Esse código é correto para tipos, pois B segue o contrato de A, e através da
+   co e contra variância, quaisquer expectativas a respeito dos métodos será
+   atendida.
+  </simpara>
+
+  <simpara>
+   Enums possuem contratos em seus itens, não em seus métodos:
+  </simpara>
+
+  <programlisting role="php">
+<![CDATA[
+<?php
+enum ErrorCode {
+    case SOMETHING_BROKE;
+}
+
+function quux(ErrorCode $errorCode)
+{
+    // Nesse primeiro momento, esse código prevê todos os casos
+    match ($errorCode) {
+        ErrorCode::SOMETHING_BROKE => true,
+    }
+}
+
+?>
+]]>
+  </programlisting>
+
+  <simpara>
+   A instrução &match; na função <code>quux</code> pode ser analisada estaticamente
+   para verificar se cobre todos os casos possíveis em ErrorCode.
+  </simpara>
+
+  <simpara>
+   Mas imagine que seja possível estender enums, assim:
+  </simpara>
+
+
+  <programlisting role="php">
+<![CDATA[
+<?php
+// Apenas para o exemplo onde enums não são finais.
+// Isto *não* funciona no PHP.
+enum MoreErrorCode extends ErrorCode {
+    case PEBKAC;
+}
+
+function fot(MoreErrorCode $errorCode) {
+    quux($errorCode);
+}
+
+fot(MoreErrorCode::PEBKAC);
+
+?>
+]]>
+ </programlisting>
+
+  <simpara>
+   Em condições normais de herança, uma classe que estende outro passará
+   na checagem de tipos.
+  </simpara>
+
+  <simpara>
+   O problema ocorreria na instrução &match; da função <code>quux()</code> que agora não cobre todos
+   os casos. Porque a função não prevê o item <code>MoreErrorCode::PEBKAC</code> o match irá falhar com uma exceção.
+  </simpara>
+
+  <simpara>
+   Por conta disso, enums são finais e não podem ser estendidos.
+  </simpara>
  </sect1>
 
  <sect1 xml:id="language.enumerations.examples">

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: af4410a7e15898c3dbe83d6ea38246745ed9c6fb Maintainer: felipe Status: ready --><!-- CREDITS: lucasr -->
+<!-- EN-Revision: 43ac336818cb3a18011d9b6ba91514f3332eb46d Maintainer: airtonzanon Status: ready --><!-- CREDITS: lucasr,felipe,airtonzanon -->
 <refentry xml:id="function.list" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>list</refname>
@@ -8,25 +8,43 @@
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>void</type><methodname>list</methodname>
-   <methodparam><type>mixed</type><parameter>varname</parameter></methodparam>
-   <methodparam rep="repeat"  choice="opt"><type>mixed</type><parameter>...</parameter></methodparam>
+   <type>array</type><methodname>list</methodname>
+   <methodparam><type>mixed</type><parameter>var</parameter></methodparam>
+   <methodparam rep="repeat" choice="opt"><type>mixed</type><parameter>vars</parameter></methodparam>
   </methodsynopsis>
   <para>
    Assim como <function>array</function>, não é exatamente uma função,
    e sim uma construção da própria linguagem. <function>list</function> é usada
    para criar uma lista de variáveis em apenas uma operação.
+   String não pode ser desempacotada e expressões como <function>list</function>
+   não pode ser completamente vazia.
   </para>
+  <note>
+   <para>
+    Antes, PHP 7.1.0, <function>list</function> apenas funcionava em arrays numericos e assume
+    o indice numerico começando em 0.
+   </para>
+  </note>
  </refsect1>
  <refsect1 role="parameters">
   &reftitle.parameters;
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>varname</parameter></term>
+     <term><parameter>var</parameter></term>
      <listitem>
       <para>
        A variável.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>vars</parameter></term>
+     <listitem>
+      <para>
+       Outras variavéis.
       </para>
      </listitem>
     </varlistentry>
@@ -36,7 +54,37 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   &return.void;
+   Retorna o array atribuído.
+  </para>
+ </refsect1>
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>7.3.0</entry>
+       <entry>
+        Foi adicionado suporte para atribuições de referência na desestruturação de array.
+       </entry>
+      </row>
+      <row>
+       <entry>7.1.0</entry>
+       <entry>
+        Agora é possível especificar chaves em <function>list</function>. Isso
+        habilita desestruturar os arrays com chaves não-integer e não-sequencial.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
   </para>
  </refsect1>
  <refsect1 role="examples">
@@ -58,7 +106,7 @@ echo "$bebida é $cor e $substancia o faz especial.\n";
 list($bebida, , $substancia) = $info;
 echo "$bebida tem $substancia.\n";
 
-// Ou ignoramos os primeiros valores para conseguir apenas o último 
+// Ou ignoramos os primeiros valores para conseguir apenas o último
 list( , , $substancia) = $info;
 echo "I need $substancia!\n";
 
@@ -72,35 +120,22 @@ var_dump($bar); // NULL
   </para>
   <para>
    <example>
-    <title>Exemplo da <function>list</function></title>     
+    <title>Exemplo da <function>list</function></title>
     <programlisting role="php">
 <![CDATA[
-<table>
- <tr>
-  <th>Lista de empregados</th>
-  <th>Salário</th>
- </tr>
-
 <?php
-
-$result = mysql_query ("SELECT id, nome, salario FROM empregados", $conn);
-while (list ($id, $nome, $salario) = mysql_fetch_row ($result)) {
-     echo " <tr>\n" .
-           "  <td><a href=\"info.php?id=$id\">$nome</a></td>\n" .
-           "  <td>$salario</td>\n" .
-            " </tr>\n";
+$resultado = $pdo->query("SELECT id, nome FROM empregados");
+while (list($id, $nome) = $resultado->fetch(PDO::FETCH_NUM)) {
+    echo "id: $id, nome: $nome\n";
 }
-
 ?>
-
-</table>
 ]]>
     </programlisting>
    </example>
   </para>
   <para>
    <example>
-    <title>Usando <function>list</function> de forma aninhada</title>
+    <title><function>list</function> e ordem das definições de índice </title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -124,57 +159,79 @@ int(3)
   <para>
    <example>
     <title>Usando <function>list</function> com índices de array</title>
+    <simpara>
+     A ordem em que são definidos os índices do array para
+     ser consumido pela <function>list</function> é irrelevante.
+    </simpara>
     <programlisting role="php">
 <![CDATA[
 <?php
-
-$info = array('café', 'marrom', 'cafeína');
-
-list($a[0], $a[1], $a[2]) = $info;
-
-var_dump($a);
-
-?>
+$foo = array(2 => 'a', 'foo' => 'b', 0 => 'c');
+$foo[1] = 'd';
+list($x, $y, $z) = $foo;
+var_dump($foo, $x, $y, $z);
 ]]>
     </programlisting>
-   <para>
-   O retorno desse script é o seguinte (note a ordem dos elementos em
-   comparação com o array original):
-   </para>
-   <screen>
-<![CDATA[ 
-array(3) {
+    <para>
+     O retorno desse script é o seguinte (note a ordem dos elementos em
+     comparação com o array original):
+    </para>
+    <screen>
+<![CDATA[
+array(4) {
   [2]=>
-  string(8) "cafeína"
-  [1]=>
-  string(5) "marrom"
+  string(1) "a"
+  ["foo"]=>
+  string(1) "b"
   [0]=>
-  string(6) "café"
+  string(1) "c"
+  [1]=>
+  string(1) "d"
 }
-]]>  
-      </screen>  
-     </example>  
-   </para>
+string(1) "c"
+string(1) "d"
+string(1) "a"
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title><function>list</function> com chaves</title>
+    <simpara>
+     A partir do PHP 7.1.0 <function>list</function> também pode agora conter
+     chaves explicitas, na qual pode ser dada expressões arbritárias.
+     A mistura chaves de integer e string é permitida; no entante, elementos
+     com e sem chaves não podem ser misturados.
+    </simpara>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$dados = [
+    ["id" => 1, "nome" => 'Mario'],
+    ["id" => 2, "nome" => 'Frederico'],
+];
+foreach ($dados as ["id" => $id, "nome" => $nome]) {
+    echo "id: $id, nome: $nome\n";
+}
+echo PHP_EOL;
+list(1 => $segundo, 3 => $quarto) = [1, 2, 3, 4];
+echo "$segundo, $quarto\n";
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+id: 1, name: Mario
+id: 2, name: Frederico
+
+2, 4
+]]>
+    </screen>
+   </example>
+  </para>
  </refsect1>
- <refsect1 role="notes">
-  &reftitle.notes;
-  <warning>
-   <para>
-    A função <function>list</function> assinala os valores começando pelos 
-    parâmetros da direita. Se você está usando variáveis normais, então não 
-    precisa se preocupar com esse detalhe. Mas se você está usando arrays com
-    índices você normalmente iria esperar que a ordem dos índices no array 
-    fosse da esquerda para a direita, mas não é isso que acontece. O índice é
-    criado na ordem reversa.
-   </para>
-  </warning>
-  <note>
-   <para>
-    <function>list</function> funciona somente com arrays numéricos e 
-    espera que esses índices comecem de 0 (zero).
-   </para>
-  </note>
- </refsect1>
+
  <refsect1 role="seealso">
   &reftitle.seealso;
   <para>

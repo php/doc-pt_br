@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 95bdd6883b5dde9504701777ba81b3c5f15df52b Maintainer: ae Status: ready --><!-- CREDITS: fernandoc,ae -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 6554e7e19770ac53e886b8194915d7cd09ff0bc7 Maintainer: ae Status: ready --><!-- CREDITS: fernandoc,ae -->
 <refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.ob-start">
  <refnamediv>
   <refname>ob_start</refname>
@@ -10,7 +10,7 @@
   &reftitle.description;
   <methodsynopsis>
    <type>bool</type><methodname>ob_start</methodname>
-   <methodparam choice="opt"><type>callable</type><parameter>output_callback</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type>callable</type><parameter>callback</parameter><initializer>&null;</initializer></methodparam>
    <methodparam choice="opt"><type>int</type><parameter>chunk_size</parameter><initializer>0</initializer></methodparam>
    <methodparam choice="opt"><type>int</type><parameter>flags</parameter><initializer><constant>PHP_OUTPUT_HANDLER_STDFLAGS</constant></initializer></methodparam>
   </methodsynopsis>
@@ -21,7 +21,7 @@
   </para>
   <para>
    O conteúdo deste buffer interno pode ser copiado em uma variável usando
-   <function>ob_get_contents</function>. Para enviar o que esta no buffer interno,
+   <function>ob_get_contents</function>. Para enviar o que está no buffer interno,
    use <function>ob_end_flush</function>. Alternativamente,
    <function>ob_end_clean</function> irá silenciosamente descartar
    o conteúdo do buffer.
@@ -43,6 +43,10 @@
    estiverem ativas, a saída será filtrada sequencialmente atráves de
    cada uma delas na ordem de aninhamento.
   </para>
+  <para>
+   Se buffer de output estiver ativo quando do escript encerra, o PHP
+   envia os dados automaticamente.
+  </para>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -50,20 +54,20 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>output_callback</parameter></term>
+     <term><parameter>callback</parameter></term>
      <listitem>
       <para>
-       Uma função de callback opcional <parameter>output_callback</parameter> também
+       Uma função de callback opcional <parameter>callback</parameter> também
        pode ser especificada. Esta função tem um parâmetro string e deve retornar
        uma string. Esta função será chamada quando
        o buffer é descarregado (flush), limpo (com
        <function>ob_flush</function>, <function>ob_clean</function> ou função
        similar) ou quando o buffer de saída
        for descarregado ao final da requisição. Quando
-       <parameter>output_callback</parameter> for chamada ela irá receber
+       <parameter>callback</parameter> for chamada ela irá receber
        o conteúdo do buffer como seu parâmetro e é esperado
        que ela retorne um novo buffer de saída como resultado, o qual será enviado
-       para o navegador. Se <parameter>output_callback</parameter> não é uma função
+       para o navegador. Se <parameter>callback</parameter> não é uma função
        que possa ser chamada, esta função irá retornar &false;.
        O callback deve ter a seguinte assinatura:
       </para>
@@ -86,25 +90,25 @@
          <term><parameter>phase</parameter></term>
          <listitem>
           <simpara>
-           Bitmask das constantes <constant>PHP_OUTPUT_HANDLER_*</constant>.
+           Bitmask das constantes <link linkend="outcontrol.constants"><constant>PHP_OUTPUT_HANDLER_*</constant></link>.
           </simpara>
          </listitem>
         </varlistentry>
        </variablelist>
       </para>
       <para>
-       Se <parameter>output_callback</parameter> retornar &false; então o
+       Se <parameter>callback</parameter> retornar &false; então o
        buffer original é enviado ao navegador.
       </para>
       <para>
-       O parâmetro <parameter>output_callback</parameter> pode ser ignorado
+       O parâmetro <parameter>callback</parameter> pode ser ignorado
        informando um &null; como seu valor.
       </para>
       <para>
        <function>ob_end_clean</function>, <function>ob_end_flush</function>,
        <function>ob_clean</function>, <function>ob_flush</function> e
        <function>ob_start</function> não podem ser chamados de dentro da função
-       callback. Se chamá-las dentro da função callback, o comportamenteo é
+       callback. Se chamá-las dentro da função callback, o comportamento é
        indefinido. Se você quiser limpar o conteúdo do buffer,
        retorne "" (a null string) de dentro da função callback.
        Você não pode chamar outras funções que utilizam o buffer de saída como
@@ -132,10 +136,6 @@
        de tamanho igual ou maior que <parameter>chunk_size</parameter>. O valor padrão
        é <literal>0</literal>, que significa que o função de output só será
        chamada quando o buffer de saída é fechado.
-      </para>
-      <para>
-       Anteriormente ao PHP 5.4.0 o valor <literal>1</literal> era um caso especial
-       que configurava chunk size para 4096 bytes.
       </para>
      </listitem>
     </varlistentry>
@@ -204,55 +204,6 @@
   </para>
  </refsect1>
 
- <refsect1 role="changelog">
-  &reftitle.changelog;
-  <para>
-   <informaltable>
-    <tgroup cols="2">
-     <thead>
-      <row>
-       <entry>&Version;</entry>
-       <entry>&Description;</entry>
-      </row>
-     </thead>
-     <tbody>
-      <row>
-       <entry>7.0.0</entry>
-       <entry>
-        Se <function>ob_start</function> é utilizado dentro de uma função de
-        callback, esta função não lança mais um <constant>E_ERROR</constant> 
-        mas agora <constant>E_RECOVERABLE_ERROR</constant>, permitindo assim
-        que manipuladores de erros capturem essa situação.
-       </entry>
-      </row>
-      <row>
-       <entry>5.4.0</entry>
-       <entry>
-        O terceiro parâmetro de <function>ob_start</function> mudou de um
-        <type>boolean</type> chamado <parameter>erase</parameter>
-        (que, configurado para &false;, evitava o buffer de saída de ser
-        apagado até o final da execução) para um parâmetro
-        <type>integer</type> chamado <parameter>flags</parameter>.
-        Infelizmente isso é uma quebra de compatibilidade reversa para códigos
-        escritos antes do PHP 5.4.0 que utilizem o terceiro parâmetro. Veja
-        <link linkend="function.ob-start.flags-bc">o exemplo de flags</link>
-        para ver como lidar com código que precisa ser compatível com ambas
-        as formas.
-       </entry>
-      </row>
-      <row>
-       <entry>5.4.0</entry>
-       <entry>
-        Um chunk size de <literal>1</literal> agora configura a descarga de blocos de 1 byte
-        enviados ao navegador.
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-  </para>
- </refsect1>
-
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
@@ -298,17 +249,12 @@ ob_end_flush();
 
   <para>
    <example xml:id="function.ob-start.flags-bc">
-    <title>Criando um buffer de saída não apagável compatível com PHP 5.3 e 5.4</title>
+    <title>Criando um buffer de saída não apagável</title>
     <programlisting role="php">
 <![CDATA[
 <?php
 
-if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
-  ob_start(null, 0, PHP_OUTPUT_HANDLER_STDFLAGS ^
-    PHP_OUTPUT_HANDLER_REMOVABLE);
-} else {
-  ob_start(null, 0, false);
-}
+ob_start(null, 0, PHP_OUTPUT_HANDLER_STDFLAGS ^ PHP_OUTPUT_HANDLER_REMOVABLE);
 
 ?>
 ]]>
@@ -331,10 +277,9 @@ if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
     <member><function>ob_tidyhandler</function></member>
    </simplelist>
   </para>
- </refsect1>  
+ </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
