@@ -20,7 +20,7 @@ if ! $(cd pt_BR; git apply --check ../patch.txt); then
 fi
 
 (cd pt_BR; git apply --reject --whitespace=fix ../patch.txt 2>&1 | tee ../merge.txt;)
-(cd pt_BR; git diff --name-only > ../list.txt)
+(cd pt_BR; git ls-files --modified --others > ../list.txt)
 
 php doc-base/configure.php --with-lang=pt_BR --enable-xml-details
 (cd pt_BR; git status)
