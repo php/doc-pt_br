@@ -1,38 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: fernandoc Status: ready -->
-  <refentry xml:id="function.parse-str" xmlns="http://docbook.org/ns/docbook">
-   <refnamediv>
-    <refname>parse_str</refname>
-    <refpurpose>Converte a string em variáveis</refpurpose>
-   </refnamediv>
- 
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: e35fbbaa52702ebf45c5e7284351e136ed67f3bb Maintainer: ae Status: ready --><!-- CREDITS: fernandoc,ae -->
+<refentry xml:id="function.parse-str" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>parse_str</refname>
+  <refpurpose>Converte a string em variáveis</refpurpose>
+ </refnamediv>
+
  <refsect1 role="description">
   &reftitle.description;
-     <methodsynopsis>
-      <type>void</type><methodname>parse_str</methodname>
-      <methodparam><type>string</type><parameter>str</parameter></methodparam>
-      <methodparam choice="opt"><type>array</type><parameter role="reference">arr</parameter></methodparam>
-     </methodsynopsis>
-    <para>
-     Converte <parameter>str</parameter> como se ela tivesse sido passada
-     via URL e define o valor das variáveis.
-     </para>
-    <note>
-     <para>
-      Para pegar a <emphasis>QUERY_STRING</emphasis> atual, você deve usar a variável
-      <link linkend="reserved.variables.server">$_SERVER['QUERY_STRING']</link>.
-      também você deve querer ler a seção sobre
-      <link linkend="language.variables.external">variáveis de fora do PHP</link>.
-     </para>
-    </note>
-  <note>
-   <para>
-    A configuração <link linkend="ini.magic-quotes-gpc">magic_quotes_gpc</link>
-    afeta a saída desta função, <function>parse_str</function> usa
-    o mesmo mecanismo que o PHP usa para popular as variáveis <literal>$_GET</literal>,
-    <literal>$_POST</literal>, etc.
-   </para>
-  </note>
+  <methodsynopsis>
+   <type>void</type><methodname>parse_str</methodname>
+   <methodparam><type>string</type><parameter>string</parameter></methodparam>
+   <methodparam><type>array</type><parameter role="reference">result</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Interpreta <parameter>string</parameter> como se ela fosse uma query string
+   passada via URL e cria variáveis no escopo atual ou no array se
+   informado em <parameter>result</parameter>.
+  </para>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -40,20 +25,28 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>str</parameter></term>
+     <term><parameter>string</parameter></term>
      <listitem>
       <para>
-       A string de entrada.
+       The input string.
       </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>arr</parameter></term>
+     <term><parameter>result</parameter></term>
      <listitem>
       <para>
-       Se o segundo parâmetro <parameter>arr</parameter> é usado,
-       variável são armazenadas nesta variável como elementos de um array.
+       Se o segundo parâmetro <parameter>result</parameter> for informado,
+       as variáveis serão gravadas como elementos de array.
       </para>
+
+      <warning>
+       <para>
+        Utilizar esta função sem o parâmetro <parameter>result</parameter> é altamente
+        <emphasis>DESENCORAJADO</emphasis> E <emphasis>OBSOLETO</emphasis> a partir do PHP 7.2.
+        Desde o 8.0.0, o parâmetro <parameter>result</parameter> é <emphasis>obrigatório</emphasis>.
+       </para>
+      </warning>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -67,47 +60,118 @@
   </para>
  </refsect1>
 
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       <parameter>result</parameter> não é mais opcional.
+      </entry>
+     </row>
+      <row>
+       <entry>7.2.0</entry>
+       <entry>
+        Utilização de <function>parse_str</function> sem o segundo parâmetro
+        agora emite um aviso de <constant>E_DEPRECATED</constant>.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
-    <para>
-     <example>
-      <title>Usando <function>parse_str</function></title>
-      <programlisting role="php">
+  <para>
+   <example>
+    <title>Using <function>parse_str</function></title>
+    <programlisting role="php">
 <![CDATA[
 <?php
 $str = "first=value&arr[]=foo+bar&arr[]=baz";
-parse_str($str);
-echo $first;  // value
-echo $arr[0]; // foo bar
-echo $arr[1]; // baz
 
+// Recommended
 parse_str($str, $output);
 echo $output['first'];  // value
 echo $output['arr'][0]; // foo bar
 echo $output['arr'][1]; // baz
 
+// DISCOURAGED
+parse_str($str);
+echo $first;  // value
+echo $arr[0]; // foo bar
+echo $arr[1]; // baz
 ?>
 ]]>
-      </programlisting>
-     </example>
-    </para>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   Como variáveis no PHP não podem conter pontos ou espaços em seus nomes,
+   estes são convertidos em underlines. O mesmo se aplica aos nomes de
+   chaves de array no caso de utilizar esta função com o parâmetro
+   <parameter>result</parameter>.
+   <example>
+    <title>Name mangling em <function>parse_str</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+parse_str("My Value=Something");
+echo $My_Value; // Something
+
+parse_str("My Value=Something", $output);
+echo $output['My_Value']; // Something
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+
+  <note>
+   <para>
+    Todas as variáveis criadas, ou os valores informados no array do segundo parâmetro,
+    já estarão automaticamente convertidos por<function>urldecode</function>.
+   </para>
+  </note>
+  <note>
+   <para>
+    Para obter a <literal>QUERY_STRING</literal> em si, vocẽ pode utilizar a variável
+    <varname>$_SERVER['QUERY_STRING']</varname>.
+    Além disso, leia a seção sobre
+    <link linkend="language.variables.external">variáveis de fontes
+    externas</link>.
+   </para>
+  </note>
  </refsect1>
 
  <refsect1 role="seealso">
   &reftitle.seealso;
-    <para>
+  <para>
    <simplelist>
     <member><function>parse_url</function></member>
     <member><function>pathinfo</function></member>
     <member><function>http_build_query</function></member>
-    <member><function>get_magic_quotes_gpc</function></member>
     <member><function>urldecode</function></member>
    </simplelist>
-    </para>
-   </refsect1>
-   
-  </refentry>
+  </para>
+ </refsect1>
 
+</refentry>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

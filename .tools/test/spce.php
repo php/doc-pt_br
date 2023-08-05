@@ -36,7 +36,6 @@ function wsfix( $filename )
         $srcLines = explode_lines( $srcText );
         $dstLines = explode_lines( $dstText );
 
-        fwrite( STDERR , "Text line count mismatch: $filename\n" );
         for ( $l = 0 ; $l < min ( count( $srcLines ), count( $dstLines ) ) ; $l++ )
         {
             $fillcount = 0;
@@ -45,7 +44,7 @@ function wsfix( $filename )
             if ( $fillcount == 1 )
             {
                 $l1 = $l + 1;
-                fwrite( STDERR , "First mismatch at line {$l1}.\n" );
+                fwrite( STDERR , "Text line count mismatch: {$filename}:{$l1}\n" );
                 break;
             }
         }
