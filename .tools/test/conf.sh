@@ -1,7 +1,7 @@
 
-(cd doc-base; git pull)
-(cd en;       git pull)
-(cd pt_BR;    git pull)
+(cd doc-base; git pull --rebase --autostash)
+(cd en;       git pull --rebase --autostash)
+(cd pt_BR;    git pull --rebase --autostash)
 
 php doc-base/configure.php --with-lang=pt_BR --enable-xml-details
 
