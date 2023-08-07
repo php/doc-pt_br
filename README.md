@@ -1,5 +1,9 @@
 # Repositório da tradução brasileira do Manual do PHP
 
+
+
+
+
 Veja [prioridades](https://github.com/php/doc-pt_br/wiki/Prioridades) e como participar [na _wiki_][wiki]. Pequenas correções e sugestões podem ser feitas por _issues_ ou pelo processo
 convencional de _fork_ e _pull requests_ do GitHub.
 
