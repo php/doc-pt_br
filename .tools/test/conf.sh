@@ -5,5 +5,6 @@
 
 php doc-base/configure.php --with-lang=pt_BR --enable-xml-details
 
+(cd pt_BR; git ls-files --modified --others > ../list.txt)
 (cd pt_BR; git status)
 
