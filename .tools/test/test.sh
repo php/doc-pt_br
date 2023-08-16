@@ -22,7 +22,7 @@ fi
 (cd pt_BR; git apply --reject --whitespace=fix ../patch.txt 2>&1 | tee ../merge.txt;)
 (cd pt_BR; git ls-files --modified --others > ../list.txt)
 
-php doc-base/configure.php --with-lang=pt_BR --enable-xml-details
+php doc-base/configure.php -q --with-lang=pt_BR --enable-xml-details --disable-xpointer-reporting
 (cd pt_BR; git status)
 (cd pt_BR; git diff)
 (cd pt_BR; git diff --name-only)
