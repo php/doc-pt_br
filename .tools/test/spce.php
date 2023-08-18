@@ -71,6 +71,12 @@ function wsfix( $filename )
 
         $dstLine = array_shift( $dstLines );
 
+        if ( str_starts_with( trim( $dstLine ) , "//" ) )
+        {
+            $dstLines[] = $dstLine;
+            continue;
+        }
+
         $ws = "";
         $chars = str_split( $srcLine );
         foreach( $chars as $char )
