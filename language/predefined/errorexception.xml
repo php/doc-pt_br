@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 071a588364ddef3af5e008b3d6213f98c617b5a0 Maintainer: ae Status: ready --><!-- CREDITS: felipe,ae,fabioluciano -->
+<!-- EN-Revision: e6376e04ed2526138e5b71e16168cf6bb269fa8a Maintainer: ae Status: ready --><!-- CREDITS: felipe,ae,fabioluciano -->
 <phpdoc:exceptionref xml:id="class.errorexception" xmlns:phpdoc="http://php.net/ns/phpdoc" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
  <title>ErrorException</title>
  <titleabbrev>ErrorException</titleabbrev>
- 
+
  <partintro>
 
 <!-- {{{ ErrorException intro -->
@@ -19,21 +19,15 @@
    &reftitle.classsynopsis;
 
 <!-- {{{ Synopsis -->
-   <classsynopsis>
+   <classsynopsis class="class">
+    <ooexception>
+     <exceptionname>ErrorException</exceptionname>
+    </ooexception>
+
     <ooclass>
-     <classname>ErrorException</classname>
+     <modifier>extends</modifier>
+     <classname>Exception</classname>
     </ooclass>
-
-    <classsynopsisinfo>
-     <ooclass>
-      <classname>ErrorException</classname>
-     </ooclass>
-
-     <ooclass>
-      <modifier>extends</modifier>
-      <classname>Exception</classname>
-     </ooclass>
-    </classsynopsisinfo>
 
     <classsynopsisinfo role="comment">&Properties;</classsynopsisinfo>
     <fieldsynopsis>
@@ -62,7 +56,7 @@
     </xi:include>
    </classsynopsis>
 <!-- }}} -->
- 
+
   </section>
 
 <!-- {{{ ErrorException properties -->
@@ -87,14 +81,16 @@
      <programlisting role="php">
  <![CDATA[
 <?php
-function exception_error_handler($severity, $message, $file, $line) {
-    if (!(error_reporting() & $severity)) {
+function exception_error_handler(int $errno, string $errstr, string $errfile = null, int $errline) {
+    if (!(error_reporting() & $errno)) {
         // This error code is not included in error_reporting
         return;
     }
-    throw new ErrorException($message, 0, $severity, $file, $line);
+    throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
 }
-set_error_handler("exception_error_handler");
+set_error_handler(exception_error_handler(...));
+// Antes do PHP 8.1.0 e a introdução de classe chamável, a chamada deveria ser assim:
+// set_error_handler(__NAMESPACE__ . "\\exception_error_handler");
 
 /* Trigger exception */
 strpos();

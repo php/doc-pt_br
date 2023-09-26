@@ -1,21 +1,22 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: felipe Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: f90df97fa5ebfa6e7fcace04976900d6700467cc Maintainer: adiel Status: ready --><!-- CREDITS: adiel,felipe -->
 <refentry xml:id="function.libxml-use-internal-errors" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>libxml_use_internal_errors</refname>
   <refpurpose>
-   Desabilita erros da libxml e permite que o usuário obtenha informação do erro como necessitar
+   Desabilita erros da libxml e permite que o usuário obtenha informações de
+   erro conforme necessário
   </refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>bool</type><methodname>libxml_use_internal_errors</methodname>
-   <methodparam choice="opt"><type>bool</type><parameter>use_errors</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>bool</type><type>null</type></type><parameter>use_errors</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
   <para>
-   <function>libxml_use_internal_errors</function> permite desabilitar
-   erros padrão standard da libxml e habilita uso de manuseador de erro.
+   A função <function>libxml_use_internal_errors</function> permite desabilitar
+   os erros padrão da libxml e habilitar o tratamento de erros do usuário.
   </para>
  </refsect1>
 
@@ -27,7 +28,10 @@
      <term><parameter>use_errors</parameter></term>
       <listitem>
        <para>
-        Habilita manuseamento de erro. O padrão é &false;.
+        Habilita (&true;) ou desabilita (&false;) o tratamento de erros do
+        usuário.
+        Desabilitar o tratamento de erros do usuário também limpará quaisquer
+        erros libxml existentes.
        </para>
       </listitem>
      </varlistentry>
@@ -38,33 +42,55 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Esta função retorna o valor anterior da
-   <parameter>use_errors</parameter>.
+   Esta função retorna o valor anterior de <parameter>use_errors</parameter>.
   </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       O parâmetro <parameter>use_errors</parameter> agora pode ser &null;.
+       Anteriormente, o padrão era &false;.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
  </refsect1>
 
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
    <example>
-    <title>Um exemplo da <function>libxml_use_internal_errors</function></title>
+    <title>Exemplo de <function>libxml_use_internal_errors</function></title>
     <para>
-     Este exemplo demonstra o uso básico dos erros da libxml e o valor
-     retornado por esta função.
+     Este exemplo demonstra o uso básico dos erros da libxml e o valor retornado
+     por esta função.
     </para>
     <programlisting role="php">
 <![CDATA[
 <?php
 
-// enable user error handling
+// habilita o tratamento de erros do usuário
 var_dump(libxml_use_internal_errors(true));
 
-$doc = DOMDocument::load('file.xml');
+// carrega o documento
+$doc = new DOMDocument;
 
-if (!$doc) {
-    $errors = libxml_get_errors();
-    foreach ($errors as $error) {
-        // handle errors here
+if (!$doc->load('arquivo.xml')) {
+    foreach (libxml_get_errors() as $erro) {
+        // trata os erros aqui
     }
 
     libxml_clear_errors();

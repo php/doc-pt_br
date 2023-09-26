@@ -1,11 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: f984ca507fdd8ac8aac4f681ab42ca3fd2193559 Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, narigone, fabioluciano -->
- <sect1 xml:id="language.oop5.interfaces" xmlns="http://docbook.org/ns/docbook">
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 3d522c890d98c563bb283cf89ec5da5f535cfb8f Maintainer: ae Status: ready --><!-- CREDITS: felipe,narigone,fabioluciano,ae -->
+ <sect1 xml:id="language.oop5.interfaces" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Interfaces de Objetos</title>
   <para>
    Interfaces de objetos permitem a criação de códigos que especificam quais métodos
-   uma classe deve implementar, sem definir como esses
-   métodos serão tratados.
+   uma classe deve implementar, sem definir como esses métodos serão
+   implementados. Interfaces compartilham o namespace com classes e traits, então eles
+   não podem usar os mesmos nomes.
   </para>
   <para>
    Interfaces são definidas da mesma forma que classes, mas com a palavra-chave <literal>interface</literal>
@@ -16,6 +17,37 @@
    Todos os métodos declarados em uma interface devem ser públicos, essa é a natureza
    de uma interface.
   </para>
+  <para>
+   Na prática, interfaces servem a dois propósitos distintos:
+  </para>
+  <simplelist>
+   <member>
+    Elas permitem os desenvolvedores de criar objetos de classes diferentes que podem ser substituídos
+    dado que eles implementam a mesma ou as mesmas interfaces. Um exemplo seriam os serviços variados de acesso a banco de dados,
+    vários sistemas de pagamentos, ou estratégias de cache. Implementações diferentes podem
+    ser substituídas sem requerer modificações nos códigos que as usam.
+   </member>
+   <member>
+    Para permitir que uma função ou método aceite e opere em um parâmetro que se molda a uma
+    interface, ao mesmo tempo que não se importa como a funcionalidade é implementada. Estas interfaces
+    são conhecidas como <literal>Iterable</literal>, <literal>Cacheable</literal>, <literal>Renderable</literal>,
+    e assim por diante, e descrevem o comportamento significativo.
+   </member>
+  </simplelist>
+  <para>
+   Interfaces podem definir
+   <link linkend="language.oop5.magic">métodos mágicos</link> para exigir que as classes
+   implementantes também implementem esses métodos.
+  </para>
+  <note>
+   <para>
+    Apesar de possível, incluir <link linkend="language.oop5.decon.constructor">construtores</link>
+    em interfaces é altamente desencorajado. Fazer isso reduz significativamente a flexibilidade do objeto implementante
+    da interface. Além disso, construtores não são verificados pelas regras de herança, o que pode causar comportamentos
+    inconsistentes ou inesperados.
+   </para>
+  </note>
+
   <sect2 xml:id="language.oop5.interfaces.implements">
    <title><literal>implements</literal></title>
    <para>
@@ -24,34 +56,37 @@
     resultará em um erro fatal. Classes podem implementar mais de uma interface se
     assim for desejado, separando cada interface com uma vírgula.
    </para>
+   <warning>
+    <para>
+     Uma classe que implemente uma interface pode utilizar um nome diferente para seus parâmetros,
+     em relação à interface. Entretanto, o PHP 8.0 suporta <link linkend="functions.named-arguments">argumentos nomeados</link>, ou seja,
+     chamadores podem usar os nomes de parâmetros conforme definidos na interface implementada. Por essa razão, é altamente
+     recomendado que desenvolvedores utilizem os mesmos nomes de parâmetros que da interface implementada.
+    </para>
+   </warning>
    <note>
     <para>
-     Em versões anteriores ao PHP 5.3.9, uma classe não poderia implementar duas interfaces que
-     especificassem um método com o mesmo nome, pois causaria ambiguidade.
-     Versões mais recentes do PHP, isso é permitido, desde que os métodos duplicados
-     tenham a mesma assinatura.
+     Interfaces podem ser estendidas como as classes, usando o operador
+     <link linkend="language.oop5.inheritance">extends</link>.
     </para>
    </note>
    <note>
     <para>
-     Interfaces podem ser estendidas como as classes, usando o operador <link linkend="language.oop5.inheritance">
-     extends</link>.
+     A classe que implementa a interface precisa declarar todos os métodos da interface
+     com uma <link linkend="language.oop.lsp">assinatura compatível</link>. Uma classe pode implementar várias interfaces
+     que declarem um método com o mesmo nome. Neste caso, a implementação precisa seguir as
+     <link linkend="language.oop.lsp">regras de compatibilidade de assinaturas</link> de todas as interfaces. É possível
+     assim aplicar <link linkend="language.oop5.variance">covariância e contravariância</link>.
     </para>
    </note>
-   <note>
-    <para>
-     A classe que implementa a interface precisa ter as mesmas assinaturas de
-     método como definidas na interface. Não fazê-lo
-     resultará em um erro fatal
-     </para>
-    </note>
   </sect2>
+ <!-- Move this to OOP constants page? -->
   <sect2 xml:id="language.oop5.interfaces.constants">
-   <title><literal>Constantes</literal></title>
+   <title>Constantes</title>
    <para>
     É possível ter constantes em interfaces. Constantes de interfaces funcionam exatamente
     como <link linkend="language.oop5.constants">constantes de classes</link>, com exceção de
-    não poderem ser sobrescritas por uma classe/interface herdeira.
+    não podem ser sobrescritas por uma classe/interface herdeira.
    </para>
   </sect2>
   <sect2 xml:id="language.oop5.interfaces.examples">
@@ -62,18 +97,18 @@
 <![CDATA[
 <?php
 
-// Declara a interface 'iTemplate'
-interface iTemplate
+// Declara a interface 'Template'
+interface Template
 {
     public function setVariable($name, $var);
     public function getHtml($template);
 }
 
 // Implementa a interface
-// Isso funcionará
-class Template implements iTemplate
+// Exemplo correto
+class WorkingTemplate implements Template
 {
-    private $vars = array();
+    private $vars = [];
 
     public function setVariable($name, $var)
     {
@@ -90,12 +125,12 @@ class Template implements iTemplate
     }
 }
 
-// Isso NÃO funcionará
+// Exemplo incorreto
 // Fatal error: Class BadTemplate contains 1 abstract methods
-// and must therefore be declared abstract (iTemplate::getHtml)
-class BadTemplate implements iTemplate
+// and must therefore be declared abstract (Template::getHtml)
+class BadTemplate implements Template
 {
-    private $vars = array();
+    private $vars = [];
 
     public function setVariable($name, $var)
     {
@@ -111,18 +146,18 @@ class BadTemplate implements iTemplate
      <programlisting role="php">
 <![CDATA[
 <?php
-interface a
+interface A
 {
     public function foo();
 }
 
-interface b extends a
+interface B extends A
 {
     public function baz(Baz $baz);
 }
 
-// Isto irá funcionar
-class c implements b
+// This will work
+class C implements B
 {
     public function foo()
     {
@@ -133,8 +168,8 @@ class c implements b
     }
 }
 
-// Isto não irá funcionar e resultará em um erro fatal
-class d implements b
+// Isso não funcionará, e gerará um erro fatal
+class D implements B
 {
     public function foo()
     {
@@ -148,27 +183,54 @@ class d implements b
 ]]>
      </programlisting>
    </example>
-   <example xml:id="language.oop5.interfaces.examples.ex3">
-    <title>Interface com herança múltipla</title>
+   <example xml:id="language.oop5.interfaces.examples.variance.multiple.interfaces">
+    <title>Compatibilidade de variância com interfaces múltiplas</title>
      <programlisting role="php">
 <![CDATA[
 <?php
-interface a
+class Foo {}
+class Bar extends Foo {}
+
+interface A {
+    public function myfunc(Foo $arg): Foo;
+}
+
+interface B {
+    public function myfunc(Bar $arg): Bar;
+}
+
+class MyClass implements A, B
+{
+    public function myfunc(Foo $arg): Bar
+    {
+        return new Bar();
+    }
+}
+?>
+]]>
+     </programlisting>
+   </example>
+   <example xml:id="language.oop5.interfaces.examples.ex3">
+    <title>Herança de várias interfaces</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+interface A
 {
     public function foo();
 }
 
-interface b
+interface B
 {
     public function bar();
 }
 
-interface c extends a, b
+interface C extends A, B
 {
     public function baz();
 }
 
-class d implements c
+class D implements C
 {
     public function foo()
     {
@@ -191,24 +253,90 @@ class d implements c
      <programlisting role="php">
 <![CDATA[
 <?php
-interface a
+interface A
 {
-    const b = 'Interface constant';
+    const B = 'Constante de interface';
 }
 
-// Imprime: Interface constant
-echo a::b;
+// Imprime: Constante de interface
+echo A::B;
 
 
-// Isto não funcionará porque não é permitido
-// sobreescrever constantes.
-class b implements a
+class B implements A
 {
-    const b = 'Class constant';
+    const B = 'Constante de classe';
+}
+
+// Imprime: Constante de classe
+// Anteriormente ao PHP 8.1.0 isto não funcionaria porque não era possível
+// sobrescrever constantes.
+echo B::B;
+?>
+]]>
+     </programlisting>
+   </example>
+   <example xml:id="language.oop5.interfaces.examples.ex5">
+    <title>Interfaces with abstract classes</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+interface A
+{
+    public function foo(string $s): string;
+
+    public function bar(int $i): int;
+}
+
+// Uma classe abstrata pode implementar apenas uma parte da interface.
+// Classes que extendam a classe abstrata precisam implementar o resto.
+abstract class B implements A
+{
+    public function foo(string $s): string
+    {
+        return $s . PHP_EOL;
+    }
+}
+
+class C extends B
+{
+    public function bar(int $i): int
+    {
+        return $i * 2;
+    }
 }
 ?>
 ]]>
-    </programlisting>
+     </programlisting>
+   </example>
+   <example xml:id="language.oop5.interfaces.examples.ex6">
+    <title>Extendendo e implementando ao mesmo tempo</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+
+class One
+{
+    /* ... */
+}
+
+interface Usable
+{
+    /* ... */
+}
+
+interface Updatable
+{
+    /* ... */
+}
+
+// A ordem de palavras chave aqui é importante. 'extends' precisa aprecer primeiro.
+class Two extends One implements Usable, Updatable
+{
+    /* ... */
+}
+?>
+]]>
+     </programlisting>
    </example>
    <para>
      Uma interface, juntamente com a declaração de tipo, fornecem uma boa maneira de garantir

@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: felipe Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: eec6a4a36bf452bf271f116e7b6b9bb09d1181c3 Maintainer: ae Status: ready --><!-- CREDITS: felipe,ae -->
 
 <chapter xml:id="zlib.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  &reftitle.examples;
@@ -17,28 +17,28 @@ $filename = tempnam('/tmp', 'zlibtest') . '.gz';
 echo "<html>\n<head></head>\n<body>\n<pre>\n";
 $s = "Only a test, test, test, test, test, test, test, test!\n";
 
-// open file for writing with maximum compression
+// Abre um arquivo para escrever os dados comprimidos
 $zp = gzopen($filename, "w9");
 
-// write string to file
+// Escreve o texto no arquivo
 gzwrite($zp, $s);
 
-// close file
+// Fecha o arquivo
 gzclose($zp);
 
-// open file for reading
+// Abre o arquivo
 $zp = gzopen($filename, "r");
 
-// read 3 char
+// Lê três bytes
 echo gzread($zp, 3);
 
-// output until end of the file and close it.
+// Imprime até o final do arquivo e o fecha
 gzpassthru($zp);
 gzclose($zp);
 
 echo "\n";
 
-// open file and print content (the 2nd time).
+// Abre e imprime o arquivo, uma segunda vez
 if (readgzfile($filename) != strlen($s)) {
         echo "Error with zlib functions!";
 }
@@ -48,6 +48,32 @@ echo "</pre>\n</body>\n</html>\n";
 ?>
 ]]>
   </programlisting>
+ </example>
+ <example>
+  <title>Utilizando a API de compressão/expansão incremental</title>
+  <programlisting role="php">
+<![CDATA[
+<?php
+// Realiza uma compressão GZIP:
+$deflateContext = deflate_init(ZLIB_ENCODING_GZIP);
+$compressed = deflate_add($deflateContext, "Data to compress", ZLIB_NO_FLUSH);
+$compressed .= deflate_add($deflateContext, ", more data", ZLIB_NO_FLUSH);
+$compressed .= deflate_add($deflateContext, ", and even more data!", ZLIB_FINISH);
+
+// Realiza uma expansão GZIP:
+$inflateContext = inflate_init(ZLIB_ENCODING_GZIP);
+$uncompressed = inflate_add($inflateContext, $compressed, ZLIB_NO_FLUSH);
+$uncompressed .= inflate_add($inflateContext, NULL, ZLIB_FINISH);
+echo $uncompressed;
+?>
+]]>
+  </programlisting>
+  &example.outputs;
+  <screen>
+<![CDATA[
+Data to compress, more data, and even more data!
+]]>
+  </screen>
  </example>
 </chapter>
 

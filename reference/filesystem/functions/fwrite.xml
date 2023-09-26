@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: diogo Status: ready --><!-- CREDITS: rarruda,ae -->
+<!-- EN-Revision: bb6247b68128cab1b166b49a3a73a87f40333267 Maintainer: ae Status: ready --><!-- CREDITS: rarruda,diogo,ae -->
 <refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.fwrite">
  <refnamediv>
   <refname>fwrite</refname>
   <refpurpose>Escrita binary-safe em arquivos</refpurpose>
  </refnamediv>
- 
+
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>int</type><methodname>fwrite</methodname>
-   <methodparam><type>resource</type><parameter>handle</parameter></methodparam>
-   <methodparam><type>string</type><parameter>string</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>length</parameter></methodparam>
+   <type class="union"><type>int</type><type>false</type></type><methodname>fwrite</methodname>
+   <methodparam><type>resource</type><parameter>stream</parameter></methodparam>
+   <methodparam><type>string</type><parameter>data</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>int</type><type>null</type></type><parameter>length</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
   <simpara>
-   <function>fwrite</function> escreve o conteúdo da 
-   <parameter>string</parameter> para o stream de arquivo apontado por
-   <parameter>handle</parameter>. 
+   <function>fwrite</function> grava o conteúdo de
+   <parameter>data</parameter> no ponteiro de arquivo informado em
+   <parameter>stream</parameter>.
   </simpara>
  </refsect1>
 
@@ -26,13 +26,13 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>handle</parameter></term>
+     <term><parameter>stream</parameter></term>
      <listitem>
       &fs.file.pointer;
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>string</parameter></term>
+     <term><parameter>data</parameter></term>
      <listitem>
       <para>
        A string a ser escrita.
@@ -43,16 +43,9 @@
      <term><parameter>length</parameter></term>
      <listitem>
       <para>
-       Se o argumento <parameter>comprimento</parameter> for dado, a escrita irá
-       parar depois que <parameter>comprimento</parameter> bytes tenham sido escritos ou
-       o final da <parameter>string</parameter> seja alcançado, o que vier
-       primeiro.
-      </para>
-      <para>
-       Observe que se o argumento <parameter>comprimento</parameter> for dado,
-       a opção de configuração <link
-       linkend="ini.magic-quotes-runtime">magic_quotes_runtime</link>
-       será ignorada e nenhuma barra será removida da <parameter>string</parameter>.
+       Se <parameter>length</parameter> for um &integer;, a escrita irá parar
+       depois que<parameter>length</parameter> forem escritos, ou o
+       o fim de <parameter>data</parameter> for alcançado, o que ocorrer primeiro.
       </para>
      </listitem>
     </varlistentry>
@@ -64,12 +57,105 @@
   &reftitle.returnvalues;
   <simpara>
    <function>fwrite</function> retorna o número de bytes
-   escritos, ou &false; em caso de erro.
+   escritos, &return.falseforfailure;.
   </simpara>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <para>
+   <function>fwrite</function> emite um <constant>E_WARNING</constant> em caso falhas.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       <parameter>length</parameter> pode ser null.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>fwrite</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$filename = 'test.txt';
+$somecontent = "Acrescente isso no arquivo\n";
+
+// Vamos garantir que o arquivo existe e pode ser escrito
+if (is_writable($filename)) {
+
+    // Nesse exemplo estamos abrindo o $filename em modo append.
+    // O ponteiro do arquivo estará no final do arquivo
+    // e portanto é aqui que $somecontent será posicionado pelo fwrite().
+    if (!$fp = fopen($filename, 'a')) {
+         echo "Erro ao abrir o ($filename)";
+         exit;
+    }
+
+    // Escrever alguma coisa no arquivo.
+    if (fwrite($fp, $somecontent) === FALSE) {
+        echo "Erro ao escrever no arquivo ($filename)";
+        exit;
+    }
+
+    echo "Sucesso, escrito ($somecontent) no arquivo ($filename)";
+
+    fclose($fp);
+
+} else {
+    echo "O arquivo não permite escrita";
+}
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
  </refsect1>
 
  <refsect1 role="notes">
   &reftitle.notes;
+  <note>
+   <para>
+    Escrever em um stream de rede pode acabar antes de toda a string ser transmitida.
+    O retorno de <function>fwrite</function> precisa ser inspecionado:
+    <programlisting role="php">
+     <![CDATA[
+<?php
+function fwrite_stream($fp, $string) {
+    for ($written = 0; $written < strlen($string); $written += $fwrite) {
+        $fwrite = fwrite($fp, substr($string, $written));
+        if ($fwrite === false) {
+            return $written;
+        }
+    }
+    return $written;
+}
+?>
+]]>
+    </programlisting>
+   </para>
+  </note>
+
   <note>
    <para>
     Em sistemas que diferenciam entre arquivos binários e texto
@@ -79,78 +165,33 @@
   </note>
   <note>
    <para>
-    Se o <parameter>handle</parameter> foi aberto com <function>fopen</function>
+    Se o <parameter>stream</parameter> foi aberto com <function>fopen</function>
     em modo de adição, escritas com <function>fwrite</function> são atômicas
-    (a não ser que o tamanho da <parameter>string</parameter> exceda o tamanho
+    (a não ser que o tamanho da <parameter>data</parameter> exceda o tamanho
     de bloco do sistema de arquivos, em algumas plataformas, e contanto que o
     arquivo esteja em um sistema de arquivos local). Sendo assim,
     não há necessidade de bloquear um recurso com <function>flock</function> antes
-    de chamar <function>fwrite</function>; todos os dados serão escritos sem
-    interrupção.
+    de chamar <function>fwrite</function>; todos os dados serão escritos sem interrupção.
    </para>
   </note>
   <note>
    <para>
-    Se escrevendo duas vezes para o ponteiro do arquivo, então a informação
-    será adicionado ao final do contéudo do arquivo, significando que o exemplo 
-    abaixo não funcionaria como esperado:
+    Se escrever duas vezes no ponteiro do arquivo, então a informação
+    será adicionado ao final do contéudo do arquivo:
     <programlisting role="php">
-<![CDATA[
+     <![CDATA[
 <?php
 $fp = fopen('data.txt', 'w');
 fwrite($fp, '1');
 fwrite($fp, '23');
 fclose($fp);
 
-// o conteúdo de 'data.txt' agora é 123 e não 23!
+// O conteúdo de 'data.txt' é 123, e não 23
 ?>
 ]]>
     </programlisting>
    </para>
   </note>
- </refsect1>
-
- <refsect1 role="examples">
-  &reftitle.examples;
-  <para>
-   <example>
-    <title>Um simples exemplo de <function>fwrite</function></title>
-    <programlisting role="php">
-<![CDATA[
-<?php
-$filename = 'teste.txt';
-$conteudo = "Acrescentar isso ao arquivo\n";
-
-// Primeiro vamos ter certeza de que o arquivo existe e pode ser alterado
-if (is_writable($filename)) {
-
- // Em nosso exemplo, nós vamos abrir o arquivo $filename
- // em modo de adição. O ponteiro do arquivo estará no final
- // do arquivo, e é pra lá que $conteudo irá quando o 
- // escrevermos com fwrite().
-    if (!$handle = fopen($filename, 'a')) {
-         echo "Não foi possível abrir o arquivo ($filename)";
-         exit;
-    }
-
-    // Escreve $conteudo no nosso arquivo aberto.
-    if (fwrite($handle, $conteudo) === FALSE) {
-        echo "Não foi possível escrever no arquivo ($filename)";
-        exit;
-    }
-
-    echo "Sucesso: Escrito ($conteudo) no arquivo ($filename)";
-
-    fclose($handle);
-
-} else {
-    echo "O arquivo $filename não pode ser alterado";
-}
-?>
-]]>
-    </programlisting>
-   </example>
-  </para>
  </refsect1>
 
  <refsect1 role="seealso">
@@ -162,6 +203,7 @@ if (is_writable($filename)) {
     <member><function>fsockopen</function></member>
     <member><function>popen</function></member>
     <member><function>file_get_contents</function></member>
+    <member><function>pack</function></member>
    </simplelist>
   </para>
  </refsect1>
