@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 99ef98227f2d590d6124ebb4ebae0284a9d3e576 Maintainer: ae Status: ready -->
+<sect1 xml:id="language.operators.errorcontrol">
+ <title>Operadores de controle de erro</title>
+ <simpara>
+  O PHP suporta um operador de controle de erro: o sinal 'arroba' (<literal>@</literal>).
+  Quando ele precede uma expressão em PHP, qualquer mensagem de erro que possa ser
+  gerada por aquela expressão será ignorada.
+ </simpara>
+ <para>
+  Se um manipulador de erro personalizado estiver configurado com
+  <function>set_error_handler</function>, ele ainda assim será chamado,
+  mesmo com a mensagem de diagnóstico suprimida.
+ </para>
+
+ <warning>
+  <para>
+   Antes do PHP 8.0.0, <function>error_reporting</function> chamada dentro de um manipulador de erro
+   sempre retornava <literal>0</literal> se a mensagem de erro era suprimida pelo operador <literal>@</literal>.
+   Desde o PHP 8.0.0, ele retorna o valor <literal>E_ERROR | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR | E_PARSE</literal>.
+  </para>
+ </warning>
+
+ <simpara>
+  Quaisquer mensages de erro geradas an expressão fica disponível no elemento <literal>"message"</literal>
+  do array retornado por <function>error_get_last</function>.
+  O resultado daquela função irá se alterar em cada erro, então é necessário fazer a verificação imediatamente.
+ </simpara>
+ <para>
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+/* Erro de arquivo intencional */
+$my_file = @file ('arquivo_nao_existente') or
+    die ("Falha abrindo arquivo: erro foi '" . error_get_last()['message'] . "'");
+
+// Isto funciona para qualquer expressão, não apenas para funções:
+$value = @$cache[$key];
+// você não receberá nenhum aviso se a chave $key não existir.
+
+?>
+]]>
+   </programlisting>
+  </informalexample>
+ </para>
+ <note>
+  <simpara>
+   O operador <literal>@</literal> funciona somente em
+   <link linkend="language.expressions">expressões</link>.
+   Uma regra simples para lembrar disso: se você pode pegar o valor de alguma coisa,
+   você pode prefixar isso com o operador <literal>@</literal>.
+   Por exemplo, ele pode prefixar variáveis, chamadas de funções,
+   alguns constructos de linguagem (<function>include</function>),
+   e assim por diante.
+   O operador não pode ser prefixado em definições de classes ou funções,
+   estruturas condicionais como <literal>if</literal>,
+   &foreach;, e semelhantes.
+  </simpara>
+ </note>
+ <warning>
+  <para>
+   Antes do PHP 8.0.0, o operador <literal>@</literal> conseguia
+   inibir erros críticos que iriam encerrar a execução do script.
+   Por exemplo, prefixar <literal>@</literal> numa chamada de uma função
+   inexistente, por estar indisponível ou por erro de digitação, iria
+   encerrar o script sem nenhuma indicação da causa.
+  </para>
+ </warning>
+
+ <sect2 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>error_reporting</function></member>
+    <member><link linkend="ref.errorfunc">Manipulação de erros e funções de log</link></member>
+   </simplelist>
+  </para>
+ </sect2>
+</sect1>
