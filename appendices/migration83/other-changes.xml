@@ -1,0 +1,575 @@
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 7fcd0116aaa5687244761e8c073bf47d5781376e Maintainer: marcosmarcolin Status: ready -->
+<sect1 xml:id="migration83.other-changes" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Outras mudanças</title>
+
+ <sect2 xml:id="migration83.other-changes.core">
+  <title>Mudanças no Core</title>
+
+  <sect3 xml:id="migration83.other-changes.core.ffi">
+   <title>FFI</title>
+
+   <para>
+    <methodname>FFI::load</methodname> agora é permitido durante o carregamento antecipado
+    quando <link linkend="ini.opcache.preload-user">opcache.preload_user</link>
+    é o usuário do sistema atual. Anteriormente,
+    chamar <methodname>FFI::load</methodname> não era possível
+    durante o carregamento antecipado se a diretiva
+    <link linkend="ini.opcache.preload-user">opcache.preload_user</link>
+    estivesse definida.
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.core.fpm">
+   <title>FPM</title>
+
+   <para>
+    O teste CLI do FPM agora falha se o caminho do socket for mais longo do que o suportado pelo sistema operacional.
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.core.opcache">
+   <title>Opcache</title>
+
+   <para>
+    Nas SAPIs CLI e phpdbg, o carregamento antecipado não exige mais que a
+    diretiva <link linkend="ini.opcache.preload-user">opcache.preload_user</link>
+    esteja configurada ao ser executado como root.
+    Nas outras SAPIs, essa diretiva é necessária ao ser executado como root,
+    pois o carregamento antecipado é feito antes da SAPI mudar para um usuário não privilegiado.
+    O teste FPM CLI agora falha se o caminho do socket for mais longo do que o suportado pelo sistema operacional.
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.core.streams">
+   <title>Streams</title>
+
+   <para>
+    A função <function>fread</function> de bloqueio em uma conexão de socket
+    agora retorna imediatamente se houver dados em buffer, em vez de esperar por mais dados.
+   </para>
+
+   <para>
+    A memória do fluxo (memory stream) não falha mais se o deslocamento de busca estiver além do final.
+    Em vez disso, a memória é aumentada na próxima gravação e os dados entre o antigo final e o
+    deslocamento são preenchidos com bytes zero, da mesma forma como acontece com arquivos.
+   </para>
+
+   <para>
+    Operações de acesso ao <function>stat</function> como
+    <function>file_exists</function> e similares agora usarão o caminho real
+    em vez do caminho real da stream. Isso é consistente com a abertura de
+    streams.
+   </para>
+  </sect3>
+ </sect2>
+
+ <sect2 xml:id="migration83.other-changes.sapi">
+  <title>Alterações nos Módulos SAPI</title>
+
+  <sect3 xml:id="migration83.other-changes.sapi.cli">
+   <title>CLI</title>
+
+   <para>
+    Os fluxos <constant>STDOUT</constant>, <constant>STDERR</constant> e
+    <constant>STDIN</constant> não são mais fechados na destruição de resources,
+    o que ocorre principalmente quando o CLI termina.
+    No entanto, ainda é possível fechar explicitamente esses fluxos usando
+    <function>fclose</function>  e funções semelhantes.
+   </para>
+  </sect3>
+ </sect2>
+
+ <sect2 xml:id="migration83.other-changes.functions">
+  <title>Funções Alteradas</title>
+
+  <sect3 xml:id="migration83.other-changes.functions.core">
+   <title>Core</title>
+
+   <para>
+    <function>gc_status</function> adicionou os seguintes 8 campos:
+
+    <simplelist>
+     <member><literal>"running"</literal> => bool</member>
+     <member><literal>"protected"</literal> => bool</member>
+     <member><literal>"full"</literal> => bool</member>
+     <member><literal>"buffer_size"</literal> => int</member>
+     <member><literal>"application_time"</literal> => float: empo total de aplicação,
+      em segundos (incluindo collector_time)</member>
+     <member><literal>"collector_time"</literal> => float: Tempo gasto coletando ciclos,
+      em segundos (incluindo destructor_time e free_time)</member>
+     <member><literal>"destructor_time"</literal> => float: Tempo gasto executando destrutores durante a
+      coleta de ciclos, em segundos</member>
+     <member><literal>"free_time"</literal> => float: Tempo gasto liberando valores
+      durante a coleta de ciclos, em segundos.</member>
+    </simplelist>
+   </para>
+
+   <para>
+    <function>class_alias</function>agora suporta a criação de um alias de uma
+    classe interna.
+   </para>
+
+   <para>
+    Definir <link linkend="ini.open-basedir">open_basedir</link> em tempo de execução
+    usando <code>ini_set('open_basedir', ...);</code> não aceita mais caminhos que
+    contenham o diretório pai (<literal>..</literal>). Anteriormente,
+    apenas os caminhos que começavam com <literal>..</literal> eram proibidos. Isso poderia
+    ser facilmente contornado adicionando <literal>./</literal> ao início do caminho.
+   </para>
+
+   <para>
+    Os manipuladores de exceção do usuário agora capturam exceções durante a finalização.
+   </para>
+
+   <para>
+    O HTML resultante das funções <function>highlight_string</function> e
+    <function>highlight_file</function> foi alterado.
+    O espaço em branco entre as tags HTML externas é removido. As quebras de linha e
+    espaços não são mais convertidos em entidades HTML. Todo o HTML agora é envolvido em uma tag
+    <literal>&lt;pre&gt;</literal>. A tag <literal>&lt;span&gt;</literal>
+    externa foi mesclada com a tag <literal>&lt;code&gt;</literal> .
+   </para>
+
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.functions.calendar">
+   <title>Calendar</title>
+
+   <para>
+    A função <function>easter_date</function> agora suporta anos de 1970 a
+    2.000.000.000 em sistemas de 64 bits, anteriormente, ela suportava apenas anos no
+    intervalo de 1970 a 2037.
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.functions.curl">
+   <title>Curl</title>
+
+   <para>
+    A função <function>curl_getinfo</function> agora suporta duas novas constantes:
+    <constant>CURLINFO_CAPATH</constant> e
+    <constant>CURLINFO_CAINFO</constant>. Se a opção for &null;, duas chaves
+    adicionais são adicionadas:
+    <literal>"capath"</literal> e <literal>"cainfo"</literal>.
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.functions.dom">
+   <title>DOM</title>
+
+   <para>
+    Alterada a tentativa de tipo de retorno de
+    <methodname>DOMCharacterData::appendData</methodname> para <type>true</type>.
+   </para>
+
+   <para>
+    <methodname>DOMDocument::loadHTML</methodname>,
+    <methodname>DOMDocument::loadHTMLFile</methodname>,
+    <methodname>DOMDocument::loadXML</methodname>, e
+    <methodname>DOMDocument::loadXMLFile</methodname> agora têm um tipo de retorno
+    tentativo de <type>bool</type>. Anteriormente, isso estava documentado com um tipo de retorno
+    de <code>DOMDocument|bool</code>, mas, a partir do PHP 8.0.0,
+    <classname>DOMDocument</classname>
+    não pode mais ser retornado, pois não pode ser chamado estaticamente.
+   </para>
+
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.functions.gd">
+   <title>Gd</title>
+
+   <para>
+    A assinatura da função <function>imagerotate</function> foi alterada.
+    O parâmetro <parameter>$ignore_transparent</parameter> foi removido,
+    pois era ignorado desde o PHP 5.5.0.
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.functions.intl">
+   <title>Intl</title>
+
+   <para>
+    A função <function>datefmt_set_timezone</function> (e seu alias
+    <methodname>IntlDateformatter::setTimeZone</methodname>)
+    agora retorna &true; em caso de sucesso, anteriormente retornava &null;.
+   </para>
+
+   <para>
+    <methodname>IntlBreakiterator::setText</methodname> agora retorna &false;
+    em caso de falha e &true; em caso de sucesso.
+    Anteriormente, ela retornava &null; em ambos os casos.
+   </para>
+
+   <para>
+    <methodname>IntlChar::enumCharNames</methodname> agora retorna um boolean.
+    Anteriormente, ela retornava &null; em caso de sucesso e &false; em caso de falha.
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.functions.mbstring">
+   <title>MBString</title>
+
+   <para>
+    As funções <function>mb_strtolower</function> e <function>mb_convert_case</function>
+    implementam regras de formatação condicional para a letra sigma grega.
+    Para <function>mb_convert_case</function>,
+    a formatação condicional se aplica apenas aos modos <constant>MB_CASE_LOWER</constant>
+    e <constant>MB_CASE_TITLE</constant>, não aos modos
+    <constant>MB_CASE_LOWER_SIMPLE</constant> e
+    <constant>MB_CASE_TITLE_SIMPLE</constant>..
+   </para>
+
+   <para>
+    A função <function>mb_decode_mimeheader</function> interpreta os underscores em
+    palavras MIME codificadas com QPrint conforme o RFC 2047; eles são
+    convertidos em espaços.
+    Os underscores devem ser codificados como <literal>"=5F"</literal> em tais
+    palavras MIME codificadas.
+   </para>
+
+   <para>
+    Em casos raros, <function>mb_encode_mimeheader</function> pode transferir-encode
+    (codificar para transferência) a cadeia de entrada, enquanto em PHP 8.2 ela seria passada como ASCII bruto.
+   </para>
+
+   <para>
+    A função <function>mb_encode_mimeheader</function> não descarta mais os bytes NUL (zero)
+    ao codificar a string de entrada com QPrint.
+    Isso anteriormente causava a corrupção de strings em determinadas codificações de texto, especialmente
+    UTF-16 e UTF-32, ao usar mb_encode_mimeheader.
+   </para>
+
+   <para>
+    O modo "não estrito" da função <function>mb_detect_encoding</function>'s agora se
+    comporta conforme descrito na documentação.
+    Anteriormente, retornava &false; se o mesmo byte (por exemplo, o primeiro
+    byte) da string de entrada fosse inválido em todas as codificações candidatas.
+    Mas geralmente, eliminava codificações candidatas da consideração quando
+    um byte inválido era encontrado e, se o mesmo byte de entrada eliminasse todas
+    as codificações restantes ainda em consideração, retornaria &false;.
+    Por outro lado, se todas as codificações candidatas, exceto uma, fossem eliminadas da consideração,
+    retornaria a última restante sem considerar quantos erros de codificação poderiam
+    ser encontrados posteriormente na string.
+    Isso difere do comportamento descrito na documentação, que diz:
+    "Se estrito for definido como falso, a codificação mais próxima será
+    retornada."
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.functions.mysqli">
+   <title>mysqli</title>
+
+   <para>
+    <function>mysqli_fetch_object</function> agora gera um
+    <classname>ValueError</classname> em vez de uma <classname>Exception</classname>
+    quando o argumento <parameter>$constructor_args</parameter> não está vazio e a
+    classe não possui um construtor.
+   </para>
+
+   <para>
+    <function>mysqli_poll</function> agora gera um <classname>ValueError</classname>
+    quando nenhum dos argumentos <parameter>$read</parameter>
+    nem <parameter>$error</parameter> é fornecido.
+   </para>
+
+   <para>
+    <function>mysqli_field_seek</function> e
+    <methodname>mysqli_result::field_seek</methodname> agora especificam o
+    tipo de retorno como <type>true</type> em vez de <type>bool</type>.
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.functions.odbc">
+   <title>ODBC</title>
+
+   <para>
+    A função <function>odbc_autocommit</function> agora aceita &null;
+    como valor para o parâmetro <parameter>$enable</parameter>.
+    Passar &null;  tem o mesmo comportamento que passar apenas 1 parâmetro,
+    ou seja, indica se o recurso de autocommit está habilitado ou não.
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.functions.pgsql">
+   <title>PGSQL</title>
+
+   <para>
+    <function>pg_fetch_object</function> agora gera um
+    <classname>ValueError</classname> em vez de uma <classname>Exception</classname>
+    quando o argumento <parameter>$constructor_args</parameter> não está vazio e a
+    classe não possui um construtor.
+   </para>
+
+   <para>
+    A função <function>pg_insert</function> agora gera um <classname>ValueError</classname>
+    em vez de um <constant>E_WARNING</constant> quando a tabela especificada é inválida.
+   </para>
+
+   <para>
+    As funções <function>pg_insert</function> e <function>pg_convert</function> agora
+    geram um <classname>ValueError</classname> ou <classname>TypeError</classname>
+    em vez de um <constant>E_WARNING</constant> quando o valor/tipo de um campo
+    não corresponde adequadamente ao tipo do PostgreSQL.
+   </para>
+
+   <para>
+    O parâmetro <parameter>$row</parameter> das funções
+    <function>pg_fetch_result</function>,
+    <function>pg_field_prtlen</function>, e
+    <function>pg_field_is_null</function> agora é opcional.
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.functions.random">
+   <title>Random</title>
+
+   <para>
+    A função <function>mt_srand</function> e <function>srand</function> foram
+    alteradas para não verificarem o número de argumentos para determinar se uma semente (seed)
+    aleatória deve ser usada. Passar &null; gerará uma semente aleatória,
+    e ao passar <literal>0</literal>, será usado zero como a semente. As funções agora são consistentes com
+    com o comportamento de <methodname>Random\Engine\Mt19937::__construct</methodname>.
+   </para>
+
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.functions.reflection">
+   <title>Reflection</title>
+
+   <para>
+    O tipo de retorno da função <methodname>ReflectionClass::getStaticProperties</methodname>
+    não é mais nulo.
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.functions.standard">
+   <title>Standard</title>
+
+   <para>
+    As mensagens de erro do tipo <constant>E_NOTICE</constant>s emitidas pela
+    função <function>unserialize</function> foram elevadas para <constant>E_WARNING</constant>.
+    <!-- RFC: https://wiki.php.net/rfc/improve_unserialize_error_handling -->
+   </para>
+
+   <para>
+    <function>unserialize</function> agora emite um novo <constant>E_WARNING</constant>
+    se a entrada contiver bytes não consumidos.
+    <!-- RFC: https://wiki.php.net/rfc/unserialize_warn_on_trailing_data -->
+   </para>
+
+   <para>
+    <function>array_pad</function> agora está limitada apenas pelo número máximo de
+    elementos que um array pode ter. Anteriormente, era possível adicionar no máximo 1048576
+    elementos de cada vez.
+   </para>
+
+   <para>
+    <function>strtok</function> gera um <constant>E_WARNING</constant> no caso
+    em que o token não é fornecido ao iniciar a tokenização.
+   </para>
+
+   <para>
+    A função <function>password_hash</function> agora encadeará a exceção subjacente
+    <classname>Random\RandomException</classname>
+    como a exceção <parameter>$previous</parameter> do tipo <classname>ValueError</classname>'s
+    quando a geração de salt falhar.
+   </para>
+
+   <para>
+    Se você estiver usando um array como o parâmetro  <parameter>$command</parameter>
+    <function>proc_open</function>, ele agora deve ter pelo menos um
+    elemento não vazio. Caso contrário, um <classname>ValueError</classname>
+    será lançado.
+   </para>
+
+   <para>
+    <function>array_sum</function> e <function>array_product</function> agora
+    emitem um aviso quando os valores no array não podem ser convertidos para int ou float.
+    Anteriormente, arrays e objetos eram ignorados, enquanto todos os outros valores eram
+    convertidos para int. Além disso, objetos que definem uma conversão numérica (por exemplo,
+    <link linkend="book.gmp">GMP</link>) agora são convertidos em vez de serem ignorados.
+    <!-- RFC: https://wiki.php.net/rfc/saner-array-sum-product -->
+   </para>
+
+   <para>
+    O parâmetro <parameter>$decimal</parameter> da função <function>number_format</function>
+    agora lida corretamente com números inteiros negativos.
+    Arredondar com um valor negativo para <parameter>$decimal</parameter> significa
+    que <parameter>$num</parameter> é arredondado para <parameter>$decimals</parameter>
+    dígitos significativos antes do ponto decimal.
+    Anteriormente, valores negativos para <parameter>$decimals</parameter> eram silenciosamente
+    ignorados e o número era arredondado para zero casas decimais.
+   </para>
+
+   <para>
+    Um novo argumento <parameter>$before_needle</parameter> foi adicionado à função
+    <function>strrchr</function>. Ele se comporta de forma semelhante ao seu equivalente nas
+    funções <function>strstr</function> ou <function>stristr</function>.
+   </para>
+
+   <para>
+    <function>str_getcsv</function> e <function>fgetcsv</function> agora retornam
+    uma string vazia em vez de uma string contendo um único byte nulo para o último campo,
+    que contém apenas um encapsulamento não terminado.
+   </para>
+  </sect3>
+
+ </sect2>
+
+ <sect2 xml:id="migration83.other-changes.extensions">
+  <title>Outras Alterações nas Extensões</title>
+
+  <sect3 xml:id="migration83.other-changes.extensions.core">
+   <title>Core</title>
+
+   <para>
+    Objetos internos que implementam um cast _IS_NUMBER, mas não um manipulador do operador
+    que sobrescreve a adição e a subtração, agora podem ser incrementados e decrementados
+    como se alguém fosse fazer <code>$o += 1</code> ou <code>$o -= 1</code>
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.extensions.dom">
+   <title>DOM</title>
+
+   <para>
+    O mecanismo de vida útil do DOM foi reformulado de tal forma que nós implicitamente
+    removidos ainda podem ser recuperados. Anteriormente, isso resultava em uma exceção.
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.extensions.sqlite3">
+   <title>SQLite3</title>
+
+   <para>
+    A classe <classname>SQLite3</classname> agora lança
+    <classname>SQLite3Exception</classname> (que estende
+    <classname>Exception</classname>) em vez de <classname>Exception</classname>.
+   </para>
+
+   <para>
+    O código de erro do SQLite agora é passado no código de erro da exceção,
+    em vez de ser incluído na mensagem de erro.
+   </para>
+
+  </sect3>
+ </sect2>
+
+ <sect2 xml:id="migration83.other-changes.ini">
+  <title>Mudanças no Tratamento de Arquivos INI</title>
+
+  <itemizedlist>
+   <listitem>
+    <para>
+     As configurações INI <literal>assert.*</literal> foram descontinuadas.
+     Isso inclui as seguintes configurações INI:
+     <simplelist>
+      <member><link linkend="ini.assert.active">assert.active</link></member>
+      <member><link linkend="ini.assert.bail">assert.bail</link></member>
+      <member><link linkend="ini.assert.callback">assert.callback</link></member>
+      <member><link linkend="ini.assert.exception">assert.exception</link></member>
+      <member><link linkend="ini.assert.warning">assert.warning</link></member>
+     </simplelist>
+     Se o valor da configuração for igual ao valor padrão, nenhuma notificação de
+     descontinuação será emitida.
+     Em vez disso, a configuração INI z<link linkend="ini.zend.assertions">zend.assertions</link>
+     deve ser usada.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <!--<link linkend="ini.zend.max_allowed_stack_size">-->zend.max_allowed_stack_size<!--</link>-->
+     é uma nova diretiva INI que define o tamanho máximo permitido da pilha.
+     Os valores possíveis são <literal>0</literal> (detectar o tamanho máximo da pilha do processo ou da thread),
+     <literal>-1</literal> (sem limite) ou um número positivo de bytes.
+     O valor padrão é <literal>0</literal>.
+     Quando não é possível detectar o tamanho máximo da pilha do processo ou da thread,
+     é usado um valor padrão do sistema conhecido.
+     Definir esse valor muito alto tem o mesmo efeito que desabilitar o limite de tamanho da pilha.
+     Fibers usam
+     <!-- link TODO -->fiber.stack_size<!-- /link -->
+     como tamanho máximo permitido da pilha.
+     Um <classname>Error</classname> é gerado quando a pilha de chamadas do processo ultrapassa
+     <!-- link TODO -->zend.max_allowed_stack_size-zend.reserved_stack_size<!-- /link--> bytes,
+     para evitar falhas de segmentação induzidas por estouro de pilha, com o
+     objetivo de facilitar a depuração.
+     O tamanho da pilha aumenta durante recursões não controladas envolvendo funções internas
+     ou os métodos mágicos
+     <link linkend="object.tostring">__toString()</link>,
+     <link linkend="object.clone">__clone()</link>,
+     <link linkend="object.sleep">__sleep()</link>,
+     <link linkend="object.destruct">__destruct()</link>.
+     Isso não está relacionado a estouros de buffer de pilha e não é uma medida de segurança.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <!--<link linkend="ini.zend.reserved_stack_size">-->zend.reserved_stack_size<!--</link>-->
+     é uma nova diretiva INI que define o tamanho reservado da pilha, em bytes.
+     Esse valor é subtraído do tamanho máximo permitido da pilha,
+     como um buffer, ao verificar o tamanho da pilha.
+    </para>
+   </listitem>
+  </itemizedlist>
+ </sect2>
+
+ <sect2 xml:id="migration83.other-changes.performance">
+  <title>Performance</title>
+
+  <sect3 xml:id="migration83.other-changes.performance.dom">
+   <title>DOM</title>
+
+   <para>
+    A iteração sobre um <classname>DOMNodeList</classname> agora utiliza o cache. Portanto,
+    solicitar itens não leva mais tempo quadrático por padrão.
+   </para>
+
+   <para>
+    Obter o conteúdo de texto de nós agora evita uma alocação, resultando
+    em um ganho de desempenho.
+   </para>
+
+   <para>
+    <methodname>DOMChildNode::remove</methodname>agora possui desempenho O(1),
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.performance.standard">
+   <title>Standard</title>
+
+   <para>
+    A verificação de erros das flags na função <function>file</function> agora é cerca de 7% mais rápida.
+   </para>
+  </sect3>
+
+  <sect3 xml:id="migration83.other-changes.performance.spl">
+   <title>SPL</title>
+
+   <para>
+    <classname>RecursiveDirectoryIterator</classname> agora realiza menos operações de entrada/saída (I/O)
+    ao percorrer um diretório.
+   </para>
+  </sect3>
+ </sect2>
+
+</sect1>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
