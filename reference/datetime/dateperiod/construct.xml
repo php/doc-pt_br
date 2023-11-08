@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 6ce419d15e103640378ae0efcb720c3128a47c8a Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano -->
+<!-- EN-Revision: 7d81260767f008218ffd338b365cfa3d10eb3d15 Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano, leonardolara -->
 
 <refentry xml:id="dateperiod.construct" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
@@ -23,25 +23,31 @@
    <methodparam><type>DateTimeInterface</type><parameter>end</parameter></methodparam>
    <methodparam choice="opt"><type>int</type><parameter>options</parameter><initializer>0</initializer></methodparam>
   </constructorsynopsis>
-  <constructorsynopsis role="DatePeriod">
-   <modifier>public</modifier> <methodname>DatePeriod::__construct</methodname>
-   <methodparam><type>string</type><parameter>isostr</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>options</parameter><initializer>0</initializer></methodparam>
-  </constructorsynopsis>
+  <warning>
+   <constructorsynopsis role="DatePeriod">
+    <modifier>public</modifier> <methodname>DatePeriod::__construct</methodname>
+    <methodparam><type>string</type><parameter>isostr</parameter></methodparam>
+    <methodparam choice="opt"><type>int</type><parameter>options</parameter><initializer>0</initializer></methodparam>
+   </constructorsynopsis>
+   <simpara>
+    Esta variante do construtor está obsoleta, use
+    o método <methodname>DatePeriod::createFromISO8601String</methodname>.
+   </simpara>
+  </warning>
   <para>
-   Creates a new DatePeriod object.
+   Cria um objeto DatePeriod.
   </para>
   <para>
-   <classname>DatePeriod</classname> objects can be used as an iterator to
-   generate a number of <classname>DateTimeImmutable</classname> or
-   <classname>DateTime</classname> object from a <parameter>start</parameter>
-   date, a <parameter>interval</parameter>, and an <parameter>end</parameter>
-   date or the number of <parameter>recurrences</parameter>.
+   Objetos <classname>DatePeriod</classname> podem ser usados como um iterador para
+   gerar um número de objetos <classname>DateTimeImmutable</classname> ou
+   <classname>DateTime</classname> a partir de uma data inicial (<parameter>start</parameter>),
+   um intervalo (<parameter>interval</parameter>), e uma data final (<parameter>end</parameter>)
+   ou o número de recorrências (<parameter>recurrences</parameter>).
   </para>
   <para>
-   The class of returned objects is equivalent to the
-   <classname>DateTimeImmutable</classname> or <classname>DateTime</classname>
-   ancestor class of the <parameter>start</parameter> object.
+   A classe do objeto retornado é equivalente à classe ancestral
+   <classname>DateTimeImmutable</classname> ou <classname>DateTime</classname>
+   do objeto do parâmetro <parameter>start</parameter>.
   </para>
  </refsect1>
 
@@ -53,7 +59,7 @@
      <term><parameter>start</parameter></term>
      <listitem>
       <para>
-       A data inicial do período.
+       A data inicial do período. Incluído por padrão no conjunto de resultados.
       </para>
      </listitem>
     </varlistentry>
@@ -69,7 +75,9 @@
      <term><parameter>recurrences</parameter></term>
      <listitem>
       <para>
-       Número de recorrências.
+       O número de recorrências. O número do resultado retornado é
+       uma unidade a mais que isto, já que a data de início é incluída no conjunto de resultados
+       por padrão. Deve ser maior que <literal>0</literal>.
       </para>
      </listitem>
     </varlistentry>
@@ -85,21 +93,58 @@
      <term><parameter>isostr</parameter></term>
      <listitem>
       <para>
-       Uma especificação de repetição de intervalos ISO 8601.
+       Um sobconjunto da <link
+       xlink:href="&url.iso-8601.repeating_intervals;">ISO 8601 repeating
+       interval specification</link>.
       </para>
+      <para>
+       Exemplos de algumas características de especificação de intervalos ISO 8601 que o PHP
+       não suporta são:
+      </para>
+      <orderedlist>
+       <listitem>
+        <simpara>
+         zero ocorrências (<literal>R0/</literal>)
+        </simpara>
+       </listitem>
+       <listitem>
+        <simpara>
+         fusos horários diferentes de UTC (<literal>Z</literal>), como <literal>+02:00</literal>.
+        </simpara>
+       </listitem>
+      </orderedlist>
      </listitem>
     </varlistentry>
     <varlistentry>
      <term><parameter>options</parameter></term>
      <listitem>
       <para>
-       Pode ser configurado com <constant>DatePeriod::EXCLUDE_START_DATE</constant> para
-       excluir a data inicial do conjunto de recorrências dentro do
+       Um campo de bits que pode ser usado para controlar certos comportamentos com
+       datas de início e fim.
+      </para>
+      <para>
+       Com <constant>DatePeriod::EXCLUDE_START_DATE</constant> você
+       exclui a data inicial do conjunto de datas recorrentes dentro do
+       período.
+      </para>
+      <para>
+       Com <constant>DatePeriod::INCLUDE_END_DATE</constant> você
+       inclui a data final do conjunto de datas recorrentes dentro do
        período.
       </para>
      </listitem>
     </varlistentry>
    </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <para>
+   Dispara uma exceção <classname>DateMalformedPeriodStringException</classname> quando
+   o parâmetro <parameter>isostr</parameter> não pode ser interpretado como um período ISO 8601
+   válido. Antes do PHP 8.3, isto era uma
+   <exceptionname>Exception</exceptionname>.
   </para>
  </refsect1>
 
@@ -116,19 +161,23 @@
      </thead>
      <tbody>
       <row>
-       <entry>5.5.8</entry>
+       <entry>8.3.0</entry>
        <entry>
-        O tipo de <parameter>end</parameter> foi modificado para
-        <interfacename>DateTimeImmutable</interfacename>.
-        Anteriormente era <classname>DateTime</classname>.
+        Agora dispara
+        <exceptionname>DateMalformedPeriodStringException</exceptionname>
+        em vez de <exceptionname>Exception</exceptionname>.
        </entry>
       </row>
       <row>
-       <entry>5.5.0</entry>
+       <entry>8.2.0</entry>
        <entry>
-        <parameter>start</parameter> foi modificado para
-        <interfacename>DateTimeImmutable</interfacename>.
-        Anteriormente era <classname>DateTime</classname>.
+        A constante <constant>DatePeriod::INCLUDE_END_DATE</constant> foi incluída.
+       </entry>
+      </row>
+      <row>
+       <entry>7.2.19, 7.3.6, 7.4.0</entry>
+       <entry>
+        O parâmetro <parameter>recurrences</parameter> agora deve ser maior que <literal>0</literal>.
        </entry>
       </row>
      </tbody>
@@ -145,21 +194,21 @@
     <programlisting role="php">
 <![CDATA[
 <?php
-$start = new DateTime('2012-07-01');
-$interval = new DateInterval('P7D');
-$end = new DateTime('2012-07-31');
-$recurrences = 4;
+$inicio = new DateTime('2012-07-01');
+$intervalo = new DateInterval('P7D');
+$fim = new DateTime('2012-07-31');
+$recorrencias = 4;
 $iso = 'R4/2012-07-01T00:00:00Z/P7D';
 
-// All of these periods are equivalent.
-$period = new DatePeriod($start, $interval, $recurrences);
-$period = new DatePeriod($start, $interval, $end);
-$period = new DatePeriod($iso);
+// Todos estes períodos são equivalentes.
+$periodo = new DatePeriod($inicio, $intervalo, $recorrencias);
+$periodo = new DatePeriod($inicio, $intervalo, $fim);
+$periodo = new DatePeriod($iso);
 
-// By iterating over the DatePeriod object, all of the
-// recurring dates within that period are printed.
-foreach ($period as $date) {
-    echo $date->format('Y-m-d')."\n";
+// Ao iterar sobre o objeto DatePeriod, todas as
+// datas recorrentes dentro do período são exibidas.
+foreach ($periodo as $data) {
+    echo $data->format('Y-m-d')."\n";
 }
 ?>
 ]]>
@@ -182,18 +231,18 @@ foreach ($period as $date) {
     <programlisting role="php">
 <![CDATA[
 <?php
-$start = new DateTime('2012-07-01');
-$interval = new DateInterval('P7D');
-$end = new DateTime('2012-07-31');
+$inicio = new DateTime('2012-07-01');
+$intervalo = new DateInterval('P7D');
+$fim = new DateTime('2012-07-31');
 
-$period = new DatePeriod($start, $interval, $end,
+$periodo = new DatePeriod($inicio, $intervalo, $fim,
                          DatePeriod::EXCLUDE_START_DATE);
 
-// By iterating over the DatePeriod object, all of the
-// recurring dates within that period are printed.
-// Note that, in this case, 2012-07-01 is not printed.
-foreach ($period as $date) {
-    echo $date->format('Y-m-d')."\n";
+// Ao iterar sobre o objeto DatePeriod, todas as
+// datas recorrentes dentro do período são exibidas.
+// Note que, neste caso, 2012-07-01 não é mostrada.
+foreach ($periodo as $data) {
+    echo $data->format('Y-m-d')."\n";
 }
 ?>
 ]]>
@@ -209,6 +258,53 @@ foreach ($period as $date) {
     </screen>
    </example>
   </para>
+  <para>
+   <example>
+    <title>Exemplo de DatePeriod mostrando todas as últimas quintas-feiras do ano</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$inicio = new DateTime('2021-12-31');
+$fim = new DateTime('2022-12-31 23:59:59');
+
+$intervalo = DateInterval::createFromDateString('last thursday of next month');
+$periodo = new DatePeriod($inicio, $intervalo, $fim, DatePeriod::EXCLUDE_START_DATE);
+
+foreach ($periodo as $data) {
+    echo $data->format('l Y-m-d'), "\n";
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Thursday 2022-01-27
+Thursday 2022-02-24
+Thursday 2022-03-31
+Thursday 2022-04-28
+Thursday 2022-05-26
+Thursday 2022-06-30
+Thursday 2022-07-28
+Thursday 2022-08-25
+Thursday 2022-09-29
+Thursday 2022-10-27
+Thursday 2022-11-24
+Thursday 2022-12-29
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <simpara>
+   Npumeros de repetições não vinculados como especificado pela ISO 8601 seção 4.5
+   "Recurring time interval" não são suportados, ex.: nem passando passando
+   <literal>"R/..."</literal> como parâmetro <parameter>isostr</parameter> nem passando
+   &null; como parâmetro <parameter>end</parameter> funcionaria.
+  </simpara>
  </refsect1>
 
 </refentry>

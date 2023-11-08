@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: bce4e5f7d7979c5b672e9375a17860b0ced5eef3 Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, surfmax, fabioluciano -->
+<!-- EN-Revision: 57e27d2a7615da2ee6de57ed27eb40b473d487cb Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, surfmax, fabioluciano, leonardolara -->
 <refentry xml:id="function.gmmktime" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>gmmktime</refname>
@@ -9,25 +9,29 @@
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>int</type><methodname>gmmktime</methodname>
-   <methodparam choice="opt"><type>int</type><parameter>hour</parameter><initializer>gmdate("H")</initializer></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>minute</parameter><initializer>gmdate("i")</initializer></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>second</parameter><initializer>gmdate("s")</initializer></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>month</parameter><initializer>gmdate("n")</initializer></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>day</parameter><initializer>gmdate("j")</initializer></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>year</parameter><initializer>gmdate("Y")</initializer></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>is_dst</parameter><initializer>-1</initializer></methodparam>
+   <type class="union"><type>int</type><type>false</type></type><methodname>gmmktime</methodname>
+   <methodparam><type>int</type><parameter>hour</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>int</type><type>null</type></type><parameter>minute</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>int</type><type>null</type></type><parameter>second</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>int</type><type>null</type></type><parameter>month</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>int</type><type>null</type></type><parameter>day</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>int</type><type>null</type></type><parameter>year</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
   <para>
    Idêntico ao <function>mktime</function> exceto que os parâmetros representam uma
    data GMT. A função <function>gmmktime</function> usa internamente a função <function>mktime</function>,
-   significando que somente horários válidos derivadas de horários locais podem ser utiliados.
+   significando que somente horários válidos derivados de horários locais podem ser utilizados.
   </para>
   <para>
-   Como em <function>mktime</function>, os argumentos podem ser
-   omitidos da direita para esquerda, com qualquer argumento omitido sendo
-   definido para o valor GMT correspondente.
+   Como em <function>mktime</function>, argumentos opcionais podem ser
+   omitidos da direita para esquerda, com todos os argumentos omitidos sendo
+   definidos para o valor GMT correspondente.
   </para>
+   <simpara>
+   Chamar <function>gmmktime</function> sem nenhum argumento não é
+   suportado, e vai resultar em um <classname>ArgumentCountError</classname>.
+   <function>time</function> pode ser usado para obter o horário atual.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -95,20 +99,6 @@
       </para>
      </listitem>
     </varlistentry>
-    <varlistentry>
-     <term><parameter>is_dst</parameter></term>
-     <listitem>
-      <para>
-       Parâmetros sempre representam uma data GMT, sendo assim, <parameter>is_dst</parameter>
-       não influenciará o resultado.
-      </para>
-      <note>
-       <para>
-        Este parâmetro foi removido no PHP 7.0.0.
-       </para>
-      </note>
-     </listitem>
-    </varlistentry>
    </variablelist>
   </para>
  </refsect1>
@@ -116,7 +106,8 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna um <type>integer</type> Unix timestamp.
+   Retorna um <type>int</type> timestamp Unix em caso de sucesso, ou &false; se O
+   timestamp não couber em um número inteiro do PHP.
   </para>
  </refsect1>
 
@@ -133,17 +124,17 @@
      </thead>
      <tbody>
       <row>
-       <entry>7.0.0</entry>
+       <entry>8.0.0</entry>
        <entry>
-        O parâmetro <parameter>is_dst</parameter> foi removido.
+        <parameter>hour</parameter> não é mais opcional. Se você precisar de um timestamp
+        Unix, use <function>time</function>.
        </entry>
       </row>
       <row>
-       <entry>5.1.0</entry>
+       <entry>8.0.0</entry>
        <entry>
-        A partir do PHP 5.1.0, o parâmetro <parameter>is_dst</parameter> foi
-        depreciado. Como resultado, a nova funcionalidade de manipulação de fusos horário deve ser
-        utilizada.
+        <parameter>minute</parameter>, <parameter>second</parameter>, <parameter>month</parameter>,
+        <parameter>day</parameter> e <parameter>year</parameter> agora podem ser nulos.
        </entry>
       </row>
      </tbody>
@@ -173,6 +164,7 @@ echo "July 1, 2000 is on a " . date("l", gmmktime(0, 0, 0, 7, 1, 2000));
   &reftitle.seealso;
   <para>
    <simplelist>
+    <member>A classe <classname>DateTimeImmutable</classname></member>
     <member><function>mktime</function></member>
     <member><function>date</function></member>
     <member><function>time</function></member>
@@ -180,7 +172,6 @@ echo "July 1, 2000 is on a " . date("l", gmmktime(0, 0, 0, 7, 1, 2000));
   </para>
  </refsect1>
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

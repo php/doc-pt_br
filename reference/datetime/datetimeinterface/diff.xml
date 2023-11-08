@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 2479b98e82e96aa310e54bedb846951e34a9208b Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano -->
-
+<!-- EN-Revision: dbbcd32d72e4c9af14e9f3b940edbedfb54f965e Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano, leonardolara -->
 <refentry xml:id="datetime.diff" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
-  <refname>DateTime::diff</refname>
-  <refname>DateTimeImmutable::diff</refname>
   <refname>DateTimeInterface::diff</refname>
+  <refname>DateTimeImmutable::diff</refname>
+  <refname>DateTime::diff</refname>
   <refname>date_diff</refname>
   <refpurpose>Retorna a diferença entre dois objetos DateTime</refpurpose>
  </refnamediv>
@@ -13,27 +12,27 @@
  <refsect1 role="description">
   &reftitle.description;
   <para>&style.oop;</para>
-  <methodsynopsis role="oop">
-   <modifier>public</modifier> <type>DateInterval</type><methodname>DateTime::diff</methodname>
-   <methodparam><type>DateTimeInterface</type><parameter>datetime2</parameter></methodparam>
-   <methodparam choice="opt"><type>bool</type><parameter>absolute</parameter><initializer>false</initializer></methodparam>
+  <methodsynopsis role="DateTimeInterface">
+   <modifier>public</modifier> <type>DateInterval</type><methodname>DateTimeInterface::diff</methodname>
+   <methodparam><type>DateTimeInterface</type><parameter>targetObject</parameter></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>absolute</parameter><initializer>&false;</initializer></methodparam>
   </methodsynopsis>
   <methodsynopsis role="DateTimeImmutable">
    <modifier>public</modifier> <type>DateInterval</type><methodname>DateTimeImmutable::diff</methodname>
-   <methodparam><type>DateTimeInterface</type><parameter>datetime2</parameter></methodparam>
-   <methodparam choice="opt"><type>bool</type><parameter>absolute</parameter><initializer>false</initializer></methodparam>
+   <methodparam><type>DateTimeInterface</type><parameter>targetObject</parameter></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>absolute</parameter><initializer>&false;</initializer></methodparam>
   </methodsynopsis>
-  <methodsynopsis role="DateTimeInterface">
-   <modifier>public</modifier> <type>DateInterval</type><methodname>DateTimeInterface::diff</methodname>
-   <methodparam><type>DateTimeInterface</type><parameter>datetime2</parameter></methodparam>
-   <methodparam choice="opt"><type>bool</type><parameter>absolute</parameter><initializer>false</initializer></methodparam>
+  <methodsynopsis role="DateTime">
+   <modifier>public</modifier> <type>DateInterval</type><methodname>DateTime::diff</methodname>
+   <methodparam><type>DateTimeInterface</type><parameter>targetObject</parameter></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>absolute</parameter><initializer>&false;</initializer></methodparam>
   </methodsynopsis>
   <para>&style.procedural;</para>
-  <methodsynopsis role="procedural">
+  <methodsynopsis>
    <type>DateInterval</type><methodname>date_diff</methodname>
-   <methodparam><type>DateTimeInterface</type><parameter>datetime1</parameter></methodparam>
-   <methodparam><type>DateTimeInterface</type><parameter>datetime2</parameter></methodparam>
-   <methodparam choice="opt"><type>bool</type><parameter>absolute</parameter><initializer>false</initializer></methodparam>
+   <methodparam><type>DateTimeInterface</type><parameter>baseObject</parameter></methodparam>
+   <methodparam><type>DateTimeInterface</type><parameter>targetObject</parameter></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>absolute</parameter><initializer>&false;</initializer></methodparam>
   </methodsynopsis>
   <para>
    Retorna a diferença entre dois objetos que implementam a classe
@@ -66,23 +65,37 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   O objeto <classname>DateInterval</classname> representando a
-   diferença entre as duas datas&return.falseforfailure;.
+   O objeto <classname>DateInterval</classname> representa a
+   diferença entre as duas datas.
+  </para>
+  <para>
+   O valor de retorno representa mais especificamente o intervalo de tempo a
+   ser aplicado ao objeto original (<parameter>$this</parameter> or
+   <parameter>$originObject</parameter>) para se chegar ao
+   <parameter>$targetObject</parameter>. Este processo nem sempre é
+   reversível.
+  </para>
+  <para>
+   O método leva em conta mudanças de horário de verão, e por isso pode
+   retornar um intervalo de <literal>24 horas e 30 minutos</literal>, por exemplo.
+   Se você quiser fazer cálculos com horários absolutos, você precisa converter
+   tanto <parameter>$this</parameter>/<parameter>$baseObject</parameter> quanto
+   <parameter>$targetObject</parameter> para UTC primeiro.
   </para>
  </refsect1>
 
  <refsect1 role="examples">
   &reftitle.examples;
   <example>
-   <title>Exemplo do método <function>DateTime::diff</function></title>
+   <title>Exemplo do método <function>DateTimeImmutable::diff</function></title>
    <para>&style.oop;</para>
    <programlisting role="php">
 <![CDATA[
 <?php
-$datetime1 = new DateTime('2009-10-11');
-$datetime2 = new DateTime('2009-10-13');
-$interval = $datetime1->diff($datetime2);
-echo $interval->format('%R%a days');
+$origin = new DateTime('2009-10-11');
+$target = new DateTime('2009-10-13');
+$interval = $origin->diff($target);
+echo $interval->format('%R%a dias');
 ?>
 ]]>
    </programlisting>
@@ -90,25 +103,74 @@ echo $interval->format('%R%a days');
    <programlisting role="php">
 <![CDATA[
 <?php
-$datetime1 = date_create('2009-10-11');
-$datetime2 = date_create('2009-10-13');
-$interval = date_diff($datetime1, $datetime2);
-echo $interval->format('%R%a days');
+$origin = date_create('2009-10-11');
+$target = date_create('2009-10-13');
+$interval = date_diff($origin, $target);
+echo $interval->format('%R%a dias');
 ?>
 ]]>
    </programlisting>
    &examples.outputs;
    <screen>
 <![CDATA[
-+2 days
++2 dias
 ]]>
    </screen>
   </example>
+  
+  <example>
+   <title><methodname>DateTimeInterface::diff</methodname> durante mudança
+   de horário de verão</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$originalTime = new DateTimeImmutable("2021-10-30 09:00:00 Europe/London");
+$targetTime = new DateTimeImmutable("2021-10-31 08:30:00 Europe/London");
+$interval = $originalTime->diff($targetTime);
+echo $interval->format("%H:%I:%S (Dias inteiros: %a)"), "\n";
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+24:30:00 (Dias inteiros: 0)
+]]>
+   </screen>
+  </example>
+
+  <example>
+   <title>Intervalo do método <methodname>DateTimeInterface::diff</methodname></title>
+   <para>
+    O valor que o método retorna é a quantidade exata de tempo para sair de
+    <parameter>$this</parameter> e chegar em <parameter>$targetObject</parameter>.
+    Comparando 1º de janeiro com 31 de dezembro retorna portanto 364, e não 365
+    dias (para anos não bissextos).
+   </para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$originalTime = new DateTimeImmutable("2023-01-01 UTC");
+$targetTime = new DateTimeImmutable("2023-12-31 UTC");
+$interval = $originalTime->diff($targetTime);
+echo "Dias inteiros: ", $interval->format("%a"), "\n";
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+Dias inteiros: 364
+]]>
+   </screen>
+  </example>
+
   <example>
    <title>Comparação entre objetos <classname>DateTime</classname></title>
    <note>
     <para>
-     A partir do PHP 5.2.2, objetos DateTime podem ser comparados utilizando os
+     Objetos das classes <classname>DateTimeImmutable</classname> e <classname>DateTime</classname>
+     podem ser comparados utilizando os
      <link linkend="language.operators.comparison">operadores de comparação</link>.
     </para>
    </note>
@@ -145,7 +207,6 @@ bool(false)
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

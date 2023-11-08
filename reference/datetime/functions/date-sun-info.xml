@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: fabioluciano Status: ready --><!-- CREDITS: thiago, fabioluciano -->
+<!-- EN-Revision: 5c951013ca04161992efed8b86fb40f55669958e Maintainer: fabioluciano Status: ready --><!-- CREDITS: thiago, fabioluciano, leonardolara -->
 <refentry xml:id="function.date-sun-info" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>date_sun_info</refname>
-  <refpurpose>Retorna um array com informações sobre pôr do sol/nascer do sol e o início/fim do dia</refpurpose>
+  <refpurpose>Retorna um array com informações sobre pôr/nascer do sol e o início/fim do dia</refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>array</type><methodname>date_sun_info</methodname>
-   <methodparam><type>int</type><parameter>time</parameter></methodparam>
+   <methodparam><type>int</type><parameter>timestamp</parameter></methodparam>
    <methodparam><type>float</type><parameter>latitude</parameter></methodparam>
    <methodparam><type>float</type><parameter>longitude</parameter></methodparam>
   </methodsynopsis>
@@ -20,10 +20,10 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>time</parameter></term>
+     <term><parameter>timestamp</parameter></term>
      <listitem>
       <para>
-       Timestamp.
+       Timestamp Unix.
       </para>
      </listitem>
     </varlistentry>
@@ -51,6 +51,120 @@
   &reftitle.returnvalues;
   <para>
    Retorna um array em caso de sucesso&return.falseforfailure;.
+   A estrutura do array é detalhada na lista abaixo:
+  </para>
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><literal>sunrise</literal></term>
+     <listitem>
+      <simpara>
+       O timestamp do nascer do sol (ângulo em relação ao zênite = 90°35').
+      </simpara>
+     </listitem> 
+    </varlistentry>
+    <varlistentry>
+     <term><literal>sunset</literal></term>
+     <listitem>
+      <simpara>
+       O timestamp do pôr do sol (ângulo em relação ao zênite = 90°35').
+      </simpara>
+     </listitem> 
+    </varlistentry>
+    <varlistentry>
+     <term><literal>transit</literal></term>
+     <listitem>
+      <simpara>
+       O timestamp quando o sol está em seu zênite, ou seja, atingiu seu ponto
+       mais alto.
+      </simpara>
+     </listitem> 
+    </varlistentry>
+    <varlistentry>
+     <term><literal>civil_twilight_begin</literal></term>
+     <listitem>
+      <simpara>
+       O início do amanhecer civil (ângulo em relação ao zênite = 96°). Termina no
+       <literal>sunrise</literal>.
+      </simpara>
+     </listitem> 
+    </varlistentry>
+    <varlistentry>
+     <term><literal>civil_twilight_end</literal></term>
+     <listitem>
+      <simpara>
+       O final do crepúsculo civil (ângulo em relação ao zênite = 96°). Começa no
+       <literal>sunset</literal>.
+      </simpara>
+     </listitem> 
+    </varlistentry>
+    <varlistentry>
+     <term><literal>nautical_twilight_begin</literal></term>
+     <listitem>
+      <simpara>
+       O início do amanhecer náutico (ângulo em relação ao zênite = 102°). Termina no
+       <literal>civil_twilight_begin</literal>.
+      </simpara>
+     </listitem> 
+    </varlistentry>
+    <varlistentry>
+     <term><literal>nautical_twilight_end</literal></term>
+     <listitem>
+      <simpara>
+       O final do crepúsculo náutico (ângulo em relação ao zênite = 102°). Começa no
+       <literal>civil_twilight_end</literal>.
+      </simpara>
+     </listitem> 
+    </varlistentry>
+    <varlistentry>
+     <term><literal>astronomical_twilight_begin</literal></term>
+     <listitem>
+      <simpara>
+       O início do amanhecer astronômico (ângulo em relação ao zênite = 108°). Termina no
+       <literal>nautical_twilight_begin</literal>.
+      </simpara>
+     </listitem> 
+    </varlistentry>
+    <varlistentry>
+     <term><literal>astronomical_twilight_end</literal></term>
+     <listitem>
+      <simpara>
+       O final do crepúsculo astronômico (ângulo em relação ao zênite = 108°). Começa no
+       <literal>nautical_twilight_end</literal>.
+      </simpara>
+     </listitem> 
+    </varlistentry>
+   </variablelist>
+  </para>
+  <para> 
+   Os valores dos elementos do array podem ser timestamps UNIX, &false; se o
+   sol estiver abaixo do respectivo ângulo durante todo o dia, or &true; se o sol estiver
+   acima do respectivo ângulo durante todo o dia.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>7.2.0</entry>
+       <entry>
+        Os cálculos foram corrigidos com base na meia-noite local em vez do
+        meio-dia local, o que muda os resultados um pouco.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
   </para>
  </refsect1>
 
@@ -85,20 +199,102 @@ astronomical_twilight_end: 17:12:00
     </screen>
    </example>
   </para>
- </refsect1>
-
- <refsect1 role="seealso">
-  &reftitle.seealso;
+  
   <para>
-   <simplelist>
-    <member><function>date_sunrise</function></member>
-    <member><function>date_sunset</function></member>
-   </simplelist>
+   <example>
+    <title>Noite polar, com algum processamento</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$tz = new \DateTimeZone('America/Anchorage');
+
+$si = date_sun_info(strtotime("2022-12-21"), 70.21, -148.51);
+foreach ($si as $key => $value) {
+    echo
+        match ($value) {
+            true => 'always',
+            false => 'never',
+            default => date_create("@{$value}")->setTimeZone($tz)->format( 'H:i:s T' ),
+        },
+        ": {$key}",
+        "\n";
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+never: sunrise
+never: sunset
+12:52:18 AKST: transit
+10:53:19 AKST: civil_twilight_begin
+14:51:17 AKST: civil_twilight_end
+09:01:47 AKST: nautical_twilight_begin
+16:42:48 AKST: nautical_twilight_end
+07:40:47 AKST: astronomical_twilight_begin
+18:03:49 AKST: astronomical_twilight_end
+]]>
+    </screen>
+   </example>
+  </para>
+
+  <para>
+   <example>
+    <title>Sol da meia-noite (Tromsø, Norway)</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$si = date_sun_info(strtotime("2022-06-26"), 69.68, 18.94);
+print_r($si);
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Array
+(
+    [sunrise] => 1
+    [sunset] => 1
+    [transit] => 1656240426
+    [civil_twilight_begin] => 1
+    [civil_twilight_end] => 1
+    [nautical_twilight_begin] => 1
+    [nautical_twilight_end] => 1
+    [astronomical_twilight_begin] => 1
+    [astronomical_twilight_end] => 1
+)
+]]>
+    </screen>
+   </example>
+  </para>
+
+  <para>
+   <example>
+    <title>Calculando a duração do dia (Kiev)</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$si = date_sun_info(strtotime('2022-08-26'), 50.45, 30.52);
+$diff = $si['sunset'] - $si['sunrise'];
+echo "Duração do dia: ",
+    floor($diff / 3600), "h ",
+    floor(($diff % 3600) / 60), "s\n";
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Duração do dia: 13h 56s
+]]>
+    </screen>
+   </example>
   </para>
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

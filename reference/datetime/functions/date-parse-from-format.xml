@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 18731686eae05a911f4da304528ebcbb45f5ab37 Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano -->
+<!-- EN-Revision: 4d13f5e4b45f699eb855a5e84736aeda2ebd142a Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano, leonardolara -->
 
 <refentry xml:id="function.date-parse-from-format" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
@@ -12,10 +12,10 @@
   <methodsynopsis>
    <type>array</type><methodname>date_parse_from_format</methodname>
    <methodparam><type>string</type><parameter>format</parameter></methodparam>
-   <methodparam><type>string</type><parameter>date</parameter></methodparam>
+   <methodparam><type>string</type><parameter>datetime</parameter></methodparam>
   </methodsynopsis>
   <para>
-   Retorna um array associativo com informações da data informada.
+   Retorna um array associativo com informação detalhada sobre a data/hora informada.
   </para>
  </refsect1>
 
@@ -27,15 +27,18 @@
      <term><parameter>format</parameter></term>
      <listitem>
       <para>
-       Formato aceito pelo método <function>DateTime::createFromFormat</function>.
+       Para documentação sobre como o parâmetro <parameter>format</parameter> é usado, favor
+       se referir à documentação da função
+       <function>DateTimeImmutable::createFromFormat</function>. As mesmas
+       regras se aplicam.
       </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>date</parameter></term>
+     <term><parameter>datetime</parameter></term>
      <listitem>
       <para>
-       String que representa a data.
+       String que representa a data/hora.
       </para>
      </listitem>
     </varlistentry>
@@ -47,8 +50,90 @@
   &reftitle.returnvalues;
   <!-- See also &return.success; -->
   <para>
-   Retorna um array associativo com informações da data informada.
+   Retorna um array associativo com informação detalhada da data/hora informada.
   </para>
+  <para>
+   O array de retorno tem chaves para <literal>year</literal>,
+   <literal>month</literal>, <literal>day</literal>, <literal>hour</literal>,
+   <literal>minute</literal>, <literal>second</literal>,
+   <literal>fraction</literal>, e <literal>is_localtime</literal>.
+  </para>
+  <para>
+   Se <literal>is_localtime</literal> estiver presente então
+   <literal>zone_type</literal> indica o tipo do fuso horário. Para o tipo
+   <literal>1</literal> (deslocamento UTC), os campos <literal>zone</literal> e
+   <literal>is_dst</literal> são incluídos; para o tipo <literal>2</literal>
+   (abreviação), os campos <literal>tz_abbr</literal> e
+   <literal>is_dst</literal> são incluídos; e para tipo <literal>3</literal>
+   (identificador de fuso), os campos <literal>tz_abbr</literal> e
+   <literal>tz_id</literal> são incluídos.
+  </para>
+  <para>
+   O array inclui os campos <literal>warning_count</literal> e
+   <literal>warnings</literal>. O primeiro indica quantos
+   avisos ocorreram.
+   As chaves dos elementos do array <literal>warnings</literal> indicam as
+   posições na string <parameter>datetime</parameter> onde os avisos
+   ocorreram, com o valor da string descrevendo o aviso em si. Um exemplo
+   abaixo mostra tal aviso.
+  </para>
+  <para>
+   O array também contém os campos <literal>error_count</literal> e
+   <literal>errors</literal>. O primeiro indica quantos erros
+   foram encontrados.
+   As chaves dos elementos do array <literal>errors</literal> indicam
+   posição na string <parameter>datetime</parameter> onde os erros
+   ocorreram, com o valor da string descrevendo o erro em si. Um exemplo
+   abaixo mostra tal erro.
+  </para>
+  <warning>
+   <para>
+    O número de elementos do arrays <literal>warnings</literal> ou
+    <literal>errors</literal> pode ser menor que
+    <literal>warning_count</literal> ou <literal>error_count</literal> se eles
+    ocorreram na mesma posição.
+   </para>
+  </warning>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <para>
+   Esta função dispara a exceção <exceptionname>ValueError</exceptionname> quando o
+   parâmetro <parameter>datetime</parameter> contém bytes nulos.
+  </para>
+ </refsect1>
+
+<refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.0.21, 8.1.8, 8.2.0</entry>
+      <entry>
+       Agora dispara <exceptionname>ValueError</exceptionname> quando bytes nulos
+       são passados por <parameter>datetime</parameter>, o que antes era silenciosamente
+       ignorado.
+      </entry>
+     </row>
+     <row>
+      <entry>7.2.0</entry>
+      <entry>
+       O elemento <literal>zone</literal> do array retornado agora representa
+       segundos em vez de minutos, e seu sinal é invertido. Por exemplo,
+       <literal>-120</literal> agora é <literal>7200</literal>.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
  </refsect1>
 
  <refsect1 role="examples">
@@ -88,19 +173,73 @@ Array
 
     [is_localtime] => 1
     [zone_type] => 1
-    [zone] => -60
+    [zone] => 3600
     [is_dst] =>
 )
 ]]>
     </screen>
    </example>
   </para>
+
+  <para>
+   <example>
+    <title>Exemplo da função <function>date_parse_from_format</function> com avisos</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$date = "26 August 2022 22:30 pm";
+$parsed = date_parse_from_format("j F Y G:i a", $date);
+
+echo "Contagem de avisos: ", $parsed['warning_count'], "\n";
+foreach ($parsed['warnings'] as $position => $message) {
+    echo "\tNa posição {$position}: {$message}\n";
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Contagem de avisos: 1
+	Na posição 23: The parsed time was invalid
+]]>
+    </screen>
+   </example>
+  </para>
+
+  <para>
+   <example>
+    <title>Exemplo da função <function>date_parse_from_format</function> com erros</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$date = "26 August 2022 CEST";
+$parsed = date_parse_from_format("j F Y H:i", $date);
+
+echo "Contagem de erros: ", $parsed['error_count'], "\n";
+foreach ($parsed['errors'] as $position => $message) {
+    echo "\tNa posição {$position}: {$message}\n";
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Contagem de erros: 3
+	Na posição 15: A two digit hour could not be found
+	Na posição 19: Data missing
+]]>
+    </screen>
+   </example>
+  </para>
  </refsect1>
+
  <refsect1 role="seealso">
   &reftitle.seealso;
   <para>
    <simplelist>
-    <member><function>DateTime::createFromFormat</function></member>
+    <member><function>DateTimeImmutable::createFromFormat</function></member>
     <member><function>checkdate</function></member>
    </simplelist>
   </para>
