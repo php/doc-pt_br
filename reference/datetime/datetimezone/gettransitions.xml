@@ -1,26 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 086dc12715921d77fe42d7cf578b6254c743aa3e Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano -->
-
+<!-- EN-Revision: 02ff7fef5b34cf8f5395180d9d39fb64d9398d00 Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano, leonardolara -->
 <refentry xml:id="datetimezone.gettransitions" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>DateTimeZone::getTransitions</refname>
   <refname>timezone_transitions_get</refname>
-  <refpurpose>Retorna todas as transições do fuso horário</refpurpose>
+  <refpurpose>Retorna todas as transições para o fuso horário</refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
   <para>&style.oop;</para>
-  <methodsynopsis role="oop">
-   <modifier>public</modifier> <type>array</type><methodname>DateTimeZone::getTransitions</methodname>
-   <methodparam choice="opt"><type>int</type><parameter>timestamp_begin</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>timestamp_end</parameter></methodparam>
+  <methodsynopsis role="DateTimeZone">
+   <modifier>public</modifier> <type class="union"><type>array</type><type>false</type></type><methodname>DateTimeZone::getTransitions</methodname>
+   <methodparam choice="opt"><type>int</type><parameter>timestampBegin</parameter><initializer><constant>PHP_INT_MIN</constant></initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>timestampEnd</parameter><initializer><constant>PHP_INT_MAX</constant></initializer></methodparam>
   </methodsynopsis>
   <para>&style.procedural;</para>
-  <methodsynopsis role="procedural">
-   <type>array</type><methodname>timezone_transitions_get</methodname>
+  <methodsynopsis>
+   <type class="union"><type>array</type><type>false</type></type><methodname>timezone_transitions_get</methodname>
    <methodparam><type>DateTimeZone</type><parameter>object</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>timestamp_begin</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>timestamp_end</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>timestampBegin</parameter><initializer><constant>PHP_INT_MIN</constant></initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>timestampEnd</parameter><initializer><constant>PHP_INT_MAX</constant></initializer></methodparam>
   </methodsynopsis>
  </refsect1>
 
@@ -30,7 +29,7 @@
    <variablelist>
     &date.datetimezone.description;
     <varlistentry>
-     <term><parameter>timestamp_begin</parameter></term>
+     <term><parameter>timestampBegin</parameter></term>
      <listitem>
       <para>
        Timestamp inicial.
@@ -38,7 +37,7 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>timestamp_end</parameter></term>
+     <term><parameter>timestampEnd</parameter></term>
      <listitem>
       <para>
        Timestamp final.
@@ -52,33 +51,59 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna um array numericamente indexado contendo um array associativo com todas
-   as transições, em caso de sucesso&return.falseforfailure;.
+   Retorna um array numericamente indexado de
+   arrays de transições em caso de sucesso, &return.falseforfailure;. Objetos
+   DataTimeZone do tipo 1 (deslocamento UTC) e tipo 2 (abreviações) não
+   contêm transições, e se tiverem este método chamado irão retornar
+   &false;.
   </para>
- </refsect1>
-
- <refsect1 role="changelog">
-  &reftitle.changelog;
   <para>
-   <informaltable>
+  Se o parâmetro <parameter>timestampBegin</parameter> for informado, a primeira entrada no
+   array de retorno irá contrer um elemento de transição no horário de
+   <parameter>timestampBegin</parameter>.
+  </para>
+  <para>
+   <table>
+    <title>Estrutura do Array de Transição</title>
     <tgroup cols="2">
      <thead>
       <row>
-       <entry>&Version;</entry>
-       <entry>&Description;</entry>
+       <entry>Key</entry>
+       <entry>Type</entry>
+       <entry>Description</entry>
       </row>
      </thead>
      <tbody>
       <row>
-       <entry>5.3.0</entry>
-       <entry>
-        Os parâmetros opcionais <parameter>timestamp_begin</parameter> e <parameter>timestamp_end</parameter>
-        foram adicionados.
-       </entry>
+       <entry><literal>ts</literal></entry>
+       <entry><type>int</type></entry>
+       <entry>Timestamp Unix</entry>
+      </row>
+      <row>
+       <entry><literal>time</literal></entry>
+       <entry><type>string</type></entry>
+       <entry>string de horário <constant>DateTimeInterface::ISO8601_EXPANDED</constant> (PHP
+       8.2 e seguintes), ou <constant>DateTimeInterface::ISO8601</constant> (PHP
+       8.1 e anteriores)</entry>
+      </row>
+      <row>
+       <entry><literal>offset</literal></entry>
+       <entry><type>int</type></entry>
+       <entry>Deslocamento UTC em segundos</entry>
+      </row>
+      <row>
+       <entry><literal>isdst</literal></entry>
+       <entry><type>bool</type></entry>
+       <entry>Se o horário de verão está ativo</entry>
+      </row>
+      <row>
+       <entry><literal>abbr</literal></entry>
+       <entry><type>string</type></entry>
+       <entry>Abreviação do fuso horário</entry>
       </row>
      </tbody>
     </tgroup>
-   </informaltable>
+   </table>
   </para>
  </refsect1>
 
@@ -132,11 +157,58 @@ Array
 ]]>
     </screen>
    </example>
+   <example>
+    <title>Um exemplo da função <function>timezone_transitions_get</function> com
+    o parâmetro <parameter>timestampBegin</parameter></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$timezone = new DateTimeZone("Europe/London");
+$transitions = $timezone->getTransitions(time());
+print_r(array_slice($transitions, 0, 3));
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+Array
+(
+    [0] => Array
+        (
+            [ts] => 1654184161
+            [time] => 2022-06-02T15:36:01+0000
+            [offset] => 3600
+            [isdst] => 1
+            [abbr] => BST
+        )
+
+    [1] => Array
+        (
+            [ts] => 1667091600
+            [time] => 2022-10-30T01:00:00+0000
+            [offset] => 0
+            [isdst] => 
+            [abbr] => GMT
+        )
+
+    [2] => Array
+        (
+            [ts] => 1679792400
+            [time] => 2023-03-26T01:00:00+0000
+            [offset] => 3600
+            [isdst] => 1
+            [abbr] => BST
+        )
+
+)
+]]>
+    </screen>
+   </example>
   </para>
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

@@ -1,30 +1,150 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: c08bf3ec575a09c695a8c27eddbaa949ce2ef6dc Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano, rogeriopradoj -->
+<!-- EN-Revision: 7a75b854c8c52226d38397e7e8177e339fdb273f Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano, rogeriopradoj, leonardolara -->
 <chapter xml:id="datetime.formats" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>Formatos de Data e Hora Suportados</title>
 
  <para>
-  Esta seção descreve todos os diferentes formatos que os interpretadores
-  <function>strtotime</function>, <classname>DateTime</classname>
-  e <function>date_create</function> entendem. Os formatos
-  estão agrupados por seção. Na maioria dos casos, formatos de diferentes
-  seções podem ser utilizados com a mesma string data/hora. Para cada um
+  Esta seção descreve todos os diferentes formatos em uma sintaxe BNF, que os
+  analisadores de <classname>DateTimeImmutable</classname>, <classname>DateTime</classname>,
+  <function>date_create_immutable</function>,
+  <function>date_create</function>, <function>date_parse</function> e
+  <function>strtotime</function> entendem. Os formatos estão agrupados
+  por seção. Na maioria dos casos, formatos de diferentes seções, separados por
+  espaços, vírgula ou ponto, podem ser utilizados com a mesma string data/hora. Para cada um
   dos formatos suportados, um ou mais exemplos estão disponíveis, assim
   como a descrição do formato. Nos formatos, caracteres entre aspas simples
-  são case-insensitive (<literal>'t'</literal> pode
+  são insensíveis a maiúsculas/minúsculas (<literal>'t'</literal> pode
   ser <literal>t</literal> ou <literal>T</literal>), caracteres entre
-  aspas duplas são case-sensitive (<literal>"T"</literal> só pode ser
+  aspas duplas são sensíveis a maiúsculas/minúsculas (<literal>"T"</literal> só pode ser
   <literal>T</literal>).
  </para>
+ <para>
+  Para formatar objetos <classname>DateTimeImmutable</classname> e
+  <classname>DateTime</classname>, favor se referir à documentação
+  do método <function>DateTimeInterface::format</function>.
+ </para>
+
+ <para>
+  Um conjunto geral de regras deve ser considerado.
+ </para>
+ <orderedlist>
+  <listitem>
+   <simpara>
+    O analisador permite para cada unidade (ano, mês, dia, hora, minuto, segundo)
+    o intervalo completo de valores. Para um ano são apenas 4 dígitos, para um mês
+    o intervalo é 0-12, dia é 0-31, hora é 0-24, e minuto é 0-59.
+   </simpara>
+  </listitem>
+  <listitem>
+   <simpara>
+    60 é permitido para segundos, e algumas vezes strings com este
+    segundo adicional aparecem. Porém, o PHP implementa o horário Unix onde "60" não é
+    um segundo válido e por isso ocorre sobrecarga.
+   </simpara>
+  </listitem>
+  <listitem>
+   <simpara>
+    <function>strtotime</function> retorna &false; se quaisquer números estiverem fora dos
+    intervalos, e <function>DateTimeImmutable::__construct</function> dispara
+    uma exceção.
+   </simpara>
+  </listitem>
+  <listitem>
+   <simpara>
+    Se um string contém somente uma data, todos os elementos de horário são inicializados em 0.
+   </simpara>
+  </listitem>
+  <listitem>
+   <simpara>
+    Todos os elementos menos significativos são inicializados em 0 se alguma parte do horário estiver
+    presente no string.
+   </simpara>
+  </listitem>
+  <listitem>
+   <simpara>
+    O analisador é muito simples, e não faz verificações adicionais, o que o torna mais rápido (e
+    mais genérico).
+   </simpara>
+  </listitem>
+  <listitem>
+   <simpara>
+    Além das regras para os elementos de horário individuais, o analisador também entende
+    <link linkend="datetime.formats.compound">formatos compostos</link> mais específicos,
+    como análise de timestamps Unix
+    (<literal>@1690388256</literal>) e números de semana ISO
+    (<literal>2008-W28-3</literal>).
+   </simpara>
+  </listitem>
+  <listitem>
+   <para>
+    Há uma verificação adicional se uma data inválida é fornecida:
+    <example>
+     <programlisting role="php">
+<![CDATA[
+<?php
+$res = date_parse("2015-09-31");
+var_dump($res["warnings"]);
+?>
+]]>
+     </programlisting>
+     &example.outputs;
+     <screen>
+<![CDATA[
+array(1) {
+  [11] =>
+  string(27) "The parsed date was invalid"
+}
+]]>
+     </screen>
+    </example>
+   </para>
+  </listitem>
+  <listitem>
+   <para>
+    Já é possível lidar com casos extremos, mas neste caso
+    a função <function>DateTimeImmutable::createFromFormat</function> deve ser usada
+    e o formato correto fornecido.
+    <example>
+     <programlisting role="php">
+<![CDATA[
+<?php
+$res = DateTimeImmutable::createFromFormat("Y-m-d", "2015-09-34");
+var_dump($res);
+]]>
+     </programlisting>
+     &example.outputs;
+     <screen>
+<![CDATA[
+object(DateTimeImmutable)#1 (3) {
+  ["date"]=>
+  string(26) "2015-10-04 17:24:43.000000"
+  ["timezone_type"]=>
+  int(3)
+  ["timezone"]=>
+  string(13) "Europe/London"
+}
+]]>
+     </screen>
+    </example>
+   </para>
+  </listitem>
+ </orderedlist>
 
  <!--Time Formats: {{{-->
- <sect1 xml:id="datetime.formats.time">
+ <sect1 annotations="chunk:false" xml:id="datetime.formats.time">
   <title>Formatos de Hora</title>
 
   <para>
-   Esta página descreve os diferentes formatos de tempo que os interpretadores
-   <function>strtotime</function>, <classname>DateTime</classname> e
-   <function>date_create</function> entendem.
+   Esta página descreve os diferentes formatos de data/hora em uma sintaxe BNF,
+   que os analisadores de <classname>DateTimeImmutable</classname>,
+   <classname>DateTime</classname>, <function>date_create</function>,
+   <function>date_create_immutable</function> e
+   <function>strtotime</function> entendem.
+  </para>
+  <para>
+   Para formatar objetos <classname>DateTimeImmutable</classname> e
+   <classname>DateTime</classname>, favor se referir à documentação
+   do método <function>DateTimeInterface::format</function>.
   </para>
 
   <table>
@@ -51,7 +171,7 @@
      <row>
       <entry><literal>HH</literal></entry>
       <entry>[01][0-9] | "2"[0-4]</entry>
-      <entry>"04", "7", "19"</entry>
+      <entry>"04", "07", "19"</entry>
      </row>
      <row>
       <entry><literal>meridiano</literal></entry>
@@ -114,7 +234,7 @@
       <entry>"4:08:37 am", "7:19:19P.M."</entry>
      </row>
      <row>
-      <entry>MS SQL (Horas, minutos, segundos e a fração com o meridiano), somente em versões superiores ou iguais a PHP 5.3</entry>
+      <entry>MS SQL (Horas, minutos, segundos e a fração com o meridiano)</entry>
       <entry><literal>hh</literal> ":" <literal>MM</literal> ":" <literal>II</literal> [.:] [0-9]+ <literal>meridian</literal></entry>
       <entry>"4:08:39:12313am"</entry>
      </row>
@@ -175,13 +295,20 @@
  <!--}}}-->
 
  <!--Date Formats: {{{-->
- <sect1 xml:id="datetime.formats.date">
+ <sect1 annotations="chunk:false" xml:id="datetime.formats.date">
   <title>Formatos de Data</title>
 
   <para>
-   Esta página descreve os diferentes formatos de data que os interpretadores
-   <function>strtotime</function>, <classname>DateTime</classname> e
-   <function>date_create</function> entendem.
+   Esta página descreve os diferentes formatos de data em uma sintaxe BNF, que
+   os analisadores de <classname>DateTimeImmutable</classname>,
+   <classname>DateTime</classname>, <function>date_create</function>,
+   <function>date_create_immutable</function> e
+   <function>strtotime</function> entendem.
+  </para>
+  <para>
+   Para formatar objetos <classname>DateTimeImmutable</classname> e
+   <classname>DateTime</classname>, favor se referir à documentação
+   do método <function>DateTimeInterface::format</function>.
   </para>
 
   <table>
@@ -249,6 +376,11 @@
       <entry><literal>YY</literal></entry>
       <entry>[0-9]{4}</entry>
       <entry>"2000", "2008", "1978"</entry>
+     </row>
+     <row>
+      <entry><literal>YYY</literal></entry>
+      <entry>[0-9]{5,19}</entry>
+      <entry>"81412", "20192"</entry>
      </row>
     </tbody>
    </tgroup>
@@ -327,7 +459,7 @@
      </row>
      <row>
       <entry>Dia e mês textual</entry>
-      <entry><literal>d</literal> ([ .\t-])* <literal>m</literal></entry>
+      <entry><literal>dd</literal> ([ .\t-])* <literal>m</literal></entry>
       <entry>"1 July", "17 Apr", "9.May"</entry>
      </row>
      <row>
@@ -344,6 +476,11 @@
       <entry>Ano (somente o ano)</entry>
       <entry><literal>YY</literal></entry>
       <entry>"1978", "2008"</entry>
+     </row>
+     <row>
+      <entry>Year (expandido, 5-19 dígitos com sinal)</entry>
+      <entry>[+-] <literal>YYY</literal></entry>
+      <entry>"-81120", "+20192"</entry>
      </row>
      <row>
       <entry>Mês textual (somente o mês)</entry>
@@ -385,6 +522,11 @@
       <entry>[+-]? <literal>YY</literal> "-" <literal>MM</literal> "-" <literal>DD</literal></entry>
       <entry>"-0002-07-26", "+1978-04-17", "1814-05-17"</entry>
      </row>
+     <row>
+      <entry>Ano com 5+ dígitos com sinal, mês e dia</entry>
+      <entry>[+-] <literal>YYY</literal> "-" <literal>MM</literal> "-" <literal>DD</literal></entry>
+      <entry>"-81120-02-26", "+20192-04-17"</entry>
+     </row>
     </tbody>
    </tgroup>
   </table>
@@ -420,13 +562,18 @@
    </para>
   </note>
 
-  <note>
+  <caution>
    <para>
     É possível exceder positivamente e negativamente os formatos <literal>dd</literal> e
     <literal>DD</literal>. Dia 0 corresponde a último dia do mês
     anterior, assim como excedências positivas contam no próximo mês. Isso faz com que
     "2008-08-00" seja equivalente a "2008-07-31" e "2008-07-31" seja equivalente
     a  "2008-07-01" (Junho possui somente 30 dias).
+   </para>
+   <para>
+    Note que o intervalo de dia é restrito a 0-31 como indicado
+    pela expressão regular acima. Por isso, "2008-06-32" não é um string de data válida,
+    por exemplo.
    </para>
    <para>
     É possível exceder negativamente os formatos <literal>mm</literal> and
@@ -442,18 +589,25 @@
     "-0001-11-30" (o ano -1 ano calendário ISO 8601, que é 2 anos DC no calendário
     que antecede o calendário Gregoriano).
    </para>
-  </note>
+  </caution>
  </sect1>
  <!--}}}-->
 
  <!--Compound Formats: {{{-->
- <sect1 xml:id="datetime.formats.compound">
+ <sect1 annotations="chunk:false" xml:id="datetime.formats.compound">
   <title>Formatos Compostos</title>
 
   <para>
-   Esta página descreve os diferentes formatos de data e tempo compostos que os interpretadores
-   <function>strtotime</function>, <classname>DateTime</classname> e
-   <function>date_create</function> entendem.
+   Esta página descreve os diferentes formatos compostos de data/hora em uma sintaxe
+   BNF, que os analisadores de <classname>DateTimeImmutable</classname>,
+   <classname>DateTime</classname>, <function>date_create</function>,
+   <function>date_create_immutable</function> e
+   <function>strtotime</function> entendem.
+  </para>
+  <para>
+   Para formatar objetos <classname>DateTimeImmutable</classname> e
+   <classname>DateTime</classname>, favor se referir à documentação
+   do método <function>DateTimeInterface::format</function>.
   </para>
 
   <table>
@@ -490,7 +644,7 @@
      <row>
       <entry><literal>HH</literal></entry>
       <entry>[01][0-9] | "2"[0-4]</entry>
-      <entry>"04", "7", "19"</entry>
+      <entry>"04", "07", "19"</entry>
      </row>
      <row>
       <entry><literal>meridian</literal></entry>
@@ -499,7 +653,7 @@
      </row>
      <row>
       <entry><literal>ii</literal></entry>
-      <entry>[0-5][0-9]</entry>
+      <entry>[0-5]?[0-9]</entry>
       <entry>"04", "8", "59"</entry>
      </row>
      <row>
@@ -524,13 +678,13 @@
      </row>
      <row>
       <entry><literal>ss</literal></entry>
-      <entry>[0-5][0-9]</entry>
+      <entry>[0-5]?[0-9]|60</entry>
       <entry>"04", "8", "59"</entry>
      </row>
      <row>
       <entry><literal>SS</literal></entry>
       <entry>[0-5][0-9]</entry>
-      <entry>"04", "08", "59"</entry>
+      <entry>"04", "08", "59", "60" (segundo intercalar)</entry>
      </row>
      <row>
       <entry><literal>W</literal></entry>
@@ -546,6 +700,72 @@
       <entry><literal>YY</literal></entry>
       <entry>[0-9]{4}</entry>
       <entry>"2000", "2008", "1978"</entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </table>
+
+  <table>
+  <title>Formatos padrões</title>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>Descrição</entry>
+      <entry>Exemplos</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>ATOM</entry>
+      <entry>"2022-06-02T16:58:35+00:00"</entry>
+     </row>
+     <row>
+      <entry>COOKIE</entry>
+      <entry>"Thursday, 02-Jun-2022 16:58:35 UTC"</entry>
+     </row>
+     <row>
+      <entry>ISO8601</entry>
+      <entry>"2022-06-02T16:58:35+0000"</entry>
+     </row>
+     <row>
+      <entry><link xlink:href="&url.rfc;822">RFC 822</link></entry>
+      <entry>"Thu, 02 Jun 22 16:58:35 +0000"</entry>
+     </row>
+     <row>
+      <entry><link xlink:href="&url.rfc;850">RFC 850</link></entry>
+      <entry>"Thursday, 02-Jun-22 16:58:35 UTC"</entry>
+     </row>
+     <row>
+      <entry><link xlink:href="&url.rfc;1036">RFC 1036</link></entry>
+      <entry>"Thu, 02 Jun 22 16:58:35 +0000"</entry>
+     </row>
+     <row>
+      <entry><link xlink:href="&url.rfc;1123">RFC 1123</link></entry>
+      <entry>"Thu, 02 Jun 2022 16:58:35 +0000"</entry>
+     </row>
+     <row>
+      <entry><link xlink:href="&url.rfc;2822">RFC 2822</link></entry>
+      <entry>"Thu, 02 Jun 2022 16:58:35 +0000"</entry>
+     </row>
+     <row>
+      <entry><link xlink:href="&url.rfc;3339">RFC 3339</link></entry>
+      <entry>"2022-06-02T16:58:35+00:00"</entry>
+     </row>
+     <row>
+      <entry><link xlink:href="&url.rfc;3339">RFC 3339</link> Extended</entry>
+      <entry>"2022-06-02T16:58:35.698+00:00"</entry>
+     </row>
+     <row>
+      <entry><link xlink:href="&url.rfc;7231">RFC 7231</link></entry>
+      <entry>"Thu, 02 Jun 2022 16:58:35 GMT"</entry>
+     </row>
+     <row>
+      <entry>RSS</entry>
+      <entry>"Thu, 02 Jun 2022 16:58:35 +0000"</entry>
+     </row>
+     <row>
+      <entry>W3C</entry>
+      <entry>"2022-06-02T16:58:35+00:00"</entry>
      </row>
     </tbody>
    </tgroup>
@@ -603,6 +823,11 @@
       <entry>"@1215282385"</entry>
      </row>
      <row>
+      <entry>Timestamp Unix com microssegundos</entry>
+      <entry>"@" "-"? [0-9]+ "." [0-9]{0,6}</entry>
+      <entry>"@1607974647.503686"</entry>
+     </row>
+     <row>
       <entry>XMLRPC</entry>
       <entry><literal>YY</literal> <literal>MM</literal> <literal>DD</literal> "T" <literal>hh</literal> ":" <literal>II</literal> ":" <literal>SS</literal></entry>
       <entry>"20080701T22:38:07", "20080701T9:38:07"</entry>
@@ -628,7 +853,7 @@
     maiúsculo.
    </para>
    <para>
-    O "T", nos formatos SOAP, XMRPC e WDDX é case-sensitive, só
+    O "T", nos formatos SOAP, XMLRPC e WDDX é case-sensitive, só
     se pode utilizar o "T" maiúsculo.
    </para>
    <para>
@@ -639,12 +864,19 @@
  <!--}}}-->
 
  <!--Relative Formats: {{{-->
- <sect1 xml:id="datetime.formats.relative">
+ <sect1 annotations="chunk:false" xml:id="datetime.formats.relative">
   <title>Formatos relativos</title>
   <para>
-   Esta página descreve os diferentes formatos de data e tempo relativos que os interpretadores
-   <function>strtotime</function>, <classname>DateTime</classname> e
-   <function>date_create</function> entendem.
+   Esta página descreve os diferentes formatos de data/hora relativos em uma sintaxe BNF,
+   que os analisadores de <classname>DateTimeImmutable</classname>,
+   <classname>DateTime</classname>, <function>date_create</function>,
+   <function>date_create_immutable</function> e
+   <function>strtotime</function> entendem.
+  </para>
+  <para>
+   Para formatar objetos <classname>DateTimeImmutable</classname> e
+   <classname>DateTime</classname>, favor se referir à documentação
+   do método <function>DateTimeInterface::format</function>.
   </para>
 
   <table>
@@ -687,9 +919,10 @@
      </row>
      <row>
       <entry><literal>unit</literal></entry>
-      <entry>(('sec' | 'second' | 'min' | 'minute' | 'hour' | 'day' |
-       'fortnight' | 'forthnight' | 'month' | 'year') 's'?) | 'weeks' |
-       <literal>daytext</literal></entry>
+      <entry>'ms' | 'µs' | (( 'msec' | 'millisecond' | 'µsec' | 'microsecond'
+      | 'usec' | 'sec' | 'second' | 'min' | 'minute' | 'hour' | 'day' |
+      'fortnight' | 'forthnight' | 'month' | 'year') 's'?) | 'weeks' |
+      <literal>daytext</literal></entry>
      </row>
     </tbody>
    </tgroup>
@@ -749,13 +982,15 @@
      <row>
       <entry>'first day of'</entry>
       <entry>Define o dia para o primeiro dia do mês atual. Essa frase é
-       usada de melhor forma, junto com um nome de mês.</entry>
+       normalmente usada da melhor forma em conjunto com um nome de mês, já que ela somente
+       afeta o mês atual.</entry>
       <entry>"first day of January 2008"</entry>
      </row>
      <row>
       <entry>'last day of'</entry>
       <entry>Define o dia para o último do mês corrente. Essa frase é
-       usada de melhor forma, junto com um nome de mês.</entry>
+       normalmente usada da melhor forma em conjunto com um nome de mês, já que ela somente
+       afeta o mês atual.</entry>
       <entry>"last day of next month"</entry>
      </row>
      <row>
@@ -774,10 +1009,13 @@
       <entry>"+5 weeks", "12 day", "-7 weekdays"</entry>
      </row>
      <row>
-      <entry><literal>ordinal</literal> <literal>space</literal> <literal>unit</literal></entry>
-      <entry>Manipula porções de tempo relativas onde o valor seja um texto.</entry>
-      <entry>"fifth day", "second month"</entry>
-     </row>
+      <entry>(<literal>ordinal</literal> | <literal>reltext</literal>) <literal>space</literal> <literal>unit</literal></entry>
+      <entry>Manipula porções de tempo relativas onde o valor seja um texto.
+      <literal>last</literal> e <literal>previous</literal> são equivalentes
+      a <literal>-1</literal>, <literal>this</literal> equivalente a nada, e
+      <literal>next</literal> equivamente a <literal>+1</literal>.</entry>
+      <entry>"fifth day", "second month", "last day", "previous year"</entry>
+      </row>
      <row>
       <entry>'ago'</entry>
       <entry>Nega todos os valores das porções de tempo relativas anteriores.</entry>
@@ -785,7 +1023,10 @@
      </row>
      <row>
       <entry><literal>dayname</literal></entry>
-      <entry>Move para o próximo dia deste nome.</entry>
+      <entry>
+       Move para o próximo dia deste nome.(See <link
+       linkend="datetime.formats.relative.dayname-note">note</link>)
+       </entry>
       <entry>"Monday"</entry>
      </row>
      <row>
@@ -811,10 +1052,18 @@
     "2008-07-24 00:00". Isso acontece por que as cinco declarações
     influenciam diretamente o tempo corrente.
    </para>
+    <para>
+    Palavras-chave como "first day of" dependem do contexto no qual o
+    string de formato relativo é usado. Se usado com um método ou funcão estáticos,
+    a referência é o timestamp atual do sistema. Entretanto, se usado em
+    <function>DateTime::modify</function> ou
+    <function>DateTimeImmutable::modify</function>, a referência é o objeto
+    no qual o método <literal>modify()</literal> é chamado.
+   </para>
   </note>
 
   <note>
-   <para>
+   <para xml:id="datetime.formats.relative.dayname-note">
     Observe as seguintes considerações quando o dia da semana corrente é o
     mesmo que o dia da semana utilizada na string date/hora. O dia da semana
     corrente pode ser (re-)calculado para porções não relativas de strings
@@ -925,7 +1174,14 @@
     Dezembro tendo 31, produzindo um total de 61 dias.
    </para>
   </note>
-
+  <note>
+   <para>
+    <literal>number</literal> é um número <emphasis>inteiro</emphasis>; se um
+    número decimal é informado, o ponto (ou vírgula) provavelmente será interpretado como delimitador.
+    Por exemplo, <literal>'+1.5 hours'</literal> é analisado como
+    <literal>'+1 5 hours'</literal>, não como <literal>'+1 hour +30 minutes'</literal>.
+   </para>
+  </note>
   <sect2 role="changelog">
    &reftitle.changelog;
    <para>
@@ -939,10 +1195,17 @@
       </thead>
       <tbody>
        <row>
-        <entry>5.3.3</entry>
+        <entry>8.2.0</entry>
         <entry>
-         "first day" e "last day" foi modificado para ter o comportamento de "+1 day" e "-1 day",
-         respectivamente. Anteriormente, o comportamento era como "first day of" e "last day of".
+         <literal>number</literal> não aceita mais múltiplos sinais,
+         ex.: <literal>+-2</literal>.
+        </entry>
+       </row>
+       <row>
+        <entry>7.0.8</entry>
+        <entry>
+         Semanas sempre começam na segunda-feira. Antes, considerava-se que o domingo também poderia
+         começar uma semana.
         </entry>
        </row>
       </tbody>

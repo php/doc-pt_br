@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: d8fc668de6a322e737ef58ab0e0460ae3b48fc71 Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano -->
-
+<!-- EN-Revision: bd1ae73f4a88404c9a3015940c66a85aaeec5889 Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano, leonardolara -->
 <refentry xml:id="dateinterval.createfromdatestring" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>DateInterval::createFromDateString</refname>
@@ -9,13 +8,21 @@
 
  <refsect1 role="description">
   &reftitle.description;
-  <methodsynopsis role="oop">
-   <modifier>public</modifier> <modifier>static</modifier> <type>DateInterval</type><methodname>DateInterval::createFromDateString</methodname>
-   <methodparam><type>string</type><parameter>time</parameter></methodparam>
+  <para>&style.oop;</para>
+  <methodsynopsis role="DateInterval">
+   <modifier>public</modifier> <modifier>static</modifier> <type class="union"><type>DateInterval</type><type>false</type></type><methodname>DateInterval::createFromDateString</methodname>
+   <methodparam><type>string</type><parameter>datetime</parameter></methodparam>
+  </methodsynopsis>
+  <para>&style.procedural;</para>
+  <methodsynopsis>
+   <type class="union"><type>DateInterval</type><type>false</type></type><methodname>date_interval_create_from_date_string</methodname>
+   <methodparam><type>string</type><parameter>datetime</parameter></methodparam>
   </methodsynopsis>
   <para>
-   Utiliza o interpretador de datas para criar um DateInterval a partir de porções
-   relativas de uma string analisada.
+   Utiliza o interpretador de data/hora como no construtor
+   da classe <classname>DateTimeImmutable</classname> para criar um
+   <classname>DateInterval</classname> a partir das partes relacionadas
+   de uma string analisada.
   </para>
  </refsect1>
 
@@ -24,19 +31,54 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>time</parameter></term>
+     <term><parameter>datetime</parameter></term>
      <listitem>
       <para>
        Uma data com porções relativas. Especificamente, os
        <link linkend="datetime.formats.relative">formatos relativos</link>
-       suportados pelo analisador utilizados em <function>strtotime</function> e
-       <classname>DateTime</classname> serão utilizados para construir o
-       DateInterval.
+       suportados pelo analisador utilizados em <classname>DateTimeImmutable</classname>,
+       <classname>DateTime</classname> e <function>strtotime</function>
+       serão utilizados para construir o DateInterval.
+      </para>
+      <para>
+       Para usar um string no formato ISO-8601 como <literal>P7D</literal>, você deve
+       usar o construtor.
       </para>
      </listitem>
     </varlistentry>
    </variablelist>
   </para>
+ </refsect1>
+
+<refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna uma nova instância de <classname>DateInterval</classname> em caso de sucesso, &return.falseforfailure;.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.2.0</entry>
+      <entry>
+       Apenas as propriedades <literal>from_string</literal> e
+       <literal>date_string</literal> estarão visíveis quando um
+       <classname>DateInterval</classname> for criado com este método.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
  </refsect1>
 
  <refsect1 role="examples">
@@ -73,17 +115,135 @@ $i = DateInterval::createFromDateString('3600 seconds');
     </programlisting>
    </example>
   </para>
- </refsect1>
-
- <refsect1 role="returnvalues">
-  &reftitle.returnvalues;
   <para>
-   Retorna uma nova instância de <classname>DateInterval</classname>.
+   <example>
+    <title>Analisando combinações e intervalos negativos</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$i = DateInterval::createFromDateString('62 weeks + 1 day + 2 weeks + 2 hours + 70 minutes');
+echo $i->format('%d %h %i'), "\n";
+
+$i = DateInterval::createFromDateString('1 year - 10 days');
+echo $i->format('%y %d'), "\n";
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen role="shell">
+449 2 70
+1 -10
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Analisando intervalos de data especiais</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$i = DateInterval::createFromDateString('last day of next month');
+var_dump($i);
+
+$i = DateInterval::createFromDateString('last weekday');
+var_dump($i);
+]]>
+    </programlisting>
+    &example.outputs.82;
+    <screen role="php">
+<![CDATA[
+object(DateInterval)#1 (2) {
+  ["from_string"]=>
+  bool(true)
+  ["date_string"]=>
+  string(22) "last day of next month"
+}
+object(DateInterval)#2 (2) {
+  ["from_string"]=>
+  bool(true)
+  ["date_string"]=>
+  string(12) "last weekday"
+}
+]]>
+    </screen>
+    &example.outputs.8.similar;
+    <screen role="php">
+<![CDATA[
+object(DateInterval)#1 (16) {
+  ["y"]=>
+  int(0)
+  ["m"]=>
+  int(1)
+  ["d"]=>
+  int(0)
+  ["h"]=>
+  int(0)
+  ["i"]=>
+  int(0)
+  ["s"]=>
+  int(0)
+  ["f"]=>
+  float(0)
+  ["weekday"]=>
+  int(0)
+  ["weekday_behavior"]=>
+  int(0)
+  ["first_last_day_of"]=>
+  int(2)
+  ["invert"]=>
+  int(0)
+  ["days"]=>
+  bool(false)
+  ["special_type"]=>
+  int(0)
+  ["special_amount"]=>
+  int(0)
+  ["have_weekday_relative"]=>
+  int(0)
+  ["have_special_relative"]=>
+  int(0)
+}
+object(DateInterval)#2 (16) {
+  ["y"]=>
+  int(0)
+  ["m"]=>
+  int(0)
+  ["d"]=>
+  int(0)
+  ["h"]=>
+  int(0)
+  ["i"]=>
+  int(0)
+  ["s"]=>
+  int(0)
+  ["f"]=>
+  float(0)
+  ["weekday"]=>
+  int(0)
+  ["weekday_behavior"]=>
+  int(0)
+  ["first_last_day_of"]=>
+  int(0)
+  ["invert"]=>
+  int(0)
+  ["days"]=>
+  bool(false)
+  ["special_type"]=>
+  int(1)
+  ["special_amount"]=>
+  int(-1)
+  ["have_weekday_relative"]=>
+  int(0)
+  ["have_special_relative"]=>
+  int(1)
+}
+]]>
+    </screen>
+   </example>
   </para>
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

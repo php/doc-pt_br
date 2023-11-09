@@ -1,34 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: bd034b66e91e07d03e8d45f93252bef6b433a20d Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, surfmax, fabioluciano -->
+<!-- EN-Revision: 5c951013ca04161992efed8b86fb40f55669958e Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, surfmax, fabioluciano, leonardolara -->
 <refentry xml:id="function.strftime" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>strftime</refname>
   <refpurpose>Formata uma hora/data de acordo com as configurações locais</refpurpose>
  </refnamediv>
 
+ <refsynopsisdiv>
+  &warn.deprecated.function-8-1-0.alternatives;
+  <simplelist role="alternatives">
+   <member><function>date</function></member>
+   <member><methodname>IntlDateFormatter::format</methodname></member>
+  </simplelist>
+ </refsynopsisdiv>
+
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>string</type><methodname>strftime</methodname>
+   <type class="union"><type>string</type><type>false</type></type><methodname>strftime</methodname>
    <methodparam><type>string</type><parameter>format</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>timestamp</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>int</type><type>null</type></type><parameter>timestamp</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
   <para>
    Formata uma hora/data local de acordo com a configuração do idioma. Nome do mês
    e dia da semana e outras strings respeitam o idioma corrente definido
    com a função <function>setlocale</function>.
   </para>
-  <para>
-   Note que nem todas as conversões especificadas pela sua biblioteca C,
-   serão suportadas pela função do PHP  <function>strftime</function>.
-   Além disso, nem todas as plataformas suportam timestamps negativos, então sua
-   faixa de datas pode ser limitada a um valor menor que a época Unix. Isto significa
-   e.g. %e, %T, %R e %D (e outras mais) e datas anteriores a
-   <literal>Jan 1, 1970</literal> não funcionarão no Windows, algumas distribuições
-   Linux, e outros sistemas operacionais. Para sistemas Windows, um resumo
-   completo dos especificadores de conversão suportados podem ser encontrados em
-   <link xlink:href="&url.strftime.win32;"><acronym>MSDN</acronym> </link>.
-  </para>
+  <warning>
+   <para>
+    Nem todas os especificadores de conversão podem ser suportados pela sua biblioteca C, e nestes
+    casos eles não serão suportadas pela função do PHP <function>strftime</function>.
+    Além disso, nem todas as plataformas suportam timestamps negativos, então sua
+    faixa de datas pode ficar limitada a um valor não anterior à época Unix. Isto significa que
+    %e, %T, %R e %D (e possivelmente outras) - assim como datas anteriores a
+    <literal>Jan 1, 1970</literal> - não funcionarão no Windows, algumas distribuições
+    Linux, e alguns outros sistemas operacionais. Para sistemas Windows, uma visão
+    completa dos especificadores de conversão suportados podem ser encontrados em
+    <link xlink:href="&url.strftime.win32;"><acronym>MSDN</acronym></link>.
+    No lugar desta função, use
+    o método <methodname>IntlDateFormatter::format</methodname>.
+   </para>
+  </warning>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -40,7 +52,7 @@
      <listitem>
       <para>
        <table>
-        <title>Os seguintes caracteres são reconhecidos no string do
+        <title>Os seguintes caracteres são reconhecidos na string do
         parâmetro <parameter>format</parameter></title>
         <tgroup cols="3">
          <thead>
@@ -87,12 +99,12 @@
           <row>
            <entry><literal>%u</literal></entry>
            <entry>Representação numérica, do dia da semana, compatível com a ISO-8601</entry>
-           <entry><literal>1</literal> (para Monday) até <literal>7</literal> (para Sunday)</entry>
+           <entry><literal>1</literal> (para segunda-feira) até <literal>7</literal> (para domingo)</entry>
           </row>
           <row>
            <entry><literal>%w</literal></entry>
            <entry>Representação numérica do dia da semana</entry>
-           <entry><literal>0</literal> (para Sunday) até <literal>6</literal> (para Saturday)</entry>
+           <entry><literal>0</literal> (para domingo) até <literal>6</literal> (para sábado)</entry>
           </row>
           <row>
            <entry align="center"><emphasis>Semana</emphasis></entry>
@@ -102,13 +114,13 @@
           <row>
            <entry><literal>%U</literal></entry>
            <entry>Número da semana de um dado ano, iniciado com o primeiro
-           Domingo sendo a primeira semana</entry>
+           domingo sendo a primeira semana</entry>
            <entry><literal>13</literal> (como a 13ª semana completa do ano)</entry>
           </row>
           <row>
            <entry><literal>%V</literal></entry>
            <entry>Número da semana, compatível com a ISO-8601:1988 de um dado ano, iniciada com
-           a primeira semana do ano com pelo menos 4 finais de semana, sendo a Segunda-feira
+           a primeira semana do ano com pelo menos 4 finais de semana, sendo a segunda-feira
            como o início da semana.</entry>
            <entry><literal>01</literal> até <literal>53</literal> (onde 53
            é responsável por uma sobreposição)</entry>
@@ -116,9 +128,9 @@
           <row>
            <entry><literal>%W</literal></entry>
            <entry>Representação numérica da semana do ano, começando
-           pela primeira Segunda-feira como primeira semana</entry>
+           pela primeira segunda-feira como primeira semana</entry>
            <entry><literal>46</literal> (como a 46ª semana do do ano iniciando
-           na Segunda-feira)</entry>
+           na segunda-feira)</entry>
           </row>
           <row>
            <entry align="center"><emphasis>Mês</emphasis></entry>
@@ -133,17 +145,17 @@
           <row>
            <entry><literal>%B</literal></entry>
            <entry>Nome completo do mês, baseado no idioma</entry>
-           <entry><literal>Janeiro</literal> até <literal>Dezembro</literal></entry>
+           <entry><literal>janeiro</literal> até <literal>dezembro</literal></entry>
           </row>
           <row>
            <entry><literal>%h</literal></entry>
            <entry>Nome do mês abreviado, baseado no idioma (sinônimo de %b)</entry>
-           <entry><literal>Jan</literal> até <literal>Dez</literal></entry>
+           <entry><literal>jan</literal> até <literal>dez</literal></entry>
           </row>
           <row>
            <entry><literal>%m</literal></entry>
            <entry>Representação com dois dígitos do mês</entry>
-           <entry><literal>01</literal> (para January) through <literal>12</literal> (para December)</entry>
+           <entry><literal>01</literal> (para janeiro) até <literal>12</literal> (para dezembro)</entry>
           </row>
           <row>
            <entry align="center"><emphasis>Ano</emphasis></entry>
@@ -158,12 +170,12 @@
           <row>
            <entry><literal>%g</literal></entry>
            <entry>Representação do ano, com dois dígitos, seguindo o padrão ISO-8601:1988 (veja %V)</entry>
-           <entry>Exemplo: <literal>09</literal> de January 6, 2009</entry>
+           <entry>Exemplo: <literal>09</literal> de 6 de janeiro de 2009</entry>
           </row>
           <row>
            <entry><literal>%G</literal></entry>
            <entry>Versão de 4 dígitos de %g</entry>
-           <entry>Exemplo: <literal>2008</literal> de January 3, 2009</entry>
+           <entry>Exemplo: <literal>2008</literal> de 3 de janeiro de 2009</entry>
           </row>
           <row>
            <entry><literal>%y</literal></entry>
@@ -187,8 +199,7 @@
           </row>
           <row>
            <entry><literal>%k</literal></entry>
-           <entry>Representação, com dois dígitos, da hora no formato 24 horas, com
-           um espaço precedendo aqueles com somente um dígito</entry>
+           <entry>Representação da hora no formato 24 horas, com um espaço precedendo dígito único</entry>
            <entry><literal> 0</literal> até <literal>23</literal></entry>
           </row>
           <row>
@@ -198,7 +209,7 @@
           </row>
           <row>
            <entry><literal>%l ('L' minúsculo)</literal></entry>
-           <entry>Representação, com dois dígitos, da hora no formato 12 horas, com um espaço precedendo aqueles com somente um dígito</entry>
+           <entry>Representação da hora no formato 12 horas, com um espaço precedendo dígito único</entry>
            <entry><literal> 1</literal> até <literal>12</literal></entry>
           </row>
           <row>
@@ -209,12 +220,17 @@
           <row>
            <entry><literal>%p</literal></entry>
            <entry>'AM' ou 'PM' maiúsculo baseado na hora informada</entry>
-           <entry>Exemplo: <literal>AM</literal> para 00:31, <literal>PM</literal> para 22:23</entry>
+           <entry>Exemplo: <literal>AM</literal> para 00:31, 
+           <literal>PM</literal> para 22:23. O resultado exato depende do
+           sistema operacional, e pode retornar variantes em minúsculoas, ou
+           variantes com pontos (como <literal>a.m.</literal>).</entry>
           </row>
           <row>
            <entry><literal>%P</literal></entry>
            <entry>'am' ou 'pm' maiúsculo baseado na hora informada</entry>
-           <entry>Exemplo: <literal>am</literal> para 00:31, <literal>pm</literal> para 22:23</entry>
+           <entry>Exemplo: <literal>am</literal> para 00:31, 
+           <literal>pm</literal> para 22:23. Não suportado por todos os sistemas
+           operacionais.</entry>
           </row>
           <row>
            <entry><literal>%r</literal></entry>
@@ -276,13 +292,13 @@
           </row>
           <row>
            <entry><literal>%s</literal></entry>
-           <entry>Timestamp Unix Epoch Time (o mesmo que a função <function>time</function>
+           <entry>Timestamp Unix(o mesmo que a função <function>time</function>
            function)</entry>
            <entry>Exemplo: <literal>305815200</literal> de September 10, 1979 08:40:00 AM</entry>
           </row>
           <row>
            <entry><literal>%x</literal></entry>
-           <entry>Carimbo escolhido de data e hora baseado no idioma, sem a hora</entry>
+           <entry>Representação da data baseada na preferência da localidade, sem a hora</entry>
            <entry>Exemplo: <literal>02/05/09</literal> de February 5, 2009</entry>
           </row>
           <row>
@@ -309,9 +325,6 @@
         </tgroup>
        </table>
       </para>
-      <para>
-       Tamanho máximo deste parâmetro é 1023 caracteres.
-      </para>
       <warning>
        <simpara>
         Contrário a ISO-9899:1999, o sistema Sun Solaris começa a semana no Domingo, como 1. Resultando
@@ -336,8 +349,8 @@
       </warning>
       <warning>
        <simpara>
-        <emphasis>Somente Mac OS X:</emphasis> O modificador <literal>%P</literal>
-        não têm suporte a implementação desta função no Mac OS X.
+        <emphasis>macOS and musl only:</emphasis> O modificador <literal>%P</literal>
+        não é suportado na implementação macOS desta função.
        </simpara>
       </warning>
      </listitem>
@@ -357,6 +370,9 @@
    atual se nenhum timestamp foi informado. Nomes de meses e dia da semana, e outras strings dependentes de linguagens
    respeitam o idioma definido
    com a função <function>setlocale</function>.
+   A função retorna &false; se <parameter>format</parameter> for vazio, contém especificadores
+   de conversão não suportados, ou se o comprimento da string retornada fosse
+   maior que <literal>4095</literal>.
   </para>
  </refsect1>
 
@@ -385,6 +401,12 @@
       </row>
      </thead>
      <tbody>
+      <row>
+       <entry>8.0.0</entry>
+       <entry>
+        <parameter>timestamp</parameter> agora pode ser nulo.
+       </entry>
+      </row>
      </tbody>
     </tgroup>
    </informaltable>
@@ -656,6 +678,8 @@ Unknown format : 'v'
   &reftitle.seealso;
   <para>
    <simplelist>
+    <member><methodname>IntlDateFormatter::format</methodname></member>
+    <member><methodname>DateTimeInterface::format</methodname></member>
     <member><link xlink:href="&url.strftime.format.designer;">Ferramenta online para criação de formatos compatíveis com o strftime()</link></member>
     <member><function>setlocale</function></member>
     <member><function>mktime</function></member>
@@ -666,7 +690,6 @@ Unknown format : 'v'
   </para>
  </refsect1>
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

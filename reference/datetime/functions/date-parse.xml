@@ -1,16 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 8d6a0d5257c38a844ef29a2b71ac4fcb1bd0ca87 Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, fabioluciano -->
+<!-- EN-Revision: 50dcf55ce543220dd8375df2fdb4f7db702b9c9f Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, fabioluciano, leonardolara -->
 <refentry xml:id="function.date-parse" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>date_parse</refname>
-  <refpurpose>Retorna um array associativo com informações detalhadas da data informada</refpurpose>
+  <refpurpose>Retorna um array associativo com informações detalhadas da data/hora informada</refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>array</type><methodname>date_parse</methodname>
-   <methodparam><type>string</type><parameter>date</parameter></methodparam>
+   <methodparam><type>string</type><parameter>datetime</parameter></methodparam>
   </methodsynopsis>
+  <para>
+   A função <function>date_parse</function> analisa a string
+   <parameter>datetime</parameter> informada conforme as mesmas regras de
+   <function>strtotime</function> e
+   <function>DateTimeImmutable::__construct</function>. Ao invés de retornar um
+   timestamp Unix (com <function>strtotime</function>) ou
+   objeto <classname>DateTimeImmutable</classname> (com
+   a função <function>DateTimeImmutable::__construct</function>), ela retorna um
+   array associativo com a informação que ela poderia detectar na
+   string <parameter>datetime</parameter> fornecida.
+  </para>
+  <para>
+   Se nenhuma informação sobre um certo grupo de elementos puder ser encontrada, estes
+   elementos do array serão configurados para &false; or omitidos. Se necessário para
+   construção de um timestamp ou objeto <classname>DateTimeImmutable</classname> a partir
+   da mesma string <parameter>datetime</parameter>, mais campos podem ser configurados para
+   um valor não-&false;. Veja os exemplos para casos onde isso acontece..
+  </para>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -18,10 +36,11 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>date</parameter></term>
+     <term><parameter>datetime</parameter></term>
      <listitem>
       <para>
-       Data no formato aceito pela função <function>strtotime</function>.
+       Data/hora no formato aceito pela
+       função <function>DateTimeImmutable::__construct</function>.
       </para>
      </listitem>
     </varlistentry>
@@ -32,53 +51,295 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna um <type>array</type> com informações da data analisada
-   em caso de sucesso&return.falseforfailure;
+   Retorna um <type>array</type> com informações da data/hora analisada.
+   </para>
+  <para>
+   O array de retorno tem chaves para <literal>year</literal>,
+   <literal>month</literal>, <literal>day</literal>, <literal>hour</literal>,
+   <literal>minute</literal>, <literal>second</literal>,
+   <literal>fraction</literal>, e <literal>is_localtime</literal>.
   </para>
+  <para>
+   Se <literal>is_localtime</literal> estiver presente então
+   <literal>zone_type</literal> indica o tipo do fuso horário. Para o tipo
+   <literal>1</literal> (deslocamento UTC), os campos <literal>zone</literal> e
+   <literal>is_dst</literal> são incluídos; para o tipo <literal>2</literal>
+   (abreviação), os campos <literal>tz_abbr</literal> e
+   <literal>is_dst</literal> são incluídos; e para tipo <literal>3</literal>
+   (identificador de fuso), os campos <literal>tz_abbr</literal> e
+   <literal>tz_id</literal> são incluídos.
+  </para>
+  <para>
+   Se elementos de tempo relativo estiverem presentes na
+   string <parameter>datetime</parameter> como <literal>+3 days</literal>,
+   então o array retornado incluirá um array aninhado com a chave
+   <literal>relative</literal>. Este array então conterá as chaves
+   <literal>year</literal>, <literal>month</literal>, <literal>day</literal>,
+   <literal>hour</literal>, <literal>minute</literal>,
+   <literal>second</literal>, e se necessário <literal>weekday</literal> e
+   <literal>weekdays</literal>, dependendo da string que foi passada.
+  </para>
+  <para>
+   O array inclui os campos <literal>warning_count</literal> e
+   <literal>warnings</literal>. O primeiro indica quantos
+   avisos ocorreram.
+   As chaves dos elementos do array <literal>warnings</literal> indicam as
+   posições na string <parameter>datetime</parameter> onde os avisos
+   ocorreram, com o valor da string descrevendo o aviso em si.
+  </para>
+  <para>
+   O array também contém os campos <literal>error_count</literal> e
+   <literal>errors</literal>. O primeiro indica quantos erros
+   foram encontrados.
+   As chaves dos elementos do array <literal>errors</literal> indicam
+   posição na string <parameter>datetime</parameter> onde os erros
+   ocorreram, com o valor da string descrevendo o erro em si.
+  </para>
+  <warning>
+   <para>
+    O número de elementos do arrays <literal>warnings</literal> ou
+    <literal>errors</literal> pode ser menor que
+    <literal>warning_count</literal> ou <literal>error_count</literal> se eles
+    ocorreram na mesma posição.
+   </para>
+  </warning>
  </refsect1>
 
  <refsect1 role="errors">
   &reftitle.errors;
   <para>
-   No caso do formato da data conter erro, o elemento 'errors'
+   Se o formato da data/hora contiver erro, o elemento 'errors'
    conterá as mensagens de erro.
   </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>7.2.0</entry>
+      <entry>
+       O elemento <literal>zone</literal> do array de retorno agora representa
+       segundos no lugar de minutos, e seu sinal é invertido. Por exemplo,
+       <literal>-120</literal> é agora <literal>7200</literal>.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
  </refsect1>
 
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
    <example>
-    <title>Um exemplo da função <function>date_parse</function></title>
+    <title>Um exemplo da função <function>date_parse</function>com um 
+    string <parameter>datetime</parameter> compreensivo</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-print_r(date_parse("2006-12-12 10:00:00.5"));
+var_dump(date_parse("2006-12-12 10:00:00.5"));
 ?>
 ]]>
     </programlisting>
     &example.outputs;
     <screen>
 <![CDATA[
-Array
-(
-    [year] => 2006
-    [month] => 12
-    [day] => 12
-    [hour] => 10
-    [minute] => 0
-    [second] => 0
-    [fraction] => 0.5
-    [warning_count] => 0
-    [warnings] => Array()
-    [error_count] => 0
-    [errors] => Array()
-    [is_localtime] =>
-)
+array(12) {
+  ["year"]=>
+  int(2006)
+  ["month"]=>
+  int(12)
+  ["day"]=>
+  int(12)
+  ["hour"]=>
+  int(10)
+  ["minute"]=>
+  int(0)
+  ["second"]=>
+  int(0)
+  ["fraction"]=>
+  float(0.5)
+  ["warning_count"]=>
+  int(0)
+  ["warnings"]=>
+  array(0) {
+  }
+  ["error_count"]=>
+  int(0)
+  ["errors"]=>
+  array(0) {
+  }
+  ["is_localtime"]=>
+  bool(false)
+}
 ]]>
     </screen>
    </example>
   </para>
+  
+  <para>
+   Os elementos de fuso horário só aparecem se eles forem incluídos no parâmetro
+   <parameter>datetime</parameter>. Neste caso sempre haverá
+   um elemento <literal>zone_type</literal> e alguns mais dependendo
+   do seu valor.
+   <example>
+    <title>Exemplo da função <function>date_parse</function> com informação de abreviação de fuso horário</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+var_dump(date_parse("June 2nd, 2022, 10:28:17 BST"));
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+array(16) {
+  ["year"]=>
+  int(2022)
+  ["month"]=>
+  int(6)
+  ["day"]=>
+  int(2)
+  ["hour"]=>
+  int(10)
+  ["minute"]=>
+  int(28)
+  ["second"]=>
+  int(17)
+  ["fraction"]=>
+  float(0)
+  ["warning_count"]=>
+  int(0)
+  ["warnings"]=>
+  array(0) {
+  }
+  ["error_count"]=>
+  int(0)
+  ["errors"]=>
+  array(0) {
+  }
+  ["is_localtime"]=>
+  bool(true)
+  ["zone_type"]=>
+  int(2)
+  ["zone"]=>
+  int(0)
+  ["is_dst"]=>
+  bool(true)
+  ["tz_abbr"]=>
+  string(3) "BST"
+}
+]]>
+    </screen>
+   </example>
+   <example>
+    <title>Exemplo da função <function>date_parse</function> com informação de identificador de fuso horário</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+var_dump(date_parse("June 2nd, 2022, 10:28:17 Europe/London"));
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+array(14) {
+  ["year"]=>
+  int(2022)
+  ["month"]=>
+  int(6)
+  ["day"]=>
+  int(2)
+  ["hour"]=>
+  int(10)
+  ["minute"]=>
+  int(28)
+  ["second"]=>
+  int(17)
+  ["fraction"]=>
+  float(0)
+  ["warning_count"]=>
+  int(0)
+  ["warnings"]=>
+  array(0) {
+  }
+  ["error_count"]=>
+  int(0)
+  ["errors"]=>
+  array(0) {
+  }
+  ["is_localtime"]=>
+  bool(true)
+  ["zone_type"]=>
+  int(3)
+  ["tz_id"]=>
+  string(13) "Europe/London"
+}
+]]>
+    </screen>
+   </example>
+  </para>
+
+  <para>
+   Se uma string mais enxuta de <parameter>datetime</parameter> for analisada, menos
+   informação estará disponível. Neste exemplo, todas as partes de horário são retornadas
+   como &false;.
+   <example>
+    <title>Função <function>date_parse</function> com um string minimizado</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+var_dump(date_parse("June 2nd, 2022"));
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+array(12) {
+  ["year"]=>
+  int(2022)
+  ["month"]=>
+  int(6)
+  ["day"]=>
+  int(2)
+  ["hour"]=>
+  bool(false)
+  ["minute"]=>
+  bool(false)
+  ["second"]=>
+  bool(false)
+  ["fraction"]=>
+  bool(false)
+  ["warning_count"]=>
+  int(0)
+  ["warnings"]=>
+  array(0) {
+  }
+  ["error_count"]=>
+  int(0)
+  ["errors"]=>
+  array(0) {
+  }
+  ["is_localtime"]=>
+  bool(false)
+}
+]]>
+    </screen>
+   </example>
+  </para>
+
   <para>
    <link linkend="datetime.formats.relative">Formatos relativos</link> não
    influenciam valores interpretados de formatos absolutos, mas são analisados no
@@ -88,44 +349,126 @@ Array
     <programlisting role="php">
 <![CDATA[
 <?php
-print_r(date_parse("2006-12-12 10:00:00.5 +1 week +1 hour"));
+var_dump(date_parse("2006-12-12 10:00:00.5 +1 week +1 hour"));
 ?>
 ]]>
     </programlisting>
     &example.outputs;
     <screen>
 <![CDATA[
-Array
-(
-    [year] => 2006
-    [month] => 12
-    [day] => 12
-    [hour] => 10
-    [minute] => 0
-    [second] => 0
-    [fraction] => 0.5
-    [warning_count] => 0
-    [warnings] => Array
-        (
-        )
+array(13) {
+  ["year"]=>
+  int(2006)
+  ["month"]=>
+  int(12)
+  ["day"]=>
+  int(12)
+  ["hour"]=>
+  int(10)
+  ["minute"]=>
+  int(0)
+  ["second"]=>
+  int(0)
+  ["fraction"]=>
+  float(0.5)
+  ["warning_count"]=>
+  int(0)
+  ["warnings"]=>
+  array(0) {
+  }
+  ["error_count"]=>
+  int(0)
+  ["errors"]=>
+  array(0) {
+  }
+  ["is_localtime"]=>
+  bool(false)
+  ["relative"]=>
+  array(6) {
+    ["year"]=>
+    int(0)
+    ["month"]=>
+    int(0)
+    ["day"]=>
+    int(7)
+    ["hour"]=>
+    int(1)
+    ["minute"]=>
+    int(0)
+    ["second"]=>
+    int(0)
+  }
+}
+]]>
+    </screen>
+   </example>
+  </para>
 
-    [error_count] => 0
-    [errors] => Array
-        (
-        )
-
-    [is_localtime] =>
-    [relative] => Array
-        (
-            [year] => 0
-            [month] => 0
-            [day] => 7
-            [hour] => 1
-            [minute] => 0
-            [second] => 0
-        )
-
-)]]>
+  <para>
+   Algumas estrofes, como <literal>Thursday</literal> irão configurar a parte de horário
+   da string para <literal>0</literal>. Se <literal>Thursday</literal> for
+   passado para a função <function>DateTimeImmutable::__construct</function>, ela também
+   teria resultado em hora, minuto, segundo e fração configurados para
+   <literal>0</literal>. No exemplo abaixo, o elemento do ano também
+   é configurado como &false;.
+   <example>
+    <title>Função <function>date_parse</function> com efeitos colaterais</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+var_dump(date_parse("Thursday, June 2nd"));
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+array(13) {
+  ["year"]=>
+  bool(false)
+  ["month"]=>
+  int(6)
+  ["day"]=>
+  int(2)
+  ["hour"]=>
+  int(0)
+  ["minute"]=>
+  int(0)
+  ["second"]=>
+  int(0)
+  ["fraction"]=>
+  float(0)
+  ["warning_count"]=>
+  int(0)
+  ["warnings"]=>
+  array(0) {
+  }
+  ["error_count"]=>
+  int(0)
+  ["errors"]=>
+  array(0) {
+  }
+  ["is_localtime"]=>
+  bool(false)
+  ["relative"]=>
+  array(7) {
+    ["year"]=>
+    int(0)
+    ["month"]=>
+    int(0)
+    ["day"]=>
+    int(0)
+    ["hour"]=>
+    int(0)
+    ["minute"]=>
+    int(0)
+    ["second"]=>
+    int(0)
+    ["weekday"]=>
+    int(4)
+  }
+}
+]]>
     </screen>
    </example>
   </para>
@@ -135,14 +478,15 @@ Array
   &reftitle.seealso;
   <para>
    <simplelist>
-    <member><function>checkdate</function></member>
+    <member><function>date_parse_from_format</function> para
+    analisar um <parameter>datetime</parameter> com um formato específico</member>
+    <member><function>checkdate</function> para validação da data do calendário gregoriano</member>
     <member><function>getdate</function></member>
    </simplelist>
   </para>
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

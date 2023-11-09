@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 5eb5d9fffef4bd6c75225ba9c702140a25b427ed Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano -->
-
+<!-- EN-Revision: 9154789dfc9cb8aa5df644bfba5e86c2deba4cb8 Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano, leonardolara -->
 <phpdoc:classref xml:id="class.dateinterval" xmlns:phpdoc="http://php.net/ns/phpdoc" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
 
  <title>A classe DateInterval</title>
@@ -17,7 +16,23 @@
    <para>
     Um intervalo de data armazena, tanto uma quantidade de tempo (em anos, meses,
     dias, horas, etc), quanto uma string de tempo relativo no formato que
-    o construtor da classe <classname>DateTime</classname> possui suporte.
+    os construtores das classes <classname>DateTimeImmutable</classname>
+    e <classname>DateTime</classname> suportam.
+   </para>
+   <para>
+    Mais especificamente, a informação em um objeto da classe
+    <classname>DateInterval</classname> é uma instrução para mover de
+    uma data/hora para outra data/hora. Este processo nem sempre é reversível.
+   </para>
+   <para>
+    Uma maneira comum de criar um objeto <classname>DateInterval</classname>
+    é calculando a diferença entre dois objetos data/hora através do método
+    <methodname>DateTimeInterface::diff</methodname>.
+   </para>
+   <para>
+    Como não existe uma maneira bem definida de comparar intervalos de datas,
+    as instâncias de <classname>DateInterval</classname> são
+    <link linkend="language.operators.comparison.incomparable">incomparáveis</link>.
    </para>
   </section>
 <!-- }}} -->
@@ -26,72 +41,75 @@
    &reftitle.classsynopsis;
 
 <!-- {{{ Synopsis -->
-   <classsynopsis>
-    <ooclass><classname>DateInterval</classname></ooclass>
-
-<!-- {{{ Class synopsis -->
-    <classsynopsisinfo>
-     <ooclass>
-      <classname>DateInterval</classname>
-     </ooclass>
-    </classsynopsisinfo>
-<!-- }}} -->
+   <classsynopsis class="class">
+    <ooclass>
+     <classname>DateInterval</classname>
+    </ooclass>
 
     <classsynopsisinfo role="comment">&Properties;</classsynopsisinfo>
     <fieldsynopsis>
      <modifier>public</modifier>
-     <type>inteiro</type>
+     <type>int</type>
      <varname linkend="dateinterval.props.y">y</varname>
     </fieldsynopsis>
     <fieldsynopsis>
      <modifier>public</modifier>
-     <type>inteiro</type>
+     <type>int</type>
      <varname linkend="dateinterval.props.m">m</varname>
     </fieldsynopsis>
     <fieldsynopsis>
      <modifier>public</modifier>
-     <type>inteiro</type>
+     <type>int</type>
      <varname linkend="dateinterval.props.d">d</varname>
     </fieldsynopsis>
     <fieldsynopsis>
      <modifier>public</modifier>
-     <type>inteiro</type>
+     <type>int</type>
      <varname linkend="dateinterval.props.h">h</varname>
     </fieldsynopsis>
     <fieldsynopsis>
      <modifier>public</modifier>
-     <type>inteiro</type>
+     <type>int</type>
      <varname linkend="dateinterval.props.i">i</varname>
     </fieldsynopsis>
     <fieldsynopsis>
      <modifier>public</modifier>
-     <type>inteiro</type>
+     <type>int</type>
      <varname linkend="dateinterval.props.s">s</varname>
     </fieldsynopsis>
     <fieldsynopsis>
      <modifier>public</modifier>
-     <type>inteiro</type>
+     <type>float</type>
+     <varname linkend="dateinterval.props.f">f</varname>
+    </fieldsynopsis>
+    <fieldsynopsis>
+     <modifier>public</modifier>
+     <type>int</type>
      <varname linkend="dateinterval.props.invert">invert</varname>
     </fieldsynopsis>
     <fieldsynopsis>
      <modifier>public</modifier>
-     <type>mixto</type>
+     <type>mixed</type>
      <varname linkend="dateinterval.props.days">days</varname>
+    </fieldsynopsis>
+    <fieldsynopsis>
+     <modifier>public</modifier>
+     <type>bool</type>
+     <varname linkend="dateinterval.props.from-string">from_string</varname>
+    </fieldsynopsis>
+    <fieldsynopsis>
+     <modifier>public</modifier>
+     <type>string</type>
+     <varname linkend="dateinterval.props.date-string">date_string</varname>
     </fieldsynopsis>
 
     <classsynopsisinfo role="comment">&Methods;</classsynopsisinfo>
-    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.dateinterval')/db:refentry/db:refsect1[@role='description']/descendant::db:constructorsynopsis[not(@role='procedural')])">
-     <xi:fallback />
+    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.dateinterval')/db:refentry/db:refsect1[@role='description']/descendant::db:constructorsynopsis[@role='DateInterval'])">
+     <xi:fallback/>
     </xi:include>
-    <!--
-    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.dateinterval')/db:refentry/db:refsect1[@role='description']/descendant::db:destructorsynopsis[not(@role='procedural')])">
-     <xi:fallback />
+    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.dateinterval')/db:refentry/db:refsect1[@role='description']/descendant::db:methodsynopsis[@role='DateInterval'])">
+     <xi:fallback/>
     </xi:include>
-    -->
-    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.dateinterval')/db:refentry/db:refsect1[@role='description']/descendant::db:methodsynopsis[not(@role='procedural')])">
-     <xi:fallback />
-    </xi:include>
-
    </classsynopsis>
 <!-- }}} -->
 
@@ -99,6 +117,12 @@
 
   <section xml:id="dateinterval.props">
    &reftitle.properties;
+   <warning>
+    <para>
+     As propriedades disponíveis listadas abaixo dependem da versão do PHP, e devem
+     ser consideradas como <emphasis>somente-leitura</emphasis>.
+    </para>
+   </warning>
    <variablelist>
     <varlistentry xml:id="dateinterval.props.y">
      <term><varname>y</varname></term>
@@ -148,6 +172,14 @@
       </para>
      </listitem>
     </varlistentry>
+    <varlistentry xml:id="dateinterval.props.f">
+     <term><varname>f</varname></term>
+     <listitem>
+      <para>
+       Número de microssegundos, como uma fração de um segundo.
+      </para>
+     </listitem>
+    </varlistentry>
     <varlistentry xml:id="dateinterval.props.invert">
      <term><varname>invert</varname></term>
      <listitem>
@@ -164,25 +196,89 @@
      <listitem>
       <para>
        Se o objeto DateInterval foi criado por
-       <function>DateTime::diff</function>, representará o número total de
-       dias entre a data inicial e final. Caso contrário,
+       <methodname>DateTimeImmutable::diff</methodname> ou
+       <methodname>DateTime::diff</methodname>, então ele representará o 
+       número total de dias inteiros entre a data inicial e final. Caso contrário,
        <varname>days</varname> será &false;.
       </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry xml:id="dateinterval.props.from-string">
+     <term><varname>from_string</varname></term>
+     <listitem>
       <para>
-       Em versões anteriores ao PHP 5.4.20/5.5.4 em vez de &false;, retornará -99999 ao
-       acessar essa propriedade.
+       Se o objeto DateInterval foi criado por
+       <methodname>DateInterval::createFromDateString</methodname>, então
+       o valor desta propriedade será &true; e a propriedade
+       <varname>date_string</varname> será populada. Caso contrário,
+       o valor será &false; e as propriedades <varname>y</varname> a
+       <varname>f</varname>, <varname>invert</varname> e
+       <varname>days</varname> serão populadas.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry xml:id="dateinterval.props.date-string">
+     <term><varname>date_string</varname></term>
+     <listitem>
+      <para>
+       String usado como argumento para 
+       <methodname>DateInterval::createFromDateString</methodname>.
       </para>
      </listitem>
     </varlistentry>
    </variablelist>
   </section>
 
+<section role="changelog" xml:id="dateinterval.changelog"><!-- {{{ -->
+   &reftitle.changelog;
+   <para>
+    <informaltable>
+     <tgroup cols="2">
+      <thead>
+       <row>
+        <entry>&Version;</entry>
+        <entry>&Description;</entry>
+       </row>
+      </thead>
+      <tbody>
+       <row>
+        <entry>8.2.0</entry>
+        <entry>
+         As propriedades <varname>from_string</varname> e <varname>date_string</varname>
+         foram adicionadas para instâncias <classname>DateInterval</classname>
+         que foram criadas usando o método
+         <methodname>DateInterval::createFromDateString</methodname>.
+        </entry>
+       </row>
+       <row>
+        <entry>8.2.0</entry>
+        <entry>
+         Apenas as propriedades <literal>y</literal> a <literal>f</literal>,
+         <literal>invert</literal>, e <literal>days</literal> serão visíveis.
+        </entry>
+       </row>
+       <row>
+        <entry>7.4.0</entry>
+        <entry>
+         As instâncias de <classname>DateInterval</classname> agora são incomparáveis;
+         antes, todas as instâncias de <classname>DateInterval</classname> eram consideradas iguais.
+        </entry>
+       </row>
+       <row>
+        <entry>7.1.0</entry>
+        <entry>A propriedade <varname>f</varname> foi adicionada.</entry>
+       </row>
+      </tbody>
+     </tgroup>
+    </informaltable>
+   </para>
+  </section><!-- }}} -->
+
  </partintro>
 
  &reference.datetime.entities.dateinterval;
 
 </phpdoc:classref>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

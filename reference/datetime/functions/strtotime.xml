@@ -1,25 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 53bdffa6b9f8ce5ffdaf476c9d450f7cd0d1afa2 Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, surfmax, thiago, fabioluciano, adiel -->
+<!-- EN-Revision: 5c951013ca04161992efed8b86fb40f55669958e Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe, surfmax, thiago, fabioluciano, adiel, leonardolara -->
 
 <refentry xml:id="function.strtotime" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>strtotime</refname>
-  <refpurpose>Interpreta qualquer descrição de data/hora em texto em inglês em timestamp Unix</refpurpose>
+  <refpurpose>Interpreta qualquer descrição textual de data/hora em inglês para timestamp Unix</refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>int</type><methodname>strtotime</methodname>
+   <type class="union"><type>int</type><type>false</type></type><methodname>strtotime</methodname>
    <methodparam><type>string</type><parameter>time</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>now</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>int</type><type>null</type></type><parameter>baseTimestamp</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
   <simpara>
    A função espera que seja informada uma string contendo um formato de data em inglês US,
    e tentará interpretá-lo para um timestamp Unix (o número de segundos
    desde January 1 1970 00:00:00 GMT), relativo ao timestamp dado em
-   <parameter>now</parameter>, ou a hora atual se <parameter>now</parameter> não
-   é fornecido.
+   <parameter>baseTimestamp</parameter>, ou o horário atual se 
+   <parameter>baseTimestamp</parameter> não for é fornecido. A interpretação de string de data
+   está definida em <link linkend="datetime.formats">Formatos de Data e Horário</link>, e
+   tem várias considerações sutis. Rever os detalhes completos dessas definições é fortemente
+   recomendado.
   </simpara>
+  <warning>
+   <para>
+    O timestamp Unix que esta função retorna não contém informação
+    sobre fuso horário. Para realizar cálculos com informação de data/hora,
+    deve-se usar a classe com mais capacidade <classname>DateTimeImmutable</classname>.
+   </para>
+  </warning>
   <para>
    Cada parâmetro desta função utiliza o fuso horário padrão, a não ser que
    um fuso horário seja especificado neste parâmetro. Tome cuidado para não utilizar
@@ -40,7 +50,7 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>now</parameter></term>
+     <term><parameter>baseTimestamp</parameter></term>
      <listitem>
       <para>
        O timestamp que será utilizado como base no cálculo das datas
@@ -55,8 +65,7 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna um timestamp em sucesso, &false; caso contrário. Antes do PHP 5.1.0,
-   esta função podia retornar <literal>-1</literal> em falha.
+   Retorna um timestamp em sucesso, &false; caso contrário.
   </para>
  </refsect1>
 
@@ -66,6 +75,30 @@
    &date.timezone.errors.description;
 
  </refsect1>
+
+ <refsect1 role="changelog">
+   &reftitle.changelog;
+   <para>
+    <informaltable>
+     <tgroup cols="2">
+      <thead>
+       <row>
+        <entry>&Version;</entry>
+        <entry>&Description;</entry>
+       </row>
+      </thead>
+      <tbody>
+       <row>
+        <entry>8.0.0</entry>
+        <entry>
+         <parameter>baseTimestamp</parameter> agora pode ser nulo.
+        </entry>
+       </row>
+      </tbody>
+     </tgroup>
+    </informaltable>
+   </para>
+  </refsect1>
 
  <refsect1 role="examples">
   &reftitle.examples;
@@ -95,7 +128,6 @@ echo strtotime("last Monday"), "\n";
 <?php
 $str = 'Not Good';
 
-// em versões antes do PHP 5.1.0 você compararia com -1, ao invés de false
 if (($timestamp = strtotime($str)) === false) {
     echo "The string ($str) is bogus";
 } else {
@@ -112,6 +144,18 @@ if (($timestamp = strtotime($str)) === false) {
   &reftitle.notes;
   <note>
    <para>
+    Data "relativa" neste caso também significa que se um componente em particular
+    do timestamp de data/hora não for fornecido, ele será removido literalmente
+    do parâmetro <parameter>baseTimestamp</parameter>. Isto é, <code>strtotime('February')</code>,
+    se executado em 31 de maio de 2022, será interpretado como <literal>31 de fevereiro de 2022</literal>,
+    o que vai transferir para um timestamp de <literal>3 de março</literal>
+    (em um ano bissexto, seria <literal>2 de março</literal>). Usar
+    <code>strtotime('1 February')</code> or <code>strtotime('first day of February')</code>
+    evitaria este problema.
+   </para>
+  </note>
+  <note>
+   <para>
     Se o número do ano for especificado no formato com dois dígitos, o valor
     entre 00-60 será mapeado para 2000-2069 e 70-99 para 1970-1999. Veja as notas a
     seguir para possíveis diferenças em sistemas 32bit (as datas possíveis acabam em
@@ -126,12 +170,6 @@ if (($timestamp = strtotime($str)) === false) {
     um inteiro sem sinal em sistemas 32-bit.)
    </para>
    <para>
-    Em versões anteriores ao PHP 5.1.0, nem todas as plataformas suportam timestamps negativos, então
-    a faixa de sua data pode ser limitada a valores inferiores a Era Unix. Isto
-    significa que datas antes de Jan 1, 1970 não funcionam no Windows,
-    algumas distribuições do Linux, e outros sistemas operacionais.
-   </para>
-   <para>
     Em versões do PHP em 64-bit, a faixa válida de um timestamp é praticamente
     infinita, já que 64 bits pode representar aproximadamente 293 bilhões de anos em ambas
     direções.
@@ -139,28 +177,9 @@ if (($timestamp = strtotime($str)) === false) {
   </note>
   <note>
    <para>
-    Datas nos formatos <literal>m/d/y</literal> e <literal>d-m-y</literal>
-    são diferenciadas observando o separador entre os vários
-    componentes: se o separador é uma barra (<literal>/</literal>), o formato
-    Americano <literal>m/d/y</literal> é utilizado; enquanto que, se o separador for
-    um traço (<literal>-</literal>) ou um ponto (<literal>.</literal>), o formato
-    Europeu <literal>d-m-y</literal> será utilizado.
-    Entretanto, se o ano foi informado no formato de dois dígitos e o separador for um
-    traço (<literal>-</literal>, a string de data será interpretada como
-    <literal>y-m-d</literal>.
-   </para>
-   <para>
-    Para evitar uma ambiguidade em potencial, o melhor é utilizar datas que seguem a ISO 8601
-    (<literal>YYYY-MM-DD</literal>) ou o método
-    <methodname>DateTime::createFromFormat</methodname> sempre que possível.
-   </para>
-  </note>
-  <note>
-   <para>
     O uso desta função para operações matemáticas não é recomendado.
     É melhor a utilização dos métodos <methodname>DateTime::add</methodname> e
-    <methodname>DateTime::sub</methodname> no PHP 5.3 e superior, ou
-    o método <methodname>DateTime::modify</methodname> no PHP 5.2.
+    <methodname>DateTime::sub</methodname>.
    </para>
   </note>
  </refsect1>
@@ -169,6 +188,8 @@ if (($timestamp = strtotime($str)) === false) {
   &reftitle.seealso;
   <para>
    <simplelist>
+    <member><classname>DateTimeImmutable</classname></member>
+    <member><methodname>DateTimeImmutable::createFromFormat</methodname></member>
     <member><link linkend="datetime.formats">Formatos de Data e Hora</link></member>
     <member><methodname>DateTime::createFromFormat</methodname></member>
     <member><function>checkdate</function></member>
@@ -177,7 +198,6 @@ if (($timestamp = strtotime($str)) === false) {
   </para>
  </refsect1>
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

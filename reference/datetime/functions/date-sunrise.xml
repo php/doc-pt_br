@@ -1,25 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 14af302c9c0e561fa6f9cdd956268758ba9a89c5 Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano -->
-<refentry xml:id="function.date-sunrise" xmlns="http://docbook.org/ns/docbook">
+<!-- EN-Revision: 5c951013ca04161992efed8b86fb40f55669958e Maintainer: fabioluciano Status: ready --><!-- CREDITS: fabioluciano, leonardolara -->
+<refentry xml:id="function.date-sunrise" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>date_sunrise</refname>
-  <refpurpose>Retorna a hora do nascer do sol de um dia e localicação informada</refpurpose>
+  <refpurpose>Retorna a hora do nascer do sol para um dia e uma localicação informados</refpurpose>
  </refnamediv>
+
+ <refsynopsisdiv>
+  <warning>
+   <para>
+    Esta função ficou <emphasis>OBSOLETA</emphasis> desde o PHP 8.1.0.
+    Confiar nesta função é altamente desencorajado. Use
+    <function>date_sun_info</function> no lugar.
+   </para>
+  </warning>
+ </refsynopsisdiv>
 
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>mixed</type><methodname>date_sunrise</methodname>
+   <type class="union"><type>string</type><type>int</type><type>float</type><type>false</type></type><methodname>date_sunrise</methodname>
    <methodparam><type>int</type><parameter>timestamp</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>format</parameter><initializer>SUNFUNCS_RET_STRING</initializer></methodparam>
-   <methodparam choice="opt"><type>float</type><parameter>latitude</parameter><initializer>ini_get("date.default_latitude")</initializer></methodparam>
-   <methodparam choice="opt"><type>float</type><parameter>longitude</parameter><initializer>ini_get("date.default_longitude")</initializer></methodparam>
-   <methodparam choice="opt"><type>float</type><parameter>zenith</parameter><initializer>ini_get("date.sunrise_zenith")</initializer></methodparam>
-   <methodparam choice="opt"><type>float</type><parameter>gmt_offset</parameter><initializer>0</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>returnFormat</parameter><initializer><constant>SUNFUNCS_RET_STRING</constant></initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>float</type><type>null</type></type><parameter>latitude</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>float</type><type>null</type></type><parameter>longitude</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>float</type><type>null</type></type><parameter>zenith</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>float</type><type>null</type></type><parameter>utcOffset</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
   <para>
-   A função <function>date_sunrise</function> retorna a hora do nascer do sol de um
-   dia (especificado como um <parameter>timestamp</parameter>) e localização informada.
+   A função <function>date_sunrise</function> retorna a hora do nascer do sol para um
+   dia (especificado como um <parameter>timestamp</parameter>) e uma localização informados.
   </para>
  </refsect1>
 
@@ -37,33 +47,33 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>format</parameter></term>
+     <term><parameter>returnFormat</parameter></term>
      <listitem>
       <para>
        <table>
-        <title>constantes de <parameter>format</parameter></title>
+        <title>Constantes de <parameter>returnFormat</parameter></title>
         <tgroup cols="2">
          <thead>
           <row>
-           <entry>constante</entry>
-           <entry>descrição</entry>
-           <entry>exemplo</entry>
+           <entry>Constante</entry>
+           <entry>Descrição</entry>
+           <entry>Exemplo</entry>
           </row>
          </thead>
          <tbody>
           <row>
            <entry>SUNFUNCS_RET_STRING</entry>
-           <entry>retorna o resultado como uma <type>string</type></entry>
+           <entry>Retorna o resultado como uma <type>string</type></entry>
            <entry>16:46</entry>
           </row>
           <row>
            <entry>SUNFUNCS_RET_DOUBLE</entry>
-           <entry>retorna o resultado como um <type>float</type></entry>
+           <entry>Retorna o resultado como um <type>float</type></entry>
            <entry>16.78243132</entry>
           </row>
           <row>
            <entry>SUNFUNCS_RET_TIMESTAMP</entry>
-           <entry>retorna o resultado como um <type>integer</type> (timestamp)</entry>
+           <entry>Retorna o resultado como um <type>int</type> (timestamp)</entry>
            <entry>1095034606</entry>
           </row>
          </tbody>
@@ -76,8 +86,8 @@
      <term><parameter>latitude</parameter></term>
      <listitem>
       <para>
-       Padronizado ao Norte, passe o valor negativado para Sul.
-       Veja também: <literal>date.default_latitude</literal>
+       Padronizado para o norte, passe um valor negativo para o sul.
+       Veja também: <link linkend="ini.date.default-latitude">date.default_latitude</link>
       </para>
      </listitem>
     </varlistentry>
@@ -85,8 +95,8 @@
      <term><parameter>longitude</parameter></term>
      <listitem>
       <para>
-       Padronizado a Leste, passe o valor negativado para Oeste.
-       Veja também: <literal>date.default_longitude</literal>
+       Padronizado para o leste, passe um valor negativado para o oeste.
+       Veja também: <link linkend="ini.date.default-longitude">date.default_longitude</link>
       </para>
      </listitem>
     </varlistentry>
@@ -94,15 +104,49 @@
      <term><parameter>zenith</parameter></term>
      <listitem>
       <para>
-       Padrão: <literal>date.sunrise_zenith</literal>
+       <parameter>zenith</parameter> é o ângulo entre o centro do sol
+       e uma linha perpendicular à superfície da Terra. É padronizado para
+       <link linkend="ini.date.sunrise-zenith">date.sunrise_zenith</link>
+       <table>
+        <title>Ângulos comuns em relação ao <parameter>zenith</parameter></title>
+        <tgroup cols="2">
+         <thead>
+          <row>
+           <entry>Ângulo</entry>
+           <entry>Descrição</entry>
+          </row>
+         </thead>
+         <tbody>
+          <row>
+           <entry>90°50'</entry>
+           <entry>Nascer do sol: o ponto onde o sol se torna visível.</entry>
+          </row>
+          <row>
+           <entry>96°</entry>
+           <entry>Amanhecer civil: convencionado para significar o início do amanhecer.</entry>
+          </row>
+          <row>
+           <entry>102°</entry>
+           <entry>Amanhecer náutico: o ponto no qual o horizonte começa a ficar visível no mar.</entry>
+          </row>
+          <row>
+           <entry>108°</entry>
+           <entry>Amanhecer astronômico: o ponto no qual o sol começa a se tornar fonte de iluminação.</entry>
+          </row>
+         </tbody>
+        </tgroup>
+       </table>
       </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>gmtoffset</parameter></term>
+     <term><parameter>utcOffset</parameter></term>
      <listitem>
       <para>
        Especificado em horas.
+       O parâmetro <parameter>utcOffset</parameter> é ignorado se
+       <parameter>returnFormat</parameter> for
+       <constant>SUNFUNCS_RET_TIMESTAMP</constant>.
       </para>
      </listitem>
     </varlistentry>
@@ -113,8 +157,10 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna a hora do nascer do sol no <parameter>format</parameter> especificado em caso de
-   sucesso&return.falseforfailure;.
+   Retorna o horário do nascer do sol no <parameter>returnFormat</parameter> especificado
+   em caso de sucesso&return.falseforfailure;. Um potencial motivo para falha é quando o
+   sol não nasce, o que acontece dentro dos círculos polares durante parte
+   do ano.
   </para>
  </refsect1>
 
@@ -137,6 +183,19 @@
       </row>
      </thead>
      <tbody>
+      <row>
+       <entry>8.1.0</entry>
+       <entry>
+        Esta função ficou obsoleta em favor de <function>date_sun_info</function>.
+       </entry>
+      </row>
+      <row>
+       <entry>8.0.0</entry>
+       <entry>
+        <parameter>latitude</parameter>, <parameter>longitude</parameter>,
+        <parameter>zenith</parameter> e <parameter>utcOffset</parameter> agora podem ser nulos.
+       </entry>
+      </row>
      </tbody>
     </tgroup>
    </informaltable>
@@ -152,14 +211,14 @@
 <![CDATA[
 <?php
 
-/* calculate the sunrise time for Lisbon, Portugal
-Latitude: 38.4 North
-Longitude: 9 West
-Zenith ~= 90
-offset: +1 GMT
+/* Calcula o nascer do sol em Lisboa, Portugal
+Latitude: 38.4 norte
+Longitude: 9 oeste
+Zênite ~= 90
+deslocamento UTC: +01:00
 */
 
-echo date("D M d Y"). ', sunrise time : ' .date_sunrise(time(), SUNFUNCS_RET_STRING, 38.4, -9, 90, 1);
+echo date("D M d Y"). ', horário do nascer do sol : ' .date_sunrise(time(), SUNFUNCS_RET_STRING, 38.4, -9, 90, 1);
 
 ?>
 ]]>
@@ -167,7 +226,7 @@ echo date("D M d Y"). ', sunrise time : ' .date_sunrise(time(), SUNFUNCS_RET_STR
     &example.outputs.similar;
     <screen>
 <![CDATA[
-Mon Dec 20 2004, sunrise time : 08:54
+Mon Dec 20 2004, horário do nascer do sol : 08:54
 ]]>
     </screen>
    </example>
@@ -178,12 +237,11 @@ Mon Dec 20 2004, sunrise time : 08:54
   &reftitle.seealso;
   <para>
    <simplelist>
-    <member><function>date_sunset</function></member>
+    <member><function>date_sun_info</function></member>
    </simplelist>
   </para>
  </refsect1>
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
