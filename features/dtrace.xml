@@ -1,0 +1,558 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 9e2d8231b5d8a3795b365c6770fab288e59e6249 Maintainer: _ Status: ready --><!-- CREDITS: leonardolara -->
+<chapter xml:id="features.dtrace" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Instrumentação dimâmica DTrace</title>
+
+ <sect1 xml:id="features.dtrace.introduction">
+  <title>Introdução ao PHP e DTrace</title>
+
+  <para>
+   DTrace é um framework de instrumentação com alta disponibilidade e pequena sobrecarga,
+   disponível em um número de plataformas incluindo Solaris, macOS,
+   Oracle Linux e BSD. DTrace pode instrumentar comportamento do sistema operacional
+   e execução de programa de usuário. Ele pode exibir valores de argumentos e ser
+   usado para inferir estatísticas de desempenho. Os sensores são monitorados pos scripts
+   criados pelo usuário escritos na linguagem própria do DTrace (D). Isto
+   permite uma análise eficiente de pontos de dados.
+  </para>
+
+  <para>
+   Sensores PHP que não estão monitorados ativamente por um script
+   D do usuário não contêm código instrumentado, então não há
+   degradação de desempenho durante a execução normal da aplicação.
+   Sensores que estão sendo monitorados incorrem em uma sobrecarga pequena o suficiente
+   para permitir monitoramento pelo DTrace em sistemas ativos em fase de produção.
+  </para>
+
+  <para>
+   PHP incorpora sensores com "Instrumentação Estaticamente Definida no Nível de Usuário" (USDT em inglês)
+   que são ativados em tempo de execução. Por exemplo, quando um script D
+   está monitorando o sensor de <literal>entrada de função</literal> do PHP, então
+   a cada momento que uma função do PHP é chamada, este sensor é disparado e
+   o código de ação do script D associado é executado.  Este código de ação
+   poderia, por exemplo, imprimir argumentos de sensor como a localização do arquivo-fonte
+   da função PHP. Ou a ação poderia agregar dados como
+   o númedo de vezes que cada função é chamada.
+  </para>
+
+  <para>
+   Apenas os sensores USDT do PHP são descritas aqui. Refira-se à literatura externa do Dtrace,
+   tanto geral quanto específica do sistema operacional, para entender como
+   o DTrace pode ser usado para instrumentar funções arbitrárias, e como ele pode ser
+   usado para instrumentar comportamento do sistema operacional. Note que nem todas as
+   características do DTrace estão disponíveis em todas as implementações.
+  </para>
+
+  <para>
+   Os sensores estáticos do Dtrace no PHP podem alternativamente ser utilizados com a
+   ferramenta SystemTap de algumas distribuições Linux.
+  </para>
+ </sect1>
+
+ <sect1 xml:id="features.dtrace.dtrace">
+  <title>Usando PHP e DTrace</title>
+  <para>
+   O PHP pode ser configuracom com sensores estáticos do DTrace em plataformas que
+   suportam a Instrumentação Dinâmica do DTrace.
+  </para>
+
+  <sect2 xml:id="features.dtrace.install">
+   <title>Configurando o PHP para Sensores Estáticos DTrace</title>
+
+   <para>
+    Refira-se à documentação externa específica da plataforma para habilitar
+    o suporte do DTrace no sistema operacional. Por exemplo, no Oracle Linux
+    inicialize um kernel UEK3 e rode os seguintes comandos:
+
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+# modprobe fasttrap
+# chmod 666 /dev/dtrace/helper
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+   <para>
+    Ao invés de usar <literal>chmod</literal>, pode-se alternativamente usar uma
+    regra de pacote ACL para limitar o acesso a um dispositivo para um usuário específico.
+   </para>
+
+   <para>
+    Construa o PHP com o parâmetro de configuração <literal>--enable-dtrace</literal>:
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+# ./configure --enable-dtrace ...
+# make
+# make install
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+   <para>
+    Isto habilita sensores estáticos no núcleo do PHP. Quaisquer extensões PHP
+    que fornecem seus próprios sensores devem ser construídas separadamente como
+    extensões compartilhadas.
+   </para>
+  </sect2>
+
+  <sect2 xml:id="features.dtrace.static-probes">
+  <title>Sensores Estáticos DTrace no Núcleo do PHP</title>
+  <table>
+   <title>Os sensores estáticos a seguir estão disponíveis no PHP</title>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>Nome do Sensor</entry>
+      <entry>Descrição do Sensor</entry>
+      <entry>Argumentos do Sensor</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry><literal>request-startup</literal></entry>
+      <entry>Dispara quando uma requisição inicia.</entry>
+      <entry>char *<varname>file</varname>, char *<varname>request_uri</varname>, char *<varname>request_method</varname></entry>
+     </row>
+     <row>
+      <entry><literal>request-shutdown</literal></entry>
+      <entry>Dispara quando uma requisição termina.</entry>
+      <entry>char *<varname>file</varname>, char *<varname>request_uri</varname>, char *<varname>request_method</varname></entry>
+     </row>
+     <row>
+      <entry><literal>compile-file-entry</literal></entry>
+      <entry>Dispara quando a compilação de um script inicia.</entry>
+      <entry>char *<varname>compile_file</varname>, char *<varname>compile_file_translated</varname></entry>
+     </row>
+     <row>
+      <entry><literal>compile-file-return</literal></entry>
+      <entry>Dispara quando a compilação de um script termina.</entry>
+      <entry>char *<varname>compile_file</varname>, char *<varname>compile_file_translated</varname></entry>
+     </row>
+     <row>
+      <entry><literal>execute-entry</literal></entry>
+      <entry>Dispara quando um array de opcode está para ser executado. Por
+      exemplo, ele dispara em chamadas de função, de includes e em continuação
+      de geradores.</entry>
+      <entry>char *<varname>request_file</varname>, int <varname>lineno</varname></entry>
+     </row>
+     <row>
+      <entry><literal>execute-return</literal></entry>
+      <entry>Dispara depois da execução de um array de opcode.</entry>
+      <entry>char *<varname>request_file</varname>, int <varname>lineno</varname></entry>
+     </row>
+     <row>
+      <entry><literal>function-entry</literal></entry>
+      <entry>Dispara quando o motor do PHP entra em uma chamada de função ou método.</entry>
+      <entry>char *<varname>function_name</varname>, char *<varname>request_file</varname>, int <varname>lineno</varname>, char *<varname>classname</varname>, char *<varname>scope</varname></entry>
+     </row>
+     <row>
+      <entry><literal>function-return</literal></entry>
+      <entry>Dispara quando o motor do PHP retorna de uma chamada de função ou método.</entry>
+      <entry>char *<varname>function_name</varname>, char *<varname>request_file</varname>, int <varname>lineno</varname>, char *<varname>classname</varname>, char *<varname>scope</varname></entry>
+     </row>
+     <row>
+      <entry><literal>exception-thrown</literal></entry>
+      <entry>Dispara quando uma exceção é disparada.</entry>
+      <entry>char *<varname>classname</varname></entry>
+     </row>
+     <row>
+      <entry><literal>exception-caught</literal></entry>
+      <entry>Dispara quando uma exceção é capturada.</entry>
+      <entry>char *<varname>classname</varname></entry>
+     </row>
+     <row>
+      <entry><literal>error</literal></entry>
+      <entry>Dispara quando um erro ocorre, independente do nível de <link linkend="ini.error-reporting">error_reporting</link>.</entry>
+      <entry>char *<varname>errormsg</varname>, char *<varname>request_file</varname>, int <varname>lineno</varname></entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </table>
+  <para>
+   Extensões de PHP podem também conter sensores estáticos adicionais.
+  </para>
+  </sect2>
+
+  <sect2 xml:id="features.dtrace.list-probes">
+   <title>Listando os Sensores Estáticos DTrace no PHP</title>
+   <para>
+    Para listar os sensores disponíveis, inicie um processo PHP e então execute:
+    <informalexample>
+     <programlisting>
+<![CDATA[
+# dtrace -l
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+
+   <para>
+    A saída será similar a:
+    <informalexample>
+     <programlisting>
+<![CDATA[
+   ID   PROVIDER            MODULE                          FUNCTION NAME
+   [ . . . ]
+    4   php15271               php               dtrace_compile_file compile-file-entry
+    5   php15271               php               dtrace_compile_file compile-file-return
+    6   php15271               php                        zend_error error
+    7   php15271               php  ZEND_CATCH_SPEC_CONST_CV_HANDLER exception-caught
+    8   php15271               php     zend_throw_exception_internal exception-thrown
+    9   php15271               php                 dtrace_execute_ex execute-entry
+   10   php15271               php           dtrace_execute_internal execute-entry
+   11   php15271               php                 dtrace_execute_ex execute-return
+   12   php15271               php           dtrace_execute_internal execute-return
+   13   php15271               php                 dtrace_execute_ex function-entry
+   14   php15271               php                 dtrace_execute_ex function-return
+   15   php15271               php              php_request_shutdown request-shutdown
+   16   php15271               php               php_request_startup request-startup
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+
+   <para>
+    Os valores da coluna Provider consistem de <literal>php</literal> mais o id
+    do processo PHP sendo executado.
+   </para>
+
+   <para>
+    Se o servidor web Apache estiver rodando, o módulo poderia ser, por
+    exemplo, <filename>libphp5.so</filename>, e haveria
+    múltiplos blocos de listagens, um para cada processo Apache em execução.
+   </para>
+
+   <para>
+    A coluna Function refere-se aos nomes das funções da implementação
+    interna do PHP, em C, onde cada fornecedor está localizado.
+   </para>
+
+   <para>
+    Se um processo PHP não estiver em execução, então nenhum sensor PHP será mostrado.
+   </para>
+  </sect2>
+
+  <sect2 xml:id="features.dtrace.examples">
+   <title>Exemplo de DTrace com PHP</title>
+   <para>
+    Este exemplo mostra o básico da linguagem D de scripts DTrace.
+    <example>
+     <title>Arquivo <filename>all_probes.d</filename> para instrumentar todos os Sensores Estáticos PHP com DTrace</title>
+     <programlisting>
+<![CDATA[
+#!/usr/sbin/dtrace -Zs
+
+#pragma D option quiet
+
+php*:::compile-file-entry
+{
+    printf("PHP compile-file-entry\n");
+    printf("  compile_file              %s\n", copyinstr(arg0));
+    printf("  compile_file_translated   %s\n", copyinstr(arg1));
+}
+
+php*:::compile-file-return
+{
+    printf("PHP compile-file-return\n");
+    printf("  compile_file              %s\n", copyinstr(arg0));
+    printf("  compile_file_translated   %s\n", copyinstr(arg1));
+}
+
+php*:::error
+{
+    printf("PHP error\n");
+    printf("  errormsg                  %s\n", copyinstr(arg0));
+    printf("  request_file              %s\n", copyinstr(arg1));
+    printf("  lineno                    %d\n", (int)arg2);
+}
+
+php*:::exception-caught
+{
+    printf("PHP exception-caught\n");
+    printf("  classname                 %s\n", copyinstr(arg0));
+}
+
+php*:::exception-thrown
+{
+    printf("PHP exception-thrown\n");
+    printf("  classname                 %s\n", copyinstr(arg0));
+}
+
+php*:::execute-entry
+{
+    printf("PHP execute-entry\n");
+    printf("  request_file              %s\n", copyinstr(arg0));
+    printf("  lineno                    %d\n", (int)arg1);
+}
+
+php*:::execute-return
+{
+    printf("PHP execute-return\n");
+    printf("  request_file              %s\n", copyinstr(arg0));
+    printf("  lineno                    %d\n", (int)arg1);
+}
+
+php*:::function-entry
+{
+    printf("PHP function-entry\n");
+    printf("  function_name             %s\n", copyinstr(arg0));
+    printf("  request_file              %s\n", copyinstr(arg1));
+    printf("  lineno                    %d\n", (int)arg2);
+    printf("  classname                 %s\n", copyinstr(arg3));
+    printf("  scope                     %s\n", copyinstr(arg4));
+}
+
+php*:::function-return
+{
+    printf("PHP function-return\n");
+    printf("  function_name             %s\n", copyinstr(arg0));
+    printf("  request_file              %s\n", copyinstr(arg1));
+    printf("  lineno                    %d\n", (int)arg2);
+    printf("  classname                 %s\n", copyinstr(arg3));
+    printf("  scope                     %s\n", copyinstr(arg4));
+}
+
+php*:::request-shutdown
+{
+    printf("PHP request-shutdown\n");
+    printf("  file                      %s\n", copyinstr(arg0));
+    printf("  request_uri               %s\n", copyinstr(arg1));
+    printf("  request_method            %s\n", copyinstr(arg2));
+}
+
+php*:::request-startup
+{
+    printf("PHP request-startup\n");
+    printf("  file                      %s\n", copyinstr(arg0));
+    printf("  request_uri               %s\n", copyinstr(arg1));
+    printf("  request_method            %s\n", copyinstr(arg2));
+}
+]]>
+     </programlisting>
+    </example>
+   </para>
+
+   <para>
+    Este script usa a opção <literal>-Z</literal> para a aplicação
+    <filename>dtrace</filename>, permitindo que ela seja executada quando não
+    há processo PHP em execução. Se esta opção fosse omitida, o script
+    iria terminar imediatamente porque ele saberia que nenhum dos sensores
+    a serem monitorados existiriam.
+   </para>
+
+   <para>
+    O script instrumenta todos os pontos de sensores estáticos do núcleo do PHP durante toda a
+    duração de um script PHP em execução. Execute o script D:
+    <informalexample>
+     <programlisting>
+<![CDATA[
+# ./all_probes.d
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+
+   <para>
+    Executa um script PHP ou aplicação. O script D de monitoramento terá
+    como saída os argumentos de cada um dos sensores quando for disparado.
+   </para>
+
+   <para>
+    Quando o monitoramento estiver completo, o script D pode ser terminado com
+    <keycombo action='simul'><keycap>CTRL</keycap><keycap>C</keycap></keycombo>.
+   </para>
+
+   <para>
+    Em máquinas com múltiplas CPUs, pode parecer que os sensor estão em ordem
+    não sequencial. Isto depende de qual CPU está processando os sensores,
+    e como as threads migram atráves dos CPUs. Mostrar os timestamps dos sensores
+    irá ajudar a reduzir a confusão, por exemplo:
+    <informalexample>
+     <programlisting>
+<![CDATA[
+php*:::function-entry
+{
+      printf("%lld: PHP function-entry ", walltimestamp);
+      [ . . .]
+}
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+  </sect2>
+
+  <sect2 xml:id="features.dtrace.references">
+   &reftitle.seealso;
+   <simplelist>
+    <member><link linkend="oci8.dtrace">Instrumentação Dinâmica OCI8 e DTrace</link></member>
+   </simplelist>
+  </sect2>
+ </sect1>
+
+ <sect1 xml:id="features.dtrace.systemtap">
+  <title>Usando SystemTap com Sensores Estáticos DTrace</title>
+  <para>
+   Em algumas distribuições Linux, o utilitário SystemTap de instrumentação pode ser
+   usado para instrumentar sensores estáticos do PHP. Isso está disponível no
+   PHP 5.4.20 e PHP 5.5.
+  </para>
+
+  <sect2 xml:id="features.dtrace.systemtap-install">
+   <title>Instalando PHP com SystemTap</title>
+
+   <para>
+    Instale o pacote de desenvolvimento do SystemTap, SDT:
+    <informalexample>
+     <programlisting role="shell">
+<![CDATA[
+# yum install systemtap-sdt-devel
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+
+   <para>
+    Instale o PHP com os sensores DTrace habilitados:
+    <informalexample>
+     <programlisting role="shell">
+<![CDATA[
+# ./configure --enable-dtrace ...
+# make
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+  </sect2>
+
+  <sect2 xml:id="features.dtrace.systemtap-list-probes">
+   <title>Listando os Sensores Estáticos com SystemTap</title>
+
+   <para>
+    Os sensores estáticos em PHP podem ser listados usando <filename>stap</filename>:
+    <informalexample>
+     <programlisting>
+<![CDATA[
+# stap -l 'process.provider("php").mark("*")' -c 'sapi/cli/php -i'
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+
+   <para>
+    A saída será:
+    <informalexample>
+     <programlisting>
+<![CDATA[
+process("sapi/cli/php").provider("php").mark("compile__file__entry")
+process("sapi/cli/php").provider("php").mark("compile__file__return")
+process("sapi/cli/php").provider("php").mark("error")
+process("sapi/cli/php").provider("php").mark("exception__caught")
+process("sapi/cli/php").provider("php").mark("exception__thrown")
+process("sapi/cli/php").provider("php").mark("execute__entry")
+process("sapi/cli/php").provider("php").mark("execute__return")
+process("sapi/cli/php").provider("php").mark("function__entry")
+process("sapi/cli/php").provider("php").mark("function__return")
+process("sapi/cli/php").provider("php").mark("request__shutdown")
+process("sapi/cli/php").provider("php").mark("request__startup")
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+  </sect2>
+
+  <sect2 xml:id="features.dtrace.systemtap-examples">
+   <title>Exemplo de SystemTap com PHP</title>
+
+   <para>
+    <example>
+     <title><filename>all_probes.stp</filename> para instrumentação de todos os Sensores Estáticos do PHP com SystemTap</title>
+     <programlisting role="shell">
+<![CDATA[
+probe process("sapi/cli/php").provider("php").mark("compile__file__entry") {
+    printf("Probe compile__file__entry\n");
+    printf("  compile_file %s\n", user_string($arg1));
+    printf("  compile_file_translated %s\n", user_string($arg2));
+}
+probe process("sapi/cli/php").provider("php").mark("compile__file__return") {
+    printf("Probe compile__file__return\n");
+    printf("  compile_file %s\n", user_string($arg1));
+    printf("  compile_file_translated %s\n", user_string($arg2));
+}
+probe process("sapi/cli/php").provider("php").mark("error") {
+    printf("Probe error\n");
+    printf("  errormsg %s\n", user_string($arg1));
+    printf("  request_file %s\n", user_string($arg2));
+    printf("  lineno %d\n", $arg3);
+}
+probe process("sapi/cli/php").provider("php").mark("exception__caught") {
+    printf("Probe exception__caught\n");
+    printf("  classname %s\n", user_string($arg1));
+}
+probe process("sapi/cli/php").provider("php").mark("exception__thrown") {
+    printf("Probe exception__thrown\n");
+    printf("  classname %s\n", user_string($arg1));
+}
+probe process("sapi/cli/php").provider("php").mark("execute__entry") {
+    printf("Probe execute__entry\n");
+    printf("  request_file %s\n", user_string($arg1));
+    printf("  lineno %d\n", $arg2);
+}
+probe process("sapi/cli/php").provider("php").mark("execute__return") {
+    printf("Probe execute__return\n");
+    printf("  request_file %s\n", user_string($arg1));
+    printf("  lineno %d\n", $arg2);
+}
+probe process("sapi/cli/php").provider("php").mark("function__entry") {
+    printf("Probe function__entry\n");
+    printf("  function_name %s\n", user_string($arg1));
+    printf("  request_file %s\n", user_string($arg2));
+    printf("  lineno %d\n", $arg3);
+    printf("  classname %s\n", user_string($arg4));
+    printf("  scope %s\n", user_string($arg5));
+}
+probe process("sapi/cli/php").provider("php").mark("function__return") {
+    printf("Probe function__return: %s\n", user_string($arg1));
+    printf(" function_name %s\n", user_string($arg1));
+    printf("  request_file %s\n", user_string($arg2));
+    printf("  lineno %d\n", $arg3);
+    printf("  classname %s\n", user_string($arg4));
+    printf("  scope %s\n", user_string($arg5));
+}
+probe process("sapi/cli/php").provider("php").mark("request__shutdown") {
+    printf("Probe request__shutdown\n");
+    printf("  file %s\n", user_string($arg1));
+    printf("  request_uri %s\n", user_string($arg2));
+    printf("  request_method %s\n", user_string($arg3));
+}
+probe process("sapi/cli/php").provider("php").mark("request__startup") {
+    printf("Probe request__startup\n");
+    printf("  file %s\n", user_string($arg1));
+    printf("  request_uri %s\n", user_string($arg2));
+    printf("  request_method %s\n", user_string($arg3));
+}
+]]>
+     </programlisting>
+    </example>
+   </para>
+   <para>
+    O script acima irá instrumentar todos os pontos de sensores estáticos do núcleo do PHP
+    durante toda a duração de um script PHP em execução:
+    <informalexample>
+     <programlisting>
+<![CDATA[
+# stap -c 'sapi/cli/php test.php' all_probes.stp
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+  </sect2>
+ </sect1>
+</chapter>
+
+<!-- Keep this comment at the end of the file
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
