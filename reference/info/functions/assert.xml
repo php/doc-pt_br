@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: ada1d79de35239334b68d0120b011530e31244ff Maintainer: ae Status: ready --><!-- CREDITS: fernandoc,ae -->
+<!-- EN-Revision: b2cbcaea5b0e967d2b2cc6bbfa631343e49a7c28 Maintainer: ae Status: ready --><!-- CREDITS: fernandoc,ae -->
 <refentry xml:id="function.assert" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>assert</refname>
@@ -14,8 +14,8 @@
    <methodparam choice="opt"><type class="union"><type>Throwable</type><type>string</type><type>null</type></type><parameter>description</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
   <para>
-   <function>assert</function> não é uma função, mas um constructo da linguagem,
-   que permite a definição de expectativas: asserções são verificadas em
+   <function>assert</function>
+   permite a definição de expectativas: asserções são verificadas em
    ambientes de desenvolvimento ou testes, mas que são removidas por otimização
    a custo zero em produção.
   </para>
@@ -149,9 +149,6 @@
      </tbody>
     </tgroup>
    </table>
-
-   As opções iniciadas com <literal>assert.</literal> podem ser configuradas através de
-   <function>assert_options</function>. No entanto, isso não é recomendado.
   </para>
  </refsect1>
 
@@ -227,7 +224,18 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   &false; if <parameter>assertion</parameter> is false, &true; otherwise.
+   <function>assert</function> sempre retorna &true; se ao menos uma das seguintes condições forem verdadeiras:
+  </para>
+  <simplelist>
+   <member><literal>zend.assertions=0</literal></member>
+   <member><literal>zend.assertions=-1</literal></member>
+   <member><literal>assert.exception=1</literal></member>
+   <member><literal>assert.bail=1</literal></member>
+   <member>Um objeto exception foi passado em <parameter>description</parameter>.</member>
+  </simplelist>
+  <para>
+   Se nenhuma das condições forem verdadeiras <function>assert</function> ainda pode retornar &true; se
+   <parameter>assertion</parameter> possa ser convertido em um valor verdadeiro, ou &false; nos demais casos.
   </para>
  </refsect1>
 
@@ -308,209 +316,99 @@
 
  <refsect1 role="examples">
   &reftitle.examples;
-  <refsect2>
-   <title>Expectativas</title>
    <example>
+    <title>Exemplo de <function>assert</function></title>
     <programlisting role="php">
 <![CDATA[
 <?php
-assert(true == false);
+assert(1 > 2);
 echo 'Hi!';
-?>
 ]]>
     </programlisting>
     <para>
-     Com <link linkend="ini.zend.assertions">zend.assertions</link> configurado para 0,
-     o exemplo acima irá emitir:
+     Se assertions estiver ativo (<link linkend="ini.zend.assertions"><literal>zend.assertions=1</literal></link>),
+     o exemplo acima emitirá:
     </para>
     <screen>
 <![CDATA[
-Hi!
-]]>
-    </screen>
-    <para>
-     Com <link linkend="ini.zend.assertions">zend.assertions</link> configurado para 1,
-     e <link linkend="ini.assert.exception">assert.exception</link> configurado para 0,
-     o exemplo acima irá emitir:
-    </para>
-    <screen>
-<![CDATA[
-Warning: assert(): assert(true == false) failed in - on line 2
-Hi!
-]]>
-    </screen>
-    <para>
-     Com <link linkend="ini.zend.assertions">zend.assertions</link> configurado para 1
-     e <link linkend="ini.assert.exception">assert.exception</link> configurado para 1,
-     o exemplo acima irá emitir:
-    </para>
-    <screen>
-<![CDATA[
-Fatal error: Uncaught AssertionError: assert(true == false) in -:2
+Fatal error: Uncaught AssertionError: assert(1 > 2) in example.php:2
 Stack trace:
-#0 -(2): assert(false, 'assert(true == ...')
+#0 example.php(2): assert(false, 'assert(1 > 2)')
 #1 {main}
-  thrown in - on line 2
+  thrown in example.php on line 2
+]]>
+    </screen>
+    <para>
+     Se assertions estiver desativado (<literal>zend.assertions=0</literal> ou <literal>zend.assertions=-1</literal>)
+     o exemplo acima emitirá:
+    </para>
+    <screen>
+<![CDATA[
+Hi!
 ]]>
     </screen>
    </example>
    <example>
-    <title>Expectativas com uma exceção personalizada</title>
+    <title>Utilizando uma mensagem customizada</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-class CustomError extends AssertionError {}
-
-assert(true == false, new CustomError('True is not false!'));
+assert(1 > 2, "Expected one to be greater than two");
 echo 'Hi!';
-?>
 ]]>
     </programlisting>
     <para>
-     Com <link linkend="ini.zend.assertions">zend.assertions</link> configurado para 0,
-     o exemplo acima irá emitir:
+     Se assertions estiverem ativadas, o código acima emitirá:
     </para>
     <screen>
 <![CDATA[
-Hi!
-]]>
-    </screen>
-    <para>
-     Com <link linkend="ini.zend.assertions">zend.assertions</link> configurado para 1
-     e <link linkend="ini.assert.exception">assert.exception</link> configurado para 0,
-     o exemplo acima irá emitir:
-    </para>
-    <screen>
-<![CDATA[
-Warning: assert(): CustomError: True is not false! in -:4
+Fatal error: Uncaught AssertionError: Expected one to be greater than two in example.php:2
 Stack trace:
-#0 {main} failed in - on line 4
-Hi!
+#0 example.php(2): assert(false, 'Expected one to...')
+#1 {main}
+  thrown in example.php on line 2
 ]]>
     </screen>
     <para>
-     Com <link linkend="ini.zend.assertions">zend.assertions</link> configurado para 1
-     e <link linkend="ini.assert.exception">assert.exception</link> configurado para 1,
-     o exemplo acima irá emitir:
+     Se assertions estiverem desativados, o código acima emitirá:
     </para>
     <screen>
 <![CDATA[
-Fatal error: Uncaught CustomError: True is not false! in -:4
+Hi!
+]]>
+    </screen>
+   </example>
+   <example>
+    <title>Utilizando uma classe exception</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+class ArithmeticAssertionError extends AssertionError {}
+
+assert(1 > 2, new ArithmeticAssertionError("Expected one to be greater than two"));
+echo 'Hi!';
+]]>
+    </programlisting>
+    <para>
+     Se assertions estiver ativo o exemplo acima emitirá:
+    </para>
+    <screen>
+<![CDATA[
+Fatal error: Uncaught ArithmeticAssertionError: Expected one to be greater than two in example.php:4
 Stack trace:
 #0 {main}
-  thrown in - on line 4
+  thrown in example.php on line 4
+]]>
+    </screen>
+    <para>
+     Se assertions estiver desativado, o exemplo acima emitirá:
+    </para>
+    <screen>
+<![CDATA[
+Hi!
 ]]>
     </screen>
    </example>
-  </refsect2>
-  <refsect2>
-   <title>Avaliações de asserções de código (somente PHP 7)</title>
-
-   <para>
-    Com asserções que avaliam código, callbacks de <function>assert</function>
-    podem ser particularmente úteis pois o código utilizado na asserção é passado
-    para o callback acrescentado de informações onde a asserção foi executada.
-   </para>
-   <para>
-    <example>
-     <title>Manipulando uma asserção falhada com um manipulador personalizado</title>
-     <programlisting role="php">
-<![CDATA[
-<?php
-// Ativa o assert e o silencia
-assert_options(ASSERT_ACTIVE, 1);
-assert_options(ASSERT_WARNING, 0);
-assert_options(ASSERT_QUIET_EVAL, 1);
-
-// Cria uma função de manipulação
-function my_assert_handler($file, $line, $code)
-{
-    echo "<hr>Assertion Failed:
-        File '$file'<br />
-        Line '$line'<br />
-        Code '$code'<br /><hr />";
-}
-
-// Configura o callback
-assert_options(ASSERT_CALLBACK, 'my_assert_handler');
-
-// Criando uma asserção que irá falhar
-$array = [];
-assert('count($array);');
-?>
-]]>
-     </programlisting>
-     &example.outputs.72;
-     <screen>
-<![CDATA[
-Deprecated: assert(): Calling assert() with a string argument is deprecated in test.php on line 21
-<hr>Assertion Failed:
-        File 'test.php'<br />
-        Line '21'<br />
-        Code 'count($array);'<br /><hr />
-]]>
-     </screen>
-     &example.outputs.71;
-     <screen>
-<![CDATA[
-<hr>Assertion Failed:
-        File 'test.php'<br />
-        Line '21'<br />
-        Code 'count($array);'<br /><hr />
-]]>
-     </screen>
-    </example>
-   </para>
-   <para>
-    <example>
-     <title>Usando um manipulador customizado para imprimir uma descrição</title>
-     <programlisting role="php">
-<![CDATA[
-<?php
-// Ativa o assert e o silencia
-assert_options(ASSERT_ACTIVE, 1);
-assert_options(ASSERT_WARNING, 0);
-assert_options(ASSERT_QUIET_EVAL, 1);
-
-// Cria uma função de manipulação
-function my_assert_handler($file, $line, $code, $desc = null)
-{
-    echo "Assertion failed at $file:$line: $code";
-    if ($desc) {
-        echo ": $desc";
-    }
-    echo "\n";
-}
-
-// Configura o callback
-assert_options(ASSERT_CALLBACK, 'my_assert_handler');
-
-// Criando uma asserção que irá falhar
-assert('2 < 1');
-assert('2 < 1', 'Two is less than one');
-?>
-]]>
-     </programlisting>
-     &example.outputs.72;
-     <screen>
-<![CDATA[
-Deprecated: assert(): Calling assert() with a string argument is deprecated in test.php on line 21
-Assertion failed at test.php:21: 2 < 1
-
-Deprecated: assert(): Calling assert() with a string argument is deprecated in test.php on line 22
-Assertion failed at test.php:22: 2 < 1: Two is less than one
-]]>
-     </screen>
-     &example.outputs.71;
-     <screen>
-<![CDATA[
-Assertion failed at test.php:21: 2 < 1
-Assertion failed at test.php:22: 2 < 1: Two is less than one
-]]>
-     </screen>
-    </example>
-   </para>
-  </refsect2>
  </refsect1>
 
  <refsect1 role="seealso">
