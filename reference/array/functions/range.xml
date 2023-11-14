@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 9b89d5c26bba2f062bfbaba2e8c4c8cd89646770 Maintainer: ae Status: ready --><!-- CREDITS: lucasr,felipe,ae -->
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 62421b98a97fe576987878055e17cf755eb395af Maintainer: ae Status: ready --><!-- CREDITS: lucasr,felipe,ae -->
 <refentry xml:id="function.range" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>range</refname>
@@ -16,7 +15,19 @@
   <para>
    Cria um array contendo uma faixa de elementos.
   </para>
+  <para>
+   Se ambos <parameter>start</parameter> e <parameter>end</parameter> forem
+   <type>string</type>s, e <parameter>step</parameter> é <type>int</type>,
+   o array produzido será uma sequência de bytes.
+   Em outros casos, o array produzido será uma sequência de números.
+  </para>
+  <para>
+   A sequência é crescente se <parameter>start</parameter> é menor ou
+   igual a <parameter>end</parameter>.
+   Em outros casos, a sequência é decrescente.
+  </para>
  </refsect1>
+
  <refsect1 role="parameters">
   &reftitle.parameters;
   <para>
@@ -33,8 +44,7 @@
      <term><parameter>end</parameter></term>
      <listitem>
       <para>
-       A sequência termina ao se alcançar o valor
-       <parameter>end</parameter>.
+       O último valor possível da sequência.
       </para>
      </listitem>
     </varlistentry>
@@ -42,73 +52,224 @@
      <term><parameter>step</parameter></term>
      <listitem>
       <para>
-       Se o parâmetro <parameter>step</parameter> for especificado, ele será usado
-       como o incremento (ou decremento) entre os elementos da sequência. <parameter>step</parameter>
-       deve ser um inteiro diferente de <literal>0</literal> e não deve exceder range. Se não for especificado,
-       <parameter>step</parameter> terá valor igual a 1.
+       <parameter>step</parameter> indica o tamanho do deslocamento entre os
+       os valores produzidos na sequência.
+      </para>
+      <para>
+       <parameter>step</parameter> pode ser negativo em sequências decrescentes.
+      </para>
+      <para>
+       Se <parameter>step</parameter> é um <type>float</type> sem uma
+       parte fracional, ele é interpretado como <type>int</type>.
       </para>
      </listitem>
     </varlistentry>
    </variablelist>
   </para>
  </refsect1>
+
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna um array com elementos iniciando com o valor <parameter>start</parameter> até o valor
-   <parameter>end</parameter>, inclusive.
+   Retorna uma sequência de elementos como um <type>array</type> onde o primeiro
+   elemento é <parameter>start</parameter> progredindo a até
+   <parameter>end</parameter>, com cada valor da sequência separados por
+   <parameter>step</parameter> valores.
+  </para>
+  <para>
+   O último elemento do array retornado pode ser <parameter>end</parameter>
+   ou um valor anterior da sequência, a depender
+   do valor de <parameter>step</parameter>.
+  </para>
+  <para>
+   Se ambos <parameter>start</parameter> e <parameter>end</parameter> são
+   <type>string</type>s, e <parameter>step</parameter> é <type>int</type>,
+   o array produzido será uma sequẽncia de bytes,
+   geralmente as letras latinas no padrão <abbrev>ASCII</abbrev>.
+  </para>
+  <para>
+   Se <parameter>start</parameter>, <parameter>end</parameter>,
+   ou <parameter>step</parameter> forem <type>float</type>,
+   o array produzido será uma sequẽncia de <type>float</type>s.
+  </para>
+  <para>
+   Em outros casos, o array produzido será uma sequência de <type>int</type>.
   </para>
  </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <itemizedlist>
+   <listitem>
+    <simpara>
+     Se <parameter>step</parameter> é <literal>0</literal>,
+     um erro <classname>ValueError</classname> é lançado.
+    </simpara>
+   </listitem>
+   <listitem>
+    <simpara>
+     se <parameter>start</parameter>, <parameter>end</parameter>,
+     ou <parameter>step</parameter> não for <function>is_finite</function>,
+     um erro <classname>ValueError</classname> é lançado.
+    </simpara>
+   </listitem>
+   <listitem>
+    <simpara>
+     Se <parameter>step</parameter> é negativo,
+     mas o array produzido é crescente
+     (<code>$start &lt;= $end</code>),
+     um erro <classname>ValueError</classname> é lançado.
+    </simpara>
+   </listitem>
+   <listitem>
+    <simpara>
+     Se <parameter>start</parameter> ou <parameter>end</parameter>
+     é um string vazia <literal>''</literal>,
+     um aviso <constant>E_WARNING</constant> é emitido
+     e a string vazia é interpretada como <literal>0</literal>.
+    </simpara>
+   </listitem>
+   <listitem>
+    <simpara>
+     Se <parameter>start</parameter> ou <parameter>end</parameter> forem uma
+     <link linkend="language.types.numeric-strings">string não numérica</link>
+     com mais de um byte, um aviso <constant>E_WARNING</constant> é emitido.
+    </simpara>
+   </listitem>
+   <listitem>
+    <simpara>
+     Se <parameter>start</parameter> ou <parameter>end</parameter> é uma string
+     que pode ser implicitamente convertida para um <type>int</type>,
+     um aviso <constant>E_WARNING</constant> é emitido.
+    </simpara>
+   </listitem>
+   <listitem>
+    <simpara>
+     Se <parameter>step</parameter> é um <type>float</type>,
+     e <parameter>start</parameter> e <parameter>end</parameter> forem uma
+     <link linkend="language.types.numeric-strings">string não numérica</link>,
+     um aviso <constant>E_WARNING</constant> é emitido.
+    </simpara>
+   </listitem>
+  </itemizedlist>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.3.0</entry>
+      <entry>
+       Se ambos <parameter>start</parameter> e <parameter>end</parameter>
+       forem strings então <function>range</function> nem sempre produzirá
+       um <type>array</type> de bytes.
+       Anteriormente, se um dos valores limite for uma string numérica,
+       então o outro valor string é implicitamente convertido para um <type>int</type>.
+      </entry>
+     </row>
+     <row>
+      <entry>8.3.0</entry>
+      <entry>
+       Um aviso <constant>E_WARNING</constant> agora é emitido se
+       <parameter>start</parameter> ou <parameter>end</parameter>
+       é uma string implicitamente conversível para <type>int</type>
+       se quaisquer valores limite é interpretado como um número.
+      </entry>
+     </row>
+     <row>
+      <entry>8.3.0</entry>
+      <entry>
+       Um aviso <constant>E_WARNING</constant> agora é emitido se
+       <parameter>start</parameter> ou <parameter>end</parameter>
+       é uma string não numérica com mais de um byte.
+      </entry>
+     </row>
+     <row>
+      <entry>8.3.0</entry>
+      <entry>
+       Um aviso <constant>E_WARNING</constant> agora é emitido se
+       <parameter>start</parameter> ou <parameter>end</parameter>
+       é uma string vazia.
+      </entry>
+     </row>
+     <row>
+      <entry>8.3.0</entry>
+      <entry>
+       Se <parameter>step</parameter> é um <type>float</type> sem
+       parte fracionária, ele será interpretado como um <type>int</type>.
+      </entry>
+     </row>
+     <row>
+      <entry>8.3.0</entry>
+      <entry>
+       Um erro <classname>ValueError</classname> agora é lançado se
+       <parameter>step</parameter> é negativo quando da produção de
+       um array crescente.
+      </entry>
+     </row>
+     <row>
+      <entry>8.3.0</entry>
+      <entry>
+       Um erro <classname>ValueError</classname> agora é lançado se
+       <parameter>step</parameter> não for finito.
+      </entry>
+     </row>
+     <row>
+      <entry>8.3.0</entry>
+      <entry>
+       Um erro <classname>TypeError</classname> agora é lançado se
+       <parameter>start</parameter> ou <parameter>end</parameter>
+       é um <type>array</type>, <type>object</type> ou <type>resource</type>.
+       Anteriormente eles eram implicitamente convertidos para <type>int</type>.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
    <example>
-    <title>Exemplos da função <function>range</function></title>
+    <title><function>range</function> examples</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-// array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
-foreach (range(0, 12) as $number) {
-    echo $number;
-}
+echo implode(', ', range(0, 12)), PHP_EOL;
 
-echo "\n";
+echo implode(', ', range(0, 100, 10)), PHP_EOL;
 
-// The step parameter
-// array(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
-foreach (range(0, 100, 10) as $number) {
-    echo $number;
-}
+echo implode(', ', range('a', 'i')), PHP_EOL;
 
-echo "\n";
+echo implode(', ', range('c', 'a')), PHP_EOL;
 
-// Usage of character sequences
-// array('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i');
-foreach (range('a', 'i') as $letter) {
-    echo $letter;
-}
-
-echo "\n";
-
-// array('c', 'b', 'a');
-foreach (range('c', 'a') as $letter) {
-    echo $letter;
-}
+echo implode(', ', range('A', 'z')), PHP_EOL;
 ?>
 ]]>
     </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100
+a, b, c, d, e, f, g, h, i
+c, b, a
+A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, [, \, ], ^, _, `, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z
+]]>
+    </screen>
    </example>
   </para>
  </refsect1>
- <refsect1 role="notes">
-  &reftitle.notes;
-  <note>
-   <para>
-    Sequências de letras são limitadas a uma letra. Se o valor inicial tiver
-    mais que uma letra, apenas a primeira letra é utilizada.
-   </para>
-  </note>
- </refsect1>
+
  <refsect1 role="seealso">
   &reftitle.seealso;
   <para>
@@ -119,6 +280,7 @@ foreach (range('c', 'a') as $letter) {
    </simplelist>
   </para>
  </refsect1>
+
 </refentry>
 <!-- Keep this comment at the end of the file
 Local variables:
