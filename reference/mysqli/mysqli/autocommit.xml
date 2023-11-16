@@ -1,37 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: fernandoc Status: ready -->
+<!-- EN-Revision: 63b99082ef83eade08151f8cb528246fded81db9 Maintainer: fernandoc Status: ready --><!-- CREDITS: fernandoc,leonardolara -->
 <refentry xml:id="mysqli.autocommit" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>mysqli::autocommit</refname>
   <refname>mysqli_autocommit</refname>
-  <refpurpose>Ativa ou desativa o salvar automaticamente as modificações no banco de dados</refpurpose>
+  <refpurpose>Ativa ou desativa a gravação automática das modificações no banco de dados</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
-  <para>Estilo orientado a objeto(metodo)</para>
-   <methodsynopsis>
-    <type>bool</type><methodname>mysqli::autocommit</methodname>
-    <methodparam><type>bool</type><parameter>mode</parameter></methodparam>
-   </methodsynopsis>
-  <para>Estilo de procedimento:</para>
+  <para>&style.oop;</para>
+  <methodsynopsis role="mysqli">
+   <modifier>public</modifier> <type>bool</type><methodname>mysqli::autocommit</methodname>
+   <methodparam><type>bool</type><parameter>enable</parameter></methodparam>
+  </methodsynopsis>
+  <para>&style.procedural;</para>
   <methodsynopsis>
    <type>bool</type><methodname>mysqli_autocommit</methodname>
-   <methodparam><type>mysqli</type><parameter>link</parameter></methodparam>
-   <methodparam><type>bool</type><parameter>mode</parameter></methodparam>
+   <methodparam><type>mysqli</type><parameter>mysql</parameter></methodparam>
+   <methodparam><type>bool</type><parameter>enable</parameter></methodparam>
   </methodsynopsis>
   <para>
-   <function>mysqli_autocommit</function> é usado para ativar ou desativar o modo de 
-   salvar automaticamente as consultas para a conexão com o banco dedados
-   representado por <parameter>link</parameter>.
-   object.
+   Ativa ou desativa o modo de gravação automática nas consultas para a conexão do banco de dados.
   </para>
-  <note>
-   <para>
-    Para determinar o estado do salvar automaticamente use o comando SQL
-    'SELECT @@autocommit'.
-   </para>
-  </note>
+  <para>
+   Para determinar o estado atual da gravação automática use o comando SQL
+   <literal>SELECT @@autocommit</literal>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    &mysqli.link.description;
+    <varlistentry>
+     <term><parameter>enable</parameter></term>
+     <listitem>
+      <para>
+       Habilitar ou não a gravação automática.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
  </refsect1>
 
  <refsect1 role="returnvalues">
@@ -41,84 +53,171 @@
   </para>
  </refsect1>
 
+ <refsect1 role="errors">
+  &reftitle.errors;
+  &mysqli.conditionalexception;
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>mysqli::autocommit</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+/* Solicita ao mysqli que dispare uma exceção se um erro ocorrer */
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+$mysqli = new mysqli("localhost", "my_user", "my_password", "world");
+
+/* O motor da tabela tem que suportar transações */
+$mysqli->query("CREATE TABLE IF NOT EXISTS language (
+    Code text NOT NULL,
+    Speakers int(11) NOT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+/* Desliga a gravação automática */
+$mysqli->autocommit(false);
+
+$result = $mysqli->query("SELECT @@autocommit");
+$row = $result->fetch_row();
+printf("Gravação automática = %s\n", $row[0]);
+
+try {
+    /* Prepara a declaração de inserção */
+    $stmt = $mysqli->prepare('INSERT INTO language(Code, Speakers) VALUES (?,?)');
+    $stmt->bind_param('ss', $language_code, $native_speakers);
+
+    /* Insere alguns valores */
+    $language_code = 'DE';
+    $native_speakers = 50_123_456;
+    $stmt->execute();
+    $language_code = 'FR';
+    $native_speakers = 40_546_321;
+    $stmt->execute();
+
+    /* Grava os dados no banco. Isto não liga a gravação automática */
+    $mysqli->commit();
+    print "2 linhas gravadas no banco de dados\n";
+
+    $result = $mysqli->query("SELECT @@autocommit");
+    $row = $result->fetch_row();
+    printf("Gravação automática = %s\n", $row[0]);
+
+    /* Tenta inserir mais valores */
+    $language_code = 'PL';
+    $native_speakers = 30_555_444;
+    $stmt->execute();
+    $language_code = 'DK';
+    $native_speakers = 5_222_444;
+    $stmt->execute();
+
+    /* Ligar a gravação automática irá disparar uma gravação */
+    $mysqli->autocommit(true);
+
+    print "2 linhas gravadas no banco de dados\n";
+} catch (mysqli_sql_exception $exception) {
+    $mysqli->rollback();
+
+    throw $exception;
+}
+]]>
+   </programlisting>
+   <para>&style.procedural;</para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+/* Solicita ao mysqli que dispare uma exceção se um erro ocorrer */
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+$mysqli = mysqli_connect("localhost", "my_user", "my_password", "world");
+
+/* O motor da tabela tem que suportar transações */
+mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS language (
+    Code text NOT NULL,
+    Speakers int(11) NOT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+/* Desliga a gravação automática */
+mysqli_autocommit($mysqli, false);
+
+$result = mysqli_query($mysqli, "SELECT @@autocommit");
+$row = mysqli_fetch_row($result);
+printf("Gravação automática = %s\n", $row[0]);
+
+try {
+    /* Prepara a declaração de inserção */
+    $stmt = mysqli_prepare($mysqli, 'INSERT INTO language(Code, Speakers) VALUES (?,?)');
+    mysqli_stmt_bind_param($stmt, 'ss', $language_code, $native_speakers);
+
+    /* Insere alguns valores */
+    $language_code = 'DE';
+    $native_speakers = 50_123_456;
+    mysqli_stmt_execute($stmt);
+    $language_code = 'FR';
+    $native_speakers = 40_546_321;
+    mysqli_stmt_execute($stmt);
+
+    /* Grava os dados no banco. Isto não liga a gravação automática */
+    mysqli_commit($mysqli);
+    print "2 linhas gravadas no banco de dados\n";
+
+    $result = mysqli_query($mysqli, "SELECT @@autocommit");
+    $row = mysqli_fetch_row($result);
+    printf("Gravação automática = %s\n", $row[0]);
+
+    /* Tenta inserir mais valores */
+    $language_code = 'PL';
+    $native_speakers = 30_555_444;
+    mysqli_stmt_execute($stmt);
+    $language_code = 'DK';
+    $native_speakers = 5_222_444;
+    mysqli_stmt_execute($stmt);
+
+    /* Ligar a gravação automática irá disparar uma gravação */
+    mysqli_autocommit($mysqli, true);
+
+    print "2 linhas gravadas no banco de dados\n";
+} catch (mysqli_sql_exception $exception) {
+    mysqli_rollback($mysqli);
+
+    throw $exception;
+}
+]]>
+   </programlisting>
+   &examples.outputs;
+   <screen>
+<![CDATA[
+Gravação automática = 0
+2 linhas gravadas no banco de dados
+Gravação automática = 0
+2 linhas gravadas no banco de dados
+Gravação automática = 0
+2 linhas gravadas no banco de dados
+Gravação automática = 0
+2 linhas gravadas no banco de dados
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
  <refsect1 role="notes">
   &reftitle.notes;
   <note>
    <para>
-    <function>mysqli_autocommit</function> Não funciona com tabelas de tipos
-    não baseadas em transações (como MyISAM ou ISAM).
+    Esta função não funciona com tipos de tabelas não transacionais (como
+    MyISAM ou ISAM).
    </para>
   </note>
- </refsect1>
- 
- <refsect1 role="examples">
-  &reftitle.examples;
-  <example>
-   <title>Estilo orientado a objeto</title>
-   <programlisting role="php">
-<![CDATA[
-<?php
-$mysqli = new mysqli("localhost", "my_user", "my_password", "world");
-
-if (mysqli_connect_errno()) {
-    printf("Connect failed: %s\n", mysqli_connect_error());
-    exit();
-}
-
-/* turn autocommit on */
-$mysqli->autocommit(TRUE);
-
-if ($result = $mysqli->query("SELECT @@autocommit")) {
-    $row = $result->fetch_row();
-    printf("Autocommit is %s\n", $row[0]);
-    $result->free();
-}
-
-/* close connection */
-$mysqli->close();
-?>
-]]>
-   </programlisting>
-  </example>
-  <example>
-   <title>Estilo de procedimento</title>
-   <programlisting role="php">
-<![CDATA[
-<?php
-$link = mysqli_connect("localhost", "my_user", "my_password", "world");
-
-if (!$link) {
-    printf("Can't connect to localhost. Error: %s\n", mysqli_connect_error());
-    exit();
-}
-
-/* turn autocommit on */
-mysqli_autocommit($link, TRUE);
-
-if ($result = mysqli_query($link, "SELECT @@autocommit")) {
-    $row = mysqli_fetch_row($result);
-    printf("Autocommit is %s\n", $row[0]);
-    mysqli_free_result($result);
-}
-
-/* close connection */
-mysqli_close($link);
-?>
-]]>
-   </programlisting>
-  </example>
-  &example.outputs;
-  <screen>
-<![CDATA[
-Autocommit is 1
-]]>
-  </screen>
  </refsect1>
 
  <refsect1 role="seealso">
   &reftitle.seealso;
   <para>
    <simplelist>
+    <member><function>mysqli_begin_transaction</function></member>
     <member><function>mysqli_commit</function></member>
     <member><function>mysqli_rollback</function></member>
    </simplelist>
@@ -126,7 +225,6 @@ Autocommit is 1
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
