@@ -1,33 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: fernandoc Status: ready -->
+<!-- EN-Revision: 9ed7c3ebf7ab6929d2fd367734a5d72b16cfc128 Maintainer: fernandoc Status: ready --><!-- CREDITS: fernandoc,leonardolara -->
 <refentry xml:id="mysqli.affected-rows" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
-  <refname>mysqli->affected_rows</refname>
+  <refname>mysqli::$affected_rows</refname>
   <refname>mysqli_affected_rows</refname>
   <refpurpose>Retorna o número de linhas afetadas pela operação MySQL anterior</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
-  <para>Estilo orientado a objetos (propriedades):</para>
-  <classsynopsis>
-   <ooclass><classname>mysqli</classname></ooclass>
-   <fieldsynopsis><type>int</type><varname>affected_rows</varname></fieldsynopsis>
-  </classsynopsis>
-  <para>Estilo de procedimento:</para>
+  <para>&style.oop;</para>
+  <fieldsynopsis><type class="union"><type>int</type><type>string</type></type><varname linkend="mysqli.affected-rows">mysqli-&gt;affected_rows</varname></fieldsynopsis>
+  <para>&style.procedural;</para>
   <methodsynopsis>
-   <type>int</type><methodname>mysqli_affected_rows</methodname>
-   <methodparam><type>mysqli</type><parameter>link</parameter></methodparam>
+   <type class="union"><type>int</type><type>string</type></type><methodname>mysqli_affected_rows</methodname>
+   <methodparam><type>mysqli</type><parameter>mysql</parameter></methodparam>
   </methodsynopsis>
   <para>
-   <function>mysqli_affected_rows</function> retorna o número de linhas afetadas pela ultima
-   consulta <literal>INSERT</literal>, <literal>UPDATE</literal>, <literal>REPLACE</literal> ou
-   <literal>DELETE</literal> associada ao parâmetro <parameter>link</parameter>
-   indicado. Se a ultima consulta foi invalida, esta função irá retornar -1.
-  </para>
-  <para>
-   Para comandos SELECT <function>mysqli_affected_rows</function> funciona como
-   <function>mysqli_num_rows</function>.
+   Retorna o número de linhas afetadas pelo último comando <literal>INSERT</literal>,
+   <literal>UPDATE</literal>, <literal>REPLACE</literal> ou
+   <literal>DELETE</literal>.
+   Funciona como <function>mysqli_num_rows</function> para
+   consultas <literal>SELECT</literal>.
   </para>
  </refsect1>
   
@@ -43,15 +37,19 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Um inteiro maior do que zero indica o número de linhas afetadas ou obtidas.
-   Zero indica que nenhum registro foi atualizado por um UPDATE, não foram encontradas
-   linhas em uma claúsula <literal>WHERE</literal> na consulta ou que a consulta ainda não foi executada.
-   -1 indica que a consulta retornou com erro.
+   Um inteiro maior do que zero indica o número de linhas afetadas ou 
+   obtidas. Zero indica que nenhum registro foi atualizado
+   por uma declaração <literal>UPDATE</literal>, nenhuma linha correspondeu à
+   claúsula <literal>WHERE</literal> na consulta ou que nenhuma consulta foi
+   executada ainda. <literal>-1</literal> indica que a consulta retornou um erro ou
+   que <function>mysqli_affected_rows</function> foi chamada para uma consulta
+   <literal>SELECT</literal> sem buffer.
   </para>
   <note> 
    <para>
-    Se o número de linhas afetadas for maior do que o maior valor inteiro possível, o número de linhas afetadas
-    será retornado como uma string.
+    Se o número de linhas afetadas for maior do que o maior valor inteiro
+    (<constant>PHP_INT_MAX</constant>), o número de linhas afetadas será
+    retornado como uma string.
    </para>
   </note>
  </refsect1>
@@ -59,17 +57,14 @@
  <refsect1 role="examples">
   &reftitle.examples;
   <example>
-   <title>Estilo orientado a objeto</title>
+    <title>Exemplo de <varname>$mysqli-&gt;affected_rows</varname></title>
+   <para>&style.oop;</para>
    <programlisting role="php">
 <![CDATA[
 <?php
-$mysqli = new mysqli("localhost", "my_user", "my_password", "world");
 
-/* check connection */
-if (mysqli_connect_errno()) {
-    printf("Connect failed: %s\n", mysqli_connect_error());
-    exit();
-}
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$mysqli = new mysqli("localhost", "my_user", "my_password", "world");
 
 /* Insert rows */
 $mysqli->query("CREATE TABLE Language SELECT * from CountryLanguage");
@@ -89,28 +84,17 @@ printf("Affected rows (DELETE): %d\n", $mysqli->affected_rows);
 $result = $mysqli->query("SELECT CountryCode FROM Language");
 printf("Affected rows (SELECT): %d\n", $mysqli->affected_rows);
 
-$result->close();
-
 /* Delete table Language */
 $mysqli->query("DROP TABLE Language");
-
-/* close connection */
-$mysqli->close();
-?>
 ]]>
    </programlisting>
-  </example>
-  <example>
-   <title>Estilo de procedimento</title>
+   <para>&style.procedural;</para>
    <programlisting role="php">
 <![CDATA[
 <?php
-$link = mysqli_connect("localhost", "my_user", "my_password", "world");
 
-if (!$link) {
-    printf("Can't connect to localhost. Error: %s\n", mysqli_connect_error());
-    exit();
-}
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$link = mysqli_connect("localhost", "my_user", "my_password", "world");
 
 /* Insert rows */
 mysqli_query($link, "CREATE TABLE Language SELECT * from CountryLanguage");
@@ -130,26 +114,20 @@ printf("Affected rows (DELETE): %d\n", mysqli_affected_rows($link));
 $result = mysqli_query($link, "SELECT CountryCode FROM Language");
 printf("Affected rows (SELECT): %d\n", mysqli_affected_rows($link));
 
-mysqli_free_result($result);
-
 /* Delete table Language */
 mysqli_query($link, "DROP TABLE Language");
-
-/* close connection */
-mysqli_close($link);
-?>
 ]]>
    </programlisting>
-  </example>
-  &example.outputs;
-  <screen>
+   &examples.outputs;
+   <screen>
 <![CDATA[
 Affected rows (INSERT): 984
 Affected rows (UPDATE): 168
 Affected rows (DELETE): 815
 Affected rows (SELECT): 169
 ]]>
-  </screen>
+   </screen>
+  </example>
  </refsect1>
 
  <refsect1 role="seealso">
@@ -163,7 +141,6 @@ Affected rows (SELECT): 169
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
