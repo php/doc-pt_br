@@ -1,67 +1,71 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 24f1c77edb908f0c73d7fb66410b86b18ecd84db Maintainer: felipe Status: ready --><!-- CREDITS: felipe -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 6f11457f11d91834e1240c3351d8c4e289371b6d Maintainer: felipe Status: ready --><!-- CREDITS: felipe,leonardolara -->
 
 <appendix xml:id="classobj.examples">
  &reftitle.examples;
  <para>
   Neste exemplo, nós primeiramente definiremos uma classe base e uma
   extensão da classe. A classe base descreve um vegetal comum,
-  que é comestível ou não e que tem sua cor. A sub-classe
+  que é comestível ou não e qual é sua cor. A sub-classe
   <varname>Espinafre</varname> adiciona um método para cozinhá-lo e outro
   para descobrir se ele está cozido.
  </para>
  <para>
   <example>
-   <title>classes.inc</title>
+   <title>Definições da Classe</title>
+   <para><varname>Vegetal</varname></para>
    <programlisting role="php">
 <![CDATA[
 <?php
 
-// Classe base com propriedades e métodos de membros
 class Vegetal {
+    public $comestivel;
 
-    var $comestivel;
-    var $cor;
+    public $cor;
 
-    function Vegetal($comestivel, $cor="verde")
+    public function __construct($comestivel, $cor = "verde")
     {
         $this->comestivel = $comestivel;
         $this->cor = $cor;
     }
 
-    function is_comestivel()
+    public function comestivel()
     {
         return $this->comestivel;
     }
 
-    function qual_cor()
+    public function qual_cor()
     {
         return $this->cor;
     }
+}
 
-} // Fim da classe Vegetal
+?>
+]]>
+   </programlisting>
+   <para><varname>Espinafre</varname></para>
+   <programlisting role="php">
+<![CDATA[
+<?php
 
-// estende a classe base
 class Espinafre extends Vegetal {
+    public $cozido = false;
 
-    var $cozido = false;
-
-    function Espinafre()
+    public function __construct()
     {
-        $this->Vegetal( true, "verde" );
+        parent::__construct(true, "verde");
     }
 
-    function cozinhe()
+    public function cozinhe()
     {
         $this->cozido = true;
     }
 
-    function esta_cozido()
+    public function esta_cozido()
     {
         return $this->cozido;
     }
-
-} // Fim da classe Espinafre
+}
 
 ?>
 ]]>
@@ -69,88 +73,98 @@ class Espinafre extends Vegetal {
   </example>
  </para>
  <para>
-  Nós instanciamos 2 objetos destas classes e exibimos informações
-  sobre elas, incluindo o parentesco de suas classes.
-  Nós também definimos algumas funções úteis, principalmente para ter
-  uma boa saída de variáveis.
+  Agora serão instanciados objetos destas classes e exibidas informações
+  sobre elas, incluindo o parentesco entre elas.
+  Também serão definidas algumas funções úteis, principalmente para ter
+  uma saída bem formatada de variáveis.
  </para>
  <para>
   <example>
    <title>test_script.php</title>
    <programlisting role="php">
 <![CDATA[
-<pre>
 <?php
 
-include "classes.inc";
+// register autoloader to load classes
+spl_autoload_register();
 
-// utility functions
-
-function print_vars($obj)
+function printProperties($obj)
 {
-foreach (get_object_vars($obj) as $prop => $val) {
-    echo "\t$prop = $val\n";
-}
+    foreach (get_object_vars($obj) as $prop => $val) {
+        echo "\t$prop = $val\n";
+    }
 }
 
-function print_methods($obj)
+function printMethods($obj)
 {
 $arr = get_class_methods(get_class($obj));
-foreach ($arr as $method) {
-    echo "\tfunction $method()\n";
-}
+    foreach ($arr as $metodo) {
+        echo "\tfunção $metodo()\n";
+    }
 }
 
-function class_parentage($obj, $class)
+function objetoPertenceA($obj, $classe)
 {
-if (is_subclass_of($GLOBALS[$obj], $class)) {
-    echo "Object $obj belongs to class " . get_class($GLOBALS[$obj]);
-    echo ", a subclass of $class\n";
-} else {
-    echo "Object $obj does not belong to a subclass of $class\n";
+    if (is_subclass_of($obj, $classe)) {
+        echo "Objeto pertence à classe " . get_class($obj);
+        echo ", uma sub-classe de $classe\n";
+    } else {
+        echo "Objeto não pertence a uma sub-classe de $classe\n";
+    }
 }
-}
 
-// instantiate 2 objects
+// instancia 2 objetos
 
-$veggie = new Vegetable(true, "blue");
-$leafy = new Spinach();
+$vegetal = new Vegetal(true, "azul");
+$folha = new Espinafre();
 
-// print out information about objects
-echo "veggie: CLASS " . get_class($veggie) . "\n";
-echo "leafy: CLASS " . get_class($leafy);
-echo ", PARENT " . get_parent_class($leafy) . "\n";
+// mostra informação sobre os objetos
+echo "vegetal: CLASSE " . get_class($vegetal) . "\n";
+echo "folha: CLASSE " . get_class($folha);
+echo ", CLASSE PAI " . get_parent_class($folha) . "\n";
 
-// show veggie properties
-echo "\nveggie: Properties\n";
-print_vars($veggie);
+// mostra propriedades do vegetal
+echo "\nvegetal: Propriedades\n";
+printProperties($vegetal);
 
-// and leafy methods
-echo "\nleafy: Methods\n";
-print_methods($leafy);
+// e métodos de folha
+echo "\nfolha: Métodos\n";
+printMethods($folha);
 
-echo "\nParentage:\n";
-class_parentage("leafy", "Spinach");
-class_parentage("leafy", "Vegetable");
+echo "\nParentesco:\n";
+objetoPertenceA($folha, Espinafre::class);
+objetoPertenceA($folha, Vegetal::class);
 ?>
-</pre>
 ]]>
    </programlisting>
-   <para>
-    Uma coisa importante para se notar no exemplo acima é que
-    o objeto <varname>$folheado</varname> é uma instância da classe
-    <classname>Espinafre</classname> que é uma subclasse de
-    <classname>Vegetal</classname>,
-    então a última parte do script acima exibirá:
-   </para>
+   &examples.outputs;
    <screen>
 <![CDATA[
-   [...]
+vegetal: CLASSE Vegetal
+folha: CLASSE Espinafre, CLASSE PAI Vegetal
+
+vegetal: Propriedades
+        comestivel = 1
+        cor = azul
+
+folha: Métodos
+        function __construct()
+        function cozinhe()
+        function esta_cozido()
+        function comestivel()
+        function qual_cor()
+
 Parentesco:
-Objeto folheado não pertence a uma subclasse de Espinafre
-Object folheado pertence à classe Espinafre, uma subclasse de Vegetal
+Objeto não pertence a uma sub-classe de Espinafre
+Objeto pertence à classe Espinafre, uma sub-classe de Vegetal
 ]]>
    </screen>
+   <para>
+    Uma nota importante sobre o exemplo acima é que
+    o objeto <varname>$folha</varname> é uma instância da classe
+    <classname>Espinafre</classname> que é uma sub-classe de
+    <classname>Vegetal</classname>.
+   </para>
   </example>
  </para>
 </appendix>
@@ -175,4 +189,3 @@ vim600: syn=xml fen fdm=syntax fdl=2 si
 vim: et tw=78 syn=sgml
 vi: ts=1 sw=1
 -->
-
