@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 0c9c2dd669fe9395eaa73d487fbd160f9057429a Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.stream-filter-register" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>stream_filter_register</refname>
+  <refpurpose>Registra um filtro de fluxo definido pelo usuário</refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>bool</type><methodname>stream_filter_register</methodname>
+   <methodparam><type>string</type><parameter>filter_name</parameter></methodparam>
+   <methodparam><type>string</type><parameter>class</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   <function>stream_filter_register</function> permite implementar
+   filtro de usuário em qualquer fluxo registrado usado com todas as outras
+   funções de sistemas de arquivos (como <function>fopen</function>,
+   <function>fread</function> etc.).
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>filter_name</parameter></term>
+     <listitem>
+      <para>
+       O nome do filtro a ser registrado.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>class</parameter></term>
+     <listitem>
+      <para>
+       Para implementar um filtro, deve-se definir uma classe como uma extensão de
+       <classname>php_user_filter</classname> com um número de funções
+       membro. Na execução de operações de leitura/escrita no fluxo
+       ao qual o filtro estiver anexado, o PHP passará os dados através do
+       filtro (e quaisquer outros filtros anexados ao fluxo) para que os
+       dados possam ser modificados como desejado. Deve-se implementar os métodos
+       exatamente como descrito em <classname>php_user_filter</classname> - caso
+       contrário, pode-se chegar a comportamentos não definidos.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.success;
+  </para>
+  <para>
+   <function>stream_filter_register</function> irá retornar &false; se o
+   nome do filtro em <parameter>filter_name</parameter> já estiver definido.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Filtro para converter para maiúsculas os caracteres no fluxo <filename>foo-bar.txt</filename></title>
+    <para>
+     O exemplo abaixo implementa um filtro chamado <literal>maiusculas</literal>
+     no fluxo <filename>foo-bar.txt</filename> que irá converter para maiúsculas
+     todos caracteres de letras lidos ou escritos no fluxo.
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+/* Define a classe de filtro */
+class filtro_maiusculas extends php_user_filter {
+  function filter($entrada, $saida, &$consumido, $fechando)
+  {
+    while ($bucket = stream_bucket_make_writeable($entrada)) {
+      $bucket->data = strtoupper($bucket->data);
+      $consumido += $bucket->datalen;
+      stream_bucket_append($saida, $bucket);
+    }
+    return PSFS_PASS_ON;
+  }
+}
+
+/* Registra o filtro no PHP */
+stream_filter_register("maiusculas", "filtro_maiusculas")
+    or die("Falha ao registrar o filtro");
+
+$fp = fopen("foo-bar.txt", "w");
+
+/* Anexa o filtro registrado ao fluxo que acabou de ser aberto */
+stream_filter_append($fp, "maiusculas");
+
+fwrite($fp, "Linha1\n");
+fwrite($fp, "Palavra - 2\n");
+fwrite($fp, "Facil Como 123\n");
+
+fclose($fp);
+
+/* Lê de volta o conteúdo
+ */
+readfile("foo-bar.txt");
+
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+LINHA1
+PALAVRA - 2
+FACIL COMO 123
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Registrando uma classe de filtro genérica para combinar com múltiplos nomes de filtro.</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+/* Define a classe de filtro */
+class filtro_string extends php_user_filter {
+  var $modo;
+
+  function filter($entrada, $saida, &$consumido, $fechando)
+  {
+    while ($bucket = stream_bucket_make_writeable($entrada)) {
+      if ($this->modo == 1) {
+        $bucket->data = strtoupper($bucket->data);
+      } elseif ($this->modo == 0) {
+        $bucket->data = strtolower($bucket->data);
+      }
+
+      $consumido += $bucket->datalen;
+      stream_bucket_append($saida, $bucket);
+    }
+    return PSFS_PASS_ON;
+  }
+
+  function onCreate()
+  {
+    if ($this->filtername == 'str.maiuscula') {
+      $this->modo = 1;
+    } elseif ($this->filtername == 'str.minuscula') {
+      $this->modo = 0;
+    } else {
+      /* Algum outro filtro str.* foi solicitado,
+         reportar falha para que o PHP continue procurando */
+      return false;
+    }
+
+    return true;
+  }
+}
+
+/* Registra o filtro no PHP */
+stream_filter_register("str.*", "filtro_string")
+    or die("Falha ao registrar o filtro");
+
+$fp = fopen("foo-bar.txt", "w");
+
+/* Anexa o filtro registrado ao fluxo que acabou de ser aberto
+   Pode-se alternativamente ligar a str.minuscula aqui */
+stream_filter_append($fp, "str.maiuscula");
+
+fwrite($fp, "Linha1\n");
+fwrite($fp, "Palavra - 2\n");
+fwrite($fp, "Facil Como 123\n");
+
+fclose($fp);
+
+/* Lê de volta o conteúdo
+ */
+readfile("foo-bar.txt");
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+LINHA1
+PALAVRA - 2
+FACIL COMO 123
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>stream_wrapper_register</function></member>
+    <member><function>stream_filter_append</function></member>
+    <member><function>stream_filter_prepend</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

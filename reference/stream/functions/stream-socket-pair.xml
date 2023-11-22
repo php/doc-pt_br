@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 0c9c2dd669fe9395eaa73d487fbd160f9057429a Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.stream-socket-pair" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>stream_socket_pair</refname>
+  <refpurpose>
+   Cria um par de fluxos de socket conectados e indistinguíveis
+  </refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>array</type><type>false</type></type><methodname>stream_socket_pair</methodname>
+   <methodparam><type>int</type><parameter>domain</parameter></methodparam>
+   <methodparam><type>int</type><parameter>type</parameter></methodparam>
+   <methodparam><type>int</type><parameter>protocol</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   <function>stream_socket_pair</function> Cria um par de fluxos de socket
+   conectados e indistinguíveis. Esta função é normalmente usada em IPC
+   (Comunicação Entre Processos, da sigla em inglês).
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>domain</parameter></term>
+     <listitem>
+      <para>
+       A família de protocolos a ser usada: <constant>STREAM_PF_INET</constant>,
+       <constant>STREAM_PF_INET6</constant> ou
+       <constant>STREAM_PF_UNIX</constant>
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>type</parameter></term>
+     <listitem>
+      <para>
+       O tipo de comunicação a ser usado:
+       <constant>STREAM_SOCK_DGRAM</constant>,
+       <constant>STREAM_SOCK_RAW</constant>,
+       <constant>STREAM_SOCK_RDM</constant>,
+       <constant>STREAM_SOCK_SEQPACKET</constant> ou
+       <constant>STREAM_SOCK_STREAM</constant>
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>protocol</parameter></term>
+     <listitem>
+      <para>
+       O protocolo a ser usado: <constant>STREAM_IPPROTO_ICMP</constant>,
+       <constant>STREAM_IPPROTO_IP</constant>,
+       <constant>STREAM_IPPROTO_RAW</constant>,
+       <constant>STREAM_IPPROTO_TCP</constant> ou
+       <constant>STREAM_IPPROTO_UDP</constant>
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+  <note>
+   <simpara>
+    Favor consultar a <link linkend="stream.constants">lista de constantes de
+    Fluxo</link> para mais detalhes sobre cada constante.
+   </simpara>
+  </note>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna um <type>array</type> com os dois recursos de socket em caso de sucesso, ou
+   &false; em caso de falha.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Um  exemplo de <function>stream_socket_pair</function></title>
+    <para>
+     Este exemplo mostra o uso básico de
+     <function>stream_socket_pair</function> na Comunicação entre Processos.
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$sockets = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
+$pid     = pcntl_fork();
+
+if ($pid == -1) {
+     die('não foi possível duplicar');
+
+} else if ($pid) {
+     /* pai */
+    fclose($sockets[0]);
+
+    fwrite($sockets[1], "filho PID: $pid\n");
+    echo fgets($sockets[1]);
+
+    fclose($sockets[1]);
+
+} else {
+    /* filho */
+    fclose($sockets[1]);
+
+    fwrite($sockets[0], "mensagem do filho\n");
+    echo fgets($sockets[0]);
+
+    fclose($sockets[0]);
+}
+
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+filho PID: 1378
+mensagem do filho
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
