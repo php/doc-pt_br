@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 2226ad08fd93e3979efbba47c5ae3545eec97d25 Maintainer: leonardolara Status: ready --><!-- CREDITS: felipe,lucasr,leonardolara -->
+<refentry xml:id="function.usort" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>usort</refname>
+  <refpurpose>Ordena um array pelos valores utilizando uma função de comparação definida pelo usuário</refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>true</type><methodname>usort</methodname>
+   <methodparam><type>array</type><parameter role="reference">array</parameter></methodparam>
+   <methodparam><type>callable</type><parameter>callback</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Ordenar o <parameter>array</parameter> pelos valores usando uma
+   função de comparação definida pelo usuário para determinar a ordem.
+  </para>
+  &note.sort-unstable;
+  &note.no-key-association;
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>array</parameter></term>
+     <listitem>
+      <para>
+       The input array.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>callback</parameter></term>
+     <listitem>
+      &sort.callback.description;
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.true.always;
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     &return.type.true;
+     &array.changelog.by-ref;
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>usort</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+function cmp($a, $b)
+{
+    if ($a == $b) {
+    return 0;
+    }
+    return ($a < $b) ? -1 : 1;
+}
+
+$a = array(3, 2, 5, 6, 1);
+
+usort($a, "cmp");
+
+foreach ($a as $chave => $valor) {
+    echo "$chave: $valor\n";
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+0: 1
+1: 2
+2: 3
+3: 5
+4: 6
+]]>
+    </screen>
+    <para>
+     O operador nave espacial (&lt;=&gt;) pode ser usado para
+     simplificar ainda mais a comparação interna.
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+function cmp($a, $b)
+{
+    return $a <=> $b;
+}
+
+$a = array(3, 2, 5, 6, 1);
+
+usort($a, "cmp");
+
+foreach ($a as $chave => $valor) {
+    echo "$chave: $valor\n";
+}
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <note>
+   <para>
+    Obviamente que nesse caso trivial a função <function>sort</function>
+    seria mais apropriada.
+   </para>
+  </note>
+  <para>
+   <example xml:id="function.usort.examples.multi">
+    <title>
+     Exemplo de <function>usort</function> usando um array multidimensional
+    </title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+function cmp($a, $b)
+{
+    return strcmp($a["fruta"], $b["fruta"]);
+}
+
+$frutas[0]["fruta"] = "limões";
+$frutas[1]["fruta"] = "abacaxis";
+$frutas[2]["fruta"] = "goiabas";
+
+usort($frutas, "cmp");
+
+foreach ($frutas as $chave => $valor) {
+    echo "\$frutas[$chave]: " . $valor["fruta"] . "\n";
+}
+?>
+]]>
+    </programlisting>
+    <para>
+     Na ordenação de um array multi-dimensional, <varname>$a</varname> e
+     <varname>$b</varname> contêm referências ao primeiro índice do array.
+    </para>
+    &example.outputs;
+    <screen>
+<![CDATA[
+$frutas[0]: abacaxis
+$frutas[1]: goiabas
+$frutas[2]: limões
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example xml:id="function.usort.examples.object">
+    <title>
+     Exemplo de <function>usort</function> usando uma função membro de um objeto
+    </title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+class TestObj {
+    var $name;
+
+    function TestObj($name)
+    {
+        $this->name = $name;
+    }
+
+    /* Essa é a função estática de comparação */
+    static function cmp_obj($a, $b)
+    {
+        return strtolower($a->name) <=> strtolower($b->name);
+    }
+}
+
+$a[] = new TestObj("c");
+$a[] = new TestObj("b");
+$a[] = new TestObj("d");
+
+usort($a, [TestObj::class, "cmp_obj"]);
+
+foreach ($a as $item) {
+    echo $item->name . "\n";
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+b
+c
+d
+]]>
+    </screen>
+   </example>
+   <example xml:id="function.usort.examples.closure">
+    <title>
+     Exemplo de <function>usort</function> usando uma <link linkend="functions.anonymous">closure</link>
+     para ordernar um array multidimensional
+    </title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$array[0] = array('key_a' => 'z', 'key_b' => 'c');
+$array[1] = array('key_a' => 'x', 'key_b' => 'b');
+$array[2] = array('key_a' => 'y', 'key_b' => 'a');
+
+function build_sorter($key) {
+    return function ($a, $b) use ($key) {
+        return strnatcmp($a[$key], $b[$key]);
+    };
+}
+
+usort($array, build_sorter('key_b'));
+
+foreach ($array as $item) {
+    echo $item['key_a'] . ', ' . $item['key_b'] . "\n";
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+y, a
+x, b
+z, c
+]]>
+    </screen>
+   </example>
+   <example xml:id="function.usort.examples.multiple-axes">
+    <title>
+     Exemplo de <function>usort</function> usando o operador nave espacial
+    </title>
+    <para>
+     O operador nave espacial permite comparação direta de
+     valores compostos atráves de múltiplos eixos. O exemplo a seguir irá ordenar
+     <literal>$pessoas</literal> pelo último nome, e depois pelo primeiro nome se
+     o último nome for igual.
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$pessoas[0] = ['primeiro' => 'Adam', 'ultimo' => 'West'];
+$pessoas[1] = ['primeiro' => 'Alec', 'ultimo' => 'Baldwin'];
+$pessoas[2] = ['primeiro' => 'Adam', 'ultimo' => 'Baldwin'];
+
+function sorter(array $a, array $b) {
+    return [$a['ultimo'], $a['primeiro']] <=> [$b['ultimo'], $b['primeiro']];
+}
+
+usort($pessoas, 'sorter');
+
+foreach ($pessoas as $pessoa) {
+    print $pessoa['ultimo'] . ', ' . $pessoa['primeiro'] . PHP_EOL;
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Baldwin, Adam
+Baldwin, Alec
+West, Adam
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><function>uasort</function></member>
+   <member><function>uksort</function></member>
+   <member>&seealso.array.sorting;</member>
+  </simplelist>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
