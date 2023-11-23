@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: a1702b5d45ad950c5f7a077878378a37851a2df6 Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.stream-socket-server" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>stream_socket_server</refname>
+  <refpurpose>Cria socket de servidor de domínio Internet ou Unix</refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>resource</type><type>false</type></type><methodname>stream_socket_server</methodname>
+   <methodparam><type>string</type><parameter>address</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter role="reference">error_code</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter role="reference">error_message</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>flags</parameter><initializer>STREAM_SERVER_BIND | STREAM_SERVER_LISTEN</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>resource</type><type>null</type></type><parameter>context</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Cria um socket de fluxo ou datagrama no endereço especificado em
+   <parameter>address</parameter>.
+  </para>
+  <para>
+   Este função apenas cria um socket, para começar a aceitar conexões
+   use <function>stream_socket_accept</function>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>address</parameter></term>
+     <listitem>
+      <para>
+       O tipo de socket criado é determinado pelo transporte especificado
+       utilizando-se o formato padrão de URL: <literal>transporte://alvo</literal>.
+      </para>
+      <para>
+       Para sockets do domínio da Internet (<constant>AF_INET</constant>) como TCP e UDP, a
+       porção <literal>alvo</literal> do parâmetro
+       <parameter>remote_socket</parameter> deve sonsistir de um
+       nome de servidor ou endereço IP seguido de dois-pontos e um número de porta. Para
+       sockets do domínio Unix, a porção <literal>alvo</literal> deve
+       apontar para o arquivo de socket do sistema de arquivos.
+      </para>
+      <para>
+       Dependendo do ambiente, sockets do domínio Unix podem não estar disponíveis.
+       Uma lista de transportes disponíveis pode ser obtida usando a função
+       <function>stream_get_transports</function>. Consulte
+       <xref linkend="transports"/> para uma lista de transportes existentes.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>error_code</parameter></term>
+     <listitem>
+      <para>
+       Se or argumentos opcionais <parameter>error_code</parameter> e <parameter>error_message</parameter>
+       estiverem presentes, eles serão definidos para indicar o erro real que ocorreu
+       ocorreu nas chamadas de sistema <literal>socket()</literal>,
+       <literal>bind()</literal> e <literal>listen()</literal>. Se
+       o valor retornado em <parameter>error_code</parameter> for
+       <literal>0</literal> e a função retornou &false;, é um
+       indicativo que o erro ocorreu antes da chamada a <literal>bind()</literal>.
+       Isto mais provavelmente será devido a um problema na inicialização do socket.
+       Note que os argumentos <parameter>error_code</parameter> e
+       <parameter>error_message</parameter> serão sempre passados por referência.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>error_message</parameter></term>
+     <listitem>
+      <para>
+       Consulte a descrição para <parameter>error_code</parameter>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>flags</parameter></term>
+     <listitem>
+      <para>
+       Um campo de máscara de bits que pode ser definido para qualquer combinação de opções
+       de criação de sockets.
+      </para>
+      <note>
+       <para>
+        Para sockets UDP, deve ser usado <constant>STREAM_SERVER_BIND</constant> como
+        o parâmetro <parameter>flags</parameter>.
+       </para>
+      </note>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>context</parameter></term>
+     <listitem>
+      <para>
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna o fluxo criado, ou &false; em caso de erro.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       <parameter>context</parameter> agora pode ser nulo.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Usando sockets de servidor TCP</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$socket = stream_socket_server("tcp://0.0.0.0:8000", $errno, $errstr);
+if (!$socket) {
+  echo "$errstr ($errno)<br />\n";
+} else {
+  while ($conn = stream_socket_accept($socket)) {
+    fwrite($conn, 'O horário atual é ' . date('n/j/Y g:i a') . "\n");
+    fclose($conn);
+  }
+  fclose($socket);
+}
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   O exemplo abaixo mostra como agir como um servidor de data/hora que pode responder
+   a requisições de horário como mostrado em um exemplo de <function>stream_socket_client</function>.
+   <note>
+    <simpara>
+     A maioria dos sistemas requerem acesso de administrador para criar um socket de servidor em portas
+     abaixo de 1024.
+    </simpara>
+   </note>
+   <example>
+    <title>Usando sockets de servidor usando UDP</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$socket = stream_socket_server("udp://127.0.0.1:1113", $errno, $errstr, STREAM_SERVER_BIND);
+if (!$socket) {
+    die("$errstr ($errno)");
+}
+
+do {
+    $pkt = stream_socket_recvfrom($socket, 1, 0, $peer);
+    echo "$peer\n";
+    stream_socket_sendto($socket, date("D M j H:i:s Y\r\n"), 0, $peer);
+} while ($pkt !== false);
+
+?>
+
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  &ipv6.brackets;
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><function>stream_socket_client</function></member>
+   <member><function>stream_set_blocking</function></member>
+   <member><function>stream_set_timeout</function></member>
+   <member><function>fgets</function></member>
+   <member><function>fgetss</function></member>
+   <member><function>fwrite</function></member>
+   <member><function>fclose</function></member>
+   <member><function>feof</function></member>
+   <member><link linkend="ref.curl">Extensão Curl</link></member>
+  </simplelist>
+ </refsect1>
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

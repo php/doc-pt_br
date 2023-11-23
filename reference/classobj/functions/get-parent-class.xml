@@ -1,18 +1,18 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: felipe Status: ready --><!-- CREDITS: surfmax -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: f004f576e7329b583dd41cf7e393efd5139bd5a3 Maintainer: felipe Status: ready --><!-- CREDITS: surfmax,leonardolara -->
 <refentry xml:id="function.get-parent-class" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>get_parent_class</refname>
-  <refpurpose>Recupera o nome da classe pai para o objeto ou classe</refpurpose>
+  <refpurpose>Obtém o nome da classe pai para o objeto ou classe</refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>string</type><methodname>get_parent_class</methodname>
-   <methodparam choice="opt"><type>mixed</type><parameter>object</parameter></methodparam>
+   <type class="union"><type>string</type><type>false</type></type><methodname>get_parent_class</methodname>
+   <methodparam choice="opt"><type class="union"><type>object</type><type>string</type></type><parameter>object_or_class</parameter></methodparam>
   </methodsynopsis>
   <para>
-   Recupera o nome da classe pai para o objeto ou classe.
+   Obtém o nome da classe pai para o objeto ou classe.
   </para>
  </refsect1>
  <refsect1 role="parameters">
@@ -20,10 +20,11 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>object</parameter></term>
+     <term><parameter>object_or_class</parameter></term>
      <listitem>
       <para>
-       O objeto a ser testado ou o nome da classe
+       O objeto testado ou o nome da classe. Este parâmetro é opcional se chamado
+       pelo método do objeto.
       </para>
      </listitem>
     </varlistentry>
@@ -33,56 +34,41 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna o nome da classe pai da classe da qual <parameter>object</parameter>
-   é uma instância ou o nome.
+   Retorna o nome da classe pai da classe da qual
+   <parameter>object_or_class</parameter> é uma instância ou o nome.
   </para>
   <note>
    <para>
-    Se o objeto não tem um pai, será retornado &false;.
+    Se o objeto não tem um pai ou a classe informada não existe, será retornado &false;.
    </para>
   </note>
   <para>
-   Se chamado sem parâmetro fora do objeto, esta função retorna &false;.
+   Se chamada sem parâmetro fora do objeto, esta função retorna &false;.
   </para>
  </refsect1>
+
  <refsect1 role="changelog">
   &reftitle.changelog;
-  <para>
-   <informaltable>
-    <tgroup cols="2">
-     <thead>
-      <row>
-       <entry>&Version;</entry>
-       <entry>&Description;</entry>
-      </row>
-     </thead>
-     <tbody>
-      <row>
-       <entry>Antes do 5.1.0</entry>
-       <entry>
-        Se chamado sem parâmetro fora do objeto, esta função retornaria
-        &null; com um aviso.
-       </entry>
-      </row>
-      <row>
-       <entry>Desde o 5.0.0</entry>
-       <entry>
-        O parâmetro <parameter>object</parameter> é opcional se chamado
-        de um método de objeto.
-       </entry>
-      </row>
-      <row>
-       <entry>Desde o 4.0.5</entry>
-       <entry>
-        Se <parameter>object</parameter> é uma string, retorna o nome da
-        classe pai da classe com este nome.
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-  </para>
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       O parâmetro <parameter>object_or_class</parameter> agora aceita apenas objetos ou nomes de classe válidos.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
  </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
@@ -92,29 +78,29 @@
 <![CDATA[
 <?php
 
-class dad {
-    function dad() 
+class Pai {
+    function __construct()
     {
     // implemente alguma lógica
     }
 }
 
-class child extends dad {
-    function child() 
+class Filha extends Pai {
+    function __construct()
     {
-        echo "Eu sou " , get_parent_class($this) , "'s filho\n";
+        echo "Eu sou filha de " , get_parent_class($this) , "\n";
     }
 }
 
-class child2 extends dad {
-    function child2() 
+class Filha2 extends Pai {
+    function __construct()
     {
-        echo "Eu sou " , get_parent_class('child2') , "'s filho também\n";
+        echo "Eu também sou filha de " , get_parent_class('filha2') , "\n";
     }
 }
 
-$foo = new child();
-$bar = new child2();
+$foo = new filha();
+$bar = new filha2();
 
 ?>
 ]]>
@@ -122,8 +108,8 @@ $bar = new child2();
     &example.outputs;
     <screen>
 <![CDATA[
-I'm dad's son
-I'm dad's son too
+Eu sou filha de Pai
+Eu também sou filha de Pai
 ]]>
     </screen>
    </example>
@@ -135,6 +121,7 @@ I'm dad's son too
    <simplelist>
     <member><function>get_class</function></member>
     <member><function>is_subclass_of</function></member>
+    <member><function>class_parents</function></member>
    </simplelist>
   </para>
  </refsect1>
