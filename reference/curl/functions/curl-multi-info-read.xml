@@ -1,83 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- $Revision$ -->
+<!-- EN-Revision: 427ab27e525c67f731ea0ef15d3d89e5f87fe191 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <refentry xml:id="function.curl-multi-info-read" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>curl_multi_info_read</refname>
-  <refpurpose>Get information about the current transfers</refpurpose>
+  <refpurpose>Obtém informação sobre as transferências atuais</refpurpose>
  </refnamediv>
- 
+
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>array</type><methodname>curl_multi_info_read</methodname>
-   <methodparam><type>resource</type><parameter>mh</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter role="reference">msgs_in_queue</parameter><initializer>&null;</initializer></methodparam>
+   <type class="union"><type>array</type><type>false</type></type><methodname>curl_multi_info_read</methodname>
+   <methodparam><type>CurlMultiHandle</type><parameter>multi_handle</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter role="reference">queued_messages</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
   <para>
-   Ask the multi handle if there are any messages or information from the individual transfers. 
-   Messages may include information such as an error code from the transfer or just the fact 
-   that a transfer is completed.
+   Interroga o manipulador múltiplo se existem mensagens ou informações das transferências individuais.
+   Mensagens podem incluir informações como um código de erro da transferência ou apenas o fato
+   de uma transferência ter sido concluída.
   </para>
-  <para>   
-   Repeated calls to this function will return a new result each time, until a &false; is returned 
-   as a signal that there is no more to get at this point. The integer pointed to with 
-   <parameter>msgs_in_queue</parameter> will contain the number of remaining messages after this 
-   function was called.
+  <para>
+   Chamadas repetidas a esta função irão retornar um novo resultado a cada vez, até que um valor &false; for retornado
+   como um sinal de que não há mais o que receber no momento. O inteiro apontado pelo parâmetro
+   <parameter>queued_messages</parameter> conterá o número de mensagens remanescentes depois que esta
+   função foi chamada.
   </para>
   <warning>
    <para>
-    The data the returned resource points to will not survive calling 
+    Os dados apontados pelo recurso retornado não irão sobreviver à chamada a
     <function>curl_multi_remove_handle</function>.
    </para>
   </warning>
  </refsect1>
- 
+
  <refsect1 role="parameters">
   &reftitle.parameters;
   <para>
    <variablelist>
     &curl.mh.description;
     <varlistentry>
-     <term><parameter>msgs_in_queue</parameter></term>
+     <term><parameter>queued_messages</parameter></term>
      <listitem>
       <para>
-       Number of messages that are still in the queue
+       Número de mensagens que ainda estão na fila
       </para>
      </listitem>
     </varlistentry>
    </variablelist>
   </para>
  </refsect1>
- 
+
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   On success, returns an associative array for the message, &false; on failure.
+   Em caso de sucesso, retorna um array associativo para a mensagem, &false; em caso de falha.
   </para>
   <para>
    <table>
-    <title>Contents of the returned array</title>
+    <title>Conteúdo do array retornado</title>
     <tgroup cols="2">
      <thead>
       <row>
-       <entry>Key:</entry>
-       <entry>Value:</entry>
+       <entry>Chave:</entry>
+       <entry>Valor:</entry>
       </row>
      </thead>
      <tbody>
       <row>
        <entry><literal>msg</literal></entry>
-       <entry>The <constant>CURLMSG_DONE</constant> constant. Other return values
-       are currently not available.</entry>
+       <entry>A constante <constant>CURLMSG_DONE</constant>. Outros valores de retorno
+       autalmente não estão disponíveis.</entry>
       </row>
       <row>
        <entry><literal>result</literal></entry>
-       <entry>One of the <constant>CURLE_*</constant> constants. If everything is
-       OK, the <constant>CURLE_OK</constant> will be the result.</entry>
+       <entry>Uma das constantes <constant>CURLE_*</constant>. Se tudo estiver
+       correto, a constante <constant>CURLE_OK</constant> será o resultado.</entry>
       </row>
       <row>
        <entry><literal>handle</literal></entry>
-       <entry>Resource of type curl indicates the handle which it concerns.</entry>
+       <entry>Recurso do tipo curl que indica o manipulador em questão.</entry>
       </row>
      </tbody>
     </tgroup>
@@ -85,11 +85,28 @@
   </para>
  </refsect1>
 
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     &curl.changelog.multi-handle-param;
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
    <example>
-    <title>A <function>curl_multi_info_read</function> example</title>
+    <title>Um exemplo de <function>curl_multi_info_read</function></title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -110,11 +127,13 @@ foreach ($urls as $i => $url) {
 
 do {
     $status = curl_multi_exec($mh, $active);
-    $info = curl_multi_info_read($mh);
-    if (false !== $info) {
+    if ($active) {
+        curl_multi_select($mh);
+    }
+    while (false !== ($info = curl_multi_info_read($mh))) {
         var_dump($info);
     }
-} while ($status === CURLM_CALL_MULTI_PERFORM || $active);
+} while ($active && $status == CURLM_OK);
 
 foreach ($urls as $i => $url) {
     $res[$i] = curl_multi_getcontent($conn[$i]);
@@ -159,31 +178,7 @@ bool(false)
    </example>
   </para>
  </refsect1>
- 
- <refsect1 role="changelog">
-  &reftitle.changelog;
-  <para>
-   <informaltable>
-    <tgroup cols="2">
-     <thead>
-      <row>
-       <entry>&Version;</entry>
-       <entry>&Description;</entry>
-      </row>
-     </thead>
-     <tbody>
-      <row>
-       <entry>5.2.0</entry>
-       <entry>
-        <parameter>msgs_in_queue</parameter> was added.
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-  </para>
- </refsect1>
- 
+
  <refsect1 role="seealso">
   &reftitle.seealso;
   <para>
@@ -194,7 +189,6 @@ bool(false)
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

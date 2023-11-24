@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- $Revision$ -->
+<!-- EN-Revision: 65d5499d46b23f4e1e4442146cd3ff585d2a91f4 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <refentry xml:id="function.curl-multi-init" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>curl_multi_init</refname>
-  <refpurpose>Returns a new cURL multi handle</refpurpose>
+  <refpurpose>Retorna um multi-manipulador cURL</refpurpose>
  </refnamediv>
- 
+
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>resource</type><methodname>curl_multi_init</methodname>
-   <void />
+   <type>CurlMultiHandle</type><methodname>curl_multi_init</methodname>
+   <void/>
   </methodsynopsis>
   <para>
-   Allows the processing of multiple cURL handles in parallel.
+   Permite o processamento de manipuladores cURL múltiplos de forma assíncrona.
   </para>
  </refsect1>
 
@@ -25,54 +25,71 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Returns a cURL multi handle resource on success, &false; on failure.
+   Retorna um multi-manipulador cURL.
   </para>
  </refsect1>
- 
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       Em caso de sucesso, esta função agora retorna uma instância de <classname>CurlMultiHandle</classname>;
+       anteriormente, um recurso do tipo <type>resource</type> era retornado.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
    <example>
-    <title><function>curl_multi_init</function> example</title>
+    <title>Exemplo de <function>curl_multi_init</function></title>
     <para>
-     This example will create two cURL handles, add them to a multi
-     handle, and then run them in parallel.
+     Este exemplo cria dois manipuladores cURL, adiciona-os a um
+     multi-manipulador e processa-os de forma assíncrona.
     </para>
     <programlisting role="php">
 <![CDATA[
 <?php
-// create both cURL resources
+// criam ambos recursos cURL
 $ch1 = curl_init();
 $ch2 = curl_init();
 
-// set URL and other appropriate options
+// define URL e outras opções apropriadas
 curl_setopt($ch1, CURLOPT_URL, "http://lxr.php.net/");
 curl_setopt($ch1, CURLOPT_HEADER, 0);
 curl_setopt($ch2, CURLOPT_URL, "http://www.php.net/");
 curl_setopt($ch2, CURLOPT_HEADER, 0);
 
-//create the multiple cURL handle
+//cria o multi-manipulador cURL
 $mh = curl_multi_init();
 
-//add the two handles
+//adiciona os dois manipuladores
 curl_multi_add_handle($mh,$ch1);
 curl_multi_add_handle($mh,$ch2);
 
-$active = null;
-//execute the handles
+//executa o multi-manipulador
 do {
-    $mrc = curl_multi_exec($mh, $active);
-} while ($mrc == CURLM_CALL_MULTI_PERFORM);
-
-while ($active && $mrc == CURLM_OK) {
-    if (curl_multi_select($mh) != -1) {
-        do {
-            $mrc = curl_multi_exec($mh, $active);
-        } while ($mrc == CURLM_CALL_MULTI_PERFORM);
+    $status = curl_multi_exec($mh, $active);
+    if ($active) {
+        curl_multi_select($mh);
     }
-}
+} while ($active && $status == CURLM_OK);
 
-//close the handles
+//fecha os manipuladores
 curl_multi_remove_handle($mh, $ch1);
 curl_multi_remove_handle($mh, $ch2);
 curl_multi_close($mh);
@@ -83,7 +100,7 @@ curl_multi_close($mh);
    </example>
   </para>
  </refsect1>
- 
+
  <refsect1 role="seealso">
   &reftitle.seealso;
   <para>
@@ -95,7 +112,6 @@ curl_multi_close($mh);
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
