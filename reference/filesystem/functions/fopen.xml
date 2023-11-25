@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: ea62fb83196997032641b50fe44420305466195e Maintainer: leonardolara Status: ready --><!-- CREDITS: rarruda,ae,diogo,leonardolara -->
+<refentry xml:id="function.fopen" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>fopen</refname>
+  <refpurpose>Abre um arquivo ou URL</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>resource</type><type>false</type></type><methodname>fopen</methodname>
+   <methodparam><type>string</type><parameter>filename</parameter></methodparam>
+   <methodparam><type>string</type><parameter>mode</parameter></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>use_include_path</parameter><initializer>&false;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>resource</type><type>null</type></type><parameter>context</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   <function>fopen</function> conecta um recurso nomeado, especificado por
+   <parameter>filename</parameter>, a um fluxo.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>filename</parameter></term>
+     <listitem>
+      <para>
+       Se <parameter>filename</parameter> estiver na forma de "esquema://...",
+       assume-se que seja uma URL, e o PHP buscará por um manipulador de protocolo
+       (também conhecido como empacotador) para aquele esquema. Se nenhum empacotador para
+       aquele protocolo estiver registrado, o PHP emitirá uma aviso para auxiliar
+       no rastreio de potenciais problemas no script, e então continuará presumindo
+       que <parameter>filename</parameter> especifica um arquivo normal.
+      </para>
+      <para>
+       Se o PHP decidiu que <parameter>filename</parameter> se refere
+       a um arquivo local, então ele tentará abrir um fluxo para aquele arquivo.
+       O arquivo precisa ser acessível pelo PHP, portanto é necessário garantir
+       que as permissões de acesso do arquivo possibilitem este acesso.
+       Se estiver habilitado
+       <link linkend="ini.open-basedir">open_basedir</link>, outras
+       restrições podem se aplicar.
+      </para>
+      <para>
+       Se o PHP decidiu que <parameter>filename</parameter> se refere
+       a um protocolo registrado e esse protocolo estiver registrado como
+       uma URL de rede, o PHP irá verificar para ter certeza que
+       <link linkend="ini.allow-url-fopen">allow_url_fopen</link> está
+       habilitado. Se não estiver, o PHP emitirá um alerta e
+       a chamada ao fopen irá falhar.
+      </para>
+      <note>
+       <para>
+        A lista de protocolos suportados pode ser encontrada em <xref
+        linkend="wrappers"/>. Alguns protocolos (também mencionados como
+        <literal>wrappers</literal>) suportam <literal>context</literal>
+        e/ou opções do &php.ini;. Recorra à página específica do
+        protocolo em uso para uma lista das opções que podem ser definidas.
+        (ex.: o valor &php.ini; <literal>user_agent</literal> utilizado pelo
+        protocolo <literal>http</literal>).
+       </para>
+      </note>
+      <para>
+       Na plataforma Windows, tenha cuidado de escapar qualquer barra invertida
+       usada no caminho do arquivo, ou use barras normais.
+       <informalexample>
+        <programlisting role="php">
+<![CDATA[
+<?php
+$handle = fopen("c:\\data\\info.txt", "r");
+?>
+]]>
+        </programlisting>
+       </informalexample>
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>mode</parameter></term>
+     <listitem>
+      <para>
+       O parâmetro <parameter>mode</parameter> especifica o tipo de acesso
+       que você precisa ao fluxo. Pode ser um dos seguintes:
+       <table>
+        <title>
+         Lista dos possíveis modos de <function>fopen</function>
+         utilizando <parameter>mode</parameter>
+        </title>
+        <tgroup cols="2">
+         <thead>
+          <row>
+           <entry><parameter>mode</parameter></entry>
+           <entry>Descrição</entry>
+          </row>
+         </thead>
+         <tbody>
+          <row>
+           <entry><literal>'r'</literal></entry>
+           <entry>
+            Abre somente para leitura; coloca o ponteiro do arquivo no
+            começo do arquivo.
+           </entry>
+          </row>
+          <row>
+           <entry><literal>'r+'</literal></entry>
+           <entry>
+            Abre para leitura e escrita; coloca o ponteiro do arquivo no
+            começo do arquivo.
+           </entry>
+          </row>
+          <row>
+           <entry><literal>'w'</literal></entry>
+           <entry>
+            Abre somente para escrita; coloca o ponteiro do arquivo no
+            começo do arquivo e reduz o comprimento do arquivo para zero.
+            Se o arquivo não existir, tenta criá-lo.
+           </entry>
+          </row>
+          <row>
+           <entry><literal>'w+'</literal></entry>
+           <entry>
+            Abre para leitura e escrita; fora isso, tem o
+            mesmo comportamento de <literal>'w'</literal>.
+           </entry>
+          </row>
+          <row>
+           <entry><literal>'a'</literal></entry>
+           <entry>
+            Abre somente para escrita; coloca o ponteiro do arquivo no final
+            do arquivo. Se o arquivo não existir, tenta criá-lo.
+            Neste modo, <function>fseek</function> não tem efeito, a escrita é sempre adicionada.
+           </entry>
+          </row>
+          <row>
+           <entry><literal>'a+'</literal></entry>
+           <entry>
+            Abre para leitura e escrita; coloca o ponteiro do arquivo no
+            final do arquivo. Se o arquivo não existir, tenta
+            criá-lo. Neste modo, <function>fseek</function> somente afeta
+            a posição de leitura, escrita é sempre adicionada.
+           </entry>
+          </row>
+          <row>
+           <entry><literal>'x'</literal></entry>
+           <entry>
+            Cria e abre o arquivo somente para escrita; coloca o ponteiro no
+            começo do arquivo. Se o arquivo já existir, a chamada a
+            <function>fopen</function> falhará, retornando &false; e
+            gerando um erro de nível <constant>E_WARNING</constant>. Se
+            o arquivo não existir, tenta criá-lo. Isto é equivalente
+            a especificar as opções <literal>O_EXCL|O_CREAT</literal> para a
+            chamada de sistema <literal>open(2)</literal> subjacente.
+           </entry>
+          </row>
+          <row>
+           <entry><literal>'x+'</literal></entry>
+           <entry>
+            Cria e abre o arquivo para leitura e escrita; fora isso, tem o
+            mesmo comportamento de <literal>'x'</literal>.
+           </entry>
+          </row>
+          <row>
+           <entry><literal>'c'</literal></entry>
+           <entry>
+            Abre o arquivo somente para escrita. Se o arquivo não existir, ele é
+            criado. Se existir, ele não é truncado (ao contrário de
+            <literal>'w'</literal>) e nem a chamada a esta função falha (como no
+            caso de <literal>'x'</literal>). O ponteiro é
+            posicionado no início do arquivo. Isto pode ser útil se for
+            desejado obter uma trava consultiva (consulte <function>flock</function>)
+            antes de tentar modificar o arquivo, já que usar
+            <literal>'w'</literal> poderia trincar o arquivo antes que a trava
+            fosse obtida (se o truncamento for desejado,
+            <function>ftruncate</function> pode ser usando depois que a trava for
+            requisitada).
+           </entry>
+          </row>
+          <row>
+           <entry><literal>'c+'</literal></entry>
+           <entry>
+            Abre o arquivo para leitura e escrita; fora isso, tem o mesmo
+            comportamento de <literal>'c'</literal>.
+           </entry>
+          </row>
+          <row>
+           <entry><literal>'e'</literal></entry>
+           <entry>
+            Define a opção close-on-exec no descritor do arquivo aberto. Somente
+            disponível no PHP compilado em sistemas conforme POSIX.1-2008.
+           </entry>
+          </row>
+         </tbody>
+        </tgroup>
+       </table>
+      </para>
+      <note>
+       <para>
+        Diferentes famílias de sistemas operacionais têm diferentes convenções de
+        final de linha. Quando um arquivo texto é escrito e deseja-se inserir uma quebra
+        de linha, é necessário usar o caractere correto de fim de linha para o
+        sistema operacional. Sistemas baseados no Unix utilizam <literal>\n</literal> como o
+        caractere de fim de linha, sistemas baseados no Windows utilizam <literal>\r\n</literal>
+        e sistemas baseados no Macintosh (Mac OS Classic) utilizavam
+        <literal>\r</literal>.
+       </para>
+       <para>
+        Se forem usados os caracteres de fim de linha inadequados em seus arquivos, pode
+        ser que esses arquivos "parecer estranhos" quando forem abertos em outras
+        aplicações.
+       </para>
+       <para>
+        O Windows oferece uma opção de tradução do modo texto (<literal>'t'</literal>)
+        que traduz, transparentemente, <literal>\n</literal> para
+        <literal>\r\n</literal> quando estiver trabalhando com o arquivo. Em contraste, pode-se
+        também utilizar <literal>'b'</literal> para forçar o modo binário, que não
+        irá traduzir os dados. Para usar essas opções, especifique
+        <literal>'b'</literal> ou <literal>'t'</literal> como o último caractere
+        do parâmetro <parameter>mode</parameter>.
+       </para>
+       <para>
+        O modo de tradução padrão é <literal>'b'</literal>.
+        Pode-se usar o modo <literal>'t'</literal>
+        ao trabalhar com arquivos texto e usar
+        <literal>\n</literal> para delimitar as linhas no script, de forma que
+        pode-se esperar que eles sejam lidos em aplicações como versões antigas do bloco de notas. Deve-se
+        usar <literal>'b'</literal> em todos os outros casos.
+       </para>
+       <para>
+        Se for especificada a opção 't' ao trabalhar com arquivos binários, pode-se
+        experimentar problemas estranhos com os dados, incluindo arquivos de imagens
+        corrompidos e problemas estranhos com os caracteres <literal>\r\n</literal>.
+       </para>
+      </note>
+      <note>
+       <para>
+        Para portabilidade, é fortemente recomendado que
+        se reescreva códigos que usem ou dependam do modo <literal>'t'</literal>
+        de forma que passem a usar o fim de linha correto e o
+        modo <literal>'b'</literal> em seu lugar.
+       </para>
+      </note>
+      <note>
+       <simpara>
+        O parâmetro <parameter>mode</parameter> é ignorado para os empacotadores
+        de fluxo <filename>php://output</filename>, <filename>php://input</filename>, <filename>php://stdin</filename>,
+        <filename>php://stdout</filename>, <filename>php://stderr</filename> e
+        <filename>php://fd</filename>.
+       </simpara>
+      </note>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>use_include_path</parameter></term>
+     <listitem>
+      <para>
+       O terceiro parâmetro opcional <parameter>use_include_path</parameter>
+       pode ser definido para '1' ou &true; se for desejado buscar o arquivo
+       também no <link linkend="ini.include-path">include_path</link>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>context</parameter></term>
+     <listitem>
+      &note.context-support;
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna um recurso de ponteiro de arquivo em caso de sucesso,
+   &return.falseforfailure;
+  </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  &fs.emits.warning.on.failure;
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>7.0.16, 7.1.2</entry>
+       <entry>
+        A opção <literal>'e'</literal> foi adicionada.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplos de <function>fopen</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$handle = fopen("/home/rasmus/file.txt", "r");
+$handle = fopen("/home/rasmus/file.gif", "wb");
+$handle = fopen("http://www.example.com/", "r");
+$handle = fopen("ftp://user:password@example.com/somefile.txt", "w");
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  &warn.ssl-non-standard;
+  <note>
+   <para>
+    Se houver problemas com leitura e gravação de arquivos
+    e a versão de módulo de servidor do PHP estiver sendo usada, deve-se
+    garantir que os arquivos e diretórios sendo usados são acessíveis ao processo
+    do servidor.
+   </para>
+  </note>
+  <note>
+   <para>
+    Esta função também pode ter sucesso quando <parameter>filename</parameter> for um
+    diretório. Se não houver certeza se <parameter>filename</parameter> é um
+    arquivo ou um diretório, pode ser necessário usar a função <function>is_dir</function>
+    antes de chamar <function>fopen</function>.
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><xref linkend="wrappers"/></member>
+    <member><function>fclose</function></member>
+    <member><function>fgets</function></member>
+    <member><function>fread</function></member>
+    <member><function>fwrite</function></member>
+    <member><function>fsockopen</function></member>
+    <member><function>file</function></member>
+    <member><function>file_exists</function></member>
+    <member><function>is_readable</function></member>
+    <member><function>stream_set_timeout</function></member>
+    <member><function>popen</function></member>
+    <member><function>stream_context_create</function></member>
+    <member><function>umask</function></member>
+    <member><classname>SplFileObject</classname></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

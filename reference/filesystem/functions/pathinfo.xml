@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: d0cc084a925f112c156d0dbac12718b2bd8d4889 Maintainer: leonardolara Status: ready --><!-- CREDITS: diogo,leonardolara -->
+<refentry xml:id="function.pathinfo" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>pathinfo</refname>
+  <refpurpose>Retorna informações sobre um caminho de arquivo</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>array</type><type>string</type></type><methodname>pathinfo</methodname>
+   <methodparam><type>string</type><parameter>path</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>flags</parameter><initializer><constant>PATHINFO_ALL</constant></initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   <function>pathinfo</function> retorna informações sobre
+   o caminho em <parameter>path</parameter>: ou um array associativo ou uma string,
+   dependendo das opções em <parameter>flags</parameter>.
+  </para>
+  <note>
+   <para>
+    Para informação sobre obtenção de informação sobre o caminho atual, leia
+    a seção sobre <link linkend="language.variables.predefined">
+    variáveis reservadas predefinidas</link>.
+   </para>
+  </note>
+  <note>
+   <para>
+    <function>pathinfo</function> opera ingenuamente na string de entrada,
+    e não tem ciência sobre o sistema de arquivos real, ou componentes de caminho como
+    "<literal>..</literal>".
+   </para>
+  </note>
+  <note>
+   <para>
+    Apenas nos sistemas Windows, o caractere <literal>\</literal> será
+    interpretado como um separador de diretório. Em outros sistemas será
+    tratado como qualquer outro caractere.
+   </para>
+  </note>
+  <caution>
+   <para>
+    <function>pathinfo</function> é afetado pela localidade, então para que seja interpretado
+    corretamente um caminho contendo caracteres multibyte, a localização correspondente deve ser definida
+    pela função <function>setlocale</function>.
+   </para>
+  </caution>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>path</parameter></term>
+     <listitem>
+      <para>
+       O caminho a ser analisado.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>flags</parameter></term>
+     <listitem>
+      <para>
+       Se presente, define o elemento expecífico a ser retornado; pode ser
+       <constant>PATHINFO_DIRNAME</constant>,
+       <constant>PATHINFO_BASENAME</constant>,
+       <constant>PATHINFO_EXTENSION</constant> ou
+       <constant>PATHINFO_FILENAME</constant>.
+      </para>
+      <para>Se <parameter>flags</parameter> não for especificado, retorna todos
+       os elementos disponíveis.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Se o parâmetro <parameter>flags</parameter> não for passado, um
+   <type>array</type> associativo contendo os seguintes elementos é
+   retornado:
+   <literal>dirname</literal>, <literal>basename</literal>,
+   <literal>extension</literal> (se houver), e <literal>filename</literal>.
+  </para>
+  <note>
+   <para>
+    Se <parameter>path</parameter> tiver mais de uma extensão,
+    <constant>PATHINFO_EXTENSION</constant> retorna apenas a última e
+    <constant>PATHINFO_FILENAME</constant> apenas remove a última.
+    (veja o primeiro exemplo abaixo).
+   </para>
+  </note>
+  <note>
+   <para>
+    Se <parameter>path</parameter> não tiver uma extensão, nenhum
+    elemento <literal>extension</literal> será retornado
+    (veja o segundo exemplo abaixo).
+   </para>
+  </note>
+  <note>
+   <para>
+    Se o <literal>basename</literal> do parâmetro <parameter>path</parameter> começa
+    com um ponto, os seguintes caracteres são interpretados como
+    <literal>extension</literal>, e o <literal>filename</literal> estará vazio
+    (veja o terceiro exemplo abaixo).
+   </para>
+  </note>
+  <para>
+   Se <parameter>flags</parameter> estiver presente, retorna uma
+   <type>string</type> contendo o elemento solicitado.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>pathinfo</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$path_parts = pathinfo('/www/htdocs/inc/lib.inc.php');
+
+echo $path_parts['dirname'], "\n";
+echo $path_parts['basename'], "\n";
+echo $path_parts['extension'], "\n";
+echo $path_parts['filename'], "\n";
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+/www/htdocs/inc
+lib.inc.php
+php
+lib.inc
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Exemplo de <function>pathinfo</function> mostrando a diferença entre null e nenhuma extensão</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$path_parts = pathinfo('/path/emptyextension.');
+var_dump($path_parts['extension']);
+
+$path_parts = pathinfo('/path/noextension');
+var_dump($path_parts['extension']);
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+string(0) ""
+
+Notice: Undefined index: extension in test.php on line 6
+NULL
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Exemplo de <function>pathinfo</function> para um arquivo iniciado por ponto</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+print_r(pathinfo('/some/path/.test'));
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+Array
+(
+    [dirname] => /some/path
+    [basename] => .test
+    [extension] => test
+    [filename] =>
+)
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Exemplo de <function>pathinfo</function> com desreferenciação de array</title>
+    <para>
+     O parâmetro <parameter>flags</parameter> não é uma máscara de bits. Apenas um único valor
+     pode ser fornecido. Para selecionar apenas um conjunto limitado de valores interpretados, use
+     desestruturação de array desta forma:
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+['basename' => $basename, 'dirname' => $dirname] = pathinfo('/www/htdocs/inc/lib.inc.php');
+
+var_dump($basename, $dirname);
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+string(11) "lib.inc.php"
+string(15) "/www/htdocs/inc"
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>dirname</function></member>
+    <member><function>basename</function></member>
+    <member><function>parse_url</function></member>
+    <member><function>realpath</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
