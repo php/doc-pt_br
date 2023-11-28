@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 8f828979a0e43b2eec86c2023a958a76f02d98bc Maintainer: felipe Status: ready --><!-- CREDITS: github:lisaldo -->
-<refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.str-getcsv">
+<!-- EN-Revision: 272838c8815f95572a60d30e39dfb1feba3e497c Maintainer: leonardolara Status: ready --><!-- CREDITS: lisaldo,felipe,leonardolara -->
+<refentry xml:id="function.str-getcsv" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>str_getcsv</refname>
   <refpurpose>
@@ -12,20 +12,20 @@
   &reftitle.description;
   <methodsynopsis>
    <type>array</type><methodname>str_getcsv</methodname>
-   <methodparam><type>string</type><parameter>input</parameter></methodparam>
-   <methodparam choice="opt"><type>string</type><parameter>delimiter</parameter><initializer>","</initializer></methodparam>
-   <methodparam choice="opt"><type>string</type><parameter>enclosure</parameter><initializer>'"'</initializer></methodparam>
+   <methodparam><type>string</type><parameter>string</parameter></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>separator</parameter><initializer>","</initializer></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>enclosure</parameter><initializer>"\""</initializer></methodparam>
    <methodparam choice="opt"><type>string</type><parameter>escape</parameter><initializer>"\\"</initializer></methodparam>
   </methodsynopsis>
   <para>
-   Analisa a string passada por campos no formato <acronym>CSV</acronym>
+   Interpreta uma string de entrada procurando por campos no formato <acronym>CSV</acronym>
    e retorna um array contendo os campos encontrados.
   </para>
   <note>
    <para>
-    As configurações de localização são levadas em conta nessa função. Se
+    As configurações de localidade são levadas em consideração por esta função. Se
     <literal>LC_CTYPE</literal> for, por exemplo, <literal>en_US.UTF-8</literal>, strings com
-    codificação de um byte podem ser lidas de forma errada na função.
+    codificação de um byte podem ser lidas incorretamente por esta função.
    </para>
   </note>
  </refsect1>
@@ -35,18 +35,18 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>input</parameter></term>
+     <term><parameter>string</parameter></term>
      <listitem>
       <para>
-       Srting a ser analisada.
+       A string a ser analisada.
       </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>delimiter</parameter></term>
+     <term><parameter>separator</parameter></term>
      <listitem>
       <para>
-       Define o delimitador (somente um caractere).
+       Define o delimitador de campos (somente um caractere de um byte).
       </para>
      </listitem>
     </varlistentry>
@@ -54,7 +54,7 @@
      <term><parameter>enclosure</parameter></term>
      <listitem>
       <para>
-       Define o enclosure (somente um caractere).
+       Define o caractere que envolve os campos (somente um caractere de um byte).
       </para>
      </listitem>
     </varlistentry>
@@ -62,20 +62,20 @@
      <term><parameter>escape</parameter></term>
      <listitem>
       <para>
-       Define o caractere de escape (no máximo um caractere). O valor padrão é a barra invertida
+       Define o caractere de escape (no máximo um caractere de um byte). O valor padrão é a barra invertida.
        (<literal>\</literal>)
-       Uma string vazia (<literal>""</literal>) desabilita o mecanismo de escape.
+       Uma string vazia (<literal>""</literal>) desabilita o mecanismo proprietário de escape.
       </para>
       <note>
        <simpara>
         Normalmente um caractere de <parameter>enclosure</parameter> é escapado dentro
-        do campo duplicando ele; entretanto, o caratere de <parameter>escape</parameter>
-        pode ser utilizado como alternativa. Então, para os valores padrões dos parâmetros
-        <literal>""</literal> e <literal>\"</literal> tem o mesmo
-        significado. Além de escapar o caractere de
-        <parameter>enclosure</parameter> o caractere de
-        <parameter>escape</parameter> não possui função especial; nem mesmo
-        para escapar ao próprio.
+        do campo por duplicação; entretanto, o caratere definido em <parameter>escape</parameter>
+        pode ser utilizado como alternativa. Então, para os valores do parâmetro padrões
+        <literal>""</literal> e <literal>\"</literal> têm o mesmo
+        significado. Além de permitir escapar o caractere de
+        <parameter>enclosure</parameter>, o caractere de
+        <parameter>escape</parameter> não possui significado especial; nem mesmo
+        para escapar a si mesmo.
        </simpara>
       </note>
      </listitem>
@@ -87,7 +87,7 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna um array com os campos lidos.
+   Retorna um array indexado contendo os campos lidos.
   </para>
  </refsect1>
 
@@ -107,13 +107,81 @@
        <entry>7.4.0</entry>
        <entry>
         O parâmetro <parameter>escape</parameter> agora interpreta uma string
-        vazia como um sinal para desabilitar o mecanismo de escape. Antes,
-        uma string vazia utilizava o valor padrão do parâmetro.
+        vazia como o sinal para desabilitar o mecanismo de escape. Antes,
+        uma string vazia era tratada como valor padrão do parâmetro.
        </entry>
       </row>
      </tbody>
     </tgroup>
    </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>str_getcsv</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$string = 'PHP,Java,Python,Kotlin,Swift';
+$data = str_getcsv($string);
+
+var_dump($data);
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+array(5) {
+  [0]=>
+  string(3) "PHP"
+  [1]=>
+  string(4) "Java"
+  [2]=>
+  string(6) "Python"
+  [3]=>
+  string(6) "Kotlin"
+  [4]=>
+  string(5) "Swift"
+}
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Exemplo de <function>str_getcsv</function>com uma string vazia</title>
+    <caution>
+     <simpara>
+      Com uma string vazia esta função retorna o valor <code>[null]</code>
+      em vez de um array vazio.
+     </simpara>
+    </caution>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$string = '';
+$data = str_getcsv($string);
+
+var_dump($data);
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+array(1) {
+  [0]=>
+  NULL
+}
+]]>
+    </screen>
+   </example>
   </para>
  </refsect1>
 
@@ -126,7 +194,6 @@
   </para>
  </refsect1>
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

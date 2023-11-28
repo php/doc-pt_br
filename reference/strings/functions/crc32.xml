@@ -1,28 +1,60 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: fernandoc Status: ready --><!-- CREDITS: surfmax -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: e095023e408c8cb6378ae16bb6870343a3946919 Maintainer: leonardolara Status: ready --><!-- CREDITS: surfmax,fernandoc,leonardolara -->
 <refentry xml:id="function.crc32" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>crc32</refname>
   <refpurpose>Calcula polinômio crc32 de uma string</refpurpose>
  </refnamediv>
- 
+
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>int</type><methodname>crc32</methodname>
-   <methodparam><type>string</type><parameter>str</parameter></methodparam>
+   <methodparam><type>string</type><parameter>string</parameter></methodparam>
   </methodsynopsis>
   <para>
-   Gera o polinômio cyclic redundancy checksum de 32-bit
-   de comprimento do <parameter>str</parameter>. É usado geralmente
+   Gera a soma de verificação de redundância cíclica de 32-bits
+   de comprimento da <parameter>string</parameter>. É usado geralmente
    para validar a integridade de um dado sendo transferido.
   </para>
-  <para>
-   Devido ao tipo integer do PHP conter sinal e muitos dos checksums crc32
-   resultarem em integers negativos, você precisa usar o formatador "%u"
-   de <function>sprintf</function> ou <function>printf</function> para obter
-   uma string representando o checksum crc32 sem sinal.
-  </para>
+  <warning>
+   <simpara>
+    Pelo fato do tipo inteiro do PHP ser com sinal, muitas somas de verificação crc32
+    resultarão em inteiros negativos em plataformas de 32 bits. Em instalações de 64 bits
+    todos os resultados de <function>crc32</function> serão inteiros positivos.
+   </simpara>
+   <simpara>
+    Por isso, é necessário usar o formatador "%u" da função <function>sprintf</function> ou
+    <function>printf</function> para obter a representação em string da
+    soma de verificação sem sinal da função <function>crc32</function> em formato decimal.
+   </simpara>
+   <simpara>
+    Para uma representação hexadecimal da soma de verificação, pode-se usar tanto
+    o formatador "%x" de <function>sprintf</function> ou <function>printf</function>
+    quanto as funções de conversão <function>dechex</function>, ambas destas soluções
+    também tomam o cuidado de converter o resultado de <function>crc32</function> para um
+    inteiro sem sinal.
+   </simpara>
+   <simpara>
+    Foi considerado que instalações de 64 bits também retornassem inteiros negativos para
+    valores mais altos de resultados, porém isto iria quebrar a conversão para hexadecimal,
+    já que os negativos teriam um deslocamento extra de 0xFFFFFFFF######## neste caso. Como
+    a representação hexadecimal parece ser o uso de caso mais comum, decidiu-se
+    não quebrar esta conversão mesmo que ela quebre comparações diretas em decimal
+    em aproximadamente 50% dos casos ao mover de 32 para 64 bits.
+   </simpara>
+   <simpara>
+    Em retrospecto, fazer com que a função retornasse um inteiro talvez não tenha sido a
+    melhor ideia, e retornar uma representação hexadecimal em string diretamente (como, por
+    exemplo, a função <function>md5</function> faz) poderia ter sido um plano melhor para
+    se começar.
+   </simpara>
+   <simpara>
+    Para uma solução mais portável, pode-se considerar a função genérica
+    <function>hash</function>. <code>hash("crc32b", $str)</code> retornará
+    a mesma string que <code>str_pad(dechex(crc32($str)), 8, '0', STR_PAD_LEFT)</code>.
+   </simpara>
+  </warning>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -30,10 +62,10 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>str</parameter></term>
+     <term><parameter>string</parameter></term>
      <listitem>
       <para>
-       A informação.
+       Os dados.
       </para>
      </listitem>
     </varlistentry>
@@ -44,7 +76,7 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna o checksum crc32 da <parameter>str</parameter> como um inteiro.
+   Retorna a soma de verificação crc32 da <parameter>string</parameter> como um inteiro.
   </para>
  </refsect1>
 
@@ -52,15 +84,15 @@
   &reftitle.examples;
    <para>
     <example>
-     <title>Mostrando um checksum crc32</title>
+     <title>Mostrando uma soma de verificação crc32</title>
     <para>
-     Este exemplo mostra como mostrar um convertido checksum com a função
+     Este exemplo mostra como exibir uma soma de verificação convertida com a função
      <function>printf</function>:
     </para>
       <programlisting role="php">
 <![CDATA[
 <?php
-$checksum = crc32("The quick brown fox jumped over the lazy dog."); 
+$checksum = crc32("The quick brown fox jumped over the lazy dog.");
 printf("%u\n", $checksum);
 ?>
 ]]>
@@ -73,14 +105,14 @@ printf("%u\n", $checksum);
   &reftitle.seealso;
   <para>
    <simplelist>
+    <member><function>hash</function></member>
     <member><function>md5</function></member>
     <member><function>sha1</function></member>
    </simplelist>
   </para>
  </refsect1>
- 
-</refentry>
 
+</refentry>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
