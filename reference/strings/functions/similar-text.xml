@@ -1,25 +1,25 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 2b0ee0e1f86417fc5cfb6c97d54e99450e666593 Maintainer: thiago Status: ready --><!-- Credits: fernandoc -->
-<refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.similar-text">
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: e095023e408c8cb6378ae16bb6870343a3946919 Maintainer: leonardolara Status: ready --><!-- Credits: fernandoc,thiago,leonardolara -->
+<refentry xml:id="function.similar-text" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>similar_text</refname>
   <refpurpose>Calcula a similaridade entre duas strings</refpurpose>
  </refnamediv>
- 
+
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>int</type><methodname>similar_text</methodname>
-   <methodparam><type>string</type><parameter>first</parameter></methodparam>
-   <methodparam><type>string</type><parameter>second</parameter></methodparam>
-   <methodparam choice="opt"><type>float</type><parameter role="reference">percent</parameter></methodparam>
+   <methodparam><type>string</type><parameter>string1</parameter></methodparam>
+   <methodparam><type>string</type><parameter>string2</parameter></methodparam>
+   <methodparam choice="opt"><type>float</type><parameter role="reference">percent</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
   <para>
-   Calcula a similaridade entre duas strings como descrito em &book.programming.classics;. 
-   Note que esta implementação não usa uma stack como no pseudo-código de 
-   Oliver, mas chamadas recursivas as quais podem ou não tornar todo o 
-   processo mais rápido. Note também que a complexidade deste algoritmo é 
-   O(N**3) aonde N é o tamanho da string mais longa.
+   Calcula a similaridade entre duas strings como descrito em
+   &book.programming.classics;. Note que esta implementação não usa uma
+   pilha como no pseudo-código de Oliver, mas chamadas recursivas que podem ou não
+   acelerar todo o processo. Note também que a complexidade deste algoritmo
+   é O(N**3) onde N é o tamanho da string mais longa.
   </para>
  </refsect1>
 
@@ -28,7 +28,7 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>primeira</parameter></term>
+     <term><parameter>string1</parameter></term>
      <listitem>
       <para>
        A primeira string.
@@ -36,20 +36,29 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>segunda</parameter></term>
+     <term><parameter>string2</parameter></term>
      <listitem>
       <para>
        A segunda string.
       </para>
+      <note>
+       <para>
+        Trocar a <parameter>string1</parameter> de lugar com
+        a <parameter>string2</parameter> pode gerar um resultado diferente; veja o
+        exemplo abaixo.
+       </para>
+      </note>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>percentual</parameter></term>
+     <term><parameter>percent</parameter></term>
      <listitem>
       <para>
-       Passando uma referência como terceiro argumento, a função
-       <function>similar_text</function> irá calcular o percentual de
-       similaridade para você.
+       Ao passar referência como terceiro argumento,
+       <function>similar_text</function> irá calcular a similaridade em
+       percentual, dividindo o resultado de <function>similar_text</function> percentual
+       média de comprimentos das strings fornecidas vezes
+       <literal>100</literal>.
       </para>
      </listitem>
     </varlistentry>
@@ -60,8 +69,40 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna o número de caracteres iguais em ambas as strings.
+   Retorna o número de caracteres correspondentes em ambas as strings.
   </para>
+  <para>
+   O número de caracteres correspondentes é calculado encontrando-se a primeira substring
+   comum mais longa, e depois fazendo o mesmo para os prefixos e sufixos,
+   recursivamente. Os comprimentos de todas as substrings comuns encontradas são somados.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example xml:id="similar_text.example.swapping">
+   <title>Exemplo de <function>similar_text</function> com inversão de ordem de argumentos</title>
+   <para>
+    Este exemplo mostra que a inversão da ordem de <parameter>string1</parameter> e
+    <parameter>string2</parameter> pode gerar resultados diferentes.
+   </para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$sim = similar_text('bafoobar', 'barfoo', $perc);
+echo "similarity: $sim ($perc %)\n";
+$sim = similar_text('barfoo', 'bafoobar', $perc);
+echo "similarity: $sim ($perc %)\n";
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+similarity: 5 (71.428571428571 %)
+similarity: 3 (42.857142857143 %)
+]]>
+   </screen>
+  </example>
  </refsect1>
 
  <refsect1 role="seealso">
@@ -75,7 +116,6 @@
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
