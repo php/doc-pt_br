@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: fernandoc Status: ready -->
+<!-- EN-Revision: 4754397753fd79f1c846868b66a2448babab1c54 Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandoc,leonardolara -->
 <refentry xml:id="function.dbase-create" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>dbase_create</refname>
@@ -8,13 +8,16 @@
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>int</type><methodname>dbase_create</methodname>
-   <methodparam><type>string</type><parameter>filename</parameter></methodparam>
+   <type>resource</type><methodname>dbase_create</methodname>
+   <methodparam><type>string</type><parameter>path</parameter></methodparam>
    <methodparam><type>array</type><parameter>fields</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>type</parameter><initializer>DBASE_TYPE_DBASE</initializer></methodparam>
   </methodsynopsis>
   <para>
    <function>dbase_create</function> cria um banco de dados com a definição
-   dada.
+   informada.
+   Se o arquivo já existir, ele não será truncado.
+   <function>dbase_pack</function> pode ser chamado para forçar o truncamento.
   </para>
   &note.open-basedir.func;
  </refsect1>
@@ -23,11 +26,11 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>filename</parameter></term>
+     <term><parameter>path</parameter></term>
      <listitem>
       <para>
-       O nome do banco de dados. Pode ser um caminho relativo ou absoluto
-       para o arquivo onde o dBase irá guardar os seus dados.
+       O caminho do banco de dados. Pode ser um caminho relativo ou absoluto
+       para o arquivo onde o dBase irá armazenar os dados.
       </para>
      </listitem>
     </varlistentry>
@@ -35,15 +38,27 @@
      <term><parameter>fields</parameter></term>
      <listitem>
       <para>
-       Uma matriz de matrizes, cada matriz descrevendo o formato de um campo no 
+       Um array de arrays, cada array descrevendo o formato de um campo no
        banco de dados. Cada campo consiste de um nome, um caractere indicando o tipo
-       do campo, e opcionalmente, um tamanho e uma precisão.
+       do campo, e opcionalmente, um tamanho, uma precisão e uma opção anulável.
+       Os tipos de campos suportados estão listados na <link
+       linkend="intro.dbase">seção de introdução</link>
       </para>
       <note>
        <para>
-        O nome dos campos são limitados em tamanho e não podem ultrapassar 10 caracteres.
+        O nome dos campos são limitados em tamanho e não podem exceder 10 caracteres.
        </para>
       </note>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>type</parameter></term>
+     <listitem>
+      <para>
+       O tipo de banco de dados a ser criado.The type of database to be created. Pode ser
+       <constant>DBASE_TYPE_DBASE</constant> ou
+       <constant>DBASE_TYPE_FOXPRO</constant>.
+      </para>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -52,15 +67,45 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna um identificador do banco de dados se for bem sucedido, 
-   ou &false; se houve um erro.
+   Retorna um recurso de banco de dados se for criado com sucesso,
+   ou &false; se houver um erro.
   </para>
  </refsect1>
+
+  <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>dbase 7.0.0</entry>
+      <entry>
+       O parâmetro <parameter>type</parameter> foi adicionado.
+      </entry>
+     </row>
+     <row>
+      <entry>dbase 7.0.0</entry>
+      <entry>
+       O valor de retorno agora é do tipo <type>resource</type> ao invés de um
+       <type>int</type>.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
    <example>
-    <title>Criando um banco de dados dBase</title>
+    <title>Criando um arquivo de banco de dados dBase</title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -74,9 +119,9 @@ $def = array(
   array("ismember", "L")
 );
 
-// creation
+// criação
 if (!dbase_create('/tmp/test.dbf', $def)) {
-  echo "Error, can't create the database\n";
+  echo "Erro, não foi possível criar o banco de dados\n";
 }
 
 ?>
