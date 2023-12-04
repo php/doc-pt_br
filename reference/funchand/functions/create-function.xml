@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 028513e94be0922956387803e75b575973539254 Maintainer: rogeriopradoj Status: ready --><!-- CREDITS: marcelo, rogeriopradoj -->
+<!-- EN-Revision: 39752929cd4ab78db8a7310dfb328444c558df99 Maintainer: leonardolara Status: ready --><!-- CREDITS: marcelo, rogeriopradoj, leonardolara -->
 <refentry xml:id="function.create-function" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>create_function</refname>
-  <refpurpose>Cria uma função anônima (lambda-style)</refpurpose>
+  <refpurpose>Cria uma função dinamicamente avaliando uma string de código</refpurpose>
  </refnamediv>
 
  <refsynopsisdiv>
@@ -18,34 +18,35 @@
    <methodparam><type>string</type><parameter>code</parameter></methodparam>
   </methodsynopsis>
   <para>
-   Cria uma função anônima a partir dos parâmetros passados e
-   retorna um nome único para si.
+   Cria uma função dinamicamente a partir dos parâmetros passados e retorna um nome único para ela.
   </para>
   <caution>
    <para>
-    Essa funcão internalmente executa um <function>eval</function> e, por isso, tem os mesmos
-    problemas de segurança da <function>eval</function>. Além disso, ele tem características
-    de má performance e uso ruim de memória.
+    Essa funcão executa um <function>eval</function> internamente e, por isso, tem os mesmos
+    problemas de segurança de <function>eval</function>. Além disso, ela tem características
+    ruins de desempenho e uso de memória, porque as funções criadas são globais e
+    não podem ser liberadas da memória.
    </para>
    <para>
-    Se estiver usando PHP 5.3 ou mais novo,
-    deve ser usada uma <link linkend="functions.anonymous">função anônima </link> nativa.
+    Uma
+    <link linkend="functions.anonymous">função anônima</link> nativa deve ser utilizada alternativamente.
    </para>
   </caution>
  </refsect1>
  <refsect1 role="parameters">
   &reftitle.parameters;
   <para>
-   Geralmente esses parâmetros serão passados em strings delimitadas por aspas simples.
-   O motivo para usar strings com aspas simples é impedir que os nomes de variáveis
-   sejam interpretados, caso contrário, se você usar aspas duplas, será necessário
-   fazer escape dos nomes das variáveis, por exemplo <literal>\$avar</literal>.
+   É recomendável passar estes parâmetros como strings em
+   <link linkend="language.types.string.syntax.single">aspas simples</link>.
+   Se forem usadas strings em <link linkend="language.types.string.syntax.double">aspas duplas</link>,
+   os nomes de variáveis no código devem ser escapados com cuidado, ex.:
+   <literal>\$somevar</literal>.
    <variablelist>
     <varlistentry>
      <term><parameter>args</parameter></term>
      <listitem>
       <para>
-       Os argumentos da função.
+       Os argumentos da função, em uma string única, separados por vírgulas.
       </para>
      </listitem>
     </varlistentry>
@@ -64,7 +65,10 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna um nome de função único como uma string, ou &false; em caso de erro.
+   Retorna um nome de função único como uma string, &return.falseforfailure;.
+   Note que o nome contém um caractere não imprimível (<literal>"\0"</literal>),
+   portanto deve-se tomar cuidado ao imprimir o nome ou incorporá-lo em qualquer outra
+   string.
   </para>
  </refsect1>
 
@@ -73,36 +77,51 @@
   <para>
    <example>
     <title>
-     Criação de uma função anônima com <function>create_function</function>
+     Criando uma função dinamicamente, com <function>create_function</function>
+     ou funções anônimas
     </title>
     <para>
-     Você pode usar esta função para (por exemplo) criar uma função a partir de
-     informação obtida em tempo de execução:
+     Pode-se usar uma função criada dinamicamente para (por exemplo) criar uma função a partir de
+     informação obtida em tempo de execução. Primeiro, usando <function>create_function</function>:
     </para>
     <programlisting role="php">
 <![CDATA[
 <?php
 $newfunc = create_function('$a,$b', 'return "ln($a) + ln($b) = " . log($a * $b);');
-echo "New anonymous function: $newfunc\n";
 echo $newfunc(2, M_E) . "\n";
-// outputs
-// New anonymous function: lambda_1
-// ln(2) + ln(2.718281828459) = 1.6931471805599
 ?>
 ]]>
     </programlisting>
+    <para>
+     Agora o mesmo código, usando uma <link linkend="functions.anonymous">função anônima</link>;
+     note que o código e os argumentos não estão mais contidos em strings:
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$newfunc = function($a,$b) { return "ln($a) + ln($b) = " . log($a * $b); };
+echo $newfunc(2, M_E) . "\n";
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+ln(2) + ln(2.718281828459) = 1.6931471805599
+]]>
+    </screen>
    </example>
-  </para>
-  <para>
-   Ou talvez para ter uma função manipuladora genérica que possa aplicar um
-   conjunto de operações sobre um lista de parâmetros:
   </para>
   <para>
    <example>
     <title>
-     Criação de uma função de processamento genérica com
-     <function>create_function</function>
+     Criação de uma função de processamento geral, com <function>create_function</function>
+     ou funções anônimas
     </title>
+    <para>
+     Outro uso seria ter uma função manipuladora geral que possa aplicar um
+     conjunto de operações a uma lista de parâmetros:
+    </para>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -113,30 +132,68 @@ function process($var1, $var2, $farr)
     }
 }
 
-// create a bunch of math functions
-$f1 = 'if ($a >=0) {return "b*a^2 = ".$b*sqrt($a);} else {return false;}';
-$f2 = "return \"min(b^2+a, a^2,b) = \".min(\$a*\$a+\$b,\$b*\$b+\$a);";
-$f3 = 'if ($a > 0 && $b != 0) {return "ln(a)/b = ".log($a)/$b; } else { return false; }';
+// cria uma porção de funções matemáticas
 $farr = array(
-    create_function('$x,$y', 'return "some trig: ".(sin($x) + $x*cos($y));'),
-    create_function('$x,$y', 'return "a hypotenuse: ".sqrt($x*$x + $y*$y);'),
-    create_function('$a,$b', $f1),
-    create_function('$a,$b', $f2),
-    create_function('$a,$b', $f3)
-    );
+    create_function('$x,$y', 'return "um pouco de trigonometria: ".(sin($x) + $x*cos($y));'),
+    create_function('$x,$y', 'return "uma hipotenusa: ".sqrt($x*$x + $y*$y);'),
+    create_function('$a,$b', 'if ($a >=0) {return "b*a^2 = ".$b*sqrt($a);} else {return false;}'),
+    create_function('$a,$b', "return \"min(b^2+a, a^2,b) = \".min(\$a*\$a+\$b,\$b*\$b+\$a);"),
+    create_function('$a,$b', 'if ($a > 0 && $b != 0) {return "ln(a)/b = ".log($a)/$b; } else { return false; }')
+);
 
-echo "\nUsing the first array of anonymous functions\n";
-echo "parameters: 2.3445, M_PI\n";
+echo "\nUsando o primeiro array de funções dinâmicas\n";
+echo "parâmetros: 2.3445, M_PI\n";
 process(2.3445, M_PI, $farr);
 
-// now make a bunch of string processing functions
+// agora cria uma porção de funções de processamento de strings
 $garr = array(
     create_function('$b,$a', 'if (strncmp($a, $b, 3) == 0) return "** \"$a\" '.
-    'and \"$b\"\n** Look the same to me! (looking at the first 3 chars)";'),
-    create_function('$a,$b', '; return "CRCs: " . crc32($a) . ", ".crc32($b);'),
-    create_function('$a,$b', '; return "similar(a,b) = " . similar_text($a, $b, &$p) . "($p%)";')
-    );
-echo "\nUsing the second array of anonymous functions\n";
+        'e \"$b\"\n** Parecem iguais para mim! (olhando para os 3 primeiros caracteres)";'),
+    create_function('$a,$b', 'return "CRCs: " . crc32($a) . ", ".crc32($b);'),
+    create_function('$a,$b', 'return "similar(a,b) = " . similar_text($a, $b, $p) . "($p%)";')
+);
+echo "\nUsando o segundo array de funções dinâmicas\n";
+process("Twas brilling and the slithy toves", "Twas the night", $garr);
+?>
+]]>
+    </programlisting>
+    <para>
+     Novamente, aqui está o mesmo código usando
+     <link linkend="functions.anonymous">funções anônimas</link>.
+     Note que os nomes das variáveis no código não precisam mais ser escapados,
+     porque não estão em uma string.
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+function process($var1, $var2, $farr)
+{
+    foreach ($farr as $f) {
+        echo $f($var1, $var2) . "\n";
+    }
+}
+
+// cria uma porção de funções matemáticas
+$farr = array(
+    function($x,$y) { return "um pouco de trigonometria: ".(sin($x) + $x*cos($y)); },
+    function($x,$y) { return "uma hipotenusa: ".sqrt($x*$x + $y*$y); },
+    function($a,$b) { if ($a >=0) {return "b*a^2 = ".$b*sqrt($a);} else {return false;} },
+    function($a,$b) { return "min(b^2+a, a^2,b) = " . min($a*$a+$b, $b*$b+$a); },
+    function($a,$b) { if ($a > 0 && $b != 0) {return "ln(a)/b = ".log($a)/$b; } else { return false; } }
+);
+
+echo "\nUsando o primeiro array de funções dinâmicas\n";
+echo "parâmetros: 2.3445, M_PI\n";
+process(2.3445, M_PI, $farr);
+
+// agora cria uma porção de funções de processamento de strings
+$garr = array(
+    function($b,$a) { if (strncmp($a, $b, 3) == 0) return "** \"$a\" " .
+        "e \"$b\"\n** Parecem iguais para mim! (olhando para os 3 primeiros caracteres)"; },
+    function($a,$b) { return "CRCs: " . crc32($a) . ", ".crc32($b); },
+    function($a,$b) { return "similar(a,b) = " . similar_text($a, $b, $p) . "($p%)"; }
+);
+echo "\nUsando o segundo array de funções dinâmicas\n";
 process("Twas brilling and the slithy toves", "Twas the night", $garr);
 ?>
 ]]>
@@ -144,17 +201,17 @@ process("Twas brilling and the slithy toves", "Twas the night", $garr);
     &example.outputs;
     <screen>
 <![CDATA[
-Using the first array of anonymous functions
-parameters: 2.3445, M_PI
-some trig: -1.6291725057799
-a hypotenuse: 3.9199852871011
+Usando o primeiro array de funções dinâmicas
+parâmetros: 2.3445, M_PI
+um pouco de trigonometria: -1.6291725057799
+uma hipotenusa: 3.9199852871011
 b*a^2 = 4.8103313314525
 min(b^2+a, a^2,b) = 8.6382729035898
 ln(a)/b = 0.27122299212594
 
-Using the second array of anonymous functions
-** "Twas the night" and "Twas brilling and the slithy toves"
-** Look the same to me! (looking at the first 3 chars)
+Usando o segundo array de funções dinâmicas
+** "Twas the night" e "Twas brilling and the slithy toves"
+** Parecem iguais para mim! (olhando para os 3 primeiros caracteres)
 CRCs: -725381282, 342550513
 similar(a,b) = 11(45.833333333333%)
 ]]>
@@ -162,18 +219,30 @@ similar(a,b) = 11(45.833333333333%)
    </example>
   </para>
   <para>
-   Mas talvez o uso mais comum para funções do tipo lambda (anônimas)
-   seja para criar funções de callback, por exemplo junto com
-   <function>array_walk</function> ou <function>usort</function>
-  </para>
-  <para>
    <example>
     <title>Uso de funções anônimas como funções callback</title>
+    <para>
+     Talvez o uso mais comum para funções dinâmicas
+     seja passá-las como chamadas de retorno, por exemplo ao usar
+     <function>array_walk</function> ou <function>usort</function>.
+    </para>
     <programlisting role="php">
 <![CDATA[
 <?php
-$av = array("the ", "a ", "that ", "this ");
-array_walk($av, create_function('&$v,$k', '$v = $v . "mango";'));
+$av = array("a ", "uma ", "aquela ", "esta ");
+array_walk($av, create_function('&$v,$k', '$v = $v . "manga";'));
+print_r($av);
+?>
+]]>
+    </programlisting>
+    <para>
+     Converted to an <link linkend="functions.anonymous">anonymous function</link>:
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$av = array("a ", "uma ", "aquela ", "esta ");
+array_walk($av, function(&$v,$k) { $v = $v . "manga"; });
 print_r($av);
 ?>
 ]]>
@@ -183,60 +252,61 @@ print_r($av);
 <![CDATA[
 Array
 (
-  [0] => the mango
-  [1] => a mango
-  [2] => that mango
-  [3] => this mango
+  [0] => a manga
+  [1] => uma manga
+  [2] => aquela manga
+  [3] => esta manga
 )
 ]]>
     </screen>
     <para>
-     um array de strings ordenado da menor para a maior
+     Ordenando strings do mais longo ao mais curto com <function>create_function</function>:
     </para>
     <programlisting role="php">
 <![CDATA[
 <?php
-
-$sv = array("small", "larger", "a big string", "it is a string thing");
+$sv = array("pequena", "uma string grande", "pouco maior", "é uma coisa essa string");
+echo "Original:\n";
 print_r($sv);
-
-?>
-]]>
-    </programlisting>
-    &example.outputs;
-    <screen>
-<![CDATA[
-Array
-(
-  [0] => small
-  [1] => larger
-  [2] => a big string
-  [3] => it is a string thing
-)
-]]>
-    </screen>
-    <para>
-     ordenação da maior para a menor
-    </para>
-    <programlisting role="php">
-<![CDATA[
-<?php
-
+echo "Ordenado:\n";
 usort($sv, create_function('$a,$b','return strlen($b) - strlen($a);'));
 print_r($sv);
-
+?>
+]]>
+    </programlisting>
+    <para>
+     Convertida em <link linkend="functions.anonymous">função anônima</link>:
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$sv = array("pequena", "uma string grande", "pouco maior", "é uma coisa essa string");
+echo "Original:\n";
+print_r($sv);
+echo "Ordenado:\n";
+usort($sv, function($a,$b) { return strlen($b) - strlen($a); });
+print_r($sv);
 ?>
 ]]>
     </programlisting>
     &example.outputs;
     <screen>
 <![CDATA[
+Original:
 Array
 (
-  [0] => it is a string thing
-  [1] => a big string
-  [2] => larger
-  [3] => small
+  [0] => pequena
+  [1] => uma string grande
+  [2] => pouco maior
+  [3] => é uma coisa essa string
+)
+Sorted:
+Array
+(
+  [0] => é uma coisa essa string
+  [1] => uma string grande
+  [2] => pouco maior
+  [3] => pequena
 )
 ]]>
     </screen>

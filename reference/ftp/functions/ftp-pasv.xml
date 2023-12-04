@@ -1,25 +1,25 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: fernandoc Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 4d1c34c9b7a30cfc3a59641122c707a2812cfed7 Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandoc,leonardolara -->
 <refentry xml:id="function.ftp-pasv" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>ftp_pasv</refname>
-  <refpurpose>Muda o modo passivo em on(ligado) ou off(desligado)</refpurpose>
+  <refpurpose>Liga ou desliga o modo passivo</refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>bool</type><methodname>ftp_pasv</methodname>
-   <methodparam><type>resource</type><parameter>ftp_stream</parameter></methodparam>
-   <methodparam><type>bool</type><parameter>pasv</parameter></methodparam>
+   <methodparam><type>FTP\Connection</type><parameter>ftp</parameter></methodparam>
+   <methodparam><type>bool</type><parameter>enable</parameter></methodparam>
   </methodsynopsis>
   <para>
-   <function>ftp_pasv</function> muda o modo passivo em on ou off. No
+   <function>ftp_pasv</function> liga ou desliga o modo passivo. No
    modo passivo, as conexões de dados são iniciadas pelo cliente,
-   ao invés do servidor.
+   e não pelo servidor.
    Pode ser necessário se o cliente estiver atrás de um firewall.
   </para>
   <para>
-   Note que <function>ftp_pasv</function> pode somente ser chamada depois do
+   Note que <function>ftp_pasv</function> somente pode ser chamada depois do
    login ter sido feito com sucesso, caso contrário irá falhar.
   </para>
  </refsect1>
@@ -28,18 +28,16 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>ftp_stream</parameter></term>
+     <term><parameter>ftp</parameter></term>
      <listitem>
-      <para>
-       O identificador da conexão FTP.
-      </para>
+      &ftp.parameter.ftp;
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>pasv</parameter></term>
+     <term><parameter>enable</parameter></term>
      <listitem>
       <para>
-       Se &true;, o modo passivo esta ligado, se não esta desligado.
+       Se &true;, o modo passivo será ligado, senão será desligado.
       </para>
      </listitem>
     </varlistentry>
@@ -52,35 +50,53 @@
    &return.success;
   </para>
  </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     &ftp.changelog.ftp-param;
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
    <example>
-    <title>Exemplo <function>ftp_pasv</function></title>
+    <title>Exemplo de <function>ftp_pasv</function></title>
     <programlisting role="php">
 <![CDATA[
 <?php
-$file = 'somefile.txt';
-$remote_file = 'readme.txt';
+$file = 'algumArquivo.txt';
+$remote_file = 'leiame.txt';
 
-// set up basic connection
-$conn_id = ftp_connect($ftp_server);
+// define uma conexão básica
+$ftp = ftp_connect($ftp_server);
 
-// login with username and password
-$login_result = ftp_login($conn_id, $ftp_user_name, $ftp_user_pass);
+// login com usuário e senha
+$login_result = ftp_login($ftp, $ftp_user_name, $ftp_user_pass);
 
-// turn passive mode on
-ftp_pasv($conn_id, true);
+// liga o modo passivo
+ftp_pasv($ftp, true);
 
-// upload a file
-if (ftp_put($conn_id, $remote_file, $file, FTP_ASCII)) {
- echo "successfully uploaded $file\n";
+// envia um arquivo
+if (ftp_put($ftp, $remote_file, $file, FTP_ASCII)) {
+    echo "Sucesso no envio de $file\n";
 } else {
- echo "There was a problem while uploading $file\n";
+    echo "Houve um problema ao enviar $file\n";
 }
 
-// close the connection
-ftp_close($conn_id);
+// fecha a conexão
+ftp_close($ftp);
 ?>
 ]]>
     </programlisting>
@@ -88,7 +104,6 @@ ftp_close($conn_id);
   </para>
  </refsect1>
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

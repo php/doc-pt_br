@@ -1,24 +1,24 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: fernandoc Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 4d1c34c9b7a30cfc3a59641122c707a2812cfed7 Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandoc,leonardolara -->
 <refentry xml:id="function.ftp-mdtm" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>ftp_mdtm</refname>
-  <refpurpose>Retorna a hora da ultima modificação no arquivo indicado</refpurpose>
+  <refpurpose>Retorna o horário da última modificação do arquivo informado</refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>int</type><methodname>ftp_mdtm</methodname>
-   <methodparam><type>resource</type><parameter>ftp_stream</parameter></methodparam>
-   <methodparam><type>string</type><parameter>remote_file</parameter></methodparam>
+   <methodparam><type>FTP\Connection</type><parameter>ftp</parameter></methodparam>
+   <methodparam><type>string</type><parameter>filename</parameter></methodparam>
   </methodsynopsis>
   <para>
-   <function>ftp_mdtm</function> retorna a hora da ultima modificação
-   em um arquivo remoto.
+   <function>ftp_mdtm</function> retorna o horário da última modificação
+   de um arquivo remoto.
   </para>
   <note>
    <para>
-    Nem todos os servidores suportam isto!
+    Nem todos os servidores suportam este recurso!
    </para>
   </note>
   <note>
@@ -32,18 +32,16 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>ftp_stream</parameter></term>
+     <term><parameter>ftp</parameter></term>
      <listitem>
-      <para>
-       O identificador com a conexão FTP.
-      </para>
+      &ftp.parameter.ftp;
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>remote_file</parameter></term>
+     <term><parameter>filename</parameter></term>
      <listitem>
       <para>
-       O arquivo a partir do qual extrair a hora da ultima modificação.
+       O arquivo do qual será extraído o horário da última modificação.
       </para>
      </listitem>
     </varlistentry>
@@ -53,39 +51,57 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna a hora da ultima modificação como um timestamp Unix em caso de
-   sucesso, -1 em caso de erro.
+   Retorna o horário da última modificação como um timestamp Unix <emphasis>local</emphasis> em caso de
+   sucesso, ou -1 em caso de erro.
   </para>
  </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     &ftp.changelog.ftp-param;
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
    <example>
-    <title>Exemplo <function>ftp_mdtm</function></title>
+    <title>Exemplo de <function>ftp_mdtm</function></title>
     <programlisting role="php">
 <![CDATA[
 <?php
 
-$file = 'somefile.txt';
+$file = 'algumArquivo.txt';
 
-// set up basic connection
-$conn_id = ftp_connect($ftp_server);
+// define uma conexão básica
+$ftp = ftp_connect($ftp_server);
 
-// login with username and password
-$login_result = ftp_login($conn_id, $ftp_user_name, $ftp_user_pass);
+// login com usuário e senha
+$login_result = ftp_login($ftp, $ftp_user_name, $ftp_user_pass);
 
-//  get the last modified time
-$buff = ftp_mdtm($conn_id, $file);
+// obtém o horário da última modificação
+$buff = ftp_mdtm($ftp, $file);
 
 if ($buff != -1) {
-    // somefile.txt was last modified on: March 26 2003 14:16:41.
-    echo "$file was last modified on : " . date("F d Y H:i:s.", $buff);
+    // algumArquivo.txt foi modificado em: March 26 2003 14:16:41.
+    echo "$file foi modificado em : " . date("F d Y H:i:s.", $buff);
 } else {
-    echo "Couldn't get mdtime";
+    echo "Não foi possível obter mdtime";
 }
 
-// close the connection
-ftp_close($conn_id);
+// fecha a conexão
+ftp_close($ftp);
 
 ?>
 ]]>
@@ -94,7 +110,6 @@ ftp_close($conn_id);
   </para>
  </refsect1>
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
