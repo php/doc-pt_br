@@ -1,25 +1,24 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 1e7507433ca540f5a2719ac9d5e345567dcc9067 Maintainer: felipe Status: ready --><!-- CREDITS: marcelo -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: de42b5016e8d9cbfd245d70f65354a86f4e2f031 Maintainer: leonardolara Status: ready --><!-- CREDITS: felipe, marcelo, leonardolara -->
 <refentry xml:id="function.func-get-arg" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>func_get_arg</refname>
-  <refpurpose>Retorna um item para uma lista de argumentos</refpurpose>
+  <refpurpose>Retorna um item de uma lista de argumentos</refpurpose>
  </refnamediv>
- 
+
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>mixed</type><methodname>func_get_arg</methodname>
-   <methodparam><type>int</type><parameter>arg_num</parameter></methodparam>
+   <methodparam><type>int</type><parameter>position</parameter></methodparam>
   </methodsynopsis>
   <para>
-   Obtém o argumento especificado da lista de argumento de uma função definida
-   pelo usuário.
+   Obtém o argumento especificado de uma lista de argumentos de uma função definida pelo usuário.
   </para>
   <para>
    Esta função pode ser usada juntamente com
-   <function>func_get_arg</function> e <function>func_num_args</function>
-   para usar com variável lista de argumentos.
+   <function>func_get_args</function> e <function>func_num_args</function>
+   para permitir que funções definidas pelo usuário aceitem listas de argumentos com comprimento variável.
   </para>
  </refsect1>
 
@@ -28,7 +27,7 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>arg_num</parameter></term>
+     <term><parameter>position</parameter></term>
      <listitem>
       <para>
        O índice do argumento. Argumentos de função são contados iniciando de
@@ -43,40 +42,16 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna o argumento especificado, ou &false; em erro.
-  </para>
- </refsect1>
-
- <refsect1 role="changelog">
-  &reftitle.changelog;
-  <para>
-   <informaltable>
-    <tgroup cols="2">
-     <thead>
-      <row>
-       <entry>&Version;</entry>
-       <entry>&Description;</entry>
-      </row>
-     </thead>
-     <tbody>
-      <row>
-       <entry>5.3.0</entry>
-       <entry>
-        Esta função pode agora ser usada na lista de parâmetros.
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
+   Retorna o argumento especificado, ou &false; em caso de erro.
   </para>
  </refsect1>
 
  <refsect1 role="errors">
   &reftitle.errors;
   <para>
-   Gera um aviso se chamado fora de uma função definida pelo usuário, ou
-   se <parameter>arg_num</parameter> é maior que o número de argumentos
-   passado.
+   Gera um alerta se chamada fora de uma função definida pelo usuário, ou
+   se <parameter>position</parameter> for maior que o número de argumentos
+   realmente passados.
   </para>
  </refsect1>
 
@@ -84,33 +59,77 @@
   &reftitle.examples;
   <para>
    <example>
-    <title>Exemplo da <function>func_get_arg</function></title>
+    <title>Exemplo de <function>func_get_arg</function></title>
     <programlisting role="php">
 <![CDATA[
 <?php
 function foo()
 {
      $numargs = func_num_args();
-     echo "Number of arguments: $numargs<br />\n";
+     echo "Número de argumentos: $numargs<br />\n";
      if ($numargs >= 2) {
-     echo "Second argument is: " . func_get_arg(1) . "<br />\n";
+     echo "Segundo argumento é: " . func_get_arg(1) . "<br />\n";
      }
-} 
+}
 
 foo (1, 2, 3);
 ?>
 ]]>
     </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Número de argumentos: 3
+Segundo argumento é: 2
+]]>
+    </screen>
    </example>
   </para>
+
+  <para>
+   <example>
+    <title>Exemplo de <function>func_get_arg</function> com argumentos por valor e por referência</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+function byVal($arg) {
+    echo 'Como passado     : ', var_export(func_get_arg(0)), PHP_EOL;
+    $arg = 'baz';
+    echo 'Depois da mudança: ', var_export(func_get_arg(0)), PHP_EOL;
+}
+
+function byRef(&$arg) {
+    echo 'Como passado     : ', var_export(func_get_arg(0)), PHP_EOL;
+    $arg = 'baz';
+    echo 'Depois da mudança: ', var_export(func_get_arg(0)), PHP_EOL;
+}
+
+$arg = 'bar';
+byVal($arg);
+byRef($arg);
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+Como passado     : 'bar'
+Depois da mudança: 'baz'
+Como passado     : 'bar'
+Depois da mudança: 'baz'
+    </screen>
+   </example>
+  </para>
+
  </refsect1>
 
  <refsect1 role="notes">
   &reftitle.notes;
+  &note.func-named-params;
+  &note.funcbyref;
   <note>
    <simpara>
-    Esta função retorna somente uma cópia dos argumentos passados, e não 
-    conta por argumentos padrão (não passado).
+    Esta função retorna uma cópia apenas dos argumentos informados, e não
+    leva em consideração argumentos padrão (não informados).
    </simpara>
   </note>
  </refsect1>
@@ -119,6 +138,7 @@ foo (1, 2, 3);
   &reftitle.seealso;
   <para>
    <simplelist>
+    <member><link linkend="functions.variable-arg-list">Sintaxe <literal>...</literal></link></member>
     <member><function>func_get_args</function></member>
     <member><function>func_num_args</function></member>
    </simplelist>
@@ -126,7 +146,6 @@ foo (1, 2, 3);
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
