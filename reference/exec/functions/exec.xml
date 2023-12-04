@@ -1,29 +1,29 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: fernandoc Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: b412bbd26214f7281ac7dd858710e09952a275f2 Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandoc,leonardolara -->
 <!-- splitted from ./en/functions/exec.xml, last change in rev 1.2 -->
-  <refentry xml:id="function.exec" xmlns="http://docbook.org/ns/docbook">
-   <refnamediv>
-    <refname>exec</refname>
-    <refpurpose>Executa um programa externo</refpurpose>
-   </refnamediv>
-   
-    <refsect1 role="description">
-     &reftitle.description;
-     <methodsynopsis>
-      <type>string</type><methodname>exec</methodname>
-      <methodparam><type>string</type><parameter>command</parameter></methodparam>
-       <methodparam choice="opt"><type>array</type><parameter role="reference">output</parameter></methodparam>
-       <methodparam choice="opt"><type>int</type><parameter role="reference">return_var</parameter></methodparam>
-     </methodsynopsis>
-    <para>
-     <function>exec</function> executa o
-     <parameter>command</parameter> dado.
-    </para>
-   </refsect1>
- 
-  <refsect1 role="parameters">
-   &reftitle.parameters;
-   <para>
+<refentry xml:id="function.exec" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>exec</refname>
+  <refpurpose>Executa um programa externo</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>string</type><type>false</type></type><methodname>exec</methodname>
+   <methodparam><type>string</type><parameter>command</parameter></methodparam>
+   <methodparam choice="opt"><type>array</type><parameter role="reference">output</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter role="reference">result_code</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   <function>exec</function> executa o comando informado em
+   <parameter>command</parameter>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
    <variablelist>
     <varlistentry>
     <term><parameter>command</parameter></term>
@@ -37,83 +37,136 @@
    <term><parameter>output</parameter></term>
     <listitem>
     <para>
-     Se o argumento <parameter>output</parameter> estiver presente, então a matriz especificada
-     será prenchida com cada linha da saída do comando. Espaços ao final, como
-     <literal>\n</literal>, não são incluídos nesta matriz. Note que se a matriz
-     já contiver alguns elementos, <function>exec</function> irá adicionar ao final da matriz.
-     Se você não quiser que a função adicione elementos, use
-     <function>unset</function> antes de passar ela para
+     Se o argumento <parameter>output</parameter> estiver presente, então o
+     array especificado será prenchido com cada linha da saída do
+     comando. Espaço ao final, como <literal>\n</literal>, não é
+     incluído neste array. Note que se o array já contiver alguns
+     elementos, <function>exec</function> irá adicionar ao final do array.
+     Se nnão houver intenção de que a função adicione elementos, use
+     <function>unset</function> no array antes de passá-lo para
      <function>exec</function>.
     </para>
     </listitem>
-
     </varlistentry>
      <varlistentry>
-     <term><parameter>return_var</parameter></term>
+     <term><parameter>result_code</parameter></term>
     <listitem>
-    <para>
-     Se o argumento <parameter>return_var</parameter> esta presente
-     junto com o argumento <parameter>output</parameter>, então o status de retorno
-     do comando executado será escrito nesta variável.
-    </para>
-   
+     <para>
+      Se o argumento <parameter>result_code</parameter> estiver presente
+      junto com o argumento <parameter>output</parameter>, então o
+      estado de retorno do comando executado será escrito nesta
+      variável.
+     </para>
     </listitem>
-    </varlistentry>
-    </variablelist>
-    </para>
-    </refsect1>
+   </varlistentry>
+  </variablelist>
+  </para>
+ </refsect1>
 
-  <refsect1 role="returnvalues">
-   &reftitle.returnvalues;
-   <para>
-    A ultima linha do resultado do comando. Se você precisa executar um
-    comando e ter todos os dados passados diretamente de volta sem
-    qualquer interferência, use a função <function>passthru</function>.
-   </para>
-   <para>
-    Para pegar a saída do comando executado, tenha certeza
-    de definir e usar o parâmetro <parameter>output</parameter>.
-   </para>
-  </refsect1>
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   A última linha do resultado do comando. Se for necessário executar um
+   comando e ter todos os dados dele passados diretamente de volta sem
+   qualquer interferência, use a função <function>passthru</function>.
+  </para>
+  <para>
+   Retorna &false; em caso de falha.
+  </para>
+  <para>
+   Para obter a saída do comando executado, certifique-se de definir e usar
+   o parâmetro <parameter>output</parameter>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <para>
+   Emite um erro de nível <constant>E_WARNING</constant> se <function>exec</function>
+   for incapaz de executar o comando em <parameter>command</parameter>.
+  </para>
+  <para>
+   Lança uma exceção <classname>ValueError</classname> se <parameter>command</parameter>
+   estiver vazio ou contiver bytes nulos.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       Se <parameter>command</parameter> estiver vazio ou contiver bytes nulos,
+       <function>exec</function> agora lança uma exceção <classname>ValueError</classname>.
+       Anteriormente emitia um erro de nível <constant>E_WARNING</constant> e retornava &false;.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
 
  <refsect1 role="examples">
-   &reftitle.examples;
-    <para>
-     <example>
-      <title>Um exemplo <function>exec</function></title>
-      <programlisting role="php">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Um exemplo <function>exec</function></title>
+    <programlisting role="php">
 <![CDATA[
 <?php
-// Mostra o nome de quem é o dono do processo php/httpd 
+// Mostra o nome de quem é o dono do processo php/httpd
 // (em um sistema com o executável "whoami" no path)
-echo exec('whoami');
+$output=null;
+$retval=null;
+exec('whoami', $output, $retval);
+echo "Retornou com estado $retval e saída:\n";
+print_r($output);
 ?>
 ]]>
-      </programlisting>
-     </example>
-    </para>
-    </refsect1>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+Retornou com estado 0 e saída:
+Array
+(
+    [0] => cmb
+)
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
 
-  <refsect1 role="notes">
-    &reftitle.notes;
-    &warn.escapeshell;
-    &note.exec-bg;
+ <refsect1 role="notes">
+  &reftitle.notes;
+  &warn.escapeshell;
+  &note.exec-bg;
+  &note.exec-bypass-shell;
  </refsect1>
 
  <refsect1 role="seealso">
   &reftitle.seealso;
   <para>
-     <simplelist>
-      <member><function>system</function></member>
-      <member><function>passthru</function></member>
-      <member><function>escapeshellcmd</function></member>
-      <member><function>pcntl_exec</function></member>
-      <member><link linkend="language.operators.execution">backtick operator</link></member>
-     </simplelist>
-    </para>
-   </refsect1>
-  </refentry>
-
+   <simplelist>
+    <member><function>system</function></member>
+    <member><function>passthru</function></member>
+    <member><function>escapeshellcmd</function></member>
+    <member><function>pcntl_exec</function></member>
+    <member><link linkend="language.operators.execution">Operador crase</link></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
