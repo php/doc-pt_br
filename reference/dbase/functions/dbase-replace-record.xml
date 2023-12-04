@@ -1,17 +1,17 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: fernandoc Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 86e6094e86b84a51d00ab217ac50ce8dde33d82a Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandoc,leonardolara -->
 <refentry xml:id="function.dbase-replace-record" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>dbase_replace_record</refname>
-  <refpurpose>Substitui um registro no banco de dados</refpurpose>
+  <refpurpose>Substitui um registro em um banco de dados</refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>bool</type><methodname>dbase_replace_record</methodname>
-   <methodparam><type>int</type><parameter>dbase_identifier</parameter></methodparam>
-   <methodparam><type>array</type><parameter>record</parameter></methodparam>
-   <methodparam><type>int</type><parameter>record_number</parameter></methodparam>
+   <methodparam><type>resource</type><parameter>database</parameter></methodparam>
+   <methodparam><type>array</type><parameter>data</parameter></methodparam>
+   <methodparam><type>int</type><parameter>number</parameter></methodparam>
   </methodsynopsis>
   <para>
    Substitui o registro no banco de dados com os dados indicados.
@@ -22,32 +22,32 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>dbase_identifier</parameter></term>
+     <term><parameter>database</parameter></term>
      <listitem>
       <para>
-       O identificador do banco de dados, retornado por <function>dbase_open</function>
+       O recurso de banco de dados, retornado por <function>dbase_open</function>
        ou <function>dbase_create</function>.
       </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>record</parameter></term>
+     <term><parameter>data</parameter></term>
      <listitem>
       <para>
-       Uma matriz indexada de dados. O número deve ser igual ao número de campo
-       no banco de dados, se não <function>dbase_add_record</function>
-       irá falhar.
+       Um array indexado de dados. O número deve ser igual ao
+       número de campos no banco de dados, caso contrário
+       <function>dbase_replace_record</function> irá falhar.
       </para>
       <note>
        <para>
-        Se você esta usando o valor de retorno de <function>dbase_get_record</function>
-        para este parâmetro, lembre-se de reiniciar o valor de <literal>deleted</literal>.
+        Se o valor de retorno de <function>dbase_get_record</function> for usado
+        para este parâmetro, lembre-se de redefinir a chave de nome <literal>deleted</literal>.
        </para>
       </note>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>record_number</parameter></term>
+     <term><parameter>number</parameter></term>
      <listitem>
       <para>
        Um inteiro que vai de 1 até o número de registros no banco de dados
@@ -64,6 +64,30 @@
    &return.success;
   </para>
  </refsect1>
+
+  <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>dbase 7.0.0</entry>
+      <entry>
+       <parameter>database</parameter> agora é do tipo <type>resource</type>
+       ao invés de <type>int</type>.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
@@ -73,20 +97,23 @@
 <![CDATA[
 <?php
 
-// open in read-write mode
+// abre somente leitura
 $db = dbase_open('/tmp/test.dbf', 2);
 
 if ($db) {
-  // gets the old row
+  // obtém o registro antigo
   $row = dbase_get_record_with_names($db, 1);
 
-  // remove the 'deleted' entry
+  // remove a entrada 'deletada'
   unset($row['deleted']);
 
-  // Update the date field with the current timestamp
+  // Atualiza o campo 'date' com a dada atual
   $row['date'] = date('Ymd');
 
-  // Replace the record
+  // converte o registro para um array indexado
+  $row = array_values($row);
+
+  // Substitui o registro
   dbase_replace_record($db, $row, 1);
   dbase_close($db);
 }
@@ -97,6 +124,21 @@ if ($db) {
    </example>
   </para>
  </refsect1>
+
+ <refsect1 role="notes"><!-- {{{ -->
+  &reftitle.notes;
+  <note>
+   <para>
+    Campos booleanos resultam em um elemento do tipo <type>int</type>
+    (<literal>0</literal> ou <literal>1</literal>) quando obtidos através de
+    <function>dbase_get_record</function> ou
+    <function>dbase_get_record_with_names</function>. Se fores escritos de volta,
+    resulta no valor tornando-se <literal>0</literal>, portanto deve-se ter cuidado
+    para ajustar os valores adequadamente.
+   </para>
+  </note>
+ </refsect1><!-- }}} -->
+
  <refsect1 role="seealso">
   &reftitle.seealso;
   <para>

@@ -1,23 +1,28 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: fernandoc Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 4754397753fd79f1c846868b66a2448babab1c54 Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandoc,leonardolara -->
 <refentry xml:id="function.dbase-numrecords" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>dbase_numrecords</refname>
-  <refpurpose>Obtém o número de registros no banco de dados</refpurpose>
+  <refpurpose>Obtém o número de registros em um banco de dados</refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>int</type><methodname>dbase_numrecords</methodname>
-   <methodparam><type>int</type><parameter>dbase_identifier</parameter></methodparam>
+   <methodparam><type>resource</type><parameter>database</parameter></methodparam>
   </methodsynopsis>
   <para>
    Obtém o número de registros (linhas) no banco de dados especificado.
   </para>
   <note>
    <para>
-    Número de registros são entre 1 e dbase_numrecords($db),
-    enquanto que números de campo são entre 0 e dbase_numfields($db)-1.
+    Resgistros marcados para remoção também são contados.
+   </para>
+  </note>
+  <note>
+   <para>
+    Número de registros estão entre 1 e <literal>dbase_numrecords($db)</literal>,
+    enquanto que números de campo estão entre 0 e <literal>dbase_numfields($db)-1</literal>.
    </para>
   </note>
  </refsect1>
@@ -26,10 +31,10 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>dbase_identifier</parameter></term>
+     <term><parameter>database</parameter></term>
      <listitem>
       <para>
-       O identificador do banco de dados, retornado por <function>dbase_open</function>
+       O recurso de banco de dados, retornado por <function>dbase_open</function>
        ou <function>dbase_create</function>.
       </para>
      </listitem>
@@ -43,6 +48,30 @@
    O número de registros no banco de dados, ou &false; se ocorrer um erro.
   </para>
  </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>dbase 7.0.0</entry>
+      <entry>
+       <parameter>database</parameter> agora é do tipo <type>resource</type>
+       ao invés de <type>int</type>.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
@@ -52,13 +81,18 @@
 <![CDATA[
 <?php
 
-// open in read-only mode
+// abre somente leitura
 $db = dbase_open('/tmp/test.dbf', 0);
 
 if ($db) {
   $record_numbers = dbase_numrecords($db);
   for ($i = 1; $i <= $record_numbers; $i++) {
-      // do something here, for each record
+      $record = dbase_get_record($db, $i);
+      if (!$record['deleted']) {
+          // faz algo com o registro
+      } else {
+          // faz algo com o registro deletado ou ignora
+      }
   }
 }
 
@@ -72,7 +106,7 @@ if ($db) {
   &reftitle.seealso;
   <para>
    <simplelist>
-    <member><function>dbase_num_fields</function></member>
+    <member><function>dbase_numfields</function></member>
    </simplelist>
   </para>
  </refsect1>
