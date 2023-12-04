@@ -1,33 +1,32 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: felipe Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: cbac1ecf71d754707d69bdc344c4031c157eaa54 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara,felipe -->
 <!-- splitted from ./en/functions/image.xml, last change in rev 1.78 -->
 <refentry xml:id="function.exif-thumbnail" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>exif_thumbnail</refname>
-  <refpurpose>Recupera a miniatura embutida de uma imagem TIFF ou JPEG</refpurpose>
+  <refpurpose>Recupera a miniatura embutida de uma imagem</refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>string</type><methodname>exif_thumbnail</methodname>
-   <methodparam><type>string</type><parameter>filename</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter role="reference">width</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter role="reference">height</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter role="reference">imagetype</parameter></methodparam>
+   <type class="union"><type>string</type><type>false</type></type><methodname>exif_thumbnail</methodname>
+   <methodparam><type class="union"><type>resource</type><type>string</type></type><parameter>file</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter role="reference">width</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter role="reference">height</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter role="reference">image_type</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
   <para>
-   <function>exif_thumbnail</function> lê a miniatura embutida de uma imagem
-   <acronym>TIFF</acronym> ou <acronym>JPEG</acronym>.
+   <function>exif_thumbnail</function> lê a miniatura embutida de uma imagem.
   </para>
   <para>
-   Se você quer exibir miniaturas através desta função, você pode enviar
-   a informação do mimetype usando a função <function>header</function>.
+   Se for desejado exibir miniaturas através desta função, deve-se enviar
+   a informação do tipo de mídia usando a função <function>header</function>.
   </para>
   <para>
-   É possível que <function>exif_thumbnail</function> não crie uma
-   imagem mas pode terminar o tamanho. Neste caso, o valor retornado é
-   &false; mas <parameter>width</parameter> e <parameter>height</parameter>
-   são definidos.
+   É possível que <function>exif_thumbnail</function> não possa criar uma
+   imagem mas possa determinar seu tamanho. Neste caso, o valor retornado é
+   &false; mas a largura (<parameter>width</parameter>) e altura (<parameter>height</parameter>)
+   serão definidos.
   </para>
  </refsect1>
  <refsect1 role="parameters">
@@ -35,11 +34,11 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>filename</parameter></term>
+     <term><parameter>file</parameter></term>
      <listitem>
       <para>
-       O nome do arquivo da imagem a ser lido. Esta imagem contém uma
-       miniatura embutida.
+       A localização do arquivo de imagem. Pode ser um caminho ou um
+       fluxo do tipo <type>resource</type>.
       </para>
      </listitem>
     </varlistentry>
@@ -60,7 +59,7 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>imagetype</parameter></term>
+     <term><parameter>image_type</parameter></term>
      <listitem>
       <para>
        O tipo da imagem da miniatura retornada. Pode ser
@@ -74,8 +73,33 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna a miniatura embutida, our &false; se a imagem não contém
+   Retorna a miniatura embutida, ou &false; se a imagem não contiver
    miniatura.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>7.2.0</entry>
+       <entry>
+        O parâmetro <parameter>file</parameter> agora suporta arquivos locais
+        e recursos de fluxo.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
   </para>
  </refsect1>
 
@@ -83,28 +107,35 @@
   &reftitle.examples;
   <para>
    <example>
-    <title>Exemplo da <function>exif_thumbnail</function></title>
+    <title>Exemplo de <function>exif_thumbnail</function></title>
     <programlisting role="php">
 <![CDATA[
 <?php
-if (array_key_exists('file', $_REQUEST)) {
-    $image = exif_thumbnail($_REQUEST['file'], $width, $height, $type);
-} else {
-    $image = false;
-}
+$image = exif_thumbnail('/path/to/image.jpg', $width, $height, $type);
+
 if ($image!==false) {
     header('Content-type: ' .image_type_to_mime_type($type));
     echo $image;
     exit;
 } else {
-    // no thumbnail available, handle the error here
-    echo 'No thumbnail available';
+    // sem miniatura, gerencia o erro aqui
+    echo 'Não há miniatura disponível';
 }
 ?>
 ]]>
     </programlisting>
    </example>
   </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    Se o parâmetro <parameter>file</parameter> for usado para passar um fluxo a esta função,
+    ele deve ser do tipo pesquisável. Note que a posição do ponteiro do arquivo não é alterada após o retorno desta função.
+   </para>
+  </note>
  </refsect1>
  <refsect1 role="seealso">
   &reftitle.seealso;
@@ -116,7 +147,6 @@ if ($image!==false) {
   </para>
  </refsect1>
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
