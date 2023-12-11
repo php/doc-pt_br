@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: cb8d8b9fa62d750b90297fa0573f68e7b9c9309e Maintainer: felipe Status: ready -->
+<!-- EN-Revision: 497c40ac164d5873fd87f622dfdeb5206392b446 Maintainer: leonardolara Status: ready --><!-- CREDITS: felipe,leonardolara -->
 <section xml:id="pdo-mysql.constants" xmlns="http://docbook.org/ns/docbook">
  &reftitle.constants;
  &pdo.driver-constants;
@@ -7,25 +7,27 @@
   <varlistentry xml:id="pdo.constants.mysql-attr-use-buffered-query">
    <term>
     <constant>PDO::MYSQL_ATTR_USE_BUFFERED_QUERY</constant>
-     (<type>integer</type>)
+    (<type>bool</type>)
    </term>
    <listitem>
     <simpara>
-     Se esse atributo é definido como &true; em um
-     <classname>PDOStatement</classname>, o driver MySQL usará a
-     versão bufferizada da API do MySQL. Se você está escrevendo um código portável, você
-     deve usar <function>PDOStatement::fetchAll</function>.
+     Por padrão todas as instruções são executadas com
+     <link linkend="mysqlinfo.concepts.buffering">buffer</link> ativo.
+     Se este atributo for definido para &false; em um objeto
+     <classname>PDO</classname>, o driver MySQL usará o modo
+     sem buffer.
     </simpara>
     <para>
-     <example><title>Forçando queries a serem bufferizadas no mysql</title>
-     <programlisting role="php">
+     <example><title>Configurando o mode sem buffer no MySQL</title>
+      <programlisting role="php">
 <![CDATA[
 <?php
-if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
-    $stmt = $db->prepare('select * from foo',
-        array(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true));
-} else {
-    die("my application only works with mysql; I should use \$stmt->fetchAll() instead");
+$pdo = new PDO("mysql:host=localhost;dbname=world", 'my_user', 'my_password');
+$pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+
+$unbufferedResult = $pdo->query("SELECT Name FROM City");
+foreach ($unbufferedResult as $row) {
+    echo $row['Name'] . PHP_EOL;
 }
 ?>
 ]]>
@@ -37,14 +39,30 @@ if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
   <varlistentry xml:id="pdo.constants.mysql-attr-local-infile">
    <term>
     <constant>PDO::MYSQL_ATTR_LOCAL_INFILE</constant>
-     (<type>integer</type>)
+    (<type>int</type>)
    </term>
    <listitem>
     <para>
      Habilita <literal>LOAD LOCAL INFILE</literal>.
     </para>
     <para>
-     Note que essa constante só pode ser usada no array <parameter>driver_options</parameter> 
+     Note que essa constante só pode ser usada no array <parameter>driver_options</parameter>
+     ao construir um novo manipulador de banco de dados.
+    </para>
+   </listitem>
+  </varlistentry>
+  <varlistentry xml:id="pdo.constants.mysql-attr-local-infile-directory">
+   <term>
+    <constant>PDO::MYSQL_ATTR_LOCAL_INFILE_DIRECTORY</constant>
+    (<type>string</type>)
+   </term>
+   <listitem>
+    <para>
+     Permite restringir o carregamento através de LOCAL DATA a arquivos localizados neste
+     diretório designado. Disponível a partir do PHP 8.1.0.
+    </para>
+    <para>
+     Note que esta constante só pode ser usada no array <parameter>driver_options</parameter>
      ao construir um novo manipulador de banco de dados.
     </para>
    </listitem>
@@ -52,7 +70,7 @@ if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
   <varlistentry xml:id="pdo.constants.mysql-attr-init-command">
    <term>
     <constant>PDO::MYSQL_ATTR_INIT_COMMAND</constant>
-     (<type>integer</type>)
+    (<type>string</type>)
    </term>
    <listitem>
     <para>
@@ -60,7 +78,7 @@ if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
      ser executado novamente ao reconectar.
     </para>
     <para>
-     Note que essa constante só pode ser usada no array <parameter>driver_options</parameter> 
+     Note que essa constante só pode ser usada no array <parameter>driver_options</parameter>
      ao construir um novo manipulador de banco de dados.
     </para>
    </listitem>
@@ -68,7 +86,7 @@ if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
   <varlistentry xml:id="pdo.constants.mysql-attr-read-default-file">
    <term>
     <constant>PDO::MYSQL_ATTR_READ_DEFAULT_FILE</constant>
-     (<type>integer</type>)
+    (<type>int</type>)
    </term>
    <listitem>
     <para>
@@ -82,7 +100,7 @@ if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
   <varlistentry xml:id="pdo.constants.mysql-attr-read-default-group">
    <term>
     <constant>PDO::MYSQL_ATTR_READ_DEFAULT_GROUP</constant>
-     (<type>integer</type>)
+    (<type>int</type>)
    </term>
    <listitem>
     <para>
@@ -96,7 +114,7 @@ if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
   <varlistentry xml:id="pdo.constants.mysql-attr-max-buffer-size">
    <term>
     <constant>PDO::MYSQL_ATTR_MAX_BUFFER_SIZE</constant>
-     (<type>integer</type>)
+    (<type>int</type>)
    </term>
    <listitem>
     <para>
@@ -108,18 +126,18 @@ if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
   <varlistentry xml:id="pdo.constants.mysql-attr-direct-query">
    <term>
     <constant>PDO::MYSQL_ATTR_DIRECT_QUERY</constant>
-     (<type>integer</type>)
+    (<type>int</type>)
    </term>
    <listitem>
     <para>
-     Executa queries diretamente, não usa prepared statements.
+     Executa consultas diretamente, não usa declarações preparadas.
     </para>
    </listitem>
   </varlistentry>
   <varlistentry xml:id="pdo.constants.mysql-attr-found-rows">
    <term>
     <constant>PDO::MYSQL_ATTR_FOUND_ROWS</constant>
-     (<type>integer</type>)
+    (<type>int</type>)
    </term>
    <listitem>
     <para>
@@ -131,7 +149,7 @@ if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
   <varlistentry xml:id="pdo.constants.mysql-attr-ignore-space">
    <term>
     <constant>PDO::MYSQL_ATTR_IGNORE_SPACE</constant>
-     (<type>integer</type>)
+    (<type>int</type>)
    </term>
    <listitem>
     <para>
@@ -143,12 +161,11 @@ if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
   <varlistentry xml:id="pdo.constants.mysql-attr-compress">
    <term>
     <constant>PDO::MYSQL_ATTR_COMPRESS</constant>
-     (<type>integer</type>)
+    (<type>int</type>)
    </term>
    <listitem>
     <para>
-     Habilita a compressão na comunicação de rede. Também é suportado quando é
-     compilado usando mysqlnd a partir do PHP 5.3.11.
+     Habilita a compressão na comunicação de rede.
     </para>
    </listitem>
   </varlistentry>
@@ -156,14 +173,11 @@ if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
   <varlistentry xml:id="pdo.constants.mysql-attr-ssl-ca">
    <term>
     <constant>PDO::MYSQL_ATTR_SSL_CA</constant>
-     (<type>integer</type>)
+    (<type>int</type>)
    </term>
    <listitem>
     <para>
      Caminho para o arquivo da autoridade certificadora (CA) SSL.
-    </para>
-    <para>
-     &version.exists.asof; 5.3.7.
     </para>
    </listitem>
   </varlistentry>
@@ -171,15 +185,12 @@ if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
   <varlistentry xml:id="pdo.constants.mysql-attr-ssl-capath">
    <term>
     <constant>PDO::MYSQL_ATTR_SSL_CAPATH</constant>
-     (<type>integer</type>)
+    (<type>int</type>)
    </term>
    <listitem>
     <para>
      Caminho para o diretório que contém os certificados SSL confiáveis da autoridade
-     certificadora (CA), armazenados no formato PEM.
-    </para>
-    <para>
-     &version.exists.asof; 5.3.7.
+     certificadora (CA), armazenados no formato <acronym>PEM</acronym>.
     </para>
    </listitem>
   </varlistentry>
@@ -187,14 +198,11 @@ if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
   <varlistentry xml:id="pdo.constants.mysql-attr-ssl-cert">
    <term>
     <constant>PDO::MYSQL_ATTR_SSL_CERT</constant>
-     (<type>integer</type>)
+    (<type>int</type>)
    </term>
    <listitem>
     <para>
      Caminho para o certificado SSL.
-    </para>
-    <para>
-     &version.exists.asof; 5.3.7.
     </para>
    </listitem>
   </varlistentry>
@@ -202,15 +210,12 @@ if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
   <varlistentry xml:id="pdo.constants.mysql-attr-cipher">
    <term>
     <constant>PDO::MYSQL_ATTR_SSL_CIPHER</constant>
-     (<type>integer</type>)
+    (<type>int</type>)
    </term>
    <listitem>
     <para>
      Uma lista de um ou mais "ciphers" admissíveis para usar na encriptação SSL, em um formato
      compreendido pelo OpenSSL. For example: <literal>DHE-RSA-AES256-SHA:AES128-SHA</literal>
-    </para>
-    <para>
-     &version.exists.asof; 5.3.7.
     </para>
    </listitem>
   </varlistentry>
@@ -218,14 +223,26 @@ if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
   <varlistentry xml:id="pdo.constants.mysql-attr-key">
    <term>
     <constant>PDO::MYSQL_ATTR_SSL_KEY</constant>
-     (<type>integer</type>)
+    (<type>int</type>)
    </term>
    <listitem>
     <para>
      Caminho para a chave SSL.
     </para>
+   </listitem>
+  </varlistentry>
+
+  <varlistentry xml:id="pdo.constants.mysql-attr-ssl-verify-server-cert">
+   <term>
+    <constant>PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT</constant>
+    (<type>int</type>)
+   </term>
+   <listitem>
     <para>
-     &version.exists.asof; 5.3.7.
+     Fornece uma maneira de desabilitar verificação do certificado SSL do servidor.
+    </para>
+    <para>
+     &version.exists.asof; 7.0.18 and PHP 7.1.4.
     </para>
    </listitem>
   </varlistentry>
@@ -233,19 +250,16 @@ if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
   <varlistentry xml:id="pdo.constants.mysql-attr-multi-statements">
    <term>
     <constant>PDO::MYSQL_ATTR_MULTI_STATEMENTS</constant>
-     (<type>integer</type>)
+    (<type>int</type>)
    </term>
    <listitem>
     <para>
-     Desabilita a execução de queries múltiplas nas funções <function>PDO::prepare</function>
+     Desabilita a execução de consultas múltiplas nas funções <function>PDO::prepare</function>
      e <function>PDO::query</function> quando definido como &false;.
     </para>
     <para>
-     Note que essa constante só pode ser usada no array <parameter>driver_options</parameter> 
+     Note que essa constante só pode ser usada no array <parameter>driver_options</parameter>
      ao construir um novo manipulador de banco de dados.
-    </para>
-    <para>
-     &version.exists.asof; 5.5.21 and PHP 5.6.5.
     </para>
    </listitem>
   </varlistentry>
