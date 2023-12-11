@@ -1,34 +1,31 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: fernandoc Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 035c126c0393fe154bac46e2c3c489ebadce48a5 Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandoc,leonardolara -->
 <refentry xml:id="mysqli-result.fetch-row" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>mysqli_result::fetch_row</refname>
   <refname>mysqli_fetch_row</refname>
-  <refpurpose>Obtém uma linha do resultado como uma matriz numerada</refpurpose>
+  <refpurpose>Obtém a próxima linha de um resultado como um array enumerado</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
-  <para>Estilo orientado a objeto (metodo):</para>
-  <methodsynopsis>
-   <type>mixed</type><methodname>mysqli_result::fetch_row</methodname>
-   <void />
+  <para>&style.oop;</para>
+  <methodsynopsis role="mysqli_result">
+   <modifier>public</modifier> <type class="union"><type>array</type><type>null</type><type>false</type></type><methodname>mysqli_result::fetch_row</methodname>
+   <void/>
   </methodsynopsis>
-  <para>Estilo de procedimento:</para>
+  <para>&style.procedural;</para>
   <methodsynopsis>
-   <type>mixed</type><methodname>mysqli_fetch_row</methodname>
+   <type class="union"><type>array</type><type>null</type><type>false</type></type><methodname>mysqli_fetch_row</methodname>
    <methodparam><type>mysqli_result</type><parameter>result</parameter></methodparam>
-  </methodsynopsis> 
+  </methodsynopsis>
   <para>
-   Retorna uma matriz que corresponde a linha obtida, &null; se não houverem mais linhas. 
+   Obtém uma linha de dados do conjunto de resultado e retorna-o como um array
+   enumerado, onde cada coluna é armazenada em um deslocamento do array iniciando de 0 (zero).
+   Cada chamada subsequente a esta função retornará a próxima linha no conjunto de
+   resultados, ou &null; se não houver mais linhas.
   </para>
-  <para>
-   <function>mysqli_fetch_row</function> obtém uma linha de dados do conjunto de resultados representado pelo
-   parâmetro <parameter>result</parameter> é retorna-a como uma matriz numerada, onde cada coluna é guardada
-   em um índice da matriz começando de 0 (zero). Cada utilização subseqüente de 
-   <function>mysqli_fetch_row</function> irá retornar a próxima linha do conjunto de resultados,
-   ou &false; se não houverem mais linhas.
-  </para>
+  &database.fetch-null;
  </refsect1>
 
  <refsect1 role="parameters">
@@ -43,80 +40,53 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   <function>mysqli_fetch_row</function> retorna uma matriz que corresponde a linha obtida
-   ou &null; se não houverem mais linhas no conjunto de resultados.
+   Retorna um array representando a linha obtida, &null; se não
+   houver mais linhas no conjunto de resultados, &return.falseforfailure;.
   </para>
-  &database.fetch-null;
  </refsect1>
 
  <refsect1 role="examples">
   &reftitle.examples;
   <example>
-   <title>Estilo orientado a objeto</title>
+   <title>Exemplo de <methodname>mysqli_result::fetch_row</methodname></title>
+   <para>&style.oop;</para>
    <programlisting role="php">
 <![CDATA[
 <?php
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $mysqli = new mysqli("localhost", "my_user", "my_password", "world");
 
-/* check connection */
-if (mysqli_connect_errno()) {
-    printf("Connect failed: %s\n", mysqli_connect_error());
-    exit();
+$query = "SELECT Name, CountryCode FROM City ORDER BY ID DESC";
+
+$result = $mysqli->query($query);
+
+/* obtém array de objetos */
+while ($row = $result->fetch_row()) {
+    printf("%s (%s)\n", $row[0], $row[1]);
 }
- 
-$query = "SELECT Name, CountryCode FROM City ORDER by ID DESC LIMIT 50,5";
-
-if ($result = $mysqli->query($query)) {
-
-    /* fetch object array */
-    while ($row = $result->fetch_row()) {
-        printf ("%s (%s)\n", $row[0], $row[1]);
-    }
-
-    /* free result set */
-    $result->close();
-}
-
-/* close connection */
-$mysqli->close();
-?>
 ]]>
    </programlisting>
-  </example>
-  <example>
-   <title>Estilo de procedimento</title>
+   <para>&style.procedural;</para>
    <programlisting role="php">
 <![CDATA[
 <?php
-$link = mysqli_connect("localhost", "my_user", "my_password", "world");
 
-/* check connection */
-if (mysqli_connect_errno()) {
-    printf("Connect failed: %s\n", mysqli_connect_error());
-    exit();
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$mysqli = mysqli_connect("localhost", "my_user", "my_password", "world");
+
+$query = "SELECT Name, CountryCode FROM City ORDER BY ID DESC";
+
+$result = mysqli_query($mysqli, $query);
+
+/* obtém array de objetos */
+while ($row = mysqli_fetch_row($result)) {
+    printf("%s (%s)\n", $row[0], $row[1]);
 }
-
-$query = "SELECT Name, CountryCode FROM City ORDER by ID DESC LIMIT 50,5";
-
-if ($result = mysqli_query($link, $query)) {
-
-    /* fetch associative array */
-    while ($row = mysqli_fetch_row($result)) {
-        printf ("%s (%s)\n", $row[0], $row[1]);
-    }
-
-    /* free result set */
-    mysqli_free_result($result);
-}
-
-/* close connection */
-mysqli_close($link);
-?>
 ]]>
    </programlisting>
-  </example>
-  &example.outputs;
-  <screen>
+   &examples.outputs.similar;
+   <screen>
 <![CDATA[
 Pueblo (USA)
 Arvada (USA)
@@ -124,7 +94,8 @@ Cape Coral (USA)
 Green Bay (USA)
 Santa Clara (USA)
 ]]>
-  </screen>
+   </screen>
+  </example>
  </refsect1>
 
  <refsect1 role="seealso">
@@ -133,6 +104,7 @@ Santa Clara (USA)
    <simplelist>
     <member><function>mysqli_fetch_array</function></member>
     <member><function>mysqli_fetch_assoc</function></member>
+    <member><function>mysqli_fetch_column</function></member>
     <member><function>mysqli_fetch_object</function></member>
     <member><function>mysqli_query</function></member>
     <member><function>mysqli_data_seek</function></member>
@@ -141,7 +113,6 @@ Santa Clara (USA)
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

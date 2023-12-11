@@ -1,33 +1,49 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: fernandoc Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 035c126c0393fe154bac46e2c3c489ebadce48a5 Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandoc,leonardolara -->
 <refentry xml:id="mysqli-result.data-seek" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>mysqli_result::data_seek</refname>
   <refname>mysqli_data_seek</refname>
-  <refpurpose>Ajusta o ponteiro do resultado para uma linha arbritaria no conjunto de resutados</refpurpose>
+  <refpurpose>Ajusta o ponteiro do resultado para uma linha arbritária no resultado</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
-  <para>Estilo orientado a objetos (metodo):</para>
-  <methodsynopsis>
-   <type>bool</type><methodname>mysqli_result::data_seek</methodname>
+  <para>&style.oop;</para>
+  <methodsynopsis role="mysqli_result">
+   <modifier>public</modifier> <type>bool</type><methodname>mysqli_result::data_seek</methodname>
    <methodparam><type>int</type><parameter>offset</parameter></methodparam>
   </methodsynopsis>
-
-  <para>Estilo de procedimento:</para>
+  <para>&style.procedural;</para>
   <methodsynopsis>
    <type>bool</type><methodname>mysqli_data_seek</methodname>
    <methodparam><type>mysqli_result</type><parameter>result</parameter></methodparam>
    <methodparam><type>int</type><parameter>offset</parameter></methodparam>
   </methodsynopsis>
-    <para>
-     A função <function>mysqli_data_seek</function> move para um resultado arbritario 
-     especificado por <parameter>offset</parameter> no conjunto de resultados especificado por
-     <parameter>result</parameter>. O parâmetro <parameter>offset</parameter> deve estar entre
-     zero e o número total de linhas menos uma (0..<function>mysqli_num_rows</function> - 1).
-    </para>
-   </refsect1>
+  <para>
+   A função <function>mysqli_data_seek</function> move o ponteiro para uma
+   posição arbritrária especificada pelo parâmetro <parameter>offset</parameter> no
+   conjunto de resultados.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    &mysqli.result.description;
+    <varlistentry>
+     <term><parameter>offset</parameter></term>
+     <listitem>
+      <para>
+       O deslocamento de linha. deve estar entre zero e o número total de linhas
+       menos uma (0..<function>mysqli_num_rows</function> - 1).
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
@@ -36,96 +52,123 @@
   </para>
  </refsect1>
 
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title><methodname>mysqli::data_seek</methodname> example</title>
+   <para>&style.oop;</para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$mysqli = new mysqli("localhost", "my_user", "my_password", "world");
+
+$query = "SELECT Name, CountryCode FROM City ORDER BY Name";
+$result = $mysqli->query($query);
+
+/* Vai até a linha 401 */
+$result->data_seek(400);
+
+/* Recebe uma única linha */
+$row = $result->fetch_row();
+
+printf("City: %s  Countrycode: %s\n", $row[0], $row[1]);
+]]>
+   </programlisting>
+   <para>&style.procedural;</para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$link = mysqli_connect("localhost", "my_user", "my_password", "world");
+
+$query = "SELECT Name, CountryCode FROM City ORDER BY Name";
+
+$result = mysqli_query($link, $query);
+
+/* Vai até a linha 401 */
+mysqli_data_seek($result, 400);
+
+/* Recebe uma única linha */
+$row = mysqli_fetch_row($result);
+
+printf ("City: %s  Countrycode: %s\n", $row[0], $row[1]);
+]]>
+   </programlisting>
+   &examples.outputs;
+   <screen>
+<![CDATA[
+City: Benin City  Countrycode: NGA
+]]>
+   </screen>
+  </example>
+
+  <example>
+   <title>Ajustando o ponteiro de resultado na iteração</title>
+   <para>
+    Esta função pode ser útil qo iterar sobre o conjunto de resultados para impor
+    uma ordem customizada ou para retroceder o conjunto de resultados ao iterar múltiplas vezes.
+   </para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$mysqli = new mysqli("localhost", "my_user", "my_password", "world");
+
+$query = "SELECT Name, CountryCode FROM City ORDER BY Name LIMIT 15,4";
+$result = $mysqli->query($query);
+
+/* Itera o conjunto de resultados na ordem inversa */
+for ($row_no = $result->num_rows - 1; $row_no >= 0; $row_no--) {
+    $result->data_seek($row_no);
+
+    /* Recebe uma linha */
+    $row = $result->fetch_row();
+
+    printf("City: %s  Countrycode: %s\n", $row[0], $row[1]);
+}
+
+/* Redefine o ponteito para o início do conjunto de resultados */
+$result->data_seek(0);
+
+print "\n";
+
+/* Itera o mesmo conjunto novamente */
+while ($row = $result->fetch_row()) {
+    printf("City: %s  Countrycode: %s\n", $row[0], $row[1]);
+}
+]]>
+   </programlisting>
+   &examples.outputs;
+   <screen>
+<![CDATA[
+City: Acmbaro  Countrycode: MEX
+City: Abuja  Countrycode: NGA
+City: Abu Dhabi  Countrycode: ARE
+City: Abottabad  Countrycode: PAK
+
+City: Abottabad  Countrycode: PAK
+City: Abu Dhabi  Countrycode: ARE
+City: Abuja  Countrycode: NGA
+City: Acmbaro  Countrycode: MEX
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
  <refsect1 role="notes">
   &reftitle.notes;
   <note>
    <para>
-    Esta função só pode ser usadas para consultas não guardadas em buffer guardadas com o uso de
-    <function>mysqli_store_result</function> ou <function>mysqli_query</function>. 
+    Esta função somente pode ser usada com resultados em buffer obtidos do
+    uso das funções <function>mysqli_store_result</function>,
+    <function>mysqli_query</function> ou <function>mysqli_stmt_get_result</function>.
    </para>
   </note>
  </refsect1>
-   
- <refsect1 role="examples">
-  &reftitle.examples;
-    <example>
-     <title>Estilo orientado a objeto</title>
-     <programlisting role="php">
-<![CDATA[
-<?php
-/* Open a connection */
-$mysqli = new mysqli("localhost", "my_user", "my_password", "world");
-
-/* check connection */ 
-if (mysqli_connect_errno()) {
-    printf("Connect failed: %s\n", mysqli_connect_error());
-    exit();
-}
-
-$query = "SELECT Name, CountryCode FROM City ORDER BY Name";
-if ($result = $mysqli->query( $query)) {
-
-    /* seek to row no. 400 */
-    $result->data_seek(399);
-
-    /* fetch row */
-    $row = $result->fetch_row();
-
-    printf ("City: %s  Countrycode: %s\n", $row[0], $row[1]);
-        
-    /* free result set*/
-    $result->close();
-}
-
-/* close connection */
-$mysqli->close();
-?>
-]]>
-    </programlisting>
-    </example>
-    <example>
-     <title>Estilo de procedimento</title>
-     <programlisting role="php">
-<![CDATA[
-<?php
-/* Open a connection */
-$link = mysqli_connect("localhost", "my_user", "my_password", "world");
-
-/* check connection */ 
-if (!$link) {
-    printf("Connect failed: %s\n", mysqli_connect_error());
-    exit();
-}
-
-$query = "SELECT Name, CountryCode FROM City ORDER BY Name";
-
-if ($result = mysqli_query($link, $query)) {
-
-    /* seek to row no. 400 */
-    mysqli_data_seek($result, 399);
-
-    /* fetch row */
-    $row = mysqli_fetch_row($result);
-
-    printf ("City: %s  Countrycode: %s\n", $row[0], $row[1]);
-        
-    /* free result set*/
-    mysqli_free_result($result);
-}
-
-/* close connection */
-mysqli_close($link);
-?>
-]]>
-     </programlisting>
-    </example>
-  &example.outputs;
-    <screen>
-<![CDATA[
-City: Benin City  Countrycode: NGA
-]]>
-    </screen>
-   </refsect1>
 
  <refsect1 role="seealso">
   &reftitle.seealso;
@@ -143,7 +186,6 @@ City: Benin City  Countrycode: NGA
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

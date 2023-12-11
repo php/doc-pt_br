@@ -1,40 +1,37 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: fernandoc Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 035c126c0393fe154bac46e2c3c489ebadce48a5 Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandoc,leonardolara -->
 <refentry xml:id="mysqli-result.fetch-assoc" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>mysqli_result::fetch_assoc</refname>
   <refname>mysqli_fetch_assoc</refname>
-  <refpurpose>Obtem uma linha do conjunto de resultados como uma matriz associativa</refpurpose>
+  <refpurpose>Obtém a próxima linha do conjunto de resultados como um array associativo</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
-  <para>Estilo orientado a objeto (metodo):</para>
-  <methodsynopsis>
-   <type>array</type><methodname>mysqli_result::fetch_assoc</methodname>
-   <void />
+  <para>&style.oop;</para>
+  <methodsynopsis role="mysqli_result">
+   <modifier>public</modifier> <type class="union"><type>array</type><type>null</type><type>false</type></type><methodname>mysqli_result::fetch_assoc</methodname>
+   <void/>
   </methodsynopsis>
-  <para>Estilo de procedimento:</para>
+  <para>&style.procedural;</para>
   <methodsynopsis>
-   <type>array</type><methodname>mysqli_fetch_assoc</methodname>
+   <type class="union"><type>array</type><type>null</type><type>false</type></type><methodname>mysqli_fetch_assoc</methodname>
    <methodparam><type>mysqli_result</type><parameter>result</parameter></methodparam>
   </methodsynopsis>
   <para>
-   Retorna uma matriz associativa que corresponde a linha obtida, ou &null; se não houverem
-   mais linhas.
+   Obtém uma linha de dados do conjunto de resultados e retorna-o como um array
+   associativo.
+   Cada chamada subsequente desta função retornará a linha seguinte do
+   conjunto de resultados, ou &null; se não houver mais linhas.
   </para>
   <para>
-   A função <function>mysqli_fetch_assoc</function> é usada para retornar uma matriz associativa
-   representando a próxima linha no conjunto de resultados representado pelo
-   parâmetro <parameter>result</parameter>, aonde cada chave representa o nome de
-   uma coluna do conjunto de resultados. 
-  </para>
-  <para>
-   Se duas ou mais colunas do resultado tiverem o mesmo nome do campo,
-   a ultima coluna terá precedencia, Paa acessar as outra
-   coluna(s) com o mesmo nome, você pode acessar o
-   resultados com índices númericos usando a função
-   <function>mysqli_fetch_row</function> ou adicionar apelidos.
+   Se duas ou mais colunas do resultado tiverem o mesmo nome, a última
+   coluna terá precedência e irá sobrescrever qualquer dado anterior. Para
+   acessar múltiplas colunas com o mesmo nome,
+   <function>mysqli_fetch_row</function> pode ser usada para obter o array indexado
+   numericamente, ou apelidos podem ser usados na lista de seleção da consulta SQL para dar
+   nomes diferentes às colunas.
   </para>
   &database.field-case;
   &database.fetch-null;
@@ -52,78 +49,55 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna uma matriz que corresponde a linha obtida &null; se não houverem mais linhas no conjunto de resultados.
+   Retorna um array associativo que representa a linha obtida,
+   onde cada chave no array representa o nome de uma das colunas do conjunto
+   de resultados; &null; se não houver
+   mais linhas no conjunto de resultados, &return.falseforfailure;.
   </para>
  </refsect1>
 
  <refsect1 role="examples">
   &reftitle.examples;
   <example>
-   <title>Estilo orientado a objeto</title>
+   <title>Exemplo de <methodname>mysqli_result::fetch_assoc</methodname></title>
+   <para>&style.oop;</para>
    <programlisting role="php">
 <![CDATA[
 <?php
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $mysqli = new mysqli("localhost", "my_user", "my_password", "world");
 
-/* check connection */
-if (mysqli_connect_errno()) {
-    printf("Connect failed: %s\n", mysqli_connect_error());
-    exit();
+$query = "SELECT Name, CountryCode FROM City ORDER BY ID DESC";
+
+$result = $mysqli->query($query);
+
+/* obtém o array associativo */
+while ($row = $result->fetch_assoc()) {
+    printf("%s (%s)\n", $row["Name"], $row["CountryCode"]);
 }
- 
-$query = "SELECT Name, CountryCode FROM City ORDER by ID DESC LIMIT 50,5";
-
-if ($result = $mysqli->query($query)) {
-
-    /* fetch associative array */
-    while ($row = $result->fetch_assoc()) {
-        printf ("%s (%s)\n", $row["Name"], $row["CountryCode"]);
-    }
-
-    /* free result set */
-    $result->close();
-}
-
-/* close connection */
-$mysqli->close();
-?>
 ]]>
    </programlisting>
-  </example>
-  <example>
-   <title>Estilo de procedimento</title>
+   <para>&style.procedural;</para>
    <programlisting role="php">
 <![CDATA[
 <?php
-$link = mysqli_connect("localhost", "my_user", "my_password", "world");
 
-/* check connection */
-if (mysqli_connect_errno()) {
-    printf("Connect failed: %s\n", mysqli_connect_error());
-    exit();
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$mysqli = mysqli_connect("localhost", "my_user", "my_password", "world");
+
+$query = "SELECT Name, CountryCode FROM City ORDER BY ID DESC";
+
+$result = mysqli_query($mysqli, $query);
+
+/* obtém o array associativo */
+while ($row = mysqli_fetch_assoc($result)) {
+    printf("%s (%s)\n", $row["Name"], $row["CountryCode"]);
 }
-
-$query = "SELECT Name, CountryCode FROM City ORDER by ID DESC LIMIT 50,5";
-
-if ($result = mysqli_query($link, $query)) {
-
-    /* fetch associative array */
-    while ($row = mysqli_fetch_assoc($result)) {
-        printf ("%s (%s)\n", $row["Name"], $row["CountryCode"]);
-    }
-
-    /* free result set */
-    mysqli_free_result($result);
-}
-
-/* close connection */
-mysqli_close($link);
-?>
 ]]>
    </programlisting>
-  </example>
-  &example.outputs;
-  <screen>
+   &examples.outputs.similar;
+   <screen>
 <![CDATA[
 Pueblo (USA)
 Arvada (USA)
@@ -131,7 +105,57 @@ Cape Coral (USA)
 Green Bay (USA)
 Santa Clara (USA)
 ]]>
-  </screen>
+   </screen>
+  </example>
+  <example xml:id="mysqli-result.example.iterator">
+   <title>Comparação de <classname>mysqli_result</classname> <classname>iterator</classname> e uso de <methodname>mysqli_result::fetch_assoc</methodname></title>
+   <para>
+    <classname>mysqli_result</classname> pode ser iterada usando-se &foreach;.
+    O conjunto de resultados será iterado sempre a partir da primeira linha, independente da posição atual do ponteiro.
+   </para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$mysqli = new mysqli("localhost", "my_user", "my_password", "world");
+
+$query = 'SELECT Name, CountryCode FROM City ORDER BY ID DESC';
+
+// Usando iterardores
+$result = $mysqli->query($query);
+foreach ($result as $row) {
+    printf("%s (%s)\n", $row["Name"], $row["CountryCode"]);
+}
+
+echo "\n==================\n";
+
+// Não usando iteradores
+$result = $mysqli->query($query);
+while ($row = $result->fetch_assoc()) {
+    printf("%s (%s)\n", $row["Name"], $row["CountryCode"]);
+}
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+Pueblo (USA)
+Arvada (USA)
+Cape Coral (USA)
+Green Bay (USA)
+Santa Clara (USA)
+
+==================
+Pueblo (USA)
+Arvada (USA)
+Cape Coral (USA)
+Green Bay (USA)
+Santa Clara (USA)
+
+]]>
+   </screen>
+  </example>
  </refsect1>
 
  <refsect1 role="seealso">
@@ -139,6 +163,7 @@ Santa Clara (USA)
   <para>
    <simplelist>
     <member><function>mysqli_fetch_array</function></member>
+    <member><function>mysqli_fetch_column</function></member>
     <member><function>mysqli_fetch_row</function></member>
     <member><function>mysqli_fetch_object</function></member>
     <member><function>mysqli_query</function></member>
@@ -148,7 +173,6 @@ Santa Clara (USA)
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
