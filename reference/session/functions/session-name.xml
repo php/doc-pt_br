@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 93edd6c0cc2861808afb845e5744e0c3321609a8 Maintainer: fernandoc Status: ready --><!-- CREDITS: surfmax -->
-<refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.session-name">
+<!-- EN-Revision: c35c07ab6a9cf533455947147634399fc928f6ca Maintainer: fernandowobeto Status: ready --><!-- CREDITS: surfmax,fernandoc,fernandowobeto -->
+<refentry xml:id="function.session-name" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>session_name</refname>
   <refpurpose>Obtém e/ou define o nome da sessão atual</refpurpose>
  </refnamediv>
- 
+
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>string</type><methodname>session_name</methodname>
-   <methodparam choice="opt"><type>string</type><parameter>name</parameter></methodparam>
+   <type class="union"><type>string</type><type>false</type></type><methodname>session_name</methodname>
+   <methodparam choice="opt"><type class="union"><type>string</type><type>null</type></type><parameter>name</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
   <para>
    <function>session_name</function> retorna o nome da sessão
@@ -19,11 +19,20 @@
    o nome da sessão <emphasis>antiga</emphasis>.
   </para>
   <para>
-    O nome da sessão é redefinido para o padrão guardado em
-    <literal>session.name</literal> na inicialização da requisição. Então você deve
-    chamar <function>session_name</function> para cada requisição (e antes que
-    <function>session_start</function> ou <function>session_register</function>
-    sejam chamadas).
+   Se um novo <parameter>name</parameter> de sessão é
+   fornecido, <function>session_name</function> modifica o cookie HTTP
+   (e saída de conteúdo quando <literal>session.transid</literal> é
+   habilitado). Assim que o cookie HTTP é
+   enviado, <function>session_name</function> gera erro.
+   <function>session_name</function> deve ser chamado
+   antes de <function>session_start</function> para a sessão funcionar
+   apropriadamente.
+  </para>
+  <para>
+   O nome da sessão é redefinido para o padrão guardado em
+   <literal>session.name</literal> na inicialização da requisição. Então você deve
+   chamar <function>session_name</function> para cada requisição (e antes que
+   <function>session_start</function> seja chamado).
   </para>
  </refsect1>
 
@@ -39,8 +48,8 @@
        usado em cookies e URLs (por exemplo, <literal>PHPSESSID</literal>). Ele
        deve conter apenas caracteres alfanuméricos; ele deve ser curto e
        descritivo (para usuários com avisos de cookie habilitados).
-       Se <parameter>name</parameter> é informado, o nome da sessão
-       atual é modificado para o novo valor.
+       Se <parameter>name</parameter> é informado e não &null;, o nome da sessão atual
+       é modificado para o novo valor.
       </para>
       <para>
        <warning>
@@ -61,7 +70,42 @@
   <para>
    Retorna o nome da sessão atual. Se <parameter>name</parameter> é informado
    e a função atualizar o nome da sessão, o nome da sessão <emphasis>antiga</emphasis>
-   é retornado.
+   é retornado, &return.falseforfailure;.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>8.0.0</entry>
+       <entry>
+        <parameter>name</parameter> é anulável agora.
+       </entry>
+      </row>
+      <row>
+       <entry>7.2.0</entry>
+       <entry>
+        <function>session_name</function> verifica o status da sessão,
+        anteriormente, apenas verificava o status do cookie. Portanto,
+        <function>session_name</function> mais antigo permite
+        chamar <function>session_name</function>
+        depois de <function>session_start</function> que pode travar o PHP
+        e pode resultar em mau comportamento.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
   </para>
  </refsect1>
 
@@ -99,7 +143,6 @@ echo "O nome da sessão anterior era $previous_name<br />";
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

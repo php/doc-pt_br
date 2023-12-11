@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 062838aa04c773e0b2de07d4922b5cad973b36a0 Maintainer: fernandoc Status: ready --><!-- CREDITS: surfmax -->
+<!-- EN-Revision: 184f3f7bd45643cb80f828d0bb001991ec3a5fad Maintainer: fernandowobeto Status: ready --><!-- CREDITS: surfmax,fernandoc,fernandowobeto -->
 <refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.session-set-save-handler" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>session_set_save_handler</refname>
@@ -20,19 +20,19 @@
    <methodparam choice="opt"><type>callable</type><parameter>update_timestamp</parameter></methodparam>
   </methodsynopsis>
   <para>
-   A partir do PHP 5.4 é possível registrar o seguinte protótipo:
+   É possível registrar o seguinte protótipo:
   </para>
   <methodsynopsis>
    <type>bool</type><methodname>session_set_save_handler</methodname>
-   <methodparam><type>SessionHandlerInterface</type><parameter>sessionhandler</parameter></methodparam>
-   <methodparam choice="opt"><type>bool</type><parameter>register_shutdown</parameter><initializer>true</initializer></methodparam>
+   <methodparam><type>object</type><parameter>sessionhandler</parameter></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>register_shutdown</parameter><initializer>&true;</initializer></methodparam>
   </methodsynopsis>
   <para>
    <function>session_set_save_handler</function> define, a nível de usuário,
    as funções de armazenamento de sessão que serão usadas para guardar e
    buscar dados associados à uma sessão.  Ela é mais útil
    quando um método de armazenamento diferente do método disponibilizado pelas sessões do PHP
-   é preferido. i.e. Armazenar os dados de sessão em um banco de dados.
+   é preferido, por exemplo armazenar os dados de sessão em um banco de dados.
   </para>
  </refsect1>
 
@@ -46,9 +46,11 @@
      <listitem>
       <para>
        Uma instância de uma classe implementando
-       <interfacename>SessionHandlerInterface</interfacename>, como
+       <interfacename>SessionHandlerInterface</interfacename>, e opcionalmente
+       <interfacename>SessionIdInterface</interfacename> e/ou
+       <interfacename>SessionUpdateTimestampHandlerInterface</interfacename>, como
        <classname>SessionHandler</classname>, para registrá-la como manipulador
-       de sessão. Apenas a partir do PHP 5.4.
+       de sessão.
       </para>
      </listitem>
     </varlistentry>
@@ -67,8 +69,16 @@
 
    <variablelist>
     <varlistentry>
-     <term><parameter>open(string $savePath, string $sessionName)</parameter></term>
+     <term><parameter>open</parameter></term>
      <listitem>
+      <para>
+       Um callable com a seguinte assinatura:
+       <methodsynopsis>
+        <type>bool</type><methodname><replaceable>open</replaceable></methodname>
+        <methodparam><type>string</type><parameter>savePath</parameter></methodparam>
+        <methodparam><type>string</type><parameter>sessionName</parameter></methodparam>
+       </methodsynopsis>
+      </para>
       <para>
        O callback open funciona igual um construtor em classes e é
        executado quando a sessão está sendo aberta.  É a primeira função de
@@ -79,8 +89,15 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>close()</parameter></term>
+     <term><parameter>close</parameter></term>
      <listitem>
+      <para>
+       Um callable com a seguinte assinatura:
+       <methodsynopsis>
+        <type>bool</type><methodname><replaceable>close</replaceable></methodname>
+        <void/>
+       </methodsynopsis>
+      </para>
       <para>
        O callback close funciona igual um destrutor em classes e é
        executado depois que o callback write da sessão for chamado. Ele também é invocado quando a função
@@ -90,8 +107,15 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>read(string $sessionId)</parameter></term>
+     <term><parameter>read</parameter></term>
      <listitem>
+      <para>
+       Um callable com a seguinte assinatura:
+       <methodsynopsis>
+        <type>string</type><methodname><replaceable>read</replaceable></methodname>
+        <methodparam><type>string</type><parameter>sessionId</parameter></methodparam>
+       </methodsynopsis>
+      </para>
       <para>
        O callback <parameter>read</parameter> sempre deve retornar uma sessão codificada (serializada) no formato
        string ou uma string vazia se não há dados para leitura.
@@ -111,8 +135,16 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>write(string $sessionId, string $data)</parameter></term>
+     <term><parameter>write</parameter></term>
      <listitem>
+      <para>
+       Um callable com a seguinte assinatura:
+       <methodsynopsis>
+        <type>bool</type><methodname><replaceable>write</replaceable></methodname>
+        <methodparam><type>string</type><parameter>sessionId</parameter></methodparam>
+        <methodparam><type>string</type><parameter>data</parameter></methodparam>
+       </methodsynopsis>
+      </para>
       <para>
        O callback <parameter>write</parameter> é chamado quando a sessão precisa ser salva e fechada. Esse
        callback recebe o ID da sessão atual e uma versão serializada da super global <varname>$_SESSION</varname>. O método de
@@ -139,8 +171,15 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>destroy($sessionId)</parameter></term>
+     <term><parameter>destroy</parameter></term>
      <listitem>
+      <para>
+       Um callable com a seguinte assinatura:
+       <methodsynopsis>
+        <type>bool</type><methodname><replaceable>destroy</replaceable></methodname>
+        <methodparam><type>string</type><parameter>sessionId</parameter></methodparam>
+       </methodsynopsis>
+      </para>
       <para>
        Esse callback é executado quando uma sessão é destruída com <function>session_destroy</function> ou com
        <function>session_regenerate_id</function> com o parâmetro de destruição definido como &true;.
@@ -149,8 +188,15 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>gc($lifetime)</parameter></term>
+     <term><parameter>gc</parameter></term>
      <listitem>
+      <para>
+       Um callable com a seguinte assinatura:
+       <methodsynopsis>
+        <type>bool</type><methodname><replaceable>gc</replaceable></methodname>
+        <methodparam><type>int</type><parameter>lifetime</parameter></methodparam>
+       </methodsynopsis>
+      </para>
       <para>
        O callback de limpeza (gc) é invocado pelo PHP, internamente e periodicamente, para
        apagar dados de sessão antiga.  A frequência é controlada por
@@ -161,12 +207,56 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>create_sid()</parameter></term>
+     <term><parameter>create_sid</parameter></term>
      <listitem>
+      <para>
+       Um callable com a seguinte assinatura:
+       <methodsynopsis>
+        <type>string</type><methodname><replaceable>create_sid</replaceable></methodname>
+        <void/>
+       </methodsynopsis>
+      </para>
       <para>
        Esse callback é executado quando um novo ID de sessão é necessário. Nenhum
        parâmetro é necessário e o valor de retorno deve ser uma string que
        seja um ID de sessão válido para seu manipulador.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>validate_sid</parameter></term>
+     <listitem>
+      <para>
+       Um callable com a seguinte assinatura:
+       <methodsynopsis>
+        <type>bool</type><methodname><replaceable>validate_sid</replaceable></methodname>
+        <methodparam><type>string</type><parameter>key</parameter></methodparam>
+       </methodsynopsis>
+      </para>
+      <para>
+       Este callback é executado quando uma sessão é iniciada, um ID de sessão é fornecido
+       e <link linkend="ini.session.use-strict-mode">session.use_strict_mode</link> é habilitado.
+       A <parameter>key</parameter> é o ID da sessão para validar.
+       Um ID de sessão é válido se já existir uma sessão com esse ID.
+       O valor retornado deve ser &true; em caso de sucesso, &false; em caso de falha.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>update_timestamp</parameter></term>
+     <listitem>
+      <para>
+       Um callable com a seguinte assinatura:
+       <methodsynopsis>
+        <type>bool</type><methodname><replaceable>update_timestamp</replaceable></methodname>
+        <methodparam><type>string</type><parameter>key</parameter></methodparam>
+        <methodparam><type>string</type><parameter>val</parameter></methodparam>
+       </methodsynopsis>
+      </para>
+      <para>
+       Este callback é executado quando uma sessão é atualizada.
+       <parameter>key</parameter> é o ID da sessão, <parameter>val</parameter> são os dados da sessão.
+       O valor retornado deve ser &true; em caso de sucesso, &false; em caso de falha.
       </para>
      </listitem>
     </varlistentry>
@@ -189,7 +279,7 @@
      Manipulador de sessão personalizado: veja o código completo na sinópse de <classname>SessionHandlerInterface</classname>.
     </title>
     <para>
-     O código a seguir é para o PHP 5.4.0 ou superior.  Aqui é demonstrado apenas a execução, o código completo pode ser
+     Aqui é demonstrado apenas a execução, o código completo pode ser
      visto na sinópse de <classname>SessionHandlerInterface</classname> no link acima.
     </para>
     <para>
@@ -213,95 +303,6 @@ session_start();
 ]]>
     </programlisting>
    </example>
-   <example>
-    <title>Manipuladores personalizados de gravação de sessão usando objetos</title>
-    <para>
-     O código a seguir é para versões do PHP anteriores à 5.4.0.
-    </para>
-    <para>
-     O exemplo a seguir apresenta um armazenamento de sessão baseada em arquivos semelhante aos
-     manipuladores de gravação de sessão padrões do PHP <parameter>files</parameter>.  Este
-     exemplo poderia ser facilmente estendido para cobrir o armazenamento em banco de dados usando sua
-     engine de banco de dados favorita e que seja suportada pelo PHP.
-    </para>
-    <para>
-     Note que foi registrada a função <function>session_write_close</function>
-     usando <function>register_shutdown_function</function> em versões do PHP anteriores à 5.4.0.
-     Isso geralmente é aconselhável ao registrar objetos como manipuladores de gravação de sessão em versões anteriores
-     à 5.4.0.
-    </para>
-    <programlisting role="php">
-<![CDATA[
-<?php
-class FileSessionHandler
-{
-    private $savePath;
-
-    function open($savePath, $sessionName)
-    {
-        $this->savePath = $savePath;
-        if (!is_dir($this->savePath)) {
-            mkdir($this->savePath, 0777);
-        }
-
-        return true;
-    }
-
-    function close()
-    {
-        return true;
-    }
-
-    function read($id)
-    {
-        return (string)@file_get_contents("$this->savePath/sess_$id");
-    }
-
-    function write($id, $data)
-    {
-        return file_put_contents("$this->savePath/sess_$id", $data) === false ? false : true;
-    }
-
-    function destroy($id)
-    {
-        $file = "$this->savePath/sess_$id";
-        if (file_exists($file)) {
-            unlink($file);
-        }
-
-        return true;
-    }
-
-    function gc($maxlifetime)
-    {
-        foreach (glob("$this->savePath/sess_*") as $file) {
-            if (filemtime($file) + $maxlifetime < time() && file_exists($file)) {
-                unlink($file);
-            }
-        }
-
-        return true;
-    }
-}
-
-$handler = new FileSessionHandler();
-session_set_save_handler(
-    array($handler, 'open'),
-    array($handler, 'close'),
-    array($handler, 'read'),
-    array($handler, 'write'),
-    array($handler, 'destroy'),
-    array($handler, 'gc')
-    );
-
-// a linha a seguir evita comportamentos não esperados ao usar objetos como manipuladores de gravação
-register_shutdown_function('session_write_close');
-
-session_start();
-// proceder para definir e recuperar valores pela chave de $_SESSION
-]]>
-    </programlisting>
-   </example>
   </para>
  </refsect1>
 
@@ -309,23 +310,7 @@ session_start();
   &reftitle.notes;
   <warning>
    <para>
-    Ao utilizar objetos como manipuladores de gravação de sessão, é importante registrar a função de
-    finalização no PHP para evitar efeitos colaterais não esperados devido à forma como o
-    PHP destrói objetos internamente em seu encerramento e que pode impedir que as funções
-    <parameter>write</parameter> e <parameter>close</parameter> sejam executadas.
-    Normalmente, <parameter>'session_write_close'</parameter> deve ser registrada usando a função
-    <function>register_shutdown_function</function>.
-   </para>
-   <para>
-    A partir do PHP 5.4.0 pode ser usado <function>session_register_shutdown</function> ou
-    simplesmente a flag 'register shutdown' ao invocar
-    <function>session_set_save_handler</function> usando o método orientado à objetos e passando uma
-    instância que implemente <classname>SessionHandlerInterface</classname>.
-   </para>
-  </warning>
-  <warning>
-   <para>
-    A partir do PHP 5.0.5 os manipuladores <parameter>write</parameter> e
+    The <parameter>write</parameter> e
     <parameter>close</parameter> são executados depois da destruição de
     objetos e portanto não podem usar objetos ou lançar exceções.
     Não é possível capturar nem
@@ -347,35 +332,6 @@ session_start();
   </warning>
  </refsect1>
 
- <refsect1 role="changelog">
-  &reftitle.changelog;
-  <informaltable>
-   <tgroup cols="2">
-    <thead>
-     <row>
-      <entry>&Version;</entry>
-      <entry>&Description;</entry>
-     </row>
-    </thead>
-    <tbody>
-     <row>
-      <entry>5.5.1</entry>
-      <entry>
-       Adicionado o parâmetro opcional <parameter>create_sid</parameter>.
-      </entry>
-     </row>
-     <row>
-      <entry>5.4.0</entry>
-      <entry>
-       Adicionado <interfacename>SessionHandlerInterface</interfacename> para a implementação de manipuladores de sessão e
-       <classname>SessionHandler</classname> para expor manipuladores de sessão internos do PHP.
-      </entry>
-     </row>
-    </tbody>
-   </tgroup>
-  </informaltable>
- </refsect1>
-
  <refsect1 role="seealso">
   &reftitle.seealso;
   <para>
@@ -389,7 +345,7 @@ session_start();
      (diretiva de configuração)
     </member>
     <member>A <function>register_shutdown_function</function></member>
-    <member>A <function>session_register_shutdown</function> para PHP 5.4.0+</member>
+    <member>The <function>session_register_shutdown</function></member>
     <member>
      Visite <link xlink:href="&url.session-save-handler;">save_handler.inc</link>
      para ver uma implementação completamente procedural
