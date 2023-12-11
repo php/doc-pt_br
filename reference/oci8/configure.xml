@@ -1,28 +1,594 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: af4410a7e15898c3dbe83d6ea38246745ed9c6fb Maintainer: marcelo Status: ready -->
-<section xml:id="oci8.installation" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 5e41012cfdf8f2eff5fa56de446c7656afac536c Maintainer: leonardolara Status: ready --><!-- CREDITS: marcelo,leonardolara -->
+<section xml:id="oci8.installation">
  &reftitle.install;
- <para>
-  Você tem que compilar o PHP com a opção
-  <option role="configure">--with-oci8[=DIR]</option>, onde DIR é a 
-  variável de ambiente ORACLE_HOME.
- </para>
- <para>
-  Se você está usando <link xlink:href="&url.oracle.instant.client;">Oracle Instant
-   Client</link>, você precisa compilar o PHP com a opção
-  <option role="configure">--with-oci8=instantclient,/path/to/oic/lib</option>. Note
-  que suporte a Oracle Instant Client apareceu primeiro nas versões 4.3.11 e
-  5.0.4.
- </para>
- <note>
-  <para>
-   Note que nas versões da OCI8 antes da 1.1, você tem que usar a opção
-   <option role="configure">--with-oci8-instant-client</option> para configurar
-   o PHP com Oracle Instant Client.
-  </para>
- </note>
-</section>
 
+
+ <section xml:id="oci8.configure" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Configurando o PHP com o OCI8</title>
+  <para>
+   Consulte a seção anterior
+   sobre <link linkend="oci8.requirements">requisitos</link>
+   antes de configurar o OCI8.
+  </para>
+  <para>
+   Antes de inicializar o servidor web, o OCI8 tipicamente requer várias
+   variáveis de ambiente Oracle (veja abaixo) para localizar bibliotecas, apontar
+   para arquivos de configuração e definir algumas propriedades básicas como o
+   conjunto de caracteres utilizado pelas bibliotecas Oracle. As variáveis devem ser definidas
+   <emphasis>antes</emphasis> que qualquer processo PHP inicie.
+  </para>
+  <para>
+   O binário PHP deve ter sido construído com a mesma versão principal, ou mais recente, das
+   bilbiotecas Oracle com as quais foi configurado. Por exemplo, se o OCI8 estiver utilizando
+   as bilbiotecas Oracle versão 19, o PHP também deve ser construído e executado
+   com as bibliotecas Oracle 19. Aplicações PHP podem se conectar a outras
+   versões de banco de dados Oracle, já que a Oracle tem compatibilidade cliente-servidor com versões diferentes.
+  </para>
+ </section>
+ <section>
+  <title>Instalando OCI8 com PECL Usando o Comando pecl</title>
+  <para xmlns:xlink="http://www.w3.org/1999/xlink">
+   A extensão OCI8 pode ser adicionada a uma instalação PHP existente usando
+   o repositório <link xlink:href="&url.pecl.package;oci8">PECL</link>.
+  </para>
+  <para>
+   <itemizedlist>
+    <listitem>
+     <para>
+      Se estiver por trás de um firewall, defina o proxy PEAR, por exemplo:
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+pear config-set http_proxy http://my-proxy.example.com:80/
+]]>
+       </screen>
+      </informalexample>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Execute
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+pecl install oci8
+]]>
+       </screen>
+      </informalexample>
+     </para>
+     <para>
+      Para o PHP 7, use <literal>pecl install oci8-2.2.0</literal>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Quando solicitado, entre o valor de <literal>$ORACLE_HOME</literal> ou
+      <literal>instantclient,/caminho/para/biblioteca/instant/client</literal>.
+     </para>
+     <para>
+      Nota: Não use nomes de variáveis como <literal>$ORACLE_HOME</literal>
+      ou <literal>$HOME</literal> porque o <literal>pecl</literal> não irá
+      interpretá-las. Em vez disso, informa um caminho expandido, por
+      exemplo <literal>/opt/oracle/product/19c/dbhome_1</literal>
+      ou <literal>instantclient,/Users/myname/Downloads/instantclient_19_8</literal>.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Se ocorrer um erro do tipo <literal>oci8_dtrace_gen.h: No such file or
+      directory</literal>, significa que o PHP foi compilado com
+      <link linkend="features.dtrace">Rastreamento Dinâmico DTrace</link> habilitado.
+      Instale usando:
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+$ export PHP_DTRACE=yes
+$ pecl install oci8
+]]>
+       </screen>
+      </informalexample>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Edite o arquivo &php.ini; e adicione a linha:
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+extension=oci8.so
+]]>
+       </screen>
+      </informalexample>
+     </para>
+     <para>
+      Certifique-se que a diretiva
+      <link linkend="ini.extension-dir">extension_dir</link> do &php.ini; esteja
+      definida para o diretório onde o arquivo <filename>oci8.so</filename> tenha sido
+      instalado.
+     </para>
+    </listitem>
+   </itemizedlist>
+  </para>
+ </section>
+ <section>
+  <title>Instalando OCI8 com PECL Usando phpize</title>
+  <para xmlns:xlink="http://www.w3.org/1999/xlink">
+   Para instalar o OCI8 em uma instalação PHP existente quando
+   o comando <literal>pecl</literal> não estiver disponível, baixe manualmente
+   o pacote OCI8 <link xlink:href="&url.pecl.package;oci8">PECL</link>,
+   ex.: <filename>oci8-3.0.0.tgz</filename>.
+  </para>
+  <para>
+   <itemizedlist>
+    <listitem>
+     <para>
+      Extraia o pacote:
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+tar -zxf oci8-3.0.0.tgz
+cd oci8-3.0.0
+]]>
+       </screen>
+      </informalexample>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Prepare o pacote:
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+phpize
+]]>
+       </screen>
+      </informalexample>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Configure o pacote,
+      usando <literal>$ORACLE_HOME</literal> ou Instant Client
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+./configure -with-oci8=shared,$ORACLE_HOME
+]]>
+       </screen>
+      </informalexample>
+     </para>
+     <para>
+      ou
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+./configure -with-oci8=shared,instantclient,/caminho/para/biblioteca/instant/client
+]]>
+       </screen>
+      </informalexample>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Instale o pacote:
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+make install
+]]>
+       </screen>
+      </informalexample>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Se ocorrer um erro do tipo <literal>oci8_dtrace_gen.h: No such file or
+      directory</literal>, significa que o PHP foi compilado
+      com <link linkend="features.dtrace">Rastreamento Dinâmico DTrace</link> habilitado.
+      Execute novamente os comandos <literal>configure</literal> e <literal>make</literal>
+      depois de definir esta variável de ambiente:
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+$ export PHP_DTRACE=yes
+]]>
+       </screen>
+      </informalexample>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Edite o arquivo &php.ini; e adicione a linha:
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+extension=oci8.so
+]]>
+       </screen>
+      </informalexample>
+     </para>
+     <para>
+      Certifique-se que a diretiva
+      <link linkend="ini.extension-dir">extension_dir</link> do &php.ini; esteja
+      definida para o diretório onde o arquivo <filename>oci8.so</filename> tenha sido
+      instalado.
+     </para>
+    </listitem>
+   </itemizedlist>
+  </para>
+ </section>
+ <section>
+  <title>Instalando o OCI8 como uma Extensão Compartilhada ao Compilar o PHP</title>
+  <para>
+   Se o PHP está sendo compilado a partir do código-fonte, a opção
+   de configuração <literal>shared</literal> pode ser usada para construir o OCI8 como uma biblioteca
+   compartilhada que pode ser carregada dinamicamente no PHP. Construir uma extensão compartilhada permite que
+   o OCI8 seja atualizado facilmente sem impactar o restante do PHP.
+  </para>
+  <para>
+   Configure o OCI8 usando uma das opções de configuração a seguir.
+  </para>
+  <para>
+   <itemizedlist>
+    <listitem>
+     <para>
+      Se as bibliotecas gratuitas do <link xmlns="http://docbook.org/ns/docbook"
+      xmlns:xlink="http://www.w3.org/1999/xlink"
+      xlink:href="&url.oracle.instant.client;">Oracle Instant
+      Client</link> estiverem sendo usadas, execute:
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+./configure --with-oci8=shared,instantclient,/caminho/para/biblioteca/instant/client
+]]>
+       </screen>
+      </informalexample>
+     </para>
+     <para>
+      Se a Instant Client 12.2 (ou anterior) tiver sido instalada a partir de arquivos ZIP, certifique-se de
+      criar as ligações simbólicas da biblioteca primeiro, por exemplo <literal>ln -s
+      libclntsh.so.12.1 libclntsh.so</literal>.
+     </para>
+     <para>
+      Se estiver sendo usada uma instalação baseada em RPM da Oracle Instant Client, a
+      linha de configuração será parecida com:
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+./configure --with-oci8=shared,instantclient,/usr/lib/oracle/<version>/client/lib
+]]>
+       </screen>
+      </informalexample>
+     </para>
+     <para>
+      Por exemplo, <option role="configure">--with-oci8=shared,instantclient,/usr/lib/oracle/19.9/client/lib</option>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Se um banco de dados Oracle ou uma instalação completa do Oracle Client estiverem sendo usados, execute:
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+./configure --with-oci8=shared,$ORACLE_HOME
+]]>
+       </screen>
+      </informalexample>
+     </para>
+     <para>
+      Certifique-se que o usuário sob o qual o servidor web esteja sendo executado
+      (<literal>nobody</literal>, <literal>www</literal>) tenha acesso às
+      bibliotecas, arquivos de inicialização
+      e <filename>tnsnames.ora</filename> (se usado) no diretório
+      <literal>$ORACLE_HOME</literal>. Com o Oracle
+      10<emphasis>g</emphasis>R2, pode ser necessário executar
+      o utilitário <filename>$ORACLE_HOME/install/changePerm.sh</filename>
+      para conceder acesso ao diretório.
+     </para>
+    </listitem>
+   </itemizedlist>
+  </para>
+  <para>
+   Depois da configuração, siga o procedimento usual de compilação do PHP,
+   ex.: <emphasis>make install</emphasis>. A biblioteca da extensão
+   compartilhada OCI8 <filename>oci8.so</filename> será criada. Pode ser necessário
+   movê-la manualmente para o diretório das extensões PHP, especificado pela
+   opção <link linkend="ini.extension-dir">extension_dir</link> no
+   arquivo &php.ini;.
+  </para>
+  <para>
+   Para completar a instalação do OCI8, edite o &php.ini; e adicione a linha:
+  </para>
+  <para>
+   <informalexample>
+    <screen>
+<![CDATA[
+extension=oci8.so
+]]>
+    </screen>
+   </informalexample>
+  </para>
+ </section>
+ <section>
+  <title>Instalando o OCI8 como um Extensão Compilada Estaticamente ao Compilar o PHP</title>
+  <para>
+   Se o PHP estiver sendo compilado a partir do código-fonte, pode-se configurá-lo para incluir
+   o OCI8 como uma extensão estática usando uma das seguintes opções de configuração.
+  </para>
+  <para>
+   <itemizedlist>
+    <listitem>
+     <para>
+      Se o Oracle Instant Client estiver sendo utilizado, execute:
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+./configure --with-oci8=instantclient,/caminho/para/biblioteca/instant/client
+]]>
+       </screen>
+      </informalexample>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Se um banco de dados Oracle ou uma instalação completa do Oracle Client estiverem sendo usados, execute:
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+./configure --with-oci8=$ORACLE_HOME
+]]>
+       </screen>
+      </informalexample>
+     </para>
+    </listitem>
+   </itemizedlist>
+  </para>
+  <para>
+   Depois da configuração, siga o procedimento usual de compilação do PHP,
+   ex.: <emphasis>make install</emphasis>. Após a compilação
+   bem sucedida, não é necessário incluir <filename>oci8.so</filename> ao
+   &php.ini;. Nenhum passo adicional de compilação é requerido.
+  </para>
+ </section>
+ <section>
+  <title>Instalando o OCI8 no Windows</title>
+  <para xmlns:xlink="http://www.w3.org/1999/xlink">
+   A extensão OCI8 pode ser adicionada a uma instalação PHP existente usando as
+   DLLs do repositório <link xlink:href="&url.pecl.package;oci8">PECL</link> ou
+   as bibliotecas no diretório <literal>ext</literal> da instalação do PHP.
+  </para>
+  <para>
+   Com as bibliotecas Oracle 12<emphasis>c</emphasis> (ou mais recentes), ative uma das
+   linhas <literal>extension=php_oci8_12c.dll</literal>,
+   <literal>extension=php_oci8_11g.dll</literal>
+   ou <literal>extension=php_oci8.dll</literal> do &php.ini;. Apenas uma dessas DLLs pode ser
+   habilitada de cada vez. DLLs com versões maiores podem conter mais
+   funcionalidades. Pode ser que nem todas as DLLs estejas disponíveis para todas as versões do PHP.
+   Certifique-se que <link linkend="ini.extension-dir">extension_dir</link> esteja definido
+   para o diretório contendo as DLLs de extensões do PHP.
+  </para>
+  <para>
+   Se o Instant Client estiver sendo utilizado, defina a variável de ambiente do sistema <envar>PATH</envar>
+   para o diretório da biblioteca Oracle.
+  </para>
+ </section>
+ <section>
+  <title>Configurando o Ambiente Oracle</title>
+  <para>
+   Antes de usar esta extensão, certifique-se que as variáveis de ambiente
+   Oracle estajam adequadamente definidas para o usuário sob o qual o servidor web esteja sendo executado.
+   Se o servidor web estiver sendo automaticamente iniciado quando o sistema é ligado, garanta que
+   o ambiente em tempo de inicialização também esteja configurado corretamente.
+  </para>
+  <note>
+   <para>
+    Não defina as variáveis de ambiente Oracle
+    usando <function>putenv</function> em um script PHP porque as bilbiotecas
+    Oracle podem estar carregadas e inicializadas antes que o script
+    seja executado. Variáveis definidas com <function>putenv</function> podem causar
+    conflitos, travamentos ou comportamento imprevisível. Algumas funções podem
+    funcionar mas outras podem dar erros sutis. As variáveis devem ser
+    definidas <emphasis>antes</emphasis> que o servidor web seja iniciado.
+   </para>
+  </note>
+  <para>
+   No Linux Red Hat e variantes, exporte as variáveis no final do arquivo
+   <filename>/etc/sysconfig/httpd</filename>.  Outros sistemas com
+   Apache 2 pode usar um script <filename>envvars</filename> no diretório
+   <filename>bin</filename> do Apache. Uma terceira opção, a
+   diretiva <literal>SetEnv</literal> do Apache
+   no arquivo <filename>httpd.conf</filename>, pode funcionar em alguns sistemas mas
+   é sabido que isto é insuficiente em outros.
+  </para>
+  <para>
+   Para verificar que as variáveis de ambiente estão definidas corretamente,
+   use <function>phpinfo</function> e verifique se
+   a seção <emphasis>Environment</emphasis> (não a <emphasis>Apache
+   Environment</emphasis>) contém as variáveis esperadas.
+  </para>
+  <para>
+   As variáveis que devem ser necessárias estão incluídas na tabela
+   a seguir. Consulte a documentação da Oracle para mais informação sobre
+   todas as variáveis disponíveis.
+   <table>
+    <title>Variáveis de Ambiente Oracle Comuns</title>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>Nome</entry>
+       <entry>Propósito</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>ORACLE_HOME</entry>
+       <entry>Contém o diretório da instalação completa do Banco de dados
+        Oracle. Não defina esta variável ao usar o Oracle Instant Client pois
+        é desnecessário e pode causar problemas de instalação.</entry>
+      </row>
+      <row>
+       <entry>ORACLE_SID</entry>
+       <entry>Contém o nome do banco de dados na máquina local ao qual a
+        ser conectado. Não há necessidade de definir esta variável se o
+        Oracle Instant Client estiver sendo usado, ou passe sempre o parâmetro de conexão
+        para a função <function>oci_connect</function>.</entry>
+      </row>
+      <row>
+       <entry>LD_LIBRARY_PATH</entry>
+       <entry>Defina esta variável (ou sua equivalente dependendo da plataforma, como
+        <literal>LIBPATH</literal> ou <literal>SHLIB_PATH</literal>) para a
+        localização das bibliotecas Oracle libraries, por
+        exemplo <filename>$ORACLE_HOME/lib</filename>
+        ou <filename>/usr/lib/oracle/18.5/client/lib</filename>. Note que com arquivos ZIP
+        do Instant Client no Linux é mais confiável usar
+        <filename>ldconfig</filename>, consulte as instruções de
+        instalação do Instant Client. Com o Instant Client 19 (ou posterior) em arquivos
+        RPM, <literal>ldconfig</literal> é executado automaticamente. Alguns usuários
+        utilizam
+        <literal>LD_PRELOAD</literal> no lugar
+        de <literal>LD_LIBRARY_PATH</literal>.</entry>
+      </row>
+      <row>
+       <entry>NLS_LANG</entry>
+       <entry>Esta é a variável primária para definir o conjunto
+        de caracteres e informação de globalização usados pelas bibliotecas
+        Oracle.</entry>
+      </row>
+      <row>
+       <entry>ORA_SDTZ</entry>
+       <entry>Define o fuso horário da sessão Oracle.</entry>
+      </row>
+      <row>
+       <entry>TNS_ADMIN</entry>
+       <entry>Contém o diretório onde os arquivos de configuração do Oracle Net Services
+        como <filename>tnsnames.ora</filename>
+        e <filename>sqlnet.ora</filename> são mantidos. Não é necessária se
+        a string de conexão da função <function>oci_connect</function> usa a sintexe de nomes
+        Easy Connect como <literal>localhost/XE</literal>. Não é necessária se
+        os arquivos de configuração de rede estiverem em uma das localizações padrões
+        como
+        <filename>/usr/lib/oracle/VERSION/client/lib/network/admin</filename>, <filename>$ORACLE_HOME/network/admin</filename>
+        ou <filename>/etc</filename>.</entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </table>
+   Variáveis de ambiente utilizadas com menor frequência incluem
+   <literal>TWO_TASK</literal>, <literal>ORA_TZFILE</literal> e as
+   várias configuração de globalização Oracle
+   como as variáveis <literal>NLS*</literal> e
+   <literal>ORA_NLS_*</literal>.
+  </para>
+ </section>
+ <section>
+  <title>Solução de Problemas</title>
+  <para>
+   O problema mais comum na instalação do OCI8 é não ter o
+   ambiente Oracle definido corretamente. Isto tipicamente aparece como um
+   problema ao usar <function>oci_connect</function>
+   ou <function>oci_pconnect</function>. O erro pode ser gerado pelo PHP,
+   como <emphasis>Call to undefined function
+   oci_connect()</emphasis>, ou pelo Oracle, como ORA-12705, ou até
+   um travamento do Apache. Verifique se os arquivos de registro do Apache contêm erros de inicialização e
+   consulte as seções acima para resolver este problema.
+  </para>
+  <para>
+   Enquanto erros de rede como ORA-12154 ou ORA-12514 indicam um problema de
+   nome ou configuração de rede Oracle, a causa raiz pode ser o ambiente
+   PHP incorretamente configurado e a incapacidade das bibliotecas Oracle
+   em localizar o arquivo de configuração
+   <filename>tnsnames.ora</filename>.
+  </para>
+  <para>
+   No Windows, múltiplas versões do Oracle instaladas em uma máquina
+   pode facilmente gerar conflitos de bilbiotecas a menos que se tenha cuidado
+   garantindo que o PHP usa apenas a versão correta do Oracle.
+  </para>
+  <para>
+   Um utilitário para examinar que bibliotecas estão sendo procuradas e carregadas
+   pode ajudar a resolver problemas de bibliotecas ausentes ou conflitantes, particularmente no
+   Windows.
+  </para>
+  <note>
+   <title>Se o servidor web não iniciar ou travar na
+    inicialização</title>
+   <para>
+    Verifique que o Apache foi construído com a biblioteca pthread:
+   </para>
+   <para>
+    <informalexample>
+     <screen>
+<![CDATA[
+# ldd /www/apache/bin/httpd
+  libpthread.so.0 => /lib/libpthread.so.0 (0x4001c000)
+  libm.so.6 => /lib/libm.so.6 (0x4002f000)
+  libcrypt.so.1 => /lib/libcrypt.so.1 (0x4004c000)
+  libdl.so.2 => /lib/libdl.so.2 (0x4007a000)
+  libc.so.6 => /lib/libc.so.6 (0x4007e000)
+  /lib/ld-linux.so.2 => /lib/ld-linux.so.2 (0x40000000)
+]]>
+     </screen>
+    </informalexample>
+   </para>
+   <para>
+    Se libpthread não estiver listada, reinstale o Apache:
+   </para>
+   <para>
+    <informalexample>
+     <screen>
+<![CDATA[
+# cd /usr/src/apache_1.3.xx
+# make clean
+# LIBS=-lpthread ./config.status
+# make
+# make install
+]]>
+     </screen>
+    </informalexample>
+   </para>
+   <para>
+    Note que em alguns sistemas como UnixWare, o nome é libthread
+    em vez de libpthread. PHP e Apache devem ser configurados com
+    EXTRA_LIBS=-lthread.
+   </para>
+  </note>
+ </section>
+
+
+</section> <!-- oci8.installation -->
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
