@@ -1,9 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: felipe Status: ready --><!-- CREDITS: fernandoc -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: e0b70f68d03701ce531be0025af19cdcfe333782 Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandoc,felipe,leonardolara -->
 <appendix xml:id="outcontrol.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
-  &reftitle.examples;
-  <section xml:id="outcontrol.examples.basic">
-  &reftitle.examples;
+ &reftitle.examples;
+
+ <section xml:id="outcontrol.examples.basic">
+  <title>Uso básico</title>
   <para>
    <example>
     <title>Exemplo de Controle de Saída</title>
@@ -24,14 +25,63 @@ ob_end_flush();
    </example>
   </para>
   <para>
-   No exmplo acima, a saída de <function>echo</function>
-   será guardada no bffer de saída até que
-   <function>ob_end_flush</function> seja chamada. Em quanto isto,
-   a chamada para <function>setcookie</function> guadará o
-   cookie sem causar um erro. (Normalmente você não pode enviar cabeçalhos
-   para o browser depois que dados já foram enviados.)
+   No exemplo acima, a saída de <function>echo</function>
+   seria armazenada no buffer de saída até que
+   <function>ob_end_flush</function> fosse chamada. Neste meio tempo,
+   a chamada a <function>setcookie</function> armazenou com sucesso um
+   cookie sem causar um erro. (Normalmente não se pode enviar cabeçalhos
+   ao navegador depois que dados já foram enviados.)
   </para>
  </section>
+
+ <section xml:id="outcontrol.examples.rewrite">
+  <title>Uso de re-escrita na saída</title>
+  <para>
+   Desde o PHP 7.1.0, <function>output_add_rewrite_var</function> e <function>output_reset_rewrite_vars</function> usam buffer dedicado de saída, isto é, não usam o buffer de saída <link linkend="ini.session.use-trans-sid">trans sid</link>.
+  </para>
+  <para>
+   <example>
+    <title>Exemplo de re-escrita na saída</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// Este código funciona com PHP 7.1.0, 7.0.10, 5.6.25 e posteriores.
+
+// HTTP_HOST é o servidor alvo padrão. Defina manualmente para fazer com o que o código de exemplo funcione.
+$_SERVER['HTTP_HOST'] = 'php.net';
+
+// Re-escrita na saída re-escreve apenas formulários. Adicione a=href.
+// Etiquetas podem ser especificadas nome_da_etiqueta=atribulo_url, ex.: img=src,iframe=src
+// Não é permitido espaço em branco entre as definições.
+// Etiqueta 'form' é uma etiqueta especial que adiciona entrada oculta.
+ini_set('url_rewriter.tags','a=href,form=');
+var_dump(ini_get('url_rewriter.tags'));
+
+// Isto é adicionado à URL e ao formulário
+output_add_rewrite_var('test', 'value');
+?>
+<a href="//php.net/index.php?bug=1234">bug1234</a>
+<form action="https://php.net/?bug=1234&edit=1" method="post">
+ <input type="text" name="title" />
+</form>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+<a href="//php.net/?bug=1234&test=value">bug1234</a>
+<form action="https://php.net/?bug=1234&edit=1" method="post"><input type="hidden" name="test" value="value" />
+ <input type="text" name="title" />
+</form>
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   Desde o PHP 7.1.0, funções de re-escrita na saída têm suas próprias configurações INI, <link linkend="ini.url-rewriter.tags">url_rewriter.tags</link> e <link linkend="ini.url-rewriter.hosts">url_rewriter.hosts</link>.
+  </para>
+ </section>
+
 </appendix>
 
 <!-- Keep this comment at the end of the file
