@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 8b5940cadeb4f1c8492f4a7f70743a2be807cf39 Maintainer: thiago Status: ready -->
-<refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.fsockopen">
+<!-- EN-Revision: 4e6f0774f03131cbeeb8c21019a690bf97fd22b6 Maintainer: leonardolara Status: ready --><!-- CREDITS: thiago,leonardolara -->
+<refentry xml:id="function.fsockopen" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>fsockopen</refname>
-  <refpurpose>Abre um socket de conexão Internet ou de domínio Unix</refpurpose>
+  <refpurpose>Abre uma conexão socket de domínio Unix ou Internet</refpurpose>
  </refnamediv>
- 
+
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>resource</type><methodname>fsockopen</methodname>
+   <type class="union"><type>resource</type><type>false</type></type><methodname>fsockopen</methodname>
    <methodparam><type>string</type><parameter>hostname</parameter></methodparam>
    <methodparam choice="opt"><type>int</type><parameter>port</parameter><initializer>-1</initializer></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter role="reference">errno</parameter></methodparam>
-   <methodparam choice="opt"><type>string</type><parameter role="reference">errstr</parameter></methodparam>
-   <methodparam choice="opt"><type>float</type><parameter>timeout</parameter><initializer>ini_get("default_socket_timeout")</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter role="reference">error_code</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter role="reference">error_message</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>float</type><type>null</type></type><parameter>timeout</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
   <para>
    Inicia uma conexão socket para o recurso especificado em
@@ -23,17 +23,17 @@
   <para>
    O PHP suporta alvos na Internet ou domínios Unix, conforme descrito em
    <xref linkend="transports"/>. Uma lista dos transportes suportados pode
-   ser encontrada utilizando a função <function>stream_get_transports</function>.
+   ser encontrada utilizando-se a função <function>stream_get_transports</function>.
   </para>
   <para>
-   Por padrão o socket será aberto em modo de bloqueio. Você pode mudar para o
-   modo desbloqueado utilizando a função 
+   Por padrão o socket será aberto em modo de bloqueio. Pode-se mudar para o
+   modo de não-bloqueio utilizando-se a função
    <function>stream_set_blocking</function>.
   </para>
   <para>
-   A função <function>stream_socket_client</function> é similar mas provê um
-   número maior de opções, incluindo conxão não bloqueada e a habilidade de
-   adicionar um contexto de corrente (stream context).
+   A função <function>stream_socket_client</function> é similar mas fornece um
+   número maior de opções, incluindo conexão não bloqueada e a habilidade de
+   fornecer um contexto de fluxo .
   </para>
  </refsect1>
  <refsect1 role="parameters">
@@ -44,11 +44,11 @@
      <term><parameter>hostname</parameter></term>
      <listitem>
       <para>
-       Se você compilou <link linkend="openssl.installation">com suporte</link>
-       a OpenSSL, você pode colocar os prefixos <literal>ssl://</literal> ou 
-       <literal>tls://</literal> ao <parameter>hostname</parameter> para utilizar 
-       SSL ou uma conexão cliente TLS sobre TCP/IP para conectar com o 
-       host remoto.
+       Se o suporte Open SSL <link linkend="openssl.installation">estiver
+       instalado</link>, pode-se prefixar o <parameter>hostname</parameter>
+       com <literal>ssl://</literal> ou <literal>tls://</literal> para utilizar
+       uma conexão SSL ou TLS sobre TCP/IP para conectar-se ao
+       servidor remoto.
       </para>
      </listitem>
     </varlistentry>
@@ -56,33 +56,33 @@
      <term><parameter>port</parameter></term>
      <listitem>
       <para>
-       O número da porta. Pode ser omitido e pulado com
+       O número da porta. Pode ser omitido e ignorado com
        <literal>-1</literal> para transportes que não usam portas, como
        <literal>unix://</literal>.
       </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>errno</parameter></term>
+     <term><parameter>error_code</parameter></term>
      <listitem>
       <para>
        Se informado, guarda o número do erro do sistema que aconteceu na chamada de
        <literal>connect()</literal> no nível do sistema.
       </para>
       <para>
-       Se o valor retornado em <parameter>errno</parameter> é
-       <literal>0</literal> e a função retornou &false;, é um indicativo que o
-       erro aconteceu antes da chamada de 
-       <literal>connect()</literal>. É bem provável que isso aconteça por um
-       problema de inicialização de socket.
+       Se o valor retornado em <parameter>error_code</parameter> for
+       <literal>0</literal> e a função retornou &false;, é uma indicação que o
+       erro aconteceu antes da chamada a
+       <literal>connect()</literal>. A causa mais provável é um
+       problema na inicialização do socket.
       </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>errstr</parameter></term>
+     <term><parameter>error_message</parameter></term>
      <listitem>
       <para>
-       A mensagem de erro como string.
+       A mensagem de erro como uma string.
       </para>
      </listitem>
     </varlistentry>
@@ -90,15 +90,16 @@
      <term><parameter>timeout</parameter></term>
      <listitem>
       <para>
-       Timeout de conexão, em segundos.
+       Limite de tempo de conexão, em segundos. Quando igual a &null;, a configuração
+       <link linkend="ini.default-socket-timeout">default_socket_timeout</link> &php.ini; é usada.
       </para>
       <note>
        <para>
-        Se você precisa de um timeout para ler/escrever dados através do
+        Se for necessário um limite de tempo para ler/escrever dados através do
         socket, use <function>stream_set_timeout</function>, já que o
         parâmetro <parameter>timeout</parameter> de
-        <function>fsockopen</function> somente é aplicado enquanto o socket
-        está conectando.
+        <function>fsockopen</function> somente é aplicável enquanto o socket
+        estiver conectando.
        </para>
       </note>
      </listitem>
@@ -110,9 +111,9 @@
   &reftitle.returnvalues;
   <para>
    <function>fsockopen</function> retorna um ponteiro de arquivo que pode ser
-   usado em em conjunto com outras funções de arquivo (como 
+   usado em em conjunto com outras funções de arquivo (como
    <function>fgets</function>, <function>fgetss</function>,
-   <function>fwrite</function>, <function>fclose</function>, e
+   <function>fwrite</function>, <function>fclose</function> e
    <function>feof</function>). Se a chamada falhar, ela retornará &false;.
   </para>
  </refsect1>
@@ -120,14 +121,37 @@
   &reftitle.errors;
   <para>
    Dispara um <constant>E_WARNING</constant> se <parameter>hostname</parameter> não
-   é um domínio válido.
+   for um domínio válido.
   </para>
  </refsect1>
+
+ <refsect1 role="changelog"><!-- {{{ -->
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       <parameter>timeout</parameter> agora pode ser nulo.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
    <example>
-    <title><function>fsockopen</function> Exemplo</title>
+    <title>Exemplo de <function>fsockopen</function></title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -153,8 +177,8 @@ if (!$fp) {
    <example>
     <title>Utilizando conexão UDP</title>
     <para>
-     O exemplo abaixo mostra como recuperar o valor de dia e hora do serviço
-     UDP (porta 13) da sua própria máquina.
+     O exemplo abaixo mostra como obter o dia e o horário do serviço
+     UDP (porta 13) da própria máquina.
     </para>
     <programlisting role="php">
 <![CDATA[
@@ -177,18 +201,18 @@ if (!$fp) {
   &reftitle.notes;
   <note>
    <para>
-    Dependedendo do ambiente, o domínio Unix ou o opcional timeout de conexão
-    não estarão disponíveis.
+    Dependedendo do ambiente, o domínio Unix ou o limite opcional de tempo
+    de conexão podem não estar disponíveis.
    </para>
   </note>
   <warning>
    <para>
     Sockets UDP algumas vezes irão parecer que foram abertos sem erro, mesmo
-    que o host remoto seja inalcançável. O erro só se tornará aparente quando
-    você ler ou escrever dados de/para o socket. A razão disso é porque o UDP
-    é um protocolo "sem conexão", o que significa que o sistema operacional
-    não tenta estabelecer uma ligação para o socket até que ele realmente
-    precise enviar ou receber dados.
+    que o servidor remoto seja inalcançável. O erro só se tornará
+    aparente quando dados são lidos ou escritos no socket.
+    A razão disso é porque o UDP é um protocolo "sem conexão",
+    o que significa que o sistema operacional não tenta estabelecer
+    uma ligação para o socket até que ele realmente precise enviar ou receber dados.
    </para>
   </warning>
   &ipv6.brackets;
