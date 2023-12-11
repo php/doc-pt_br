@@ -41,13 +41,16 @@
   <itemizedlist>
    <listitem>
     <para>
-     <function>mysqli_real_connect</function> precisa de um objeto válido que
-     deve ser criado pela função <function>mysqli_init</function>.
+     <function>mysqli_real_connect</function> precisa de uma instância do
+     objeto <classname>mysqli</classname>.
+     Isto pode ser obtido chamando-se
+     <methodname>mysqli::__construct</methodname> ou
+     <function>mysqli_init</function> sem argumentos.
     </para>
    </listitem>
    <listitem>
     <para>
-     Com a função <function>mysqli_options</function> você pode definir várias
+     Com a função <function>mysqli_options</function> pode-se definir várias
      opções de conexão.
     </para>
    </listitem>
@@ -79,7 +82,7 @@
      <term><parameter>username</parameter></term>
      <listitem>
       <para>
-       O nome de usuário do MySQL ou &null; para assumir o nome de usuário com base na opção ini
+       O nome de usuário do MySQL, ou &null; para assumir o nome de usuário com base na opção ini
        <link linkend="ini.mysqli.default-user">mysqli.default_user</link>.
       </para>
      </listitem>
@@ -88,7 +91,7 @@
      <term><parameter>password</parameter></term>
      <listitem>
       <para>
-       A senha do MySQL ou &null; para assumir a senha com base na opção ini.
+       A senha do MySQL, ou &null; para assumir a senha com base na opção ini
        <link linkend="ini.mysqli.default-pw">mysqli.default_pw</link>.
       </para>
      </listitem>
@@ -132,56 +135,56 @@
      <term><parameter>flags</parameter></term>
      <listitem>
       <para>
-       Com as <parameter>flags</parameter> de parâmetro, você pode definir diferentes
+       Com o parâmetro <parameter>flags</parameter>, pode-se definir diferentes
        opções de conexão:
       </para>
       <table xml:id="mysqli.real-connect.flags">
-       <title>Supported flags</title>
+       <title>Opções suportadas</title>
        <tgroup cols="2">
-       <thead>
-        <row>
-         <entry>Nome</entry>
-         <entry>Descrição</entry>
-        </row>
-       </thead>
-       <tbody>
-        <row>
-         <entry><constant>MYSQLI_CLIENT_COMPRESS</constant></entry>
-         <entry>Usar protocolo de compressão</entry>
-        </row>
-        <row>
-         <entry><constant>MYSQLI_CLIENT_FOUND_ROWS</constant></entry>
-         <entry>retorna o número de linhas correspondentes, não o número de linhas afetadas</entry>
-        </row>
-        <row>
-         <entry><constant>MYSQLI_CLIENT_IGNORE_SPACE</constant></entry>
-         <entry>Permita espaços após os nomes das funções. Torna todos os nomes de função palavras reservadas.</entry>
-        </row>
-        <row>
-         <entry><constant>MYSQLI_CLIENT_INTERACTIVE</constant></entry>
-         <entry>
-          Permita segundos de <literal>interactive_timeout</literal> (em vez de
-          <literal>wait_timeout</literal> segundos) de inatividade antes de fechar a conexão
-         </entry>
-        </row>
-        <row>
-         <entry><constant>MYSQLI_CLIENT_SSL</constant></entry>
-         <entry>Usar SSL (criptografia)</entry>
-        </row>
-        <row>
-         <entry><constant>MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT</constant></entry>
-         <entry>
-          Como <constant>MYSQLI_CLIENT_SSL</constant>, mas desabilita a validação do certificado
-          SSL fornecido. Isso é apenas para instalações usando MySQL Native Driver e MySQL 5.6 ou posterior.
-         </entry>
-        </row>
+        <thead>
+         <row>
+          <entry>Nome</entry>
+          <entry>Descrição</entry>
+         </row>
+        </thead>
+        <tbody>
+         <row>
+          <entry><constant>MYSQLI_CLIENT_COMPRESS</constant></entry>
+          <entry>Usa protocolo de compressão</entry>
+         </row>
+         <row>
+          <entry><constant>MYSQLI_CLIENT_FOUND_ROWS</constant></entry>
+          <entry>Retorna o número de linhas correspondentes, não o número de linhas afetadas</entry>
+         </row>
+         <row>
+          <entry><constant>MYSQLI_CLIENT_IGNORE_SPACE</constant></entry>
+          <entry>Permite espaços após os nomes das funções. Faz com que todos os nomes de funções sejam palavras reservadas.</entry>
+         </row>
+         <row>
+          <entry><constant>MYSQLI_CLIENT_INTERACTIVE</constant></entry>
+          <entry>
+           Permite segundos de <literal>interactive_timeout</literal> (em vez de
+           segundos de <literal>wait_timeout</literal>) de inatividade antes de fechar a conexão
+          </entry>
+         </row>
+         <row>
+          <entry><constant>MYSQLI_CLIENT_SSL</constant></entry>
+          <entry>Usa SSL (criptografia)</entry>
+         </row>
+         <row>
+          <entry><constant>MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT</constant></entry>
+          <entry>
+           Como <constant>MYSQLI_CLIENT_SSL</constant>, mas desabilita a validação do certificado
+           SSL fornecido. Isso é apenas para instalações usando o driver nativo do MySQL e MySQL 5.6 ou posterior.
+          </entry>
+         </row>
         </tbody>
        </tgroup>
       </table>
       <note>
        <para>
-        Por motivos de segurança, o sinalizador <constant>MULTI_STATEMENT</constant>
-        não é suportado no PHP. Se você deseja executar várias consultas, use a
+        Por motivos de segurança, a opção <constant>MULTI_STATEMENT</constant>
+        não é suportado no PHP. Se for desejado executar várias consultas, use a
         função <function>mysqli_multi_query</function>.
        </para>
       </note>
@@ -236,17 +239,17 @@
 <![CDATA[
 <?php
 
-$mysqli = mysqli_init();
+$mysqli = new mysqli();
 if (!$mysqli) {
-    die('mysqli_init failed');
+    die('conexão mysqli falhou');
 }
 
 if (!$mysqli->options(MYSQLI_INIT_COMMAND, 'SET AUTOCOMMIT = 0')) {
-    die('A configuração MYSQLI_INIT_COMMAND falhou');
+    die('Configuração de MYSQLI_INIT_COMMAND falhou');
 }
 
 if (!$mysqli->options(MYSQLI_OPT_CONNECT_TIMEOUT, 5)) {
-    die('A configuração MYSQLI_OPT_CONNECT_TIMEOUT falhou');
+    die('Configuração de MYSQLI_OPT_CONNECT_TIMEOUT falhou');
 }
 
 if (!$mysqli->real_connect('localhost', 'my_user', 'my_password', 'my_db')) {
@@ -267,18 +270,19 @@ $mysqli->close();
 
 class foo_mysqli extends mysqli {
     public function __construct($host, $user, $pass, $db) {
-        parent::init();
+        // O construtor pai deve ser chamado diretamente, ou um erro E_FATAL será gerado
+        parent::__construct();
 
         if (!parent::options(MYSQLI_INIT_COMMAND, 'SET AUTOCOMMIT = 0')) {
-            die('A configuração MYSQLI_INIT_COMMAND falhou');
+            die('Configuração de MYSQLI_INIT_COMMAND falhou');
         }
 
         if (!parent::options(MYSQLI_OPT_CONNECT_TIMEOUT, 5)) {
-            die('A configuração MYSQLI_OPT_CONNECT_TIMEOUT falhou');
+            die('Configuração de MYSQLI_OPT_CONNECT_TIMEOUT falhou');
         }
 
         if (!parent::real_connect($host, $user, $pass, $db)) {
-            die('Erro de conexão (' . mysqli_connect_errno() . ') '
+            die('Erro de conexão Error (' . mysqli_connect_errno() . ') '
                     . mysqli_connect_error());
         }
     }
@@ -297,9 +301,9 @@ $db->close();
 <![CDATA[
 <?php
 
-$link = mysqli_init();
+$link = mysqli_connect();
 if (!$link) {
-    die('mysqli_init failed');
+    die('mysqli_connect falhou');
 }
 
 if (!mysqli_options($link, MYSQLI_INIT_COMMAND, 'SET AUTOCOMMIT = 0')) {
@@ -324,7 +328,7 @@ mysqli_close($link);
    &examples.outputs;
    <screen>
 <![CDATA[
-Sucesso... Informações do host MySQL: localhost via TCP/IP
+Sucesso... MySQL host info: localhost via TCP/IP
 ]]>
    </screen>
   </example>
@@ -340,7 +344,6 @@ Sucesso... Informações do host MySQL: localhost via TCP/IP
   <para>
    <simplelist>
     <member><function>mysqli_connect</function></member>
-    <member><function>mysqli_init</function></member>
     <member><function>mysqli_options</function></member>
     <member><function>mysqli_ssl_set</function></member>
     <member><function>mysqli_close</function></member>

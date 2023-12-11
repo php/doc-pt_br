@@ -1,39 +1,47 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: af4410a7e15898c3dbe83d6ea38246745ed9c6fb Maintainer: felipe Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 63b99082ef83eade08151f8cb528246fded81db9 Maintainer: leonardolara Status: ready --><!-- CREDITS: felipe,leonardolara -->
 <refentry xml:id="mysqli-stmt.bind-param" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>mysqli_stmt::bind_param</refname>
   <refname>mysqli_stmt_bind_param</refname>
-  <refpurpose>Passa variáveis para um preparado comando como parâmetros</refpurpose>
+  <refpurpose>Liga variáveis a uma declaração preparada como parâmetros</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
-  <para>Modo orientado a objeto (método):</para>
-  <methodsynopsis>
-   <type>bool</type><methodname>mysqli_stmt::bind_param</methodname>
+  <para>&style.oop;</para>
+  <methodsynopsis role="mysqli_stmt">
+   <modifier>public</modifier> <type>bool</type><methodname>mysqli_stmt::bind_param</methodname>
    <methodparam><type>string</type><parameter>types</parameter></methodparam>
-   <methodparam><type>mixed</type><parameter role="reference">var1</parameter></methodparam>
-   <methodparam choice="opt"><type>mixed</type><parameter role="reference">...</parameter></methodparam>
+   <methodparam><type>mixed</type><parameter role="reference">var</parameter></methodparam>
+   <methodparam rep="repeat"><type>mixed</type><parameter role="reference">vars</parameter></methodparam>
   </methodsynopsis>
-  <para>Modo procedural:</para>
+  <para>&style.procedural;</para>
   <methodsynopsis>
    <type>bool</type><methodname>mysqli_stmt_bind_param</methodname>
-   <methodparam><type>mysqli_stmt</type><parameter>stmt</parameter></methodparam>
+   <methodparam><type>mysqli_stmt</type><parameter>statement</parameter></methodparam>
    <methodparam><type>string</type><parameter>types</parameter></methodparam>
-   <methodparam><type>mixed</type><parameter role="reference">var1</parameter></methodparam>
-   <methodparam choice="opt"><type>mixed</type><parameter role="reference">...</parameter></methodparam>
+   <methodparam><type>mixed</type><parameter role="reference">var</parameter></methodparam>
+   <methodparam rep="repeat"><type>mixed</type><parameter role="reference">vars</parameter></methodparam>
   </methodsynopsis>
   <para>
-   Passa variáveis para marcadores de parâmetros no comando SQL que foi
-   passado para <function>mysqli_prepare</function>.
+   Liga variáveis para os marcadores de parâmetros na declaração SQL preparada por
+   <function>mysqli_prepare</function> ou <function>mysqli_stmt_prepare</function>.
   </para>
   <note>
    <para>
-    Se o tamanho da informação da variáveis excede o máximo permitido do tamanho
-    de pacote (max_allowed_packet), você deve especificar <literal>b</literal> no
-    <parameter>types</parameter> e usar <function>mysqli_stmt_send_long_data</function> 
-    para enviar a informação em pacotes.
+    Se o tamanho de dados de um variável exceder o tamanho de pacote máximo permitido
+    (max_allowed_packet), deve-se especificar <literal>b</literal> em
+    <parameter>types</parameter> e usar
+    <function>mysqli_stmt_send_long_data</function> para enviar os dados em pacotes.
+   </para>
+  </note>
+  <note>
+   <para>
+    Deve-se ter cuidado ao usar <function>mysqli_stmt_bind_param</function> em conjunto
+    com <function>call_user_func_array</function>. Note que <function>mysqli_stmt_bind_param</function>
+    requer que os parâmetros sejam passados por referência, enquanto que <function>call_user_func_array</function>
+    pode aceitar como parâmetro uma lista de variáveis que podem representar referências ou valores.
    </para>
   </note>
  </refsect1>
@@ -47,9 +55,9 @@
      <term><parameter>types</parameter></term>
      <listitem>
       <para>
-       A string que contém um ou mais caracteres que especifica os tipos
-       para as correspondente variáveis passadas:
-       <table>
+       Uma string que contém um ou mais caracteres que especificam os tipos
+       para as variáveis correspondentes ligadas:
+       <table xml:id="mysqli-stmt.bind-param.parameters">
         <title>Caracteres de especificação de tipo</title>
         <tgroup cols="2">
          <thead>
@@ -61,19 +69,19 @@
          <tbody>
           <row>
            <entry>i</entry>
-           <entry>corresponde a uma variável de tipo inteiro</entry>
+           <entry>variável correspondente tem tipo <type>int</type></entry>
           </row>
           <row>
            <entry>d</entry>
-           <entry>corresponde a uma variável de tipo double</entry>
+           <entry>variável correspondente tem tipo <type>float</type></entry>
           </row>
           <row>
            <entry>s</entry>
-           <entry>corresponde a uma variável de tipo string</entry>
+           <entry>variável correspondente tem tipo <type>string</type></entry>
           </row>
           <row>
            <entry>b</entry>
-           <entry>corresponde a uma variável que contém dados para um blob e enviará em pacotes</entry>
+           <entry>variável correspondente é um blob e será enviada em pacotes</entry>
           </row>
          </tbody>
         </tgroup>
@@ -82,11 +90,12 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>var1</parameter></term>
+     <term><parameter>var</parameter></term>
+     <term><parameter>vars</parameter></term>
      <listitem>
       <para>
-       O número de variáveis e tamanho da string
-       <parameter>types</parameter> precisa combinar com os parâmetros no comando.
+       O número de variáveis e o comprimento da string
+       que o parâmetro <parameter>types</parameter> deve corresponder aos parâmetros na declaração.
       </para>
      </listitem>
     </varlistentry>
@@ -101,20 +110,22 @@
   </para>
  </refsect1>
 
+ <refsect1 role="errors">
+  &reftitle.errors;
+  &mysqli.conditionalexception;
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <example>
-   <title>Modo orientado a objeto</title>
+   <title>Exemplo de <methodname>mysqli_stmt::bind_param</methodname></title>
+   <para>&style.oop;</para>
    <programlisting role="php">
 <![CDATA[
 <?php
-$mysqli = new mysqli('localhost', 'my_user', 'my_password', 'world');
 
-/* check connection */
-if (mysqli_connect_errno()) {
-    printf("Connect failed: %s\n", mysqli_connect_error());
-    exit();
-}
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$mysqli = new mysqli('localhost', 'my_user', 'my_password', 'world');
 
 $stmt = $mysqli->prepare("INSERT INTO CountryLanguage VALUES (?, ?, ?, ?)");
 $stmt->bind_param('sssd', $code, $language, $official, $percent);
@@ -124,36 +135,22 @@ $language = 'Bavarian';
 $official = "F";
 $percent = 11.2;
 
-/* execute prepared statement */
 $stmt->execute();
 
-printf("%d Row inserted.\n", $stmt->affected_rows);
+printf("%d linha inserida.\n", $stmt->affected_rows);
 
-/* close statement and connection */
-$stmt->close();
-
-/* Clean up table CountryLanguage */
+/* Limpa tabela CountryLanguage */
 $mysqli->query("DELETE FROM CountryLanguage WHERE Language='Bavarian'");
-printf("%d Row deleted.\n", $mysqli->affected_rows);
-
-/* close connection */
-$mysqli->close();
-?>
+printf("%d linha apagada.\n", $mysqli->affected_rows);
 ]]>
-  </programlisting>
-  </example>
-  <example>
-   <title>Modo procedural</title>
+   </programlisting>
+   <para>&style.procedural;</para>
    <programlisting role="php">
 <![CDATA[
 <?php
-$link = mysqli_connect('localhost', 'my_user', 'my_password', 'world');
 
-/* check connection */
-if (!$link) {
-    printf("Connect failed: %s\n", mysqli_connect_error());
-    exit();
-}
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$link = mysqli_connect('localhost', 'my_user', 'my_password', 'world');
 
 $stmt = mysqli_prepare($link, "INSERT INTO CountryLanguage VALUES (?, ?, ?, ?)");
 mysqli_stmt_bind_param($stmt, 'sssd', $code, $language, $official, $percent);
@@ -163,31 +160,52 @@ $language = 'Bavarian';
 $official = "F";
 $percent = 11.2;
 
-/* execute prepared statement */
 mysqli_stmt_execute($stmt);
 
-printf("%d Row inserted.\n", mysqli_stmt_affected_rows($stmt));
+printf("%d linha inserida.\n", mysqli_stmt_affected_rows($stmt));
 
-/* close statement and connection */
-mysqli_stmt_close($stmt);
-
-/* Clean up table CountryLanguage */
+/* Limpa tabela CountryLanguage */
 mysqli_query($link, "DELETE FROM CountryLanguage WHERE Language='Bavarian'");
-printf("%d Row deleted.\n", mysqli_affected_rows($link));
-
-/* close connection */
-mysqli_close($link);
-?>
+printf("%d linha apagada.\n", mysqli_affected_rows($link));
 ]]>
    </programlisting>
-  </example>
-  &example.outputs;
-  <screen>
+   &examples.outputs;
+   <screen>
 <![CDATA[
-1 Row inserted.
-1 Row deleted.
+1 linha inserida.
+1 linha apagada.
 ]]>
-  </screen>
+   </screen>
+  </example>
+  <example>
+   <title>Usando <literal>...</literal> para fornecer argumentos</title>
+   <para>
+    O operador <literal>...</literal> pode ser usado para fornecer uma lista de argumentos
+    de comprimento variável, como por exemplo em uma cláusula <literal>WHERE IN</literal>.
+   </para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$mysqli = new mysqli('localhost', 'my_user', 'my_password', 'world');
+
+$stmt = $mysqli->prepare("SELECT Language FROM CountryLanguage WHERE CountryCode IN (?, ?)");
+/* Usando ... para fornecer argumentos */
+$stmt->bind_param('ss', ...['DEU', 'POL']);
+$stmt->execute();
+$stmt->store_result();
+
+printf("%d linhas encontradas.\n", $stmt->num_rows());
+]]>
+   </programlisting>
+   &examples.outputs;
+   <screen>
+<![CDATA[
+10 linhas encontradas.
+]]>
+   </screen>
+  </example>
  </refsect1>
 
  <refsect1 role="seealso">
@@ -206,7 +224,6 @@ mysqli_close($link);
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
