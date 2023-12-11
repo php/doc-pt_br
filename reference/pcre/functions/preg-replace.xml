@@ -1,27 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 53bdffa6b9f8ce5ffdaf476c9d450f7cd0d1afa2 Maintainer: FelipeBarth Status: ready --><!-- CREDITS: FelipeBarth, adiel -->
-<!-- Reviewed: no -->
-
+<!-- EN-Revision: 31b22987dd66a0251de914029b9f1b4c377bf9af Maintainer: leonardolara Status: ready --><!-- CREDITS: FelipeBarth, adiel, leonardolara -->
 <refentry xml:id="function.preg-replace" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>preg_replace</refname>
-  <refpurpose>Realiza uma pesquisa por uma expressão regular e a substitui.</refpurpose>
+  <refpurpose>Realiza uma pesquisa por uma expressão regular e substitui</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>mixed</type><methodname>preg_replace</methodname>
-   <methodparam><type>mixed</type><parameter>pattern</parameter></methodparam>
-   <methodparam><type>mixed</type><parameter>replacement</parameter></methodparam>
-   <methodparam><type>mixed</type><parameter>subject</parameter></methodparam>
+   <type class="union"><type>string</type><type>array</type><type>null</type></type><methodname>preg_replace</methodname>
+   <methodparam><type class="union"><type>string</type><type>array</type></type><parameter>pattern</parameter></methodparam>
+   <methodparam><type class="union"><type>string</type><type>array</type></type><parameter>replacement</parameter></methodparam>
+   <methodparam><type class="union"><type>string</type><type>array</type></type><parameter>subject</parameter></methodparam>
    <methodparam choice="opt"><type>int</type><parameter>limit</parameter><initializer>-1</initializer></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter role="reference">count</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter role="reference">count</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
   <para>
-   Pesquisa <parameter>subject</parameter> para o correspondente
-   <parameter>pattern</parameter> substituindo pelo
+   Pesquisa <parameter>subject</parameter> por correspondências a
+   <parameter>pattern</parameter> e substitui-as por
    <parameter>replacement</parameter>.
+  </para>
+  <para>
+   Para procurar correspondência por uma string exata, e não por um padrão,
+   considere usar <function>str_replace</function> ou
+   <function>str_ireplace</function> no lugar desta função.
   </para>
  </refsect1>
 
@@ -37,9 +40,8 @@
        strings.
       </para>
       <para>
-       Diversas <link linkend="reference.pcre.pattern.modifiers">PCRE modifiers</link>
-       também estão disponíveis, incluindo as obsoletas '<literal>e</literal>'
-       (PREG_REPLACE_EVAL), que é específica para esta função.
+       Diversos <link linkend="reference.pcre.pattern.modifiers">modificadores PCRE</link>
+       também estão disponíveis.
       </para>
      </listitem>
     </varlistentry>
@@ -54,44 +56,44 @@
        parâmetros são arrays, cada <parameter>pattern</parameter> vai ser
        substituído pelo seu<parameter>replacement</parameter> correspondente. Se
        houver menos elementos no <parameter>replacement</parameter>
-       array do que no <parameter>pattern</parameter> array, qualquer extra
-       <parameter>pattern</parameter>s será substituído por uma string vazia.
+       array do que no <parameter>pattern</parameter> array, qualquer
+       <parameter>pattern</parameter> extra será substituído por uma string vazia.
       </para>
       <para>
        <parameter>replacement</parameter> pode conter referências na forma
-       <literal>\\<replaceable>n</replaceable></literal> ou (desde PHP 4.0.4)
+       <literal>\<replaceable>n</replaceable></literal> ou
        <literal>$<replaceable>n</replaceable></literal>, com a última forma sendo
-       preferêncial. Toda referência será substituída pelo texto capturado pelo
-       padrão entre parentêses<replaceable>n</replaceable>'th.
+       a preferível. Cada referência desse tipo será substituída pelo texto capturado pelo
+       <replaceable>n</replaceable>-ésimo padrão entre parentêses.
        <replaceable>n</replaceable> pode ser de 0 to 99, e
-       <literal>\\0</literal> ou <literal>$0</literal> refere-se ao texto correspondente
-       por todo o pattern. A abertura de parentêses são contadas da esquerda para direita
-       (a partir de 1) para obter o número de subpattern de captura.
-       Para uso da contrabarra no replacement, deve ser duplicada
-       (<literal>"\\\\"</literal> string PHP ).
+       <literal>\0</literal> ou <literal>$0</literal> referem-se ao texto correspondente
+       ao padrão inteiro. Parênteses de abertura são contados da esquerda para direita
+       (iniciando em 1) para obter o número do sub-padrão de captura.
+       Note que barra invertida em &string;s literais podem precisar ser escapados.
       </para>
       <para>
-       Quando se trabalha com uma padrão de substituição, onde a backreference 
-       é imediatamente seguida por outro número (isto é.: inserido um número literal
-       imediatamento de um padrão correspondente), você não pode usar a habitual 
-       notação <literal>\\1</literal>para seu backreference.  
-       <literal>\\11</literal>, por exemplo, iria confundir a função
-       <function>preg_replace</function> pois não saberá se quer o
-       <literal>\\1</literal> backreference seguido por um literal 
-       <literal>1</literal>, ou o <literal>\\11</literal> backreference
-       seguido por nada. Neste caso a solução é usar <literal>\${1}1</literal>.
-       Isto cria um isolado <literal>$1</literal> backreference, deixando-o
-       <literal>1</literal> como um literal.
+       Quando se trabalha com uma padrão de substituição, onde a referência passada
+       é imediatamente seguida por outro número (isto é, inserido um número literal
+       imediatamente após um padrão correspondente), não se pode usar a habitual
+       notação <literal>\1</literal> para a referência passada.
+       <literal>\11</literal>, por exemplo, iria confundir a função
+       <function>preg_replace</function> pois ela não saberá
+       se o desejado é a referência <literal>\1</literal> seguida por um literal
+       <literal>1</literal>, ou a referência <literal>\11</literal>
+       seguida por nada. Neste caso, a solução é usar
+       <literal>${1}1</literal>. Isto cria uma referência
+       <literal>$1</literal> isolada, deixando o <literal>1</literal>
+       como um literal.
       </para>
       <para>
-       Ao usar um obsoleto <literal>e</literal> modificador, esta função escapa
-       alguns caracteres (ou seja <literal>'</literal>, <literal>"</literal>,
-       <literal>\</literal> and NULL) nas strings que substituem os
-       backreferences. Isto é feito para garantir que nenhum erro surja
-       do uso do backreference com aspas simples ou duplas (por exemplo,
-       <literal>'strlen(\'$1\')+strlen("$2")'</literal>). Certifique-se da
+       Ao usar o modificador <literal>e</literal> que está defasado, esta função escapa
+       alguns caracteres (nomeadamente <literal>'</literal>, <literal>"</literal>,
+       <literal>\</literal> e NULL) nas strings que substituem as
+       referências passadas. Isto é feito para garantir que nenhum erro de sintaxe surja
+       de uso de referência passada com aspas simples ou duplas (por exemplo,
+       <literal>'strlen(\'$1\')+strlen("$2")'</literal>). Certifique-se de estar ciente da
        <link linkend="language.types.string">sintaxe string</link> do PHP
-       para saber exatamente como a string interpretada será considerada.
+       para ter uma visão exata de como será a string interpretada.
       </para>
      </listitem>
     </varlistentry>
@@ -106,14 +108,18 @@
        a substituição são executadas em cada entrada do <parameter>subject</parameter>,
        e o valor de retorno é um array também.
       </para>
+      <para>
+       Se o array <parameter>subject</parameter> for associativo, as chaves
+       são preservadas no valor de retorno.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
      <term><parameter>limit</parameter></term>
      <listitem>
       <para>
-       O máximo possível de substituições para cada patern em cada 
-       <parameter>subject</parameter> string. O padrão é
+       O máximo possível de substituições para cada padrão em cada string de
+       <parameter>subject</parameter>. O padrão é
        <literal>-1</literal> (sem limite).
       </para>
      </listitem>
@@ -122,7 +128,7 @@
      <term><parameter>count</parameter></term>
      <listitem>
       <para>
-       Se especificado, essa variável será preenchida com o número de
+       Se especificada, essa variável será preenchida com o número de
        substiuições realizadas.
       </para>
      </listitem>
@@ -136,10 +142,10 @@
   <para>
    <function>preg_replace</function> retorna um array se o
    parâmetro <parameter>subject</parameter> é um array, caso contrário
-   retorna uma string
+   retorna uma string.
   </para>
   <para>
-   Se a correspondência for encontrada, o novo <parameter>subject</parameter>
+   Se correspondências forem encontradas, o novo <parameter>subject</parameter>
    será devolvido, caso contrário <parameter>subject</parameter> será
    devolvido inalterado ou &null; se um erro ocorreu.
   </para>
@@ -148,16 +154,17 @@
  <refsect1 role="errors">
   &reftitle.errors;
   <para>
-   Um nível de erro <constant>E_DEPRECATED</constant> é emitido quando passado
-   o modificador "\e".
+   Usar o modificador "\e" é um erro;
+   um erro de nível <constant>E_WARNING</constant> é emitido neste caso.
   </para>
+  &pcre.pattern.warning;
  </refsect1>
 
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
    <example>
-    <title>Usando backreferences seguido por literais numéricos</title>
+    <title>Usando referências passadas seguidas por literais numéricos</title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -202,7 +209,7 @@ The bear black slow jumped over the lazy dog.
 ]]>
     </screen>
     <para>
-     By ksorting patterns and replacements, we should get what we wanted.
+     Ao ordenar padrões e substituições com ksort, obtém-se o desejado.
     </para>
     <programlisting role="php">
 <![CDATA[
@@ -223,7 +230,7 @@ The slow black bear jumped over the lazy dog.
   </para>
   <para>
    <example>
-    <title>Replacing several values</title>
+    <title>Substituindo vários valores</title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -244,7 +251,7 @@ $startDate = 5/27/1999
   </para>
   <para>
    <example>
-    <title>Strip whitespace</title>
+    <title>Removendo espaços</title>
     <para>
      Este exemplo retira o excesso de espaçoes em branco de uma string.
     </para>
@@ -291,12 +298,34 @@ xp***to
     Ao usar arrays com <parameter>pattern</parameter> e
     <parameter>replacement</parameter>, as chaves são processadas na ordem que
     aparecem no array. Isto <emphasis>não é necessariamente</emphasis> o
-    mesmo que a ordem de índice numérico. Se é feito o uso dos índices para 
+    mesmo que a ordem de índice numérico. Se é feito o uso dos índices para
     indentificar qual <parameter>pattern</parameter> deve ser substituído por qual
     <parameter>replacement</parameter>, é necessário executar a função
     <function>ksort</function> em cada array antes de chamar a função
     <function>preg_replace</function>.
    </para>
+  </note>
+  <note>
+   <para>
+    Quando ambos <parameter>pattern</parameter> e <parameter>replacement</parameter> forem
+    arrays, as regras de correspondência irão operar sequancialmente. Isto é, o segundo par <parameter>pattern</parameter>/<parameter>replacement</parameter>
+    irá operar na string que resulta do primeiro par <parameter>pattern</parameter>/<parameter>replacement</parameter>,
+    e não da string original. Se for desejado simular substituições operando em paralelo,
+    como inversão de dois valores, substitua um padrão por uma referência intermediária, e então em um par
+    posterior substitua a referência intermediária pelo substituto desejado.
+   </para>
+   <example>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$p = array('/a/', '/b/', '/c/');
+$r = array('b', 'c', 'd');
+print_r(preg_replace($p, $r, 'a'));
+// prints d
+?>
+]]>
+    </programlisting>
+   </example>
   </note>
  </refsect1>
 
@@ -304,17 +333,18 @@ xp***to
   &reftitle.seealso;
   <para>
    <simplelist>
-    <member><link linkend="pcre.pattern">PCRE Patterns</link></member>
+    <member><link linkend="pcre.pattern">Padrões PCRE</link></member>
+    <member><function>preg_quote</function></member>
     <member><function>preg_filter</function></member>
     <member><function>preg_match</function></member>
     <member><function>preg_replace_callback</function></member>
     <member><function>preg_split</function></member>
     <member><function>preg_last_error</function></member>
+    <member><function>str_replace</function></member>
    </simplelist>
   </para>
  </refsect1>
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
