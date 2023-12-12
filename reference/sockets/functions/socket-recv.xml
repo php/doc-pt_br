@@ -1,27 +1,246 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 9511edb9f86e995399b840b0ed0fe98f50d6bd22 Maintainer: felipe Status: ready --><!-- CREDITS: marcelo -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 14dc7c47365f2b71f6c907a5ba5bccf42534d5a9 Maintainer: leonardolara Status: ready --><!-- CREDITS: marcelo,felipe,leonardolara -->
 <refentry xml:id="function.socket-recv" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>socket_recv</refname>
   <refpurpose>Recebe dados de um socket conectado</refpurpose>
  </refnamediv>
- 
+
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>int</type><methodname>socket_recv</methodname>
-   <methodparam><type>resource</type><parameter>socket</parameter></methodparam>
-   <methodparam><type>string</type><parameter role="reference">buf</parameter></methodparam>
-   <methodparam><type>int</type><parameter>len</parameter></methodparam>
+   <type class="union"><type>int</type><type>false</type></type><methodname>socket_recv</methodname>
+   <methodparam><type>Socket</type><parameter>socket</parameter></methodparam>
+   <methodparam><type class="union"><type>string</type><type>null</type></type><parameter role="reference">data</parameter></methodparam>
+   <methodparam><type>int</type><parameter>length</parameter></methodparam>
    <methodparam><type>int</type><parameter>flags</parameter></methodparam>
   </methodsynopsis>
   <para>
-   &warn.undocumented.func;
+   A função <function>socket_recv</function> recebe o número de bytes definidos em
+   <parameter>length</parameter>, dos dados definidos em <parameter>data</parameter> a partir do
+   <parameter>socket</parameter>. <function>socket_recv</function> pode ser
+   usada para receber dados de sockets conectados. Adicionalmente, uma ou mais
+   opções podem ser especificadas para modificar o comportamento da
+   função.
+  </para>
+  <para>
+   O parâmetro <parameter>data</parameter> é passado por referência, por isso deve ser
+   especificado como uma variável na lista de argumentos. Dados lidos do
+   <parameter>socket</parameter> por <function>socket_recv</function>
+   serão retornados em <parameter>data</parameter>.
   </para>
  </refsect1>
- 
-</refentry>
 
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>socket</parameter></term>
+     <listitem>
+      <para>
+       O <parameter>socket</parameter> deve ser uma instância de <classname>Socket</classname> previamente
+       criada por socket_create().
+      </para>
+     </listitem>
+    </varlistentry>
+
+    <varlistentry>
+     <term><parameter>data</parameter></term>
+     <listitem>
+      <para>
+       Os dados recebidos serão guardados na variável especificada em
+       <parameter>data</parameter>. Se um erro ocorrer, se a
+       conexão for redefinida, ou se não houver dados
+       disponíveis, <parameter>data</parameter> será igual a &null;.
+      </para>
+     </listitem>
+    </varlistentry>
+
+    <varlistentry>
+     <term><parameter>length</parameter></term>
+     <listitem>
+      <para>
+       <parameter>length</parameter> é o número máximo de bytes que serão recebidos do servidor remoto.
+      </para>
+     </listitem>
+    </varlistentry>
+
+    <varlistentry>
+     <term><parameter>flags</parameter></term>
+     <listitem>
+      <para>
+       O valor de <parameter>flags</parameter> pode ser qualquer combinação das
+       opções a seguir, unidas pelo operador binário OR
+       (<literal>|</literal>).
+      </para>
+
+      <table>
+       <title>Valores possíveis para <parameter>flags</parameter></title>
+       <tgroup cols="2">
+        <thead>
+         <row>
+          <entry>Opção</entry>
+          <entry>Descrição</entry>
+         </row>
+        </thead>
+        <tbody>
+         <row>
+          <entry><constant>MSG_OOB</constant></entry>
+          <entry>
+           Processa dados fora-de-banda.
+          </entry>
+         </row>
+         <row>
+          <entry><constant>MSG_PEEK</constant></entry>
+          <entry>
+           Recebe dados do início da fila sem
+           removê-los da fila.
+          </entry>
+         </row>
+         <row>
+          <entry><constant>MSG_WAITALL</constant></entry>
+          <entry>
+           Bloqueia até que pelo menos o número de bytem em <parameter>length</parameter> seja recebido.
+           Entretando, se um sinal for capturado ou se o servidor remoto desconectar, a
+           função pode retornar menos dados.
+          </entry>
+         </row>
+         <row>
+          <entry><constant>MSG_DONTWAIT</constant></entry>
+          <entry>
+           Com esta opção, a função retorna mesmo se ela normalmente
+           tivesse bloqueado.
+          </entry>
+         </row>
+        </tbody>
+       </tgroup>
+      </table>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   <function>socket_recv</function> retorna o número de bytes recebidos,
+   ou &false; se houver um erro. O código de erro real pode ser obtido
+   chamando-se <function>socket_last_error</function>. Este código de erro pode se
+   passado a <function>socket_strerror</function> para obter uma explicação textual
+   do erro.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     &sockets.changelog.socket-param;
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>socket_recv</function></title>
+    <para>
+     Este exemplo é um re-escrita simples do primeiro exemplo de
+     <xref linkend="sockets.examples"/> para
+     uso de <function>socket_recv</function>.
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+error_reporting(E_ALL);
+
+echo "<h2>Conexão TCP/IP</h2>\n";
+
+/* Obtém a porta do serviço WWW. */
+$service_port = getservbyname('www', 'tcp');
+
+/* Obtém o endereço IP do servidor de destino. */
+$address = gethostbyname('www.example.com');
+
+/* Cria o socket TCP/IP. */
+$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+if ($socket === false) {
+    echo "socket_create() failed: reason: " . socket_strerror(socket_last_error()) . "\n";
+} else {
+    echo "OK.\n";
+}
+
+echo "Tentando conexão a '$address' na porta '$service_port'...";
+$result = socket_connect($socket, $address, $service_port);
+if ($result === false) {
+    echo "socket_connect() falhou.\nRazão: ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
+} else {
+    echo "OK.\n";
+}
+
+$in = "HEAD / HTTP/1.1\r\n";
+$in .= "Host: www.example.com\r\n";
+$in .= "Connection: Close\r\n\r\n";
+$out = '';
+
+echo "Enviando requisição HTTP HEAD...";
+socket_write($socket, $in, strlen($in));
+echo "OK.\n";
+
+echo "Lendo resposta:\n\n";
+$buf = 'Este é o meu buffer.';
+if (false !== ($bytes = socket_recv($socket, $buf, 2048, MSG_WAITALL))) {
+    echo "Lidos $bytes bytes de socket_recv(). Fechando socket...";
+} else {
+    echo "socket_recv() falhou; razão: " . socket_strerror(socket_last_error($socket)) . "\n";
+}
+socket_close($socket);
+
+echo $buf . "\n";
+echo "OK.\n\n";
+?>
+]]>
+    </programlisting>
+    <para>
+     O exemplo acima irá produzir algo assim:
+    </para>
+    <screen>
+<![CDATA[
+<h2>Conexão TCP/IP</h2>
+OK.
+Tentando conexão a '208.77.188.166' na porta '80'...OK.
+Enviando requisição HTTP HEAD...OK.
+Lendo resposta:
+
+Lidos 123 bytes de socket_recv(). Fechando socket...HTTP/1.1 200 OK
+Date: Mon, 14 Sep 2009 08:56:36 GMT
+Server: Apache/2.2.3 (Red Hat)
+Last-Modified: Tue, 15 Nov 2005 13:24:10 GMT
+ETag: "b80f4-1b6-80bfd280"
+Accept-Ranges: bytes
+Content-Length: 438
+Connection: close
+Content-Type: text/html; charset=UTF-8
+
+OK.
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+</refentry>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
