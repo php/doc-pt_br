@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 035c126c0393fe154bac46e2c3c489ebadce48a5 Maintainer: leonardolara Status: ready -->
+<refentry xml:id="mysqli-result.fetch-array" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>mysqli_result::fetch_array</refname>
+  <refname>mysqli_fetch_array</refname>
+  <refpurpose>Recebe a próxima linha de resultado como array associativo, numérico, ou ambos</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <para>&style.oop;</para>
+  <methodsynopsis role="mysqli_result">
+   <modifier>public</modifier> <type class="union"><type>array</type><type>null</type><type>false</type></type><methodname>mysqli_result::fetch_array</methodname>
+   <methodparam choice="opt"><type>int</type><parameter>mode</parameter><initializer><constant>MYSQLI_BOTH</constant></initializer></methodparam>
+  </methodsynopsis>
+  <para>&style.procedural;</para>
+  <methodsynopsis>
+   <type class="union"><type>array</type><type>null</type><type>false</type></type><methodname>mysqli_fetch_array</methodname>
+   <methodparam><type>mysqli_result</type><parameter>result</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>mode</parameter><initializer><constant>MYSQLI_BOTH</constant></initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Recebe uma linha de dados do conjunto de resultados e retorna-a como um array.
+   Cada chamada subsequente a esta função retornará a linha seguinte dentro do
+   conjunto de resultados, ou &null; se não houver mais linhas.
+  </para>
+  <para>
+   Além de armazenar os dados nos índices numéricos do array resultante,
+   esta função também pode armazenar os dados em índices associativos
+   usando os nomes dos campos do conjunto de resultados como chaves.
+  </para>
+  <para>
+   Se duas ou mais colunas do resultado tiverem o mesmo nome, a última
+   coluna terá precedência e irá sobrescrever os dados anteriores. Para
+   acessar múltiplas colunas com o mesmo nome, deve ser usada a versão
+   da linha indexada numericamente.
+  </para>
+  &database.field-case;
+  &database.fetch-null;
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    &mysqli.result.description;
+    <varlistentry>
+     <term><parameter>mode</parameter></term>
+     <listitem>
+      <para>
+       O segundo arqumento é uma constante que indica qual tipo de array
+       deve ser produzido a partir dos dados da linha atual. Os valores possíveis para
+       este parâmetro são as constantes <constant>MYSQLI_ASSOC</constant>,
+       <constant>MYSQLI_NUM</constant> ou <constant>MYSQLI_BOTH</constant>.
+      </para>
+      <para>
+       Ao usar a constante <constant>MYSQLI_ASSOC</constant>, esta função
+       irá se comportar de modo idêntico à função <function>mysqli_fetch_assoc</function>,
+       enquanyo <constant>MYSQLI_NUM</constant> irá se comportar de modo idêntico à
+       função <function>mysqli_fetch_row</function>. A opção final
+       <constant>MYSQLI_BOTH</constant> irá criar um único array com os
+       atributos de ambas.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna um array que representa a linha recebida, &null; se não
+   houver mais linhas no resultado, &return.falseforfailure;.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>mysqli_result::fetch_array</methodname></title>
+   <para>&style.oop;</para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$mysqli = new mysqli("localhost", "my_user", "my_password", "world");
+
+$query = "SELECT Name, CountryCode FROM City ORDER BY ID LIMIT 3";
+$result = $mysqli->query($query);
+
+/* array com índice numérico */
+$row = $result->fetch_array(MYSQLI_NUM);
+printf("%s (%s)\n", $row[0], $row[1]);
+
+/* array associativo */
+$row = $result->fetch_array(MYSQLI_ASSOC);
+printf("%s (%s)\n", $row["Name"], $row["CountryCode"]);
+
+/* array com índice numérico e associativo */
+$row = $result->fetch_array(MYSQLI_BOTH);
+printf("%s (%s)\n", $row[0], $row["CountryCode"]);
+]]>
+   </programlisting>
+   <para>&style.procedural;</para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$mysqli = mysqli_connect("localhost", "my_user", "my_password", "world");
+
+$query = "SELECT Name, CountryCode FROM City ORDER by ID LIMIT 3";
+$result = mysqli_query($mysqli, $query);
+
+/* array com índice numérico */
+$row = mysqli_fetch_array($result, MYSQLI_NUM);
+printf("%s (%s)\n", $row[0], $row[1]);
+
+/* array associativo */
+$row = mysqli_fetch_array($result, MYSQLI_ASSOC);
+printf("%s (%s)\n", $row["Name"], $row["CountryCode"]);
+
+/* array com índice numérico e associativo */
+$row = mysqli_fetch_array($result, MYSQLI_BOTH);
+printf("%s (%s)\n", $row[0], $row["CountryCode"]);
+]]>
+   </programlisting>
+   &examples.outputs.similar;
+   <screen>
+<![CDATA[
+Kabul (AFG)
+Qandahar (AFG)
+Herat (AFG)
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>mysqli_fetch_assoc</function></member>
+    <member><function>mysqli_fetch_column</function></member>
+    <member><function>mysqli_fetch_row</function></member>
+    <member><function>mysqli_fetch_object</function></member>
+    <member><function>mysqli_query</function></member>
+    <member><function>mysqli_data_seek</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
