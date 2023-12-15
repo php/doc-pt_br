@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: d68e83b719028bb068785cccc3205c23be530564 Maintainer: leonardolara Status: ready -->
+<refentry xml:id="mysqli-stmt.sqlstate" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>mysqli_stmt::$sqlstate</refname>
+  <refname>mysqli_stmt_sqlstate</refname>
+  <refpurpose>Retorna o erro SQLSTATE da operação da instrução anterior</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <para>&style.oop;</para>
+  <fieldsynopsis><type>string</type><varname linkend="mysqli-stmt.sqlstate">mysqli_stmt-&gt;sqlstate</varname></fieldsynopsis>
+  <para>&style.procedural;</para>
+  <methodsynopsis>
+   <type>string</type><methodname>mysqli_stmt_sqlstate</methodname>
+   <methodparam><type>mysqli_stmt</type><parameter>statement</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Retorna uma string contento o código de erro SQLSTATE
+   para a função de instrução preparada mais recentemente chamada, que possa ter sucesso ou falhar.
+   O código de erro consiste de cinco caracteres. <literal>'00000'</literal> significa que não houve erro.
+   Os valores são especificados pela ANSI SQL e pela ODBC. Para uma lista de valores possíveis, consulte
+   <link xlink:href="&url.mysql.docs.error;">&url.mysql.docs.error;</link>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    &mysqli.stmt.description;
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna uma string contendo o código de erro SQLSTATE para o último erro.
+   O código de erro consiste de cinco caracteres. <literal>'00000'</literal> significa que não houve erro.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>&style.oop;</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+/* abre uma conexão */
+$mysqli = new mysqli("localhost", "my_user", "my_password", "world");
+
+/* verifica a conexão */
+if (mysqli_connect_errno()) {
+    printf("Conexão falhou: %s\n", mysqli_connect_error());
+    exit();
+}
+
+$mysqli->query("CREATE TABLE myCountry LIKE Country");
+$mysqli->query("INSERT INTO myCountry SELECT * FROM Country");
+
+
+$query = "SELECT Name, Code FROM myCountry ORDER BY Name";
+if ($stmt = $mysqli->prepare($query)) {
+
+    /* apaga a tabela */
+    $mysqli->query("DROP TABLE myCountry");
+
+    /* executa a instrução */
+    $stmt->execute();
+
+    printf("Erro: %s.\n", $stmt->sqlstate);
+
+    /* fecha a instrução */
+    $stmt->close();
+}
+
+/* fecha a conexão */
+$mysqli->close();
+?>
+]]>
+   </programlisting>
+  </example>
+  <example>
+   <title>&style.procedural;</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+/* abre uma conexão */
+$link = mysqli_connect("localhost", "my_user", "my_password", "world");
+
+/* verifica a conexão */
+if (mysqli_connect_errno()) {
+    printf("Conexão falhou: %s\n", mysqli_connect_error());
+    exit();
+}
+
+mysqli_query($link, "CREATE TABLE myCountry LIKE Country");
+mysqli_query($link, "INSERT INTO myCountry SELECT * FROM Country");
+
+
+$query = "SELECT Name, Code FROM myCountry ORDER BY Name";
+if ($stmt = mysqli_prepare($link, $query)) {
+
+    /* apaga a tabela */
+    mysqli_query($link, "DROP TABLE myCountry");
+
+    /* executa a instrução */
+    mysqli_stmt_execute($stmt);
+
+    printf("Error: %s.\n", mysqli_stmt_sqlstate($stmt));
+
+    /* fecha a instrução */
+    mysqli_stmt_close($stmt);
+}
+
+/* fecha a conexão */
+mysqli_close($link);
+?>
+]]>
+   </programlisting>
+   &examples.outputs;
+   <screen>
+<![CDATA[
+Erro: 42S02.
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    Observe que nem todos os erros do MySQL são mapeados para erros SQLSTATE.
+    O valor <literal>HY000</literal> (erro geral) é usado para erros não mapeados.
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>mysqli_stmt_errno</function></member>
+    <member><function>mysqli_stmt_error</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

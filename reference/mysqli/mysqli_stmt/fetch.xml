@@ -1,32 +1,39 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: fernandoc Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 63b99082ef83eade08151f8cb528246fded81db9 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="mysqli-stmt.fetch" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>mysqli_stmt::fetch</refname>
   <refname>mysqli_stmt_fetch</refname>
-  <refpurpose>Obtém resultados de um preparado comando e os coloca nas determinadas variáveis</refpurpose>
+  <refpurpose>Recebe resultados de uma instrução preparada nas variáveis vinculadas</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
-  <para>Modo orientado a objeto (método):</para>
-  <methodsynopsis>
-   <type>bool</type><methodname>mysqli_stmt::fetch</methodname>
-   <void />
+  <para>&style.oop;</para>
+  <methodsynopsis role="mysqli_stmt">
+   <modifier>public</modifier> <type class="union"><type>bool</type><type>null</type></type><methodname>mysqli_stmt::fetch</methodname>
+   <void/>
   </methodsynopsis>
-  <para>Modo procedural:</para>
+  <para>&style.procedural;</para>
   <methodsynopsis>
-   <type>bool</type><methodname>mysqli_stmt_fetch</methodname>
-   <methodparam><type>mysqli_stmt</type><parameter>stmt</parameter></methodparam>
+   <type class="union"><type>bool</type><type>null</type></type><methodname>mysqli_stmt_fetch</methodname>
+   <methodparam><type>mysqli_stmt</type><parameter>statement</parameter></methodparam>
   </methodsynopsis>
   <para>
-   Obtém o resultado de um preparado comando e coloca nas variáveis determinadas 
-   por <function>mysqli_stmt_bind_result</function>.
+   Recebe o resultado de uma instrução preparada nas variáveis vinculadas por
+   <function>mysqli_stmt_bind_result</function>.
   </para>
   <note>
    <para>
-    Note que todas as colunas precisam ser determinadas para aplicação antes
-    de chamar a <function>mysqli_stmt_fetch</function>.
+    Observe que todas as colunas precisam estar vinculadas pela aplicação antes de chamar a função
+    <function>mysqli_stmt_fetch</function>.
+   </para>
+  </note>
+  <note>
+   <para>
+    Os dados são transferidos sem buffer quando não se chama a função
+    <function>mysqli_stmt_store_result</function>, o que pode reduzir
+    o desempenho (mas reduz o consumo de memória).
    </para>
   </note>
  </refsect1>
@@ -42,7 +49,7 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <table>
+  <table xml:id="mysqli-stmt.fetch.returnvalues">
    &reftitle.returnvalues;
    <tgroup cols="2">
     <thead>
@@ -54,31 +61,36 @@
     <tbody>
      <row>
       <entry>&true;</entry>
-      <entry>Sucesso. Dados foram obtidos</entry>
+      <entry>Sucesso. Dados foram recebidos</entry>
      </row>
      <row>
       <entry>&false;</entry>
-      <entry>Erro ocorrido</entry>
+      <entry>Error occurred</entry>
      </row>
      <row>
       <entry>&null;</entry>
-      <entry>Não há mais linhas/não existe dados ou dados truncados</entry>
+      <entry>Não há mais linhas/dados ou ocorreu um truncamento de dados</entry>
      </row>
     </tbody>
    </tgroup>
   </table>
  </refsect1>
 
+ <refsect1 role="errors">
+  &reftitle.errors;
+  &mysqli.conditionalexception;
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <example>
-   <title>Modo orientado a objeto</title>
+   <title>&style.oop;</title>
    <programlisting role="php">
 <![CDATA[
 <?php
 $mysqli = new mysqli("localhost", "my_user", "my_password", "world");
 
-/* check connection */
+/* verifica a conexão */
 if (mysqli_connect_errno()) {
     printf("Connect failed: %s\n", mysqli_connect_error());
     exit();
@@ -88,35 +100,35 @@ $query = "SELECT Name, CountryCode FROM City ORDER by ID DESC LIMIT 150,5";
 
 if ($stmt = $mysqli->prepare($query)) {
 
-    /* execute statement */
+    /* executa a instrução */
     $stmt->execute();
 
-    /* bind result variables */
+    /* vincula as variáveis do resultado */
     $stmt->bind_result($name, $code);
 
-    /* fetch values */
+    /* recebe os valores */
     while ($stmt->fetch()) {
         printf ("%s (%s)\n", $name, $code);
     }
 
-    /* close statement */
+    /* fecha a instrução */
     $stmt->close();
 }
 
-/* close connection */
+/* fecha a conexão */
 $mysqli->close();
 ?>
 ]]>
-  </programlisting>
+   </programlisting>
   </example>
   <example>
-   <title>Modo procedural</title>
+   <title>&style.procedural;</title>
    <programlisting role="php">
 <![CDATA[
 <?php
 $link = mysqli_connect("localhost", "my_user", "my_password", "world");
 
-/* check connection */
+/* verifica a conexão */
 if (mysqli_connect_errno()) {
     printf("Connect failed: %s\n", mysqli_connect_error());
     exit();
@@ -126,29 +138,28 @@ $query = "SELECT Name, CountryCode FROM City ORDER by ID DESC LIMIT 150,5";
 
 if ($stmt = mysqli_prepare($link, $query)) {
 
-    /* execute statement */
+    /* executa a instrução */
     mysqli_stmt_execute($stmt);
 
-    /* bind result variables */
+    /* vincula as variáveis do resultado */
     mysqli_stmt_bind_result($stmt, $name, $code);
 
-    /* fetch values */
+    /* recebe os valores */
     while (mysqli_stmt_fetch($stmt)) {
         printf ("%s (%s)\n", $name, $code);
     }
 
-    /* close statement */
+    /* fecha a instrução */
     mysqli_stmt_close($stmt);
 }
 
-/* close connection */
+/* fecha a conexão */
 mysqli_close($link);
 ?>
 ]]>
    </programlisting>
-  </example>
-  &example.outputs;
-  <screen>
+   &examples.outputs;
+   <screen>
 <![CDATA[
 Rockford (USA)
 Tallahassee (USA)
@@ -156,7 +167,8 @@ Salinas (USA)
 Santa Clarita (USA)
 Springfield (USA)
 ]]>
-  </screen>
+   </screen>
+  </example>
  </refsect1>
 
  <refsect1 role="seealso">
@@ -172,7 +184,6 @@ Springfield (USA)
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
