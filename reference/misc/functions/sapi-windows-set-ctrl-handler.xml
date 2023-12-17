@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 426d9a8f156bca7be9cb5475e24ba104ee814bc1 Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.sapi-windows-set-ctrl-handler" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>sapi_windows_set_ctrl_handler</refname>
+  <refpurpose>Define ou remove um manipulador de evento CTRL</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>bool</type><methodname>sapi_windows_set_ctrl_handler</methodname>
+   <methodparam><type class="union"><type>callable</type><type>null</type></type><parameter>handler</parameter></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>add</parameter><initializer>&true;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Define ou remove um manipulador de evento <literal>CTRL</literal>, que permite que os processos
+   CLI do Windows interceptem ou ignorem eventos <literal>CTRL+C</literal> e
+   <literal>CTRL+BREAK</literal>. Observe que em ambientes multi-thread,
+   isto só é possível quando a função é chamada da thread principal.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <variablelist>
+   <varlistentry>
+    <term><parameter>handler</parameter></term>
+    <listitem>
+     <para>
+      Uma função de chamada de retorno a ser definida ou removida. Se definida, esta função será chamada
+      sempre que um evento <literal>CTRL+C</literal> ou <literal>CTRL+BREAK</literal>
+      ocorrer. A função deve ter a seguinte assinatura:
+      <methodsynopsis>
+       <type>void</type><methodname>handler</methodname>
+       <methodparam><type>int</type><parameter>event</parameter></methodparam>
+      </methodsynopsis>
+      <variablelist>
+       <varlistentry>
+        <term><parameter>event</parameter></term>
+        <listitem>
+         <simpara>
+          O evento <literal>CTRL</literal> que foi recebido;
+          pode ser <constant>PHP_WINDOWS_EVENT_CTRL_C</constant>
+          ou <constant>PHP_WINDOWS_EVENT_CTRL_BREAK</constant>.
+         </simpara>
+        </listitem>
+       </varlistentry>
+      </variablelist>
+      Definir um <parameter>handler</parameter> como &null; faz com que o processo ignore eventos
+      <literal>CTRL+C</literal>, mas não os eventos <literal>CTRL+BREAK</literal>.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><parameter>add</parameter></term>
+    <listitem>
+     <para>
+      Se for igual a &true;, o manipulador é definido. Se for &false;, o manipulador é removido.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.success;
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example xml:id="sapi-windows-set-ctrl-handler.example.basic">
+   <title>Uso Básico de <function>sapi_windows_set_ctrl_handler</function></title>
+   <para>
+    Este exemplo mostra como interceptar eventos <literal>CTRL</literal>.
+   </para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+function ctrl_handler(int $event)
+{
+    switch ($event) {
+        case PHP_WINDOWS_EVENT_CTRL_C:
+            echo "CTRL+C foi pressionado\n";
+            break;
+        case PHP_WINDOWS_EVENT_CTRL_BREAK:
+            echo "CTRL+BREAK foi pressionado\n";
+            break;
+    }
+}
+
+sapi_windows_set_ctrl_handler('ctrl_handler');
+while (true); // repetição infinita, para que o manipulador seja disparado
+?>
+]]>
+   </programlisting>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><function>sapi_windows_generate_ctrl_event</function></member>
+  </simplelist>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

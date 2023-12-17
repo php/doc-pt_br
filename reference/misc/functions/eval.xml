@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 68308f0095c6ebf0d19afa72f2bac0a9f194e77d Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.eval" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>eval</refname>
+  <refpurpose>Avalia uma string como código PHP</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>mixed</type><methodname>eval</methodname>
+   <methodparam><type>string</type><parameter>code</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Avalia a string fornecida no parâmetro <parameter>code</parameter> como um código PHP.
+  </para>
+  <para>
+   O código a ser avaliado herda o
+   <link linkend="language.variables.scope">escopo de variáveis</link>
+   da linha na qual a chamada a <function>eval</function> ocorrer.
+   Todas as variáveis disponíveis naquela linha estarão disponíveis para leitura e
+   modificação no código avaliado.
+   Entretanto, todas as funções e classes definidas serão definidas no espaço de nomes global.
+   Em outras palavras, o compilador considera o código avaliado como se ele fosse um
+   arquivo <link linkend="function.include">incluído</link> separadamente.
+  </para>
+  <caution>
+   <para>
+    A construção de linguagem <function>eval</function> é <emphasis>bastante perigosa</emphasis>
+    porque permite execução de código PHP arbitrário. <emphasis>Seu uso é contudo
+    desencorajado.</emphasis> Se foi cuidadosamente verificado que não há outra opção
+    a não ser usar esta construção, deve-se prestar atenção especial para <emphasis>não passar nenhum dado
+    fornecido pelo usuário</emphasis> no parâmetro sem antes validá-lo.
+   </para>
+  </caution>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>code</parameter></term>
+     <listitem>
+      <para>
+       Código PHP válido a ser avaliado.
+      </para>
+      <para>
+       O código não pode ser envolvido em
+       <link linkend="language.basic-syntax.phpmode">etiquetas PHP</link> de abertura e de fechamento, isto é,
+       <literal>'echo "Hi!";'</literal> deve ser passado ao invés de
+       <literal>'&lt;?php echo "Hi!"; ?&gt;'</literal>. Ainda é possível sair e re-entrar
+       no modo PGP usando-se os marcadores apropriados, ex.:
+       <literal>'echo "In PHP mode!"; ?&gt;In HTML mode!&lt;?php echo "Back in PHP mode!";'</literal>.
+      </para>
+      <para>
+       Além disso, o código informado deve ser código PHP válido. Isto inclui o fato de que todas
+       as instruções devem ser adequadamente terminadas com ponto-e-vírgula.
+       <literal>'echo "Hi!"'</literal> por exemplo causará um erro de avaliação, enquanto que
+       <literal>'echo "Hi!";'</literal> funcionará.
+      </para>
+      <para>
+       Uma instrução <literal>return</literal> irá terminar imediatamente a
+       avaliação do código.
+      </para>
+      <para>
+       o código será executado no escopo do código que está chamando <function>eval</function>. Todas
+       as variáveis definidas ou alteradas na chamada a <function>eval</function> permanecerão visíveis depois
+       que ela terminar.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   <function>eval</function> retorna &null; a menos que
+   <literal>return</literal> seja chamado no código avaliado, neste caso
+   o valor passado a <literal>return</literal> será o retornado. A partir do PHP 7, se houver um
+   erro de avaliação no código, <function>eval</function> lança uma exceção ParseError.
+   Antes do PHP 7, neste caso <function>eval</function> retornava
+   &false; e a execução do código seguinte continuava normalmente. Não
+   é possível capturar um erro de avaliação em <function>eval</function>
+   usando <function>set_error_handler</function>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>eval</function> example - fusão simples de texto</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$string = 'cup';
+$name = 'coffee';
+$str = 'This is a $string with my $name in it.';
+echo $str. "\n";
+eval("\$str = \"$str\";");
+echo $str. "\n";
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+This is a $string with my $name in it.
+This is a cup with my coffee in it.
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+
+  &note.language-construct;
+
+  &tip.ob-capture;
+  <note>
+   <para>
+    Em caso de erro fatal no código avaliado, todo o script é terminado.
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>call_user_func</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
