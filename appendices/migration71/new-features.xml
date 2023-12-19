@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 459c0e1de40c71062731abb431ec1c9f74b2aaf2 Maintainer: leonardolara Status: ready -->
+
+<sect1 xml:id="migration71.new-features" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Novas funcionalidades</title>
+
+ <sect2 xml:id="migration71.new-features.nullable-types">
+  <title>Tipos anuláveis</title>
+
+  <para>
+   Declarações de tipo para parâmetros e valores de retorno agora podem ser marcados como
+   anuláveis, prefixando-se o nome do tipo com um ponto de interrogação. Isto significa
+   que assim como o tipo especificado, &null; também pode ser passado como argumento, ou
+   retornado como um valor, respectivamente.
+  </para>
+
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+function testReturn(): ?string
+{
+    return 'elePHPant';
+}
+
+var_dump(testReturn());
+
+function testReturn(): ?string
+{
+    return null;
+}
+
+var_dump(testReturn());
+
+function test(?string $name)
+{
+    var_dump($name);
+}
+
+test('elePHPant');
+test(null);
+test();
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+string(10) "elePHPant"
+NULL
+string(10) "elePHPant"
+NULL
+Uncaught Error: Too few arguments to function test(), 0 passed in...
+]]>
+   </screen>
+  </informalexample>
+ </sect2>
+
+ <sect2 xml:id="migration71.new-features.void-functions">
+  <title>Funções void</title>
+
+  <para>
+   Um tipo de retorno <type>void</type> foi introduzido. Funções declaradas com
+   void como seu tipo de retorno precisam omitir totalmente a instrução de retorno,
+   ou usar uma instrução de retorno vazia. &null; não é um valor de retorno válido para uma
+   função void.
+  </para>
+
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+function swap(&$left, &$right): void
+{
+    if ($left === $right) {
+        return;
+    }
+
+    $tmp = $left;
+    $left = $right;
+    $right = $tmp;
+}
+
+$a = 1;
+$b = 2;
+var_dump(swap($a, $b), $a, $b);
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+null
+int(2)
+int(1)
+]]>
+   </screen>
+  </informalexample>
+
+  <para>
+   Tentar usar um valor de retorno de uma função void simplesmente é avaliado como
+   &null;, sem alertas emitidos. A razão para isso é que alertas
+   implicariam no uso de funções would implicate the use of funções genéricas de ordem superior.
+  </para>
+ </sect2>
+
+ <sect2 xml:id="migration71.new-features.symmetric-array-destructuring">
+  <title>Desestruturação simétrica de array</title>
+
+  <para>
+   A sintaxe curta de array (<literal>[]</literal>) agora pode ser usada para
+   desestruturar arrays para atribuições (incluindo dentro de
+   <literal>foreach</literal>), como uma alternativa para a sintaxe
+   <function>list</function> existente, o que ainda é suportado.
+  </para>
+
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$data = [
+    [1, 'Tom'],
+    [2, 'Fred'],
+];
+
+// estilo list()
+list($id1, $name1) = $data[0];
+
+// estilo []
+[$id1, $name1] = $data[0];
+
+// estilo list()
+foreach ($data as list($id, $name)) {
+    // lógica aqui com $id e $name
+}
+
+// estilo []
+foreach ($data as [$id, $name]) {
+    // lógica aqui com $id e $name
+}
+]]>
+   </programlisting>
+  </informalexample>
+ </sect2>
+
+ <sect2 xml:id="migration71.new-features.class-constant-visibility">
+  <title>Visibilidade de constante de classe</title>
+
+  <para>
+   Foi adicionado suporte para especificação de visibilidade de constantes de classe.
+  </para>
+
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class ConstDemo
+{
+    const PUBLIC_CONST_A = 1;
+    public const PUBLIC_CONST_B = 2;
+    protected const PROTECTED_CONST = 3;
+    private const PRIVATE_CONST = 4;
+}
+]]>
+   </programlisting>
+  </informalexample>
+ </sect2>
+
+ <sect2 xml:id="migration71.new-features.iterable-pseudo-type">
+  <title>Pseudo-tipo <type>iterable</type></title>
+
+  <para>
+   Um novo pseudo-tipo (similar a <type>callable</type>) chamado
+   <type>iterable</type> (iterável) foi introduzido. Pode ser usado em tipos de
+   parâmetros e valores de retorno, onde aceita tanto arrays quanto objetos que implementam
+   a interface <classname>Traversable</classname>. Com respeito à sub-tipagem,
+   tipos de parâmetros de classes filhas podem ampliar uma declaração de classe pai de um <type>array</type>
+   ou <classname>Traversable</classname> para um <type>iterable</type>. Com tipos de retorno,
+   classes filhas podem estreitar um tipo de retorno da classe pai de <type>iterable</type> para
+   <type>array</type> ou um objeto que implemente <classname>Traversable</classname>.
+  </para>
+
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+function iterator(iterable $iter)
+{
+    foreach ($iter as $val) {
+        //
+    }
+}
+]]>
+   </programlisting>
+  </informalexample>
+ </sect2>
+
+ <sect2 xml:id="migration71.new-features.mulit-catch-exception-handling">
+  <title>Manipulação de exceção com multi-captura</title>
+
+  <para>
+   Exceções múltiplas por bloco de captura podem agora ser especificadas usando o caractere
+   de barra vertical (<literal>|</literal>). Isto é útil para quando exceções
+   diferentes de hierarquias de classe diferentes são manipuladas ao mesmo tempo.
+  </para>
+
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+try {
+    // algum código
+} catch (FirstException | SecondException $e) {
+    // manipula a primeira e a segunda exceções
+}
+]]>
+   </programlisting>
+  </informalexample>
+ </sect2>
+
+ <sect2 xml:id="migration71.new-features.support-for-keys-in-list">
+  <title>Suporte para chaves em <function>list</function></title>
+
+  <para>
+   Agora pode-se especificar chaves na função <function>list</function>, ou sua nova sintaxe curta
+   <literal>[]</literal>. Isto habilita desestruturação de arrays com
+   chaves não inteiras ou não sequenciais.
+  </para>
+
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$data = [
+    ["id" => 1, "name" => 'Tom'],
+    ["id" => 2, "name" => 'Fred'],
+];
+
+// estilo list()
+list("id" => $id1, "name" => $name1) = $data[0];
+
+// estilo []
+["id" => $id1, "name" => $name1] = $data[0];
+
+// estilo list()
+foreach ($data as list("id" => $id, "name" => $name)) {
+    // lógica aqui com $id e $name
+}
+
+// estilo []
+foreach ($data as ["id" => $id, "name" => $name]) {
+    // lógica aqui com $id e $name
+}
+]]>
+   </programlisting>
+  </informalexample>
+ </sect2>
+
+ <sect2 xml:id="migration71.new-features.support-for-negative-string-offsets">
+  <title>Suporte a deslocamento negativo em string</title>
+
+  <para>
+   Suporte a deslocamentos de string negativos foi adicionado às
+   <link linkend="book.strings">funções de manipulação de string</link>
+   que aceitam deslocamentos, assim como para
+   <link linkend="language.types.string.substr">indexação de string</link> com
+   <literal>[]</literal> ou <literal>{}</literal>. Nestes casos, um deslocamento
+   negativo é interpretado como sendo um deslocamento a partir do final da string.
+  </para>
+
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+var_dump("abcdef"[-2]);
+var_dump(strpos("aabbcc", "b", -3));
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+string (1) "e"
+int(3)
+]]>
+   </screen>
+  </informalexample>
+
+  <para>
+   Deslocamento negativo de string e array agora também é suportado na sintaxe
+   avaliativa simples de variáveis dentro de strings.
+  </para>
+
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$string = 'bar';
+echo "O último caractere de '$string' é '$string[-1]'.\n";
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+O último caractere de 'bar' é 'r'.
+]]>
+   </screen>
+  </informalexample>
+ </sect2>
+
+ <sect2 xml:id="migration71.new-features.support-for-aead-in-ext-openssl">
+  <title>Suporte a AEAD em ext/openssl</title>
+
+  <para>
+   Suporte para AEAD (modos GCM e CCM) foi adicionado através da extensão das funções
+   <function>openssl_encrypt</function> e
+   <function>openssl_decrypt</function> com parâmetros adicionais.
+  </para>
+ </sect2>
+
+ <sect2 xml:id="migration71.new-features.convert-callables-to-closures">
+  <title>Conversão de chamáveis para <classname>Closure</classname>s com <methodname>Closure::fromCallable</methodname></title>
+
+  <para>
+   Um novo método estático foi introduzido à classe <classname>Closure</classname>
+   para permitir que objetos do tipo <type>callable</type> sejam facilmente convertidos em objetos
+   da classe <classname>Closure</classname>.
+  </para>
+
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class Test
+{
+    public function exposeFunction()
+    {
+        return Closure::fromCallable([$this, 'privateFunction']);
+    }
+
+    private function privateFunction($param)
+    {
+        var_dump($param);
+    }
+}
+
+$privFunc = (new Test)->exposeFunction();
+$privFunc('algum valor');
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+string(11) "algum valor"
+]]>
+   </screen>
+  </informalexample>
+ </sect2>
+
+ <sect2 xml:id="migration71.new-features.asynchronous-signal-handling">
+  <title>Manipulação assíncrona de sinal</title>
+
+  <para>
+   Uma nova função chamada <function>pcntl_async_signals</function> foi
+   introduzida para habilitar manipulação assíncrona de sinal sem usar ticks (que
+   introduzem muita sobrecarga).
+  </para>
+
+  <informalexample>
+   <programlisting role="php">
+<![CDATA[
+<?php
+pcntl_async_signals(true); // liga sinais assíncronos
+
+pcntl_signal(SIGHUP,  function($sig) {
+    echo "SIGHUP\n";
+});
+
+posix_kill(posix_getpid(), SIGHUP);
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+SIGHUP
+]]>
+   </screen>
+  </informalexample>
+ </sect2>
+
+ <sect2 xml:id="migration71.new-features.http2-server-push-support-in-ext-curl">
+  <title>Suporte a push de servidor HTTP/2 em ext/curl</title>
+
+  <para>
+   Support a push de servidor foi adicionado à extensão CURL (requer
+   versão 7.46 e superior). Isto pode ser aproveitado pela função
+   <function>curl_multi_setopt</function> com a nova constante
+   <constant>CURLMOPT_PUSHFUNCTION</constant>. As constantes
+   <constant>CURL_PUSH_OK</constant> e <constant>CURL_PUSH_DENY</constant> também foram
+   adicionadas de forma que a execução da chamada de push do servidor possa ser tanto
+   aprovada quanto negada.
+  </para>
+ </sect2>
+
+ <sect2 xml:id="migration71.new-features.stream-context-options">
+  <title>Opções de Contexto de Fluxo</title>
+
+  <para>
+   A opção de contexto de fluxo <link linkend="context.socket.tcp_nodelay">tcp_nodelay</link>
+   foi adicionada.
+  </para>
+ </sect2>
+
+</sect1>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
