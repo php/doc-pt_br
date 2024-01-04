@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 769812c12f00c1978bf7dd711dca38dbf05462da Maintainer: leonardolara Status: ready -->
+<!-- splitted from ./en/functions/exec.xml, last change in rev 1.28 -->
+<refentry xml:id="function.proc-open" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>proc_open</refname>
+  <refpurpose>
+   Executa um comando e abre ponteiros de arquivo para entrada/saída
+  </refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>resource</type><type>false</type></type><methodname>proc_open</methodname>
+   <methodparam><type class="union"><type>array</type><type>string</type></type><parameter>command</parameter></methodparam>
+   <methodparam><type>array</type><parameter>descriptor_spec</parameter></methodparam>
+   <methodparam><type>array</type><parameter role="reference">pipes</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>string</type><type>null</type></type><parameter>cwd</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>array</type><type>null</type></type><parameter>env_vars</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>array</type><type>null</type></type><parameter>options</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   <function>proc_open</function> é similar a <function>popen</function>
+   mas fornece um grau de controle muito maior sobre a execução do programa.
+  </para>
+
+<!-- ptys are currently disabled in the sources
+    <para>
+     PHP 5 introduces pty support for systems with Unix98 ptys. This allows
+     your script to interact with applications that expect to be talking to a
+     terminal.  A pty works like a pipe, but is bi-directional, so there is no
+     need to specify a read/write mode.  The example below shows how to use a
+     pty; note that you don't have to have all descriptors talking to a pty.
+     Also note that only one pty is created, even though pty is specified 3
+     times.  In a future version of PHP, it might be possible to do more than
+     just read and write to the pty.
+    </para>
+-->
+
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>command</parameter></term>
+     <listitem>
+      <para>
+       A linha de comando a executar, como uma &string;. Caracteres especiais precisam ser escapados adequadamente,
+       e o uso de aspas deve ser apropriadamente aplicado.
+      </para>
+      <note>
+       <simpara>
+        No <emphasis>Windows</emphasis>, a menos que <literal>bypass_shell</literal> esteja definido para &true; no parâmetro
+        <parameter>options</parameter>, o comando em <parameter>command</parameter> é
+        passado para <command>cmd.exe</command> (na verdade, <literal>%ComSpec%</literal>)
+        com a opção <literal>/c</literal> como uma string <emphasis>sem aspas</emphasis>
+        (isto é, exatamente como fornecido a <function>proc_open</function>).
+        Isto pode fazer com que <command>cmd.exe</command> remova as aspas que envolvem o comando em
+        <parameter>command</parameter> (para detalhes, consulte a documentação do <command>cmd.exe</command>),
+        resultando em comportamento inesperado e potencialmente perigoso, porque
+        as mensagens de erro de <command>cmd.exe</command> podem conter (partes dos) comandos passados em
+        <parameter>command</parameter> (veja exemplo abaixo).
+       </simpara>
+      </note>
+      <para>
+       A partir do PHP 7.4.0, <parameter>command</parameter> pode ser passado como um &array; de parâmetros de comandos.
+       Neste caso, o processo será aberto diretamente (sem passar por um "shell")
+       e o PHP irá gerenciar qualquer escape de argumentos se necessário.
+      </para>
+      <note>
+       <para>
+        No Windows, o escape de argumentos dos elementos do &array; assume que a análise
+        de linha de comando é compatível com a análise
+        dos argumentos de linha de comando feita pelas bibliotecas em tempo de execução do VC.
+       </para>
+      </note>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>descriptor_spec</parameter></term>
+     <listitem>
+      <para>
+       Um array indexado onte a chave representa o número descritor e o
+       valor representa como o PHP irá passar esse descritor ao processo
+       filho. 0 é stdin, 1 é stdout e 2 é stderr.
+      </para>
+      <para>
+       Cada elemento pode ser:
+       <simplelist>
+        <member>Um array descrevendo o tubo a ser passado ao processo. O primeiro
+         elemento é o tipo do descritor e o segundo elemento é uma opção para
+         o tipo fornecido. Tipos válidos são <literal>pipe</literal> (o segundo
+         elemento pode ser <literal>r</literal> para passar a ponta de leitura do tubo
+         ao processo, ou <literal>w</literal> para passar a ponta de escrita) e
+         <literal>file</literal> (o segundo elemento é um nome de arquivo).
+         Observe que qualquer outro tipo diferente de <literal>w</literal> é tratado como <literal>r</literal>.
+        </member>
+        <member>
+         Um recurso de fluxo representando um descritor de arquivo real (ex.: arquivo aberto,
+         um soquete ou <constant>STDIN</constant>).
+        </member>
+       </simplelist>
+      </para>
+      <para>
+       O número do descritor de arquivo não é limitado a 0, 1 e 2 - pode-se
+       especificar qualquer número válido de descritor de arquivo e ele será passado ao
+       processo filho. Isto permite que o script consiga operar com outros
+       scripts que são executados como "co-processos". Em particular, isto é útil para
+       passar senhas a programas como PGP, GPG e openssl de uma forma
+       mais segura. Também é útil para ler informações de estado
+       de decritores de arquivos auxiliares fornecidas por estes programas.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>pipes</parameter></term>
+     <listitem>
+      <para>
+       Será definido para um array indexado de ponteiros de arquivos que corresponde à
+       ponta do PHP de qualquer tubo que seja criado.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>cwd</parameter></term>
+     <listitem>
+      <para>
+       O diretório de trabalho inicial para o comando. Precisa ser um
+       caminho de diretório <emphasis role="strong">absoluto</emphasis>, ou &null;
+       se for desejado usar o valor padrão (o diretório de trabalho do
+       processo PHP atual)
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>env_vars</parameter></term>
+     <listitem>
+      <para>
+       Um array com as variáveis de ambiente para o comando que será
+       executado, ou &null; para usar o mesmo ambiente do processo PHP atual
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>options</parameter></term>
+     <listitem>
+      <para>
+       Permite especificar opções adicionais. As opções atualmente suportadas
+       incluem:
+       <simplelist>
+        <member>
+         <literal>suppress_errors</literal> (somente Windows): suprime erros
+         gerados por esta função quando definida para &true;
+        </member>
+        <member>
+         <literal>bypass_shell</literal> (somente Windows): ignora o "shell"
+         <literal>cmd.exe</literal> quando definida para &true;
+        </member>
+        <member>
+         <literal>blocking_pipes</literal> (somente Windows): força
+         tubos no modo de bloqueio quando definida para &true;
+        </member>
+        <member>
+         <literal>create_process_group</literal> (somente Windows): permite ao
+         processo filho lidar com eventos <literal>CTRL</literal> quando definida para &true;
+        </member>
+        <member>
+         <literal>create_new_console</literal> (somente Windows): o novo processo
+         terá um novo console, ao invés de herdar o console do processo pai
+        </member>
+       </simplelist>
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna um recurso representando o processo, que deve ser liberado usando
+   <function>proc_close</function> quando seu uso tiver sido finalizado. Em caso de falha
+   retorna &false;.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>7.4.4</entry>
+       <entry>
+        Adicionada a opção <literal>create_new_console</literal> ao parâmetro
+        <parameter>options</parameter>.
+       </entry>
+      </row>
+      <row>
+       <entry>7.4.0</entry>
+       <entry>
+        <function>proc_open</function> agora aceita um &array;
+        para o parâmetro <parameter>command</parameter>.
+       </entry>
+      </row>
+      <row>
+       <entry>7.4.0</entry>
+       <entry>
+        Adicionada a opção <literal>create_process_group</literal> ao parâmetro
+        <parameter>options</parameter>.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Um exemplo de <function>proc_open</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$descriptorspec = array(
+   0 => array("pipe", "r"),  // stdin é um tubo de onde o processo filho irá ler
+   1 => array("pipe", "w"),  // stdout é um tubo no qual o processo filho irá escrever
+   2 => array("file", "/tmp/error-output.txt", "a") // stderr é um arquivo que será escrito
+);
+
+$cwd = '/tmp';
+$env = array('some_option' => 'aeiou');
+
+$process = proc_open('php', $descriptorspec, $pipes, $cwd, $env);
+
+if (is_resource($process)) {
+    // $pipes agora será parecido com:
+    // 0 => manipulador que pode ser escrito, conectado ao stdin filho
+    // 1 => manipulador que pode ser lido, conectado ao stdout filho
+    // Qualquer saída de erro será anexaa ao /tmp/error-output.txt
+
+    fwrite($pipes[0], '<?php print_r($_ENV); ?>');
+    fclose($pipes[0]);
+
+    echo stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+
+    // É importante fechar todos os tubos antes de chamar
+    // proc_close para evitar o beco sem saída
+    $return_value = proc_close($process);
+
+    echo "comando retornou $return_value\n";
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+Array
+(
+    [some_option] => aeiou
+    [PWD] => /tmp
+    [SHLVL] => 1
+    [_] => /usr/local/bin/php
+)
+comando retornou 0
+]]>
+    </screen>
+   </example>
+  </para>
+
+  <para>
+   <example>
+    <title>Peculiaridade de <function>proc_open</function> no Windows</title>
+    <simpara>
+     Embora seja esperado que o programa a seguir pesquise o arquivo
+     <filename>filename.txt</filename> pelo texto <literal>search</literal> e
+     mostre os resultados, ele se comporta de maneira bastante diferente.
+    </simpara>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$descriptorspec = [STDIN, STDOUT, STDOUT];
+$cmd = '"findstr" "search" "filename.txt"';
+$proc = proc_open($cmd, $descriptorspec, $pipes);
+proc_close($proc);
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+'findstr" "search" "filename.txt' is not recognized as an internal or external command,
+operable program or batch file.
+]]>
+    </screen>
+    <simpara>
+     Para contornar este comportamento, normalmente é suficiente envolver
+     <parameter>command</parameter> com aspas adicionais:
+    </simpara>
+    <programlisting role="php">
+<![CDATA[
+$cmd = '""findstr" "search" "filename.txt""';
+]]>
+    </programlisting>
+   </example>
+  </para>
+
+<!-- ptys are currently disabled
+  <para>
+   <example>
+    <title>ptys usage</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// Create a pseudo terminal for the child process
+$descriptorspec = array(
+   0 => array("pty"),
+   1 => array("pty"),
+   2 => array("pty")
+);
+$process = proc_open("cvs -d:pserver:cvsread@cvs.php.net:/repository login", $descriptorspec, $pipes);
+if (is_resource($process)) {
+   // work with it here
+}
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+-->
+
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    Compatibilidade com Windows: Descritores além de 2 (stderr) estão disponíveis para
+    o processo filho como manipuladores que podem ser herdados, mas como a arquitetura
+    Windows não associa números de descritores de arquivos a manipuladores de
+    baixo nível, o processo filho não tem (ainda) meios de acessar esses
+    manipuladores. Stdin, stdout e stderr funcionam conforme esperado.
+   </para>
+  </note>
+  <note>
+   <para>
+    Se for necessário somente um tubo de processo unidirecional (mão única), utilize a função
+    <function>popen</function>, pois é muito mais fácil de usar.
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>popen</function></member>
+    <member><function>exec</function></member>
+    <member><function>system</function></member>
+    <member><function>passthru</function></member>
+    <member><function>stream_select</function></member>
+    <member>O <link linkend="language.operators.execution">operador crase</link></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
