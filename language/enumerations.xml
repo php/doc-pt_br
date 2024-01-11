@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?> <!-- EN-Revision: 16b11ae4604f3c38f9011c46137ddcbf9238154b Maintainer: ae Status: ready --><!-- CREDITS: lhsazevedo,ae,ABDALAZARD -->
+<?xml version="1.0" encoding="utf-8"?> <!-- EN-Revision: 0f53e8f37b7bf8513c93e5e2d67e7787f26ed693 Maintainer: ae Status: ready --><!-- CREDITS: lhsazevedo,ae,ABDALAZARD,leonardolara -->
  <chapter xml:id="language.enumerations" xmlns="http://docbook.org/ns/docbook">
   <title>Enumerações</title>
   <sect1 xml:id="language.enumerations.overview">
@@ -37,6 +37,7 @@
    <programlisting role="php">
 <![CDATA[
 <?php
+
 enum Naipe
 {
     case Copas;
@@ -59,14 +60,20 @@ enum Naipe
    <programlisting role="php">
 <![CDATA[
 <?php
-function pegar_uma_carta(Naipe $naipe) { ... }
+
+function pegar_uma_carta(Naipe $naipe)
+{
+    /* ... */
+}
 
 $val = Naipe::Ouros;
 
 // OK
 pegar_uma_carta($val);
+
 // OK
 pegar_uma_carta(Naipe::Paus);
+
 // TypeError: pegar_uma_carta(): Argument #1 ($naipe) must be of type Naipe, string given
 pegar_uma_carta('Espadas');
 ?>
@@ -84,13 +91,14 @@ pegar_uma_carta('Espadas');
    </para>
 
    <para>
-    Por padrão, os casos não são internamente associados por um valor escalar. Ou seja, <literal>Suit::Copas</literal>
+    Por padrão, os casos não são internamente associados por um valor escalar. Ou seja, <literal>Naipe::Copas</literal>
     is not equal to <literal>"0"</literal>. Instead, each case is backed by a singleton object of that name. That means that:
    </para>
 
    <programlisting role="php">
 <![CDATA[
 <?php
+
 $a = Naipe::Espadas;
 $b = Naipe::Espadas;
 
@@ -124,6 +132,7 @@ $a instanceof Naipe;  // true
    <programlisting role="php">
 <![CDATA[
 <?php
+
 print Naipe::Espadas->name;
 // imprime "Espadas"
 ?>
@@ -154,6 +163,7 @@ print Naipe::Espadas->name;
   <programlisting role="php">
 <![CDATA[
 <?php
+
 enum Naipe: string
 {
     case Copas = 'C';
@@ -195,6 +205,7 @@ enum Naipe: string
   <programlisting role="php">
 <![CDATA[
 <?php
+
 print Naipe::Paus->value;
 // Imprime "P"
 ?>
@@ -209,6 +220,7 @@ print Naipe::Paus->value;
   <programlisting role="php">
 <![CDATA[
 <?php
+
 $naipe = Naipe::Paus;
 $ref = &$naipe->value;
 // Error: Cannot acquire reference to property Naipe::$value
@@ -249,6 +261,7 @@ $ref = &$naipe->value;
   <programlisting role="php">
 <![CDATA[
 <?php
+
 $registro = obter_coisas_do_banco_de_dados($id);
 print $registro['naipe'];
 
@@ -279,6 +292,7 @@ print $naipe->value;
   <programlisting role="php">
 <![CDATA[
 <?php
+
 interface Colorido
 {
     public function cor(): string;
@@ -307,7 +321,10 @@ enum Naipe implements Colorido
     }
 }
 
-function pintar(Colorido $c) { ... }
+function pintar(Colorido $c)
+{
+   /* ... */
+}
 
 pintar(Naipe::Paus);  // Funciona
 
@@ -329,6 +346,7 @@ print Naipe::Ouros->shape(); // imprime "Retângulo"
   <programlisting role="php">
    <![CDATA[
 <?php
+
 interface Colorido
 {
     public function cor(): string;
@@ -378,6 +396,7 @@ enum Naipe: string implements Colorido
   <programlisting role="php">
 <![CDATA[
 <?php
+
 interface Colorido
 {
     public function cor(): string;
@@ -433,6 +452,7 @@ final class Naipe implements UnitEnum, Colorido
   <programlisting role="php">
 <![CDATA[
 <?php
+
 enum Tamanho
 {
     case Pequeno;
@@ -472,6 +492,7 @@ enum Tamanho
   <programlisting role="php">
 <![CDATA[
 <?php
+
 enum Tamanho
 {
     case Pequeno;
@@ -497,6 +518,7 @@ enum Tamanho
   <programlisting role="php">
 <![CDATA[
 <?php
+
 interface Colorido
 {
     public function cor(): string;
@@ -551,30 +573,49 @@ enum Naipe implements Colorido
   <programlisting role="php">
 <![CDATA[
 <?php
+
 // Esta é uma definição de Enum perfeitamente legal.
 enum Direcao implements ArrayAccess
 {
     case Cima;
     case Baixo;
 
-    public function offsetGet($val) { ... }
-    public function offsetExists($val) { ... }
-    public function offsetSet($val) { throw new Exception(); }
-    public function offsetUnset($val) { throw new Exception(); }
+    public function offsetExists($offset): bool
+    {
+        return false;
+    }
+
+    public function offsetGet($offset): mixed
+    {
+        return null;
+    }
+
+    public function offsetSet($offset, $value): void
+    {
+        throw new Exception();
+    }
+
+    public function offsetUnset($offset): void
+    {
+        throw new Exception();
+    }
 }
 
 class Foo
 {
     // Isto é permitido.
-    const Bar = Direcao::Baixo;
+    const BAIXO = Direcao::Baixo;
 
     // Isto não é permitido, pois pode não ser determinístico.
-    const Bar = Direcao::Cima['curta'];
+    const CIMA = Direcao::Cima['curta'];
     // Fatal error: Cannot use [] on enums in constant expression
 }
 
 // Isto é perfeitamente legal, porque não é uma expressão constante.
 $x = Direcao::Cima['curta'];
+var_dump("\$x is " . var_export($x, true));
+
+$foo = new Foo();
 ?>
 ]]>
   </programlisting>
@@ -632,8 +673,10 @@ $x = Direcao::Cima['curta'];
   <programlisting role="php">
 <![CDATA[
 <?php
+
 $trevos = new Naipe();
 // Error: Cannot instantiate enum Naipe
+
 $ferraduras = (new ReflectionClass(Naipe::class))->newInstanceWithoutConstructor()
 // Error: Cannot instantiate enum Naipe
 ?>
@@ -654,6 +697,7 @@ $ferraduras = (new ReflectionClass(Naipe::class))->newInstanceWithoutConstructor
   <programlisting role="php">
 <![CDATA[
 <?php
+
 Naipe::cases();
 // Produz: [Naipe::Copas, Naipe::Ouros, Naipe::Paus, Naipe::Espadas]
 ?>
@@ -675,6 +719,7 @@ Naipe::cases();
   <programlisting role="php">
 <![CDATA[
 <?php
+
 Naipe::Copas === unserialize(serialize(Naipe::Copas));
 
 print serialize(Naipe::Copas);
@@ -701,6 +746,7 @@ print serialize(Naipe::Copas);
   <programlisting role="php">
 <![CDATA[
 <?php
+
 enum Foo {
     case Bar;
 }
@@ -764,6 +810,7 @@ function bar(B $b) {
   <programlisting role="php">
 <![CDATA[
 <?php
+
 enum ErrorCode {
     case SOMETHING_BROKE;
 }
@@ -793,6 +840,7 @@ function quux(ErrorCode $errorCode)
   <programlisting role="php">
 <![CDATA[
 <?php
+
 // Apenas para o exemplo onde enums não são finais.
 // Isto *não* funciona no PHP.
 enum MoreErrorCode extends ErrorCode {
@@ -833,13 +881,17 @@ fot(MoreErrorCode::PEBKAC);
     <programlisting role="php">
 <![CDATA[
 <?php
+
 enum Ordem
 {
     case Asc;
     case Desc;
 }
 
-function consulta($campos, $filtros, Ordem $ordem = Ordem::Asc) { ... }
+function consulta($campos, $filtros, Ordem $ordem = Ordem::Asc)
+{
+     /* ... */
+}
 ?>
 ]]>
     </programlisting>
@@ -860,6 +912,7 @@ function consulta($campos, $filtros, Ordem $ordem = Ordem::Asc) { ... }
     <programlisting role="php">
 <![CDATA[
 <?php
+
 enum EstadoDeUsuario: string
 {
     case Pendente = 'P';
@@ -897,6 +950,7 @@ enum EstadoDeUsuario: string
     <programlisting role="php">
 <![CDATA[
 <?php
+
 foreach (EstadoDeUsuario::cases() as $caso) {
     printf('<option value="%s">%s</option>\n', $caso->value, $caso->label());
 }
