@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 2c17cef6e71c3d85011319cde128cc4edf89a053 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<refentry xml:id="function.mb-detect-encoding" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>mb_detect_encoding</refname>
+  <refpurpose>Detectar a codificação de caracteres</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>string</type><type>false</type></type><methodname>mb_detect_encoding</methodname>
+   <methodparam><type>string</type><parameter>string</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>array</type><type>string</type><type>null</type></type><parameter>encodings</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>strict</parameter><initializer>&false;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Detecta a codificação de caracteres mais provável para a <type>string</type> <parameter>string</parameter>
+   a partir de uma lista ordenada de candidatos.
+  </para>
+  <para>
+   A detecção automática da codificação de caracteres pretendida nunca pode ser totalmente confiável;
+   sem informações adicionais, é semelhante a decodificar uma string criptografada
+   sem a chave. É sempre preferível usar uma indicação de codificação de caracteres
+   armazenada ou transmitida com os dados, como um cabeçalho HTTP "Content-Type".
+  </para>
+  <para>
+   Esta função é mais útil com codificações multibyte, onde nem todas as sequências de
+   bytes formam uma string válida. Se a string de entrada contiver tal sequência,
+   essa codificação será rejeitada e a próxima codificação será verificada.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>string</parameter></term>
+     <listitem>
+      <para>
+       A <type>string</type> sendo inspecionada.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>encodings</parameter></term>
+     <listitem>
+      <para>
+       Uma lista de codificações de caracteres para tentar, em ordem. A lista pode ser especificada como
+            um array de strings ou uma única string separada por vírgulas.
+      </para>
+      <para>
+       Se <parameter>encodings</parameter> for omitido ou &null;,
+       a detect_order atual (definida com a opção de configuração
+       <link linkend="ini.mbstring.detect-order">mbstring.detect_order</link>,
+       ou função <function>mb_detect_order</function>) será usada.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>strict</parameter></term>
+     <listitem>
+      <para>
+       Controla o comportamento quando <parameter>string</parameter>
+       não é válida em nenhuma das <parameter>encodings</parameter> listadas.
+       Se <parameter>strict</parameter> for definido como &false;, a codificação mais próxima
+       correspondente será retornada; se <parameter>strict</parameter> for definido como &true;,
+       &false; será retornado.
+      </para>
+      <para>
+       O valor padrão para <parameter>strict</parameter> pode ser definido
+       com a opção de configuração
+       <link linkend="ini.mbstring.strict-detection">mbstring.strict_detection</link>.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   A codificação de caracteres detectada ou &false; se a string não for válida
+   em nenhuma das codificações listadas.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.2.0</entry>
+      <entry>
+       <function>mb_detect_encoding</function> não retornará mais
+       as seguintes codificações não textuais:
+       <literal>"Base64"</literal>, <literal>"QPrint"</literal>,
+       <literal>"UUencode"</literal>, <literal>"HTML entities"</literal>,
+       <literal>"7 bit"</literal> e <literal>"8 bit"</literal>.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>mb_detect_encoding</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// Detectar codificação de caracteres com a detect_order atual
+echo mb_detect_encoding($str);
+
+// "auto" é expandido de acordo com mbstring.language
+echo mb_detect_encoding($str, "auto");
+
+// Especificar parâmetro "encodings" por lista separada por vírgula
+echo mb_detect_encoding($str, "JIS, eucjp-win, sjis-win");
+
+// Usar array para especificar parâmetro "encodings"
+$encodings = [
+  "ASCII",
+  "JIS",
+  "EUC-JP"
+];
+echo mb_detect_encoding($str, $encodings);
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Efeito do parâmetro <parameter>strict</parameter></title>
+    <programlisting role="php">
+     <![CDATA[
+<?php
+// 'áéóú' codificado em ISO-8859-1
+$str = "\xE1\xE9\xF3\xFA";
+
+// A string não é válida em ASCII ou UTF-8, mas UTF-8 é considerado uma correspondência mais próxima
+var_dump(mb_detect_encoding($str, ['ASCII', 'UTF-8'], false));
+var_dump(mb_detect_encoding($str, ['ASCII', 'UTF-8'], true));
+
+// Se uma codificação válida for encontrada, o parâmetro strict não muda o resultado
+var_dump(mb_detect_encoding($str, ['ASCII', 'UTF-8', 'ISO-8859-1'], false));
+var_dump(mb_detect_encoding($str, ['ASCII', 'UTF-8', 'ISO-8859-1'], true));
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+string(5) "UTF-8"
+bool(false)
+string(10) "ISO-8859-1"
+string(10) "ISO-8859-1"
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   Em alguns casos, a mesma sequência de bytes pode formar uma string válida em várias
+   codificações de caracteres, e é impossível saber qual interpretação foi
+   pretendida. Por exemplo, entre muitos outros, a sequência de bytes "\xC4\xA2" poderia ser:
+  </para>
+  <para>
+   <simplelist>
+    <member>
+     "Ä¢" (U+00C4 LATIN CAPITAL LETTER A WITH DIAERESIS seguido por U+00A2 CENT SIGN)
+     codificado em qualquer um de of ISO-8859-1, ISO-8859-15, or Windows-1252
+    </member>
+    <member>
+     "ФЂ" (U+0424 CYRILLIC CAPITAL LETTER EF seguido por U+0402 CYRILLIC CAPITAL LETTER
+     DJE) codificado em ISO-8859-5
+    </member>
+    <member>
+     "Ģ" (U+0122 LATIN CAPITAL LETTER G WITH CEDILLA) codificado em UTF-8
+    </member>
+   </simplelist>
+  </para>
+  <para>
+   <example>
+    <title>Efeito da ordem quando várias codificações correspondem</title>
+    <programlisting role="php">
+     <![CDATA[
+<?php
+$str = "\xC4\xA2";
+
+// A string é válida em todas as três codificações, então a primeira listada será retornada
+var_dump(mb_detect_encoding($str, ['UTF-8', 'ISO-8859-1', 'ISO-8859-5']));
+var_dump(mb_detect_encoding($str, ['ISO-8859-1', 'ISO-8859-5', 'UTF-8']));
+var_dump(mb_detect_encoding($str, ['ISO-8859-5', 'UTF-8', 'ISO-8859-1']));
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+string(5) "UTF-8"
+string(10) "ISO-8859-1"
+string(10) "ISO-8859-5"
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>mb_detect_order</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 92f1b8b177eb5730382abf9f27bae868f1bb636f Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<refentry xml:id="function.mb-send-mail" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>mb_send_mail</refname>
+  <refpurpose>Envia email codificado</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>bool</type><methodname>mb_send_mail</methodname>
+   <methodparam><type>string</type><parameter>to</parameter></methodparam>
+   <methodparam><type>string</type><parameter>subject</parameter></methodparam>
+   <methodparam><type>string</type><parameter>message</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>array</type><type>string</type></type><parameter>additional_headers</parameter><initializer>[]</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>string</type><type>null</type></type><parameter>additional_params</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Envia e-mails. Cabeçalhos e mensagens são convertidos e codificados de acordo
+   com a configuração de <function>mb_language</function>. É uma função wrapper
+   para <function>mail</function>, então veja também <function>mail</function> para detalhes.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>to</parameter></term>
+     <listitem>
+      <para>
+       Os endereços de e-mail para os quais o e-mail será enviado. Múltiplos
+       destinatários podem ser especificados separando cada
+       endereço em <parameter>to</parameter> por vírgula.
+       Este parâmetro não é automaticamente codificado.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>subject</parameter></term>
+     <listitem>
+      <para>
+       O assunto do e-mail.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>message</parameter></term>
+     <listitem>
+      <para>
+       A mensagem do e-mail.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>additional_headers</parameter> (opcional)</term>
+     <listitem>
+      <para>
+       <type>String</type> ou <type>array</type> a ser inserido no final do cabeçalho do e-mail.
+      </para>
+      <para>
+       Isso é tipicamente usado para adicionar cabeçalhos extras (De, Cc e Bcc).
+       Múltiplos cabeçalhos extras devem ser separados por um CRLF (\r\n).
+       Valide o parâmetro para não injetar cabeçalhos indesejados por atacantes.
+      </para>
+      <para>
+       Se um <type>array</type> for passado, suas chaves são os nomes dos cabeçalhos e seus
+       valores são os respectivos valores dos cabeçalhos.
+      </para>
+      <note>
+       <para>
+        Ao enviar e-mails, o e-mail <emphasis>deve</emphasis> conter
+        um cabeçalho <literal>From</literal>. Isso pode ser configurado com o
+        parâmetro <parameter>additional_headers</parameter>, ou um padrão
+        pode ser configurado no &php.ini;.
+       </para>
+       <para>
+        Falhar em fazer isso resultará em uma mensagem de erro
+        semelhante a <literal>Warning: mail(): "sendmail_from" not
+        set in php.ini or custom "From:" header missing</literal>.
+        O cabeçalho <literal>From</literal> também define
+        <literal>Return-Path</literal> no Windows.
+       </para>
+      </note>
+      <note>
+       <para>
+        Se as mensagens não forem recebidas, tente usar apenas LF (\n).
+        Alguns agentes de transferência de email Unix (notavelmente
+        <link xlink:href="&url.qmail;">qmail</link>) substituem LF por CRLF
+        automaticamente (o que leva a duplicação de CR se CRLF for usado).
+        Isso deve ser usado apenas como último recurso, pois não está em conformidade com
+        <link xlink:href="&url.rfc;2822">RFC 2822</link>.
+       </para>
+      </note>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>additional_params</parameter></term>
+     <listitem>
+      <para>
+       <parameter>additional_params</parameter> é um parâmetro de linha de comando MTA
+       útil ao definir o cabeçalho Return-Path correto
+       ao usar sendmail.
+      </para>
+      <para>
+       Este parâmetro é escapado internamente por <function>escapeshellcmd</function>
+       para evitar a execução de comandos. <function>escapeshellcmd</function> evita
+       a execução de comandos, mas permite adicionar parâmetros adicionais. Por razões de segurança,
+       este parâmetro deve ser validado.
+      </para>
+      <para>
+       Como <function>escapeshellcmd</function> é aplicado automaticamente, alguns caracteres
+       que são permitidos como endereços de e-mail por RFCs da Internet não podem ser usados. Programas
+       que são obrigados a usar esses caracteres <function>mail</function> não podem ser usados.
+      </para>
+      <para>
+       O usuário que o servidor da web executa deve ser adicionado como um usuário confiável para o
+       arquivo de configuração do sendmail para evitar a adição de um cabeçalho 'X-Warning'
+       à mensagem quando o remetente do envelope (-f) é definido usando este método.
+       Para usuários do sendmail, este arquivo é <filename>/etc/mail/trusted-users</filename>.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.success;
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       <parameter>additional_params</parameter> é anulável agora.
+      </entry>
+     </row>
+      <row>
+       <entry>7.2.0</entry>
+       <entry>
+        O parâmetro <parameter>additional_headers</parameter> agora também aceita
+        um <type>array</type>.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>mail</function></member>
+    <member><function>mb_encode_mimeheader</function></member>
+    <member><function>mb_language</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
