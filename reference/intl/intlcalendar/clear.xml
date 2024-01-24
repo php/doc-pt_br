@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 2ca090342977839edca2f7f4e52305a1b5da6095 Maintainer: leonardolara Status: ready -->
+<refentry xml:id="intlcalendar.clear" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>IntlCalendar::clear</refname>
+  <refpurpose>Limpa um campo ou todos os campos</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <para>
+   &style.oop;
+  </para>
+  <methodsynopsis role="IntlCalendar">
+   <modifier>public</modifier> <type>true</type><methodname>IntlCalendar::clear</methodname>
+   <methodparam choice="opt"><type class="union"><type>int</type><type>null</type></type><parameter>field</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   &style.procedural;
+  </para>
+  <methodsynopsis>
+   <type>true</type><methodname>intlcal_clear</methodname>
+   <methodparam><type>IntlCalendar</type><parameter>calendar</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>int</type><type>null</type></type><parameter>field</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Limpa todos os campos ou um campo específico. Um campo limpo é
+   marcado como indefinido, dando a ele a menor prioridade em relação a campos sobrepostos ou
+   mesmo a valores padrões ao calcular o instante de tempo. Adicionalmente, seu valor é definido
+   para <literal>0</literal>, embora devido à baixa prioridade do campo, seu valor poderá
+   ter sido definido internamente para outro valor no momento que o campo tenha terminado
+   de ser consultado.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <variablelist>
+   <varlistentry>
+    <term><parameter>calendar</parameter></term>
+    <listitem>
+     &intl.parameter.intl-calendar;
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><parameter>field</parameter></term>
+    <listitem>
+     &reference.intl.incfieldparam;
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.true.always;
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      &return.type.true;
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+   <title>Exemplos de <function>IntlCalendar::clear</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+ini_set('intl.default_locale', 'es_ES');
+ini_set('date.timezone', 'UTC');
+
+$fields = array(
+    'FIELD_ERA'                  => 0,
+    'FIELD_YEAR'                 => 1,
+    'FIELD_MONTH'                => 2,
+    'FIELD_WEEK_OF_YEAR'         => 3,
+    'FIELD_WEEK_OF_MONTH'        => 4,
+    'FIELD_DATE'                 => 5,
+    'FIELD_DAY_OF_YEAR'          => 6,
+    'FIELD_DAY_OF_WEEK'          => 7,
+    'FIELD_DAY_OF_WEEK_IN_MONTH' => 8,
+    'FIELD_AM_PM'                => 9,
+    'FIELD_HOUR'                 => 10,
+    'FIELD_HOUR_OF_DAY'          => 11,
+    'FIELD_MINUTE'               => 12,
+    'FIELD_SECOND'               => 13,
+    'FIELD_MILLISECOND'          => 14,
+    'FIELD_ZONE_OFFSET'          => 15,
+    'FIELD_DST_OFFSET'           => 16,
+    'FIELD_YEAR_WOY'             => 17,
+    'FIELD_DOW_LOCAL'            => 18,
+    'FIELD_EXTENDED_YEAR'        => 19,
+    'FIELD_JULIAN_DAY'           => 20,
+    'FIELD_MILLISECONDS_IN_DAY'  => 21,
+    'FIELD_IS_LEAP_MONTH'        => 22,
+    'FIELD_FIELD_COUNT'          => 23,
+);
+function getSetFields(IntlCalendar $cal) {
+    global $fields;
+    $ret = array();
+    foreach ($fields as $name => $value) {
+        if ($cal->isSet($value)) {
+            $ret[] = $name;
+        }
+    }
+    return $ret;
+}
+
+$cal = new IntlGregorianCalendar(2013, 2 /* março */, 15);
+echo "Depois da criação do calendário gregoriano\n";
+print_r(getSetFields($cal));
+echo "\n";
+
+echo IntlDateFormatter::formatObject($cal), "\n";
+echo "Depois do formatador requisitar o ano estendido\n";
+print_r(getSetFields($cal));
+echo "\n";
+
+$cal->clear(IntlCalendar::FIELD_YEAR);
+echo "Depois do ano ter sido limpo, a data fica a mesma\n";
+echo IntlDateFormatter::formatObject($cal), "\n";
+echo "porque FIELD_EXTENDED_YEAR ainda está definida\n";
+print_r(getSetFields($cal));
+echo "\n";
+
+var_dump($cal->clear(IntlCalendar::FIELD_EXTENDED_YEAR));
+echo "Depois que o ano estendido foi limpo\n";
+print_r(getSetFields($cal));
+echo IntlDateFormatter::formatObject($cal), "\n";
+echo "\n";
+
+echo "Depois que os campos são recalculados,\n"
+        . " o ano estendido é definido novamente (para 1970)\n";
+print_r(getSetFields($cal));
+echo "\n";
+
+$cal->clear();
+echo "Depois de chamar a variante sem argumentos\n";
+print_r(getSetFields($cal));
+echo IntlDateFormatter::formatObject($cal), "\n";
+
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Depois da criação do calendário gregoriano
+Array
+(
+    [0] => FIELD_ERA
+    [1] => FIELD_YEAR
+    [2] => FIELD_MONTH
+    [3] => FIELD_DATE
+)
+
+15/03/2013 00:00:00
+Depois do formatador requisitar o ano estendido
+Array
+(
+    [0] => FIELD_ERA
+    [1] => FIELD_YEAR
+    [2] => FIELD_MONTH
+    [3] => FIELD_DATE
+    [4] => FIELD_EXTENDED_YEAR
+)
+
+Depois do ano ter sido limpo, a data fica a mesma
+15/03/2013 00:00:00
+porque FIELD_EXTENDED_YEAR ainda está definida
+Array
+(
+    [0] => FIELD_ERA
+    [1] => FIELD_MONTH
+    [2] => FIELD_DATE
+    [3] => FIELD_EXTENDED_YEAR
+)
+
+bool(true)
+Depois que o ano estendido foi limpo
+Array
+(
+    [0] => FIELD_ERA
+    [1] => FIELD_MONTH
+    [2] => FIELD_DATE
+)
+15/03/1970 00:00:00
+
+Depois que os campos são recalculados,
+ o ano estendido é definido novamente (para 1970)
+Array
+(
+    [0] => FIELD_ERA
+    [1] => FIELD_MONTH
+    [2] => FIELD_DATE
+    [3] => FIELD_EXTENDED_YEAR
+)
+
+Depois de chamar a variante sem argumentos
+Array
+(
+)
+01/01/1970 00:00:00
+
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
