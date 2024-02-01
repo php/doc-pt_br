@@ -2,49 +2,49 @@
 <!-- EN-Revision: 84e8f0960b841a5ebca9d81cd2c2311b6504a371 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
 
 <chapter xml:id="pdo.prepared-statements" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
- <title>Prepared statements and stored procedures</title>
+ <title>Declarações preparadas e procedimentos armazenados</title>
  <para>
-  Many of the more mature databases support the concept of prepared
-  statements.  What are they? They can be thought of as a kind of compiled
-  template for the SQL that an application wants to run, that can be customized
-  using variable parameters.  Prepared statements offer two major benefits:
+  Muitos dos bancos de dados mais maduros suportam o conceito de declarações
+  preparadas. O que são elas? Elas podem ser consideradas como uma espécie de
+  modelo compilado para o SQL que uma aplicação deseja executar, que pode ser personalizado
+  usando parâmetros variáveis. As declarações preparadas oferecem dois benefícios principais:
  </para>
  <itemizedlist>
   <listitem>
    <simpara>
-    The query only needs to be parsed (or prepared) once, but can be
-    executed multiple times with the same or different parameters. When the
-    query is prepared, the database will analyze, compile and optimize its
-    plan for executing the query. For complex queries this process can take
-    up enough time that it will noticeably slow down an application if there
-    is a need to repeat the same query many times with different parameters. By
-    using a prepared statement the application avoids repeating the
-    analyze/compile/optimize cycle. This means that prepared statements use fewer
-    resources and thus run faster.
+    A consulta só precisa ser analisada (ou preparada) uma vez, mas pode ser
+    executada várias vezes com os mesmos ou diferentes parâmetros. Quando a
+    consulta é preparada, o banco de dados irá analisar, compilar e otimizar seu
+    plano para executar a consulta. Para consultas complexas, esse processo pode levar
+    tempo suficiente para diminuir perceptivelmente o desempenho de uma aplicação se houver
+    necessidade de repetir a mesma consulta muitas vezes com diferentes parâmetros. Ao
+    usar uma declaração preparada, a aplicação evita repetir o
+    ciclo de análise/compilação/otimização. Isso significa que declarações preparadas usam menos
+    recursos e, portanto, são mais rápidas.
    </simpara>
   </listitem>
   <listitem>
    <simpara>
-    The parameters to prepared statements don't need to be quoted; the
-    driver automatically handles this. If an application exclusively uses
-    prepared statements, the developer can be sure that no SQL injection will
-    occur (however, if other portions of the query are being built up with
-    unescaped input, SQL injection is still possible).
+    Os parâmetros das declarações preparadas não precisam ser citados; o
+    driver lida automaticamente com isso. Se uma aplicação usar exclusivamente
+    declarações preparadas, o desenvolvedor pode ter certeza de que nenhuma injeção de SQL
+    ocorrerá (no entanto, se outras partes da consulta estiverem sendo construídas com
+    entrada não escapada, a injeção de SQL ainda é possível).
    </simpara>
   </listitem>
  </itemizedlist>
  <para>
-  Prepared statements are so useful that they are the only feature that PDO
-  will emulate for drivers that don't support them.  This ensures that an
-  application will be able to use the same data access paradigm regardless of
-  the capabilities of the database.
+  As declarações preparadas são tão úteis que são a única funcionalidade que o PDO
+  emula para drivers que não as suportam. Isso garante que uma
+  aplicação poderá usar o mesmo paradigma de acesso a dados, independentemente das
+  capacidades do banco de dados.
  </para>
  <para>
   <example>
-   <title>Repeated inserts using prepared statements</title>
+   <title>Inserções repetidas usando declarações preparadas</title>
    <simpara>
-    This example performs an INSERT query by substituting a <literal>name</literal>
-    and a <literal>value</literal> for the named placeholders.
+    Este exemplo executa uma consulta INSERT substituindo um <literal>name</literal>
+    e um <literal>value</literal> pelos marcadores de posição nomeados.
    </simpara>
    <programlisting role="php">
 <![CDATA[
@@ -53,12 +53,12 @@ $stmt = $dbh->prepare("INSERT INTO REGISTRY (name, value) VALUES (:name, :value)
 $stmt->bindParam(':name', $name);
 $stmt->bindParam(':value', $value);
 
-// insert one row
+// insere uma linha
 $name = 'one';
 $value = 1;
 $stmt->execute();
 
-// insert another row with different values
+// insere outra linha com valores diferentes
 $name = 'two';
 $value = 2;
 $stmt->execute();
@@ -69,10 +69,10 @@ $stmt->execute();
  </para>
  <para>
   <example>
-   <title>Repeated inserts using prepared statements</title>
+   <title>Inserções repetidas usando declarações preparadas</title>
    <simpara>
-    This example performs an INSERT query by substituting a <literal>name</literal>
-    and a <literal>value</literal> for the positional <literal>?</literal> placeholders.
+    Este exemplo executa uma consulta INSERT substituindo um <literal>name</literal>
+    e um <literal>value</literal> pelos marcadores de posição posicionais <literal>?</literal>.
    </simpara>
    <programlisting role="php">
 <![CDATA[
@@ -81,12 +81,12 @@ $stmt = $dbh->prepare("INSERT INTO REGISTRY (name, value) VALUES (?, ?)");
 $stmt->bindParam(1, $name);
 $stmt->bindParam(2, $value);
 
-// insert one row
+// insere uma linha
 $name = 'one';
 $value = 1;
 $stmt->execute();
 
-// insert another row with different values
+// insere outra linha com valores diferentes
 $name = 'two';
 $value = 2;
 $stmt->execute();
@@ -97,11 +97,11 @@ $stmt->execute();
  </para>
  <para>
   <example>
-   <title>Fetching data using prepared statements</title>
+   <title>Buscando dados usando declarações preparadas</title>
    <simpara>
-    This example fetches data based on a key value supplied by a form.
-    The user input is automatically quoted, so there is no risk of a
-    SQL injection attack.
+    Este exemplo busca dados com base em um valor de chave fornecido por um formulário.
+    A entrada do usuário é automaticamente citada, portanto, não há risco de um ataque de
+    injeção de SQL.
    </simpara>
    <programlisting role="php">
 <![CDATA[
@@ -118,14 +118,14 @@ foreach ($stmt as $row) {
  </para>
  <para>
   <example>
-   <title>Calling a stored procedure with an output parameter</title>
+   <title>Chamando um procedimento armazenado com um parâmetro de saída</title>
    <simpara>
-    If the database driver supports it, an application may also bind parameters for
-    output as well as input. Output parameters are typically used to retrieve
-    values from stored procedures. Output parameters are slightly more complex
-    to use than input parameters, in that a developer must know how large a given
-    parameter might be when they bind it. If the value turns out to be larger
-    than the size they suggested, an error is raised.
+    Se o driver do banco de dados suportar, uma aplicação também pode vincular parâmetros de
+    saída além de entrada. Os parâmetros de saída são normalmente usados para recuperar
+    valores de procedimentos armazenados. Os parâmetros de saída são um pouco mais complexos
+    de usar do que os parâmetros de entrada, pois um desenvolvedor deve saber o quão grande um determinado
+    parâmetro pode ser quando o vincula. Se o valor for maior do
+    que o tamanho sugerido, um erro será gerado.
    </simpara>
    <programlisting role="php">
 <![CDATA[
@@ -133,7 +133,7 @@ foreach ($stmt as $row) {
 $stmt = $dbh->prepare("CALL sp_returns_string(?)");
 $stmt->bindParam(1, $return_value, PDO::PARAM_STR, 4000);
 
-// call the stored procedure
+// chamar o procedimento armazenado
 $stmt->execute();
 
 print "procedure returned $return_value\n";
@@ -144,12 +144,12 @@ print "procedure returned $return_value\n";
  </para>
  <para>
   <example>
-   <title>Calling a stored procedure with an input/output parameter</title>
+   <title>Chamando um procedimento armazenado com um parâmetro de entrada/saída</title>
    <simpara>
-    Developers may also specify parameters that hold values both input and output;
-    the syntax is similar to output parameters. In this next example, the
-    string 'hello' is passed into the stored procedure, and when it returns,
-    hello is replaced with the return value of the procedure.
+    Os desenvolvedores também podem especificar parâmetros que contêm valores tanto de entrada quanto de saída;
+    a sintaxe é semelhante aos parâmetros de saída. No próximo exemplo, a
+    string 'hello' é passada para o procedimento armazenado e, quando ele retorna,
+    hello é substituído pelo valor de retorno do procedimento.
    </simpara>
    <programlisting role="php">
 <![CDATA[
@@ -158,7 +158,7 @@ $stmt = $dbh->prepare("CALL sp_takes_string_returns_string(?)");
 $value = 'hello';
 $stmt->bindParam(1, $value, PDO::PARAM_STR|PDO::PARAM_INPUT_OUTPUT, 4000);
 
-// call the stored procedure
+// chamar o procedimento armazenado
 $stmt->execute();
 
 print "procedure returned $value\n";
@@ -169,14 +169,14 @@ print "procedure returned $value\n";
  </para>
  <para>
   <example>
-   <title>Invalid use of placeholder</title>
+   <title>Uso inválido de marcador de posição</title>
    <programlisting role="php">
 <![CDATA[
 <?php
 $stmt = $dbh->prepare("SELECT * FROM REGISTRY where name LIKE '%?%'");
 $stmt->execute([$_GET['name']]);
 
-// placeholder must be used in the place of the whole value
+// o marcador de posição deve ser usado no lugar do valor inteiro
 $stmt = $dbh->prepare("SELECT * FROM REGISTRY where name LIKE ?");
 $stmt->execute(["%$_GET[name]%"]);
 ?>
