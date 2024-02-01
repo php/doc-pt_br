@@ -4,80 +4,80 @@
 <chapter xml:id="pdo.transactions" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>Transactions and auto-commit</title>
  <para>
-  Now that you're connected via PDO, you must understand how PDO
-  manages transactions before you start issuing queries. If you've never
-  encountered transactions before, they offer 4 major features: Atomicity,
-  Consistency, Isolation and Durability (ACID). In layman's terms, any work
-  carried out in a transaction, even if it is carried out in stages, is
-  guaranteed to be applied to the database safely, and without interference
-  from other connections, when it is committed. Transactional work can also
-  be automatically undone at your request (provided you haven't already
-  committed it), which makes error handling in your scripts easier.
+  Agora que você está conectado via PDO, é necessário entender como o PDO
+  gerencia transações antes de começar a emitir consultas. Se você nunca
+  encontrou transações antes, elas oferecem 4 recursos principais: Atomicidade,
+  Consistência, Isolamento e Durabilidade (ACID). Em termos simples, qualquer trabalho
+  realizado em uma transação, mesmo que seja feito em etapas, é
+  garantido de ser aplicado ao banco de dados com segurança e sem interferência
+  de outras conexões, quando é confirmado. O trabalho transacional também pode
+  ser desfeito automaticamente a seu pedido (desde que você ainda não tenha
+  confirmado), o que facilita o tratamento de erros em seus scripts.
  </para>
  <para>
-  Transactions are typically implemented by "saving-up" your batch of
-  changes to be applied all at once; this has the nice side effect of
-  drastically improving the efficiency of those updates. In other words,
-  transactions can make your scripts faster and potentially more robust
-  (you still need to use them correctly to reap that benefit).
+  As transações são tipicamente implementadas "salvando" seu lote de
+  alterações para serem aplicadas de uma vez; isso tem o efeito colateral agradável de
+  melhorar drasticamente a eficiência dessas atualizações. Em outras palavras,
+  transações podem tornar seus scripts mais rápidos e potencialmente mais robustos
+  (ainda é necessário usá-los corretamente para obter esse benefício).
  </para>
  <para>
-  Unfortunately, not every database supports transactions, so PDO needs to
-  run in what is known as "auto-commit" mode when you first open the
-  connection.  Auto-commit mode means that every query that you run has its
-  own implicit transaction, if the database supports it, or no transaction
-  if the database doesn't support transactions. If you need a transaction,
-  you must use the <methodname>PDO::beginTransaction</methodname> method to
-  initiate one. If the underlying driver does not support transactions, a
-  PDOException will be thrown (regardless of your error handling settings:
-  this is always a serious error condition). Once you are in a transaction,
-  you may use <methodname>PDO::commit</methodname> or
-  <methodname>PDO::rollBack</methodname> to finish it, depending on the success
-  of the code you run during the transaction.
- </para>
- <warning>
-  <para>
-   PDO only checks for transaction capabilities on driver level. If certain
-   runtime conditions mean that transactions are unavailable,
-   <methodname>PDO::beginTransaction</methodname> will still return &true;
-   without error if the database server accepts the request to start a
-   transaction.
-  </para>
-  <para>
-   An example of this would be trying to use transactions on MyISAM tables on
-   a MySQL database.
-  </para>
- </warning>
- <para>
-  When the script ends or when a connection is about to be closed, if you
-  have an outstanding transaction, PDO will automatically roll it back.
-  This is a safety measure to help avoid inconsistency in the cases where
-  the script terminates unexpectedly--if you didn't explicitly commit the
-  transaction, then it is assumed that something went awry, so the rollback
-  is performed for the safety of your data.
+  Infelizmente, nem todos os bancos de dados suportam transações, então o PDO precisa
+  rodar no que é conhecido como modo "auto-commit" quando você abre a
+  conexão pela primeira vez. O modo auto-commit significa que cada consulta que você
+  executa tem sua própria transação implícita, se o banco de dados suportar, ou nenhuma transação
+  se o banco de dados não suportar transações. Se você precisar de uma transação,
+  você deve usar o método <methodname>PDO::beginTransaction</methodname> para
+  iniciá-la. Se o driver subjacente não suportar transações, uma
+  PDOException será lançada (independentemente das suas configurações de tratamento de erro:
+  essa é sempre uma condição de erro grave). Uma vez que você está em uma transação,
+  você pode usar <methodname>PDO::commit</methodname> ou
+  <methodname>PDO::rollBack</methodname> para finalizá-la, dependendo do sucesso
+  do código que você executou durante a transação.
  </para>
  <warning>
   <para>
-   The automatic rollback only happens if you initiate the transaction via
-   <methodname>PDO::beginTransaction</methodname>. If you manually issue a
-   query that begins a transaction PDO has no way of knowing about it and
-   thus cannot roll it back if something bad happens.
+   O PDO verifica apenas as capacidades de transação no nível do driver. Se certas
+   condições de tempo de execução significarem que transações estão indisponíveis,
+   <methodname>PDO::beginTransaction</methodname> ainda retornará &true;
+   sem erro se o servidor de banco de dados aceitar a solicitação para iniciar uma
+   transação.
+  </para>
+  <para>
+   Um exemplo disso seria tentar usar transações em tabelas MyISAM em
+   um banco de dados MySQL.
   </para>
  </warning>
  <para>
-  <example><title>Executing a batch in a transaction</title>
+  Quando o script termina ou quando uma conexão está prestes a ser fechada, se você
+  tiver uma transação pendente, o PDO automaticamente a reverterá.
+  Esta é uma medida de segurança para ajudar a evitar inconsistências nos casos em que
+  o script termina inesperadamente--se você não confirmou explicitamente a
+  transação, então é assumido que algo deu errado, então o rollback
+  é executado para a segurança de seus dados.
+ </para>
+ <warning>
+  <para>
+   O rollback automático só acontece se você iniciar a transação via
+   <methodname>PDO::beginTransaction</methodname>. Se você emitir manualmente uma
+   consulta que inicia uma transação, o PDO não tem como saber sobre isso e
+   assim não pode revertê-la se algo ruim acontecer.
+  </para>
+ </warning>
+ <para>
+  <example><title>Executando um lote em uma transação</title>
    <para>
-    In the following sample, let's assume that we are creating a set of
-    entries for a new employee, who has been assigned an ID number of 23.
-    In addition to entering the basic data for that person, we also need to
-    record their salary. It's pretty simple to make two separate updates,
-    but by enclosing them within the
-    <methodname>PDO::beginTransaction</methodname> and
-    <methodname>PDO::commit</methodname> calls, we are guaranteeing that no one
-    else will be able to see those changes until they are complete. If
-    something goes wrong, the catch block rolls back all changes made
-    since the transaction was started, and then prints out an error
-    message.
+    No exemplo a seguir, vamos assumir que estamos criando um conjunto de
+    entradas para um novo funcionário, que recebeu um número de ID 23.
+    Além de inserir os dados básicos para essa pessoa, também precisamos
+    registrar seu salário. É bastante simples fazer duas atualizações separadas,
+    mas ao envolvê-las nas chamadas
+    <methodname>PDO::beginTransaction</methodname> e
+    <methodname>PDO::commit</methodname>, estamos garantindo que ninguém
+    mais poderá ver essas alterações até que elas estejam completas. Se
+    algo der errado, o bloco catch reverte todas as alterações feitas
+    desde que a transação foi iniciada e, em seguida, imprime uma
+    mensagem de erro.
    </para>
    <programlisting role="php">
 <![CDATA[
@@ -109,12 +109,12 @@ try {
   </example>
  </para>
  <para>
-  You're not limited to making updates in a transaction; you can also issue
-  complex queries to extract data, and possibly use that information to
-  build up more updates and queries; while the transaction is active, you
-  are guaranteed that no one else can make changes while you are in the
-  middle of your work. For further reading on transactions, refer to the
-  documentation provided by your database server.
+  Você não está limitado a fazer atualizações em uma transação; você também pode emitir
+  consultas complexas para extrair dados e possivelmente usar essas informações para
+  construir mais atualizações e consultas; enquanto a transação estiver ativa, você
+  tem a garantia de que ninguém mais pode fazer alterações enquanto você está
+  no meio do seu trabalho. Para ler mais sobre transações, consulte a
+  documentação fornecida pelo seu servidor de banco de dados.
  </para>
 </chapter>
 
