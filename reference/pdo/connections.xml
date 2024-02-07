@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: d861a1bcea24f05e52e4938c1ecdf9d70326d7aa Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+
+<chapter xml:id="pdo.connections" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Conexões e gerenciamento de conexões</title>
+ <para>
+  As conexões são estabelecidas criando instâncias da classe base PDO.
+  Não importa qual driver você deseja usar; você sempre usa o nome da
+  classe PDO. O construtor aceita parâmetros para especificar a
+  fonte do banco de dados (conhecida como DSN) e opcionalmente para o nome de usuário e
+  senha (se houver).
+ </para>
+ <para>
+  <example>
+   <title>Conectando-se ao MySQL</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$dbh = new PDO('mysql:host=localhost;dbname=test', $user, $pass);
+?>
+]]>
+   </programlisting>
+  </example>
+ </para>
+ <para>
+  Se houver algum erro de conexão, um objeto <literal>PDOException</literal>
+  será lançado. Você pode capturar a exceção se quiser lidar com a
+  condição de erro, ou pode optar por deixá-la para um manipulador de exceção
+  global do aplicativo que você configurou via
+  <function>set_exception_handler</function>.
+ </para>
+ <para>
+  <example><title>Tratando erros de conexão</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+try {
+    $dbh = new PDO('mysql:host=localhost;dbname=test', $user, $pass);
+} catch (PDOException $e) {
+    // tentar reconectar após algum intervalo, por exemplo
+}
+]]>
+   </programlisting>
+  </example>
+ </para>
+ <warning>
+  <para>
+   Assim como qualquer outra <link linkend="language.exceptions">exceção</link>,
+   <classname>PDOException</classname> pode ser capturada explicitamente, via
+   uma instrução &catch;, ou implicitamente através de <function>set_exception_handler</function>.
+   Caso contrário, o comportamento padrão de converter uma exceção não capturada em um
+   <constant>E_FATAL_ERROR</constant> ocorrerá.
+   O erro fatal conterá uma rastreabilidade que pode vazar detalhes da conexão.
+   Portanto, a opção &php.ini;
+   <link linkend="ini.display-errors"><literal>display_errors</literal></link>
+   deve ser definida como <literal>0</literal> em um servidor de produção.
+  </para>
+ </warning>
+ <para>
+  Após a conexão bem-sucedida com o banco de dados, uma instância da classe PDO
+  é retornada para seu script. A conexão permanece ativa pelo
+  tempo de vida desse objeto PDO. Para fechar a conexão, você precisa
+  destruir o objeto garantindo que todas as referências restantes a ele sejam
+  deletadas - você faz isso atribuindo &null; à variável que mantém o
+  objeto. Se você não fizer isso explicitamente, o PHP fechará automaticamente
+  a conexão quando seu script terminar.
+ </para>
+ <note>
+  <simpara>
+   Se ainda houver outras referências a esta instância PDO (como de uma
+   instância PDOStatement, ou de outras variáveis referenciando a mesma
+   instância PDO), estas também devem ser removidas (por exemplo, atribuindo &null; à
+   variável que referencia a instância PDOStatement).
+  </simpara>
+ </note>
+ <para>
+  <example>
+   <title>Fechando uma conexão</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$dbh = new PDO('mysql:host=localhost;dbname=test', $user, $pass);
+// use a conexão aqui
+$sth = $dbh->query('SELECT * FROM foo');
+
+// e agora terminamos; feche-a
+$sth = null;
+$dbh = null;
+?>
+]]>
+   </programlisting>
+  </example>
+ </para>
+ <para>
+  Muitas aplicações web se beneficiarão com a realização de conexões persistentes
+  com servidores de banco de dados. As conexões persistentes não são fechadas no final do
+  script, mas são armazenadas em cache e reutilizadas quando outro script solicita uma conexão
+  usando as mesmas credenciais. O cache de conexão persistente permite evitar a sobrecarga
+  de estabelecer uma nova conexão toda vez que um script precisa se comunicar com um banco de dados,
+  resultando em uma aplicação web mais
+  rápida.
+ </para>
+ <para>
+  <example>
+   <title>Conexões persistentes</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$dbh = new PDO('mysql:host=localhost;dbname=test', $user, $pass, array(
+    PDO::ATTR_PERSISTENT => true
+));
+?>
+]]>
+   </programlisting>
+  </example>
+ </para>
+ <para>
+  O valor da opção <constant>PDO::ATTR_PERSISTENT</constant> é convertido para
+  &boolean; (ativar/desativar conexões persistentes), a menos que seja uma
+  &string; não numérica, caso em que permite usar vários pools de conexões persistentes.
+  Isso é útil se diferentes conexões usam configurações incompatíveis, por exemplo,
+  valores diferentes de <constant>PDO::MYSQL_ATTR_USE_BUFFERED_QUERY</constant>.
+ </para>
+ <note>
+  <para>
+   Se desejar usar conexões persistentes, você deve definir
+   <constant>PDO::ATTR_PERSISTENT</constant> no array de opções do driver
+   passadas para o construtor PDO. Se definir este atributo com
+   <methodname>PDO::setAttribute</methodname> após a instanciação do
+   objeto, o driver não usará conexões persistentes.
+  </para>
+ </note>
+ <note>
+  <para>
+   Se estiver usando o driver PDO ODBC e suas bibliotecas ODBC suportarem
+   Pool de Conexões ODBC (unixODBC e Windows são duas que suportam; pode haver
+   mais), então é recomendável que você não use conexões PDO
+   persistentes e, em vez disso, deixe o cache de conexão para a camada de
+   Pool de Conexões ODBC. O Pool de Conexões ODBC é compartilhado com outros
+   módulos no processo; se o PDO for instruído a armazenar em cache a conexão,
+   então essa conexão nunca seria retornada ao pool de conexões ODBC,
+   resultando em conexões adicionais sendo criadas para atender a esses outros
+   módulos.
+  </para>
+ </note>
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
+
