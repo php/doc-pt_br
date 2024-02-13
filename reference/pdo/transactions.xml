@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: eae19eb5fe0f5bebcbce382ea7a505cedeb5a883 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+
+<chapter xml:id="pdo.transactions" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Transações e confirmação automática (auto-commit)</title>
+ <para>
+  Agora que você está conectado via PDO, é necessário entender como o PDO
+  gerencia transações antes de começar a emitir consultas. Se você nunca
+  encontrou transações antes, elas oferecem 4 recursos principais: Atomicidade,
+  Consistência, Isolamento e Durabilidade (ACID). Em termos simples, qualquer trabalho
+  realizado em uma transação, mesmo que seja feito em etapas, é
+  garantido de ser aplicado ao banco de dados com segurança e sem interferência
+  de outras conexões, quando é confirmado. O trabalho transacional também pode
+  ser desfeito automaticamente a seu pedido (desde que você ainda não tenha
+  confirmado), o que facilita o tratamento de erros em seus scripts.
+ </para>
+ <para>
+  As transações são tipicamente implementadas "salvando" seu lote de
+  alterações para serem aplicadas de uma vez; isso tem o efeito colateral agradável de
+  melhorar drasticamente a eficiência dessas atualizações. Em outras palavras,
+  transações podem tornar seus scripts mais rápidos e potencialmente mais robustos
+  (ainda é necessário usá-los corretamente para obter esse benefício).
+ </para>
+ <para>
+  Infelizmente, nem todos os bancos de dados suportam transações, então o PDO precisa
+  rodar no que é conhecido como modo "auto-commit" quando você abre a
+  conexão pela primeira vez. O modo auto-commit significa que cada consulta que você
+  executa tem sua própria transação implícita, se o banco de dados suportar, ou nenhuma transação
+  se o banco de dados não suportar transações. Se você precisar de uma transação,
+  você deve usar o método <methodname>PDO::beginTransaction</methodname> para
+  iniciá-la. Se o driver subjacente não suportar transações, uma
+  PDOException será lançada (independentemente das suas configurações de tratamento de erro:
+  essa é sempre uma condição de erro grave). Uma vez que você está em uma transação,
+  você pode usar <methodname>PDO::commit</methodname> ou
+  <methodname>PDO::rollBack</methodname> para finalizá-la, dependendo do sucesso
+  do código que você executou durante a transação.
+ </para>
+ <warning>
+  <para>
+   O PDO verifica apenas as capacidades de transação no nível do driver. Se certas
+   condições de tempo de execução significarem que transações estão indisponíveis,
+   <methodname>PDO::beginTransaction</methodname> ainda retornará &true;
+   sem erro se o servidor de banco de dados aceitar a solicitação para iniciar uma
+   transação.
+  </para>
+  <para>
+   Um exemplo disso seria tentar usar transações em tabelas MyISAM em
+   um banco de dados MySQL.
+  </para>
+ </warning>
+ <para>
+  Quando o script termina ou quando uma conexão está prestes a ser fechada, se você
+  tiver uma transação pendente, o PDO automaticamente a reverterá.
+  Esta é uma medida de segurança para ajudar a evitar inconsistências nos casos em que
+  o script termina inesperadamente--se você não confirmou explicitamente a
+  transação, então é assumido que algo deu errado, então o rollback
+  é executado para a segurança de seus dados.
+ </para>
+ <warning>
+  <para>
+   O rollback automático só acontece se você iniciar a transação via
+   <methodname>PDO::beginTransaction</methodname>. Se você emitir manualmente uma
+   consulta que inicia uma transação, o PDO não tem como saber sobre isso e
+   assim não pode revertê-la se algo ruim acontecer.
+  </para>
+ </warning>
+ <para>
+  <example><title>Executando um lote em uma transação</title>
+   <para>
+    No exemplo a seguir, vamos assumir que estamos criando um conjunto de
+    entradas para um novo funcionário, que recebeu um número de ID 23.
+    Além de inserir os dados básicos para essa pessoa, também precisamos
+    registrar seu salário. É bastante simples fazer duas atualizações separadas,
+    mas ao envolvê-las nas chamadas
+    <methodname>PDO::beginTransaction</methodname> e
+    <methodname>PDO::commit</methodname>, estamos garantindo que ninguém
+    mais poderá ver essas alterações até que elas estejam completas. Se
+    algo der errado, o bloco catch reverte todas as alterações feitas
+    desde que a transação foi iniciada e, em seguida, imprime uma
+    mensagem de erro.
+   </para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+try {
+  $dbh = new PDO('odbc:SAMPLE', 'db2inst1', 'ibmdb2',
+      array(PDO::ATTR_PERSISTENT => true));
+  echo "Connected\n";
+} catch (Exception $e) {
+  die("Unable to connect: " . $e->getMessage());
+}
+
+try {
+  $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+  $dbh->beginTransaction();
+  $dbh->exec("insert into staff (id, first, last) values (23, 'Joe', 'Bloggs')");
+  $dbh->exec("insert into salarychange (id, amount, changedate)
+      values (23, 50000, NOW())");
+  $dbh->commit();
+
+} catch (Exception $e) {
+  $dbh->rollBack();
+  echo "Failed: " . $e->getMessage();
+}
+?>
+]]>
+   </programlisting>
+  </example>
+ </para>
+ <para>
+  Você não está limitado a fazer atualizações em uma transação; você também pode emitir
+  consultas complexas para extrair dados e possivelmente usar essas informações para
+  construir mais atualizações e consultas; enquanto a transação estiver ativa, você
+  tem a garantia de que ninguém mais pode fazer alterações enquanto você está
+  no meio do seu trabalho. Para ler mais sobre transações, consulte a
+  documentação fornecida pelo seu servidor de banco de dados.
+ </para>
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
+

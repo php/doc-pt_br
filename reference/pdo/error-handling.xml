@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 1508d46d0998c4843a22d28460bb6c4244290129 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+
+<chapter xml:id="pdo.error-handling" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Erros e manipulação de erros</title>
+ <para>
+  O PDO oferece a você a escolha entre 3 estratégias diferentes de manipulação de erros, para se adequar
+  ao seu estilo de desenvolvimento de aplicativos.
+ </para>
+ <itemizedlist>
+  <listitem>
+   <para>
+    <constant>PDO::ERRMODE_SILENT</constant>
+   </para>
+   <para>
+     Antes do PHP 8.0.0, este era o modo padrão. O PDO simplesmente define o código de erro para você
+     para inspecionar usando os métodos <methodname>PDO::errorCode</methodname> e
+     <methodname>PDO::errorInfo</methodname> tanto nos
+     objetos de instrução quanto no banco de dados; se o erro resultasse de uma chamada em um
+     objeto de instrução, você invocaria o
+     método <methodname>PDOStatement::errorCode</methodname> ou
+     <methodname>PDOStatement::errorInfo</methodname>
+     nesse objeto. Se o erro resultasse de uma chamada no
+     objeto de banco de dados, você invocaria esses métodos no objeto de banco de dados
+     em vez disso.
+    </para>
+  </listitem>
+  <listitem>
+   <para>
+    <constant>PDO::ERRMODE_WARNING</constant>
+   </para>
+   <para>
+     Além de definir o código de erro, o PDO emitirá uma mensagem de
+     E_WARNING tradicional. Esta configuração é útil durante a depuração/teste, se
+     você apenas quiser ver quais problemas ocorreram sem interromper o
+     fluxo do aplicativo.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <constant>PDO::ERRMODE_EXCEPTION</constant>
+    </para>
+    <para>
+     A partir do PHP 8.0.0, este é o modo padrão.
+     Além de definir o código de erro, o PDO lançará um
+     <classname>PDOException</classname>
+     e definirá suas propriedades para refletir o código de erro e o
+     informações de erro. Esta configuração também é útil durante a depuração, pois irá
+     efetivamente "explodir" o script no ponto do erro, muito
+     rapidamente apontando um dedo para áreas problemáticas potenciais em seu código
+     (lembre-se: as transações são automaticamente revertidas se a exceção
+     faz com que o script termine).
+    </para>
+    <para>
+     O modo de exceção também é útil porque você pode estruturar sua manipulação de erros
+     de forma mais clara do que com avisos no estilo tradicional do PHP e
+     com menos código/aninhamento do que em modo silencioso e explicitamente
+     verificando o valor de retorno de cada chamada de banco de dados.
+    </para>
+    <para>
+     Veja <link linkend="language.exceptions">Exceções</link> para mais
+     informações sobre Exceções em PHP.
+    </para>
+   </listitem>
+ </itemizedlist>
+ <para>
+  O PDO padroniza o uso de strings de código de erro SQLSTATE SQL-92; individualmente
+  Os drivers do PDO são responsáveis por mapear seus códigos nativos para os
+  códigos SQLSTATE apropriados. O método <methodname>PDO::errorCode</methodname>
+  retorna um único código SQLSTATE. Se você precisar de informações mais específicas
+  sobre um erro, o PDO também oferece um método
+  <methodname>PDO::errorInfo</methodname> que retorna uma matriz
+  contendo o código SQLSTATE, o código de erro específico do driver e o driver
+  string de erro específico.
+ </para>
+
+ <para>
+  <example>
+   <title>Criar uma instância do PDO e definir o modo de erro</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$dsn = 'mysql:dbname=testdb;host=127.0.0.1';
+$user = 'dbuser';
+$password = 'dbpass';
+
+$dbh = new PDO($dsn, $user, $password);
+$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+// Isso fará com que o PDO lance uma PDOException (quando a tabela não existe)
+$dbh->query("SELECT wrongcolumn FROM wrongtable");
+]]>
+   </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Fatal error: Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'testdb.wrongtable' doesn't exist in /tmp/pdo_test.php:10
+Stack trace:
+#0 /tmp/pdo_test.php(10): PDO->query('SELECT wrongcol...')
+#1 {main}
+  thrown in /tmp/pdo_test.php on line 10
+]]>
+    </screen>
+  </example>
+ </para>
+ <note>
+  <para>
+   <methodname>PDO::__construct</methodname> sempre lançará uma <classname>PDOException</classname> se a conexão falhar
+   independentemente de qual <constant>PDO::ATTR_ERRMODE</constant> estiver atualmente definido.
+  </para>
+ </note>
+ <para>
+  <example>
+   <title>Criar uma instância do PDO e definir o modo de erro a partir do construtor</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$dsn = 'mysql:dbname=test;host=127.0.0.1';
+$user = 'googleguy';
+$password = 'googleguy';
+
+$dbh = new PDO($dsn, $user, $password, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING));
+
+// Isso fará com que o PDO lance um erro de nível E_WARNING em vez de uma exceção (quando a tabela não existe)
+$dbh->query("SELECT wrongcolumn FROM wrongtable");
+]]>
+   </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Warning: PDO::query(): SQLSTATE[42S02]: Base table or view not found: 1146 Table 'test.wrongtable' doesn't exist in
+/tmp/pdo_test.php on line 9
+]]>
+    </screen>
+  </example>
+ </para>
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
+
