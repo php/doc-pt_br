@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 7838e3af5aa611d439f4b7037d8c96c017852972 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<refentry xml:id="function.spl-autoload-register" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>spl_autoload_register</refname>
+  <refpurpose>Registra a função dada como implementação __autoload()</refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>bool</type><methodname>spl_autoload_register</methodname>
+   <methodparam choice="opt"><type class="union"><type>callable</type><type>null</type></type><parameter>callback</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>throw</parameter><initializer>&true;</initializer></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>prepend</parameter><initializer>&false;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Registrar uma função na fila de __autoload fornecida pelo spl. Se a fila
+   ainda não estiver ativada, será ativada.
+  </para>
+  <para>
+   Se seu código tiver uma função <function>__autoload</function> existente, então
+   esta função deve ser registrada explicitamente na fila __autoload. Isso
+   ocorre porque <function>spl_autoload_register</function> substituirá
+   efetivamente o cache do mecanismo para a função <function>__autoload</function>
+   por <function>spl_autoload</function> ou
+   <function>spl_autoload_call</function>.
+  </para>
+  <para>
+   Se houver várias funções de carregamento automático, <function>spl_autoload_register</function>
+   permite isso. Ele cria efetivamente uma fila de funções de carregamento automático e
+   executa cada uma delas na ordem em que são definidas. Em contraste,
+   <function>__autoload</function> só pode ser definido uma vez.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>callback</parameter></term>
+     <listitem>
+      <para>
+       A função de carregamento automático sendo registrada.
+       Se for &null;, então a implementação padrão de
+       <function>spl_autoload</function> será registrada.
+      </para>
+      <methodsynopsis>
+       <type>void</type><methodname><replaceable>callback</replaceable></methodname>
+       <methodparam><type>string</type><parameter>class</parameter></methodparam>
+      </methodsynopsis>
+      <para>
+       A <parameter>class</parameter> não conterá a barra invertida
+       inicial de um identificador totalmente qualificado.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>throw</parameter></term>
+     <listitem>
+      <para>
+       Este parâmetro especifica se
+       <function>spl_autoload_register</function> deve lançar
+       exceções quando o <parameter>callback</parameter>
+       não pode ser registrado.
+      </para>
+      <warning>
+        <para>
+         Este parâmetro é ignorado a partir do PHP 8.0.0, e um aviso será
+         emitido se definido como &false;. <function>spl_autoload_register</function>
+         agora sempre lançará um <classname>TypeError</classname> em argumentos
+         inválidos.
+        </para>
+      </warning>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>prepend</parameter></term>
+     <listitem>
+      <para>
+       Se true, <function>spl_autoload_register</function> irá adicionar
+       o carregador automático na fila de carregamento automático antes de anexá-lo.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.success;
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>8.0.0</entry>
+       <entry>
+        <parameter>callback</parameter> é anulável agora.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title><function>spl_autoload_register</function> como substituição para um <function>__autoload</function> function</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+// function __autoload($class) {
+//     include 'classes/' . $class . '.class.php';
+// }
+
+function my_autoloader($class) {
+    include 'classes/' . $class . '.class.php';
+}
+
+spl_autoload_register('my_autoloader');
+
+// Ou, usando uma função anônima
+spl_autoload_register(function ($class) {
+    include 'classes/' . $class . '.class.php';
+});
+
+?>
+]]>
+    </programlisting>
+   </example>
+   <example>
+    <title><function>spl_autoload_register</function> exemplo onde a classe não é carregada</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+namespace Foobar;
+
+class Foo {
+    static public function test($class) {
+        print '[['. $class .']]';
+    }
+}
+
+spl_autoload_register(__NAMESPACE__ .'\Foo::test');
+
+new InexistentClass;
+
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+[[Foobar\InexistentClass]]
+Fatal error: Class 'Foobar\InexistentClass' not found in ...
+]]>
+    </screen>
+   </example>
+   <example>
+    <title>O identificador será fornecido sem a barra invertida inicial</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+spl_autoload_register(static function ($class) {
+    var_dump($class);
+});
+
+class_exists('RelativeName');
+class_exists('RelativeName\\WithNamespace');
+class_exists('\\AbsoluteName');
+class_exists('\\AbsoluteName\\WithNamespace');
+
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+string(12) "RelativeName"
+string(26) "RelativeName\WithNamespace"
+string(12) "AbsoluteName"
+string(26) "AbsoluteName\WithNamespace"
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>__autoload</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
