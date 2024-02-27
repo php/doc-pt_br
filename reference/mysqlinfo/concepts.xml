@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 968c2bc60de3e93d7f38be0b9d2d1b9685a16ea7 Maintainer: leonardolara Status: ready -->
+<chapter xml:id="mysqlinfo.concepts" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Conceitos</title>
+ <para>
+  Esses conceitos são específicos dos drivers MySQL para PHP.
+ </para>
+
+ <section xml:id="mysqlinfo.concepts.buffering">
+  <title>Consultas com buffer e sem buffer</title>
+
+  <para>
+   As consultas usam o modo de buffer por padrão. Isso significa que os resultados da consulta são
+   imediatamente transferidos do servidor MySQL para o PHP e então mantidos na memória
+   do processo PHP. Isso permite operações adicionais, como contar o
+   número de linhas e mover (buscar) o ponteiro do resultado atual. Também permite
+   emitir consultas adicionais na mesma conexão enquanto trabalha no conjunto de resultados.
+   A desvantagem do modo buffer é que conjuntos de resultados maiores podem exigir
+   bastante memória. A memória será mantida ocupada até que todas as referências ao
+   conjunto de resultados sejam desativadas ou o conjunto de resultados seja explicitamente liberado, o que acontecerá
+   automaticamente durante o término da solicitação, o mais tardar. A terminologia "armazenar resultado" também é usada
+   para o modo buffer, pois todo o conjunto de resultados é armazenado de uma só vez.
+  </para>
+
+  <note>
+   <para>
+    Ao usar a libmysqlclient como biblioteca, o limite de memória do PHP não contará a memória usada
+    para conjuntos de resultados, a menos que os dados sejam buscados em variáveis ​​PHP. Com o mysqlnd
+    a memória contabilizada incluirá o conjunto completo de resultados.
+   </para>
+  </note>
+
+  <para>
+   Consultas MySQL sem buffer executam a consulta e aguardam
+   que os dados do servidor MySQL sejam buscados. Isso usa menos memória
+   do lado do PHP, mas pode aumentar a carga no servidor. A menos que o conjunto completo de resultados tenha sido
+   obtido do servidor, nenhuma consulta adicional poderá ser enviada pela mesma conexão. Consultas
+   sem buffer também podem ser chamadas de "resultado de uso". Depois que todas as linhas do conjunto de resultados
+   forem buscadas, o conjunto de resultados desaparecerá e não poderá ser iterado novamente.
+  </para>
+
+  <para>
+   Seguindo essas características, consultas sem buffer devem ser utilizadas apenas
+   quando se espera um grande conjunto de resultados que será processado sequencialmente.
+   As consultas sem buffer contêm uma série de armadilhas que tornam mais
+   difícil seu uso, por exemplo, o número de linhas no conjunto de resultados é desconhecido
+   até que a última linha seja obtida.
+   Consultas em buffer são a maneira mais fácil e flexível de processar conjuntos de resultados.
+  </para>
+
+  <!-- @TODO
+    - Add list of issues people run into with unbuffered queries
+    - Add list of specific use cases for when unbuffered queries are useful
+    - Question: Unbuffered queries still require all rows to be returned or resource free before executing another? Applies to all extensions?
+    - Show "free_result" functions / unset usage with buffered queries 8double-check with Andrey on mysqlnd optimizations
+   -->
+
+  <para>
+   Como as consultas em buffer são o padrão, os exemplos abaixo demonstrarão como
+   executar consultas sem buffer com cada API.
+  </para>
+
+  <example>
+   <title>Exemplo de consulta sem buffer: mysqli</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$mysqli  = new mysqli("localhost", "my_user", "my_password", "world");
+$unbufferedResult = $mysqli->query("SELECT Name FROM City", MYSQLI_USE_RESULT);
+
+foreach ($unbufferedResult as $row) {
+    echo $row['Name'] . PHP_EOL;
+}
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <example>
+   <title>Exemplo de consulta sem buffer: pdo_mysql</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$pdo = new PDO("mysql:host=localhost;dbname=world", 'my_user', 'my_password');
+$pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+
+$unbufferedResult = $pdo->query("SELECT Name FROM City");
+foreach ($unbufferedResult as $row) {
+    echo $row['Name'] . PHP_EOL;
+}
+?>
+]]>
+   </programlisting>
+  </example>
+ </section>
+
+ <section xml:id="mysqlinfo.concepts.charset">
+  <title>Conjuntos de caracteres</title>
+
+  <para>
+   Idealmente, um conjunto de caracteres adequado será definido no nível do servidor, e isso é descrito
+   na seção <link xlink:href="&url.mysql.charsets.config;">Configuração do conjunto de caracteres</link>
+   do manual do servidor MySQL. Alternativamente, cada API MySQL oferece um método para definir
+   o conjunto de caracteres em tempo de execução.
+  </para>
+
+  <caution>
+   <title>O conjunto de caracteres e escape de caracteres</title>
+   <para>
+    O conjunto de caracteres deve ser entendido e definido, pois afeta todas as
+    ações e inclui implicações de segurança. Por exemplo, o mecanismo de escape
+    (por exemplo, <function>mysqli_real_escape_string</function> para mysqli e <methodname>PDO::quote</methodname> para PDO_MySQL) irá aderir a
+    esta configuração. É importante perceber que essas funções não usarão o conjunto
+    de caracteres definido com uma consulta, portanto, por exemplo, o seguinte não terá efeito
+    sobre elas:
+   </para>
+  </caution>
+
+  <example>
+   <title>Problemas ao definir o conjunto de caracteres com SQL</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$mysqli = new mysqli("localhost", "my_user", "my_password", "world");
+
+// Não afetará $mysqli->real_escape_string();
+$mysqli->query("SET NAMES utf8mb4");
+
+// Não afetará $mysqli->real_escape_string();
+$mysqli->query("SET CHARACTER SET utf8mb4");
+
+// Mas isto afetará $mysqli->real_escape_string();
+$mysqli->set_charset('utf8mb4');
+
+// Porém, isto NÃO irá afetá-la (UTF-8 vs utf8mb4) -- não use hífens aqui
+$mysqli->set_charset('UTF-8');
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <para>
+   Abaixo estão exemplos que demonstram como alterar adequadamente o conjunto de caracteres em tempo de execução
+   usando cada API.
+  </para>
+
+  <note>
+   <title>Possível confusão UTF-8</title>
+   <para>
+    Como os nomes dos conjuntos de caracteres no MySQL não contêm hífens, a string
+    "utf8" é válida no MySQL para definir o conjunto de caracteres como UTF-8 (codificação Unicode UTF-8 de até 3 bytes). A string
+    "UTF-8" não é válida, pois o uso de "UTF-8" não alterará o conjunto de caracteres e gerará um erro.
+   </para>
+  </note>
+
+  <example>
+   <title>Exemplo de definição do conjunto de caracteres: mysqli</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$mysqli = new mysqli("localhost", "my_user", "my_password", "world");
+
+echo 'Conjunto de caracteres inicial: ' . $mysqli->character_set_name() . "\n";
+
+if (!$mysqli->set_charset('utf8mb4')) {
+    printf("Erro ao carregar o conjunto de caracteres utf8mb4: %s\n", $mysqli->error);
+    exit;
+}
+
+echo 'Seu conjunto de caracteres atual é: ' . $mysqli->character_set_name() . "\n";
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <example>
+   <title>Exemplo de definição do conjunto de caracteres: <link linkend="ref.pdo-mysql.connection">pdo_mysql</link></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$pdo = new PDO("mysql:host=localhost;dbname=world;charset=utf8mb4", 'my_user', 'my_pass');
+?>
+]]>
+   </programlisting>
+  </example>
+
+ </section>
+
+</chapter>
