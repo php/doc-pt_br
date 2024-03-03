@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 5787d74ce439741a4656551604df0b3b24e6fcf6 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<refentry xml:id="splfileobject.fgetcsv" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>SplFileObject::fgetcsv</refname>
+  <refpurpose>Obtém linha do arquivo e faz o parse como campos CSV</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis role="SplFileObject">
+   <modifier>public</modifier> <type class="union"><type>array</type><type>false</type></type><methodname>SplFileObject::fgetcsv</methodname>
+   <methodparam choice="opt"><type>string</type><parameter>separator</parameter><initializer>","</initializer></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>enclosure</parameter><initializer>"\""</initializer></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>escape</parameter><initializer>"\\"</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Obtém uma linha do arquivo no formato <acronym>CSV</acronym> e retorna um array contendo os campos lidos.
+  </para>
+  <note>
+   <para>
+    As configurações de localidade são levadas em consideração por esta função. Se
+    <literal>LC_CTYPE</literal> for, por exemplo, <literal>en_US.UTF-8</literal>, arquivos em
+    codificações de um byte podem ser lidos incorretamente por esta função.
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>separator</parameter></term>
+     <listitem>
+      <para>
+       O delimitador de campo (apenas um caractere de um byte). Padrão é uma vírgula ou o valor definido usando <methodname>SplFileObject::setCsvControl</methodname>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>enclosure</parameter></term>
+     <listitem>
+      <para>
+       O caractere de delimitador de campo (apenas um caractere de um byte). Padrão é uma aspa dupla ou o valor definido usando <methodname>SplFileObject::setCsvControl</methodname>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>escape</parameter></term>
+     <listitem>
+      <para>
+       O caractere de escape (no máximo um caractere de um byte). Padrão é uma barra invertida (<literal>\</literal>) ou o valor definido usando <methodname>SplFileObject::setCsvControl</methodname>.
+       Uma string vazia (<literal>""</literal>) desativa o mecanismo de escape proprietário.
+      </para>
+      <note>
+       <simpara>
+        Geralmente, um caractere de <parameter>enclosure</parameter> é escapado dentro
+        de um campo duplicando-o; no entanto, o caractere de <parameter>escape</parameter>
+        pode ser usado como alternativa. Assim, para os valores padrão dos parâmetros
+        <literal>""</literal> e <literal>\"</literal> têm o mesmo
+        significado. Além de permitir escapar o caractere de
+        <parameter>enclosure</parameter>, o caractere de
+        <parameter>escape</parameter> não tem significado especial; nem mesmo é
+        destinado a escapar a si mesmo.
+       </simpara>
+      </note>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna um array indexado contendo os campos lidos, ou &false; em caso de erro.
+  </para>
+  <note>
+   <para>
+    Uma linha em branco em um arquivo CSV será retornada como um array
+    composto por um único campo &null; a menos que esteja usando <constant>SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE</constant>,
+    caso em que as linhas em branco são ignoradas.
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>7.4.0</entry>
+       <entry>
+        O parâmetro <parameter>escape</parameter> agora também aceita uma string vazia
+        para desativar o mecanismo de escape proprietário.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <methodname>SplFileObject::fgetcsv</methodname></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$file = new SplFileObject("data.csv");
+while (!$file->eof()) {
+    var_dump($file->fgetcsv());
+}
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Exemplo de <constant>SplFileObject::READ_CSV</constant></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$file = new SplFileObject("animals.csv");
+$file->setFlags(SplFileObject::READ_CSV);
+foreach ($file as $row) {
+    list($animal, $class, $legs) = $row;
+    printf("A %s is a %s with %d legs\n", $animal, $class, $legs);
+}
+?>
+]]>
+    </programlisting>
+    <para>Conteúdo de animals.csv</para>
+    <programlisting role="txt">
+<![CDATA[
+crocodile,reptile,4
+dolphin,mammal,0
+duck,bird,2
+koala,mammal,4
+salmon,fish,0
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+A crocodile is a reptile with 4 legs
+A dolphin is a mammal with 0 legs
+A duck is a bird with 2 legs
+A koala is a mammal with 4 legs
+A salmon is a fish with 0 legs
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><methodname>SplFileObject::setCsvControl</methodname></member>
+    <member><methodname>SplFileObject::setFlags</methodname></member>
+    <member><link linkend="splfileobject.constants.read-csv">SplFileObject::READ_CSV</link></member>
+    <member><methodname>SplFileObject::current</methodname></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
