@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 86e6094e86b84a51d00ab217ac50ce8dde33d82a Maintainer: leonardolara Status: ready -->
+
+<chapter xml:id="ldap.controls" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Controles LDAP</title>
+ <para>
+   Controles são objetos especiais que podem ser enviados junto com uma
+   requisição LDAP para alterar o comportamento do servidor LDAP durante a realização
+   da requisição. Pode também haver controles enviados pelo servidor
+   junto com a resposta para fornecer mais informação, normalmente
+   para responder a um objeto de controle da requisição.
+  <note>
+   <para>
+    Nem todos os controles são suportados por todos os servidores LDAP. Para saber quais controles
+    são suportados por um servidor, é necessário consultar o DSE raiz lendo-se um
+    DN vazio com o filtro (objectClass=*).
+   </para>
+   <example>
+    <title>Testando suporte ao controle de resultados paginados</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+// $ds é um identificador válido de ligação a um servidor de diretório
+
+$result = ldap_read($ds, '', '(objectClass=*)', ['supportedControl']);
+if (!in_array(LDAP_CONTROL_PAGEDRESULTS, ldap_get_entries($ds, $result)[0]['supportedcontrol'])) {
+  die("Este servidor não suporte controle de resultados paginados.");
+}
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </note>
+ </para>
+
+ <para>
+   A partir do PHP 7.3, pode-se enviar controle com a requisição em todas
+   as funções de requisição usando o parâmetro "serverctrls". Quando uma versão
+   "ext" de uma função existir, deve-se usá-la se for desejado
+   acessar o objeto de resposta completa e ser capaz de analisar
+   controles de resposta a partir dele usando <function>ldap_parse_result</function>.
+ </para>
+
+ <para>
+   "serverctrls" deve ser uma array contendo um array para cada controle a enviar,
+   contendo as seguintes chaves:
+   <variablelist>
+    <varlistentry>
+     <term>
+      oid
+      (<type>string</type>)
+     </term>
+     <listitem>
+      <simpara>
+       O OID do controle. Deve-se usar constantes
+       LDAP_CONTROL_* para isto. Consulte as <link linkend="ldap.constants">constantes LDAP</link>.
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>
+      iscritical
+      (<type>bool</type>)
+     </term>
+     <listitem>
+      <simpara>
+       Se um controle for observado como crítico, a requisição falhará se o
+       constrole não for suportado pelo servidor, ou se houver falha em sua
+       aplicação. Observe que alguns controles devem ser sempre marcados como críticos
+       como citado na RFC que os introduz. O padrão é &false;.
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>
+      value
+      (<type>mixed</type>)
+     </term>
+     <listitem>
+      <simpara>
+       Se aplicável, o valor do controle. Leia a seguir para mais informação.
+      </simpara>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+
+ </para>
+
+ <para>
+   A maior parte dos valores de controle são enviados ao servidor com codificação BER.
+   O usuário pode aplicar a codificação BER por conta própria, ou pode-se
+   passar um array com as chaves corretas de forma que a codificação é
+   feita automaticamente.
+   Controles que suportam ser passados como um array são:
+  <itemizedlist>
+   <listitem>
+    <para>
+     <constant>LDAP_CONTROL_PAGEDRESULTS</constant>
+     Chaves esperadas são [size] e [cookie]
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <constant>LDAP_CONTROL_ASSERT</constant>
+     Chave esperada é filter
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <constant>LDAP_CONTROL_VALUESRETURNFILTER</constant>
+     Chave esperada é filter
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <constant>LDAP_CONTROL_PRE_READ</constant>
+     Chave esperada é attrs
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <constant>LDAP_CONTROL_POST_READ</constant>
+     Chave esperada é attrs
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <constant>LDAP_CONTROL_SORTREQUEST</constant>
+     Espera um array de arrays com chaves attr, [oid], [reverse].
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <constant>LDAP_CONTROL_VLVREQUEST</constant>
+     Chaves esperadas são before, after, attrvalue|(offset, count), [context]
+    </para>
+   </listitem>
+  </itemizedlist>
+ </para>
+
+ <para>
+   Os controles a seguir não precisam de nenhum valor:
+  <itemizedlist>
+   <listitem>
+    <para>
+     <constant>LDAP_CONTROL_PASSWORDPOLICYREQUEST</constant>
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <constant>LDAP_CONTROL_MANAGEDSAIT</constant>
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <constant>LDAP_CONTROL_DONTUSECOPY</constant>
+    </para>
+   </listitem>
+  </itemizedlist>
+ </para>
+
+ <para>
+   O controle <constant>LDAP_CONTROL_PROXY_AUTHZ</constant> é um caso especial
+   já que não é esperado que seu valor seja codificado com BER, por usso pode-se usar
+   diretamente uma string para seu valor.
+ </para>
+
+ <para>
+   Quando controles são analisados por <function>ldap_parse_result</function>, valores são
+   convertidos em array se suportado.
+   Isto é suportado para:
+  <itemizedlist>
+   <listitem>
+    <para>
+     <constant>LDAP_CONTROL_PASSWORDPOLICYRESPONSE</constant>
+     Chaves são expire, grace, [error]
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <constant>LDAP_CONTROL_PAGEDRESULTS</constant>
+     Chaves são size, cookie
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <constant>LDAP_CONTROL_PRE_READ</constant>
+     Chaves são dn e nomes de atributo LDAP
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <constant>LDAP_CONTROL_POST_READ</constant>
+     Chaves são dn e nomes de atributo LDAP
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <constant>LDAP_CONTROL_SORTRESPONSE</constant>
+     Chaves são errcode, [attribute]
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <constant>LDAP_CONTROL_VLVRESPONSE</constant>
+     Chaves são target, count, errcode, context
+    </para>
+   </listitem>
+  </itemizedlist>
+ </para>
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

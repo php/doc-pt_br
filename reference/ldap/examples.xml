@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 39899ee59d6d6ffa387d1d3e34b49b56fb08e151 Maintainer: leonardolara Status: ready -->
+
+<chapter xml:id="ldap.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ &reftitle.examples;
+ <section xml:id="ldap.examples-basic">
+  <title>Uso básico</title>
+  <para>
+   Obtém informação para todas as entradas onde o sobrenome inicia
+   com "S" em um servidor de diretório, mostrando um extrato com
+   nome e endereço de correio eletrônico.
+  </para>
+
+  <example>
+   <title>Exemplo de pesquisa LDAP</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+// sequência básica com o LDAP é conectar, ligar, pesquisar, interpretar resultado
+// da pesquisa, fechar a conexão
+
+echo "<h3>Teste de consulta LDAP</h3>";
+echo "Conectando ...";
+$ds=ldap_connect("localhost");  // deve ser um servidor LDAP válido!
+echo "Resultado da conexão é " . $ds . "<br />";
+
+if ($ds) {
+    echo "Ligando ...";
+    $r=ldap_bind($ds);     // esta é uma ligação "anônima", tipicamente
+                           // com acesso somente-leitura
+    echo "Resultado da ligação é " . $r . "<br />";
+
+    echo "Pesquisando por (sn=S*) ...";
+    // Pesquisa entrada de sobrenome
+    $sr=ldap_search($ds, "o=Minha Empresa, c=BR", "sn=S*");
+    echo "Resultado da pesquisa é " . $sr . "<br />";
+
+    echo "Número de entradas retornadas é " . ldap_count_entries($ds, $sr) . "<br />";
+
+    echo "Obtendo entradas ...<p>";
+    $info = ldap_get_entries($ds, $sr);
+    echo "Dados para " . $info["count"] . " itens retornados:<p>";
+
+    for ($i=0; $i<$info["count"]; $i++) {
+        echo "dn é: " . $info[$i]["dn"] . "<br />";
+        echo "primeira entrada cn é: " . $info[$i]["cn"][0] . "<br />";
+        echo "primeira entrada de e-mail é: " . $info[$i]["mail"][0] . "<br /><hr />";
+    }
+
+    echo "Fechando a conexão";
+    ldap_close($ds);
+
+} else {
+    echo "<h4>Não foi possível conectar ao servidor LDAP</h4>";
+}
+?>
+]]>
+   </programlisting>
+  </example>
+ </section>
+ <section xml:id="ldap.examples-controls">
+  <title>Controles LDAP</title>
+  <para>
+   Aqui estão alguns exemplos de uso de Controles LDAP com PHP &gt;= 7.3.0.
+  </para>
+
+  <example>
+   <title>Ligação com informação de políticas</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$user   = 'cn=admin,dc=example,dc=com';
+$passwd = 'senhaadministrador';
+
+$ds = ldap_connect('ldap://localhost');
+
+if ($ds) {
+    $r = ldap_bind_ext($ds, $user, $passwd, [['oid' => LDAP_CONTROL_PASSWORDPOLICYREQUEST]]);
+
+    if (ldap_parse_result($ds, $r, $errcode, $matcheddn, $errmsg, $referrals, $ctrls)) {
+        if ($errcode != 0) {
+            die("Erro: $errmsg ($errcode)");
+        }
+        if (isset($ctrls[LDAP_CONTROL_PASSWORDPOLICYRESPONSE])) {
+            $value = $ctrls[LDAP_CONTROL_PASSWORDPOLICYRESPONSE]['value'];
+            echo "Expira em: ".$value['expire']." segundos\n";
+            echo "Número de autenticações restantes: ".$value['grace']."\n";
+            if (isset($value['error'])) {
+                echo "Código de erro da política: ".$value['error'];
+            }
+        }
+    }
+} else {
+    die("Não foi possível conectar ao servidor LDAP");
+}
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <example>
+   <title>Modifica a desencriptação somente se não estiver vazia</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+// $link é uma conexão LDAP
+
+$result = ldap_mod_replace_ext(
+    $link,
+    'o=test,dc=example,dc=com',
+    ['description' => 'Nova descrição'],
+    [
+        [
+            'oid'         => LDAP_CONTROL_ASSERT,
+            'iscritical'  => TRUE,
+            'value'       => ['filter' => '(!(description=*))']
+        ]
+    ]
+);
+
+// E então usa ldap_parse_result
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <example>
+   <title>Lendo alguns valores antes da remoção</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+// $link é uma conexão LDAP
+
+$result = ldap_delete_ext(
+    $link,
+    'o=test,dc=example,dc=com',
+    [
+        [
+            'oid'         => LDAP_CONTROL_PRE_READ,
+            'iscritical'  => TRUE,
+            'value'       => ['attrs' => ['o', 'description']]
+        ]
+    ]
+);
+
+// E então usa ldap_parse_result
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <example>
+   <title>Remove uma referência</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+// $link é uma conexão LDAP
+
+// Sem o controle o nó referenciado seria removido
+// Certifique-se de definir o controle como crítico para evitar isso
+$result = ldap_delete_ext(
+    $link,
+    'cn=reference,dc=example,dc=com',
+    [['oid' => LDAP_CONTROL_MANAGEDSAIT, 'iscritical' => TRUE]]
+);
+
+// E então usa ldap_parse_result
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <example>
+   <title>Usa paginação para uma pesquisa</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+// $link é uma conexão LDAP
+
+$cookie = '';
+
+do {
+    $result = ldap_search(
+        $link, 'dc=example,dc=base', '(cn=*)', ['cn'], 0, 0, 0, LDAP_DEREF_NEVER,
+        [['oid' => LDAP_CONTROL_PAGEDRESULTS, 'value' => ['size' => 2, 'cookie' => $cookie]]]
+    );
+    ldap_parse_result($link, $result, $errcode , $matcheddn , $errmsg , $referrals, $controls);
+    // Para deixar o exemplo curto os erros não são testados
+    $entries = ldap_get_entries($link, $result);
+    foreach ($entries as $entry) {
+        echo "cn: ".$entry['cn'][0]."\n";
+    }
+    if (isset($controls[LDAP_CONTROL_PAGEDRESULTS]['value']['cookie'])) {
+        // É necessário passar o cookie da última chamada para a próxima
+        $cookie = $controls[LDAP_CONTROL_PAGEDRESULTS]['value']['cookie'];
+    } else {
+        $cookie = '';
+    }
+    // Cookie vazio significa última página
+} while (strlen($cookie) > 0);
+?>
+]]>
+   </programlisting>
+  </example>
+ </section>
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
+
