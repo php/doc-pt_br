@@ -3,7 +3,7 @@
 <refentry xml:id="sqlite3.setauthorizer" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>SQLite3::setAuthorizer</refname>
-  <refpurpose>Configures a callback to be used as an authorizer to limit what a statement can do</refpurpose>
+  <refpurpose>Configura um retorno de chamada a ser usado como um autorizador para limitar o que uma declaração pode fazer</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
@@ -13,34 +13,34 @@
    <methodparam><type class="union"><type>callable</type><type>null</type></type><parameter>callback</parameter></methodparam>
   </methodsynopsis>
   <para>
-   Sets a callback that will be called by SQLite every time an action is performed
-   (reading, deleting, updating, etc.). This is used when preparing a SQL statement from
-   an untrusted source to ensure that the SQL statements do not try to access data they
-   are not allowed to see, or that they do not try to execute malicious statements that
-   damage the database. For example, an application may allow a user to enter arbitrary
-   SQL queries for evaluation by a database. But the application does not want the user to
-   be able to make arbitrary changes to the database. An authorizer could then be put in
-   place while the user-entered SQL is being prepared that disallows everything except
-   SELECT statements.
+   Define um retorno de chamada que será chamado pelo SQLite toda vez que uma ação for executada
+   (leitura, exclusão, atualização, etc.). Isso é usado ao preparar uma declaração SQL de
+   uma fonte não confiável para garantir que as declarações SQL não tentem acessar dados aos quais
+   não têm permissão para ver, ou que não tentem executar declarações maliciosas que
+   danifiquem o banco de dados. Por exemplo, um aplicativo pode permitir que um usuário insira consultas
+   SQL arbitrárias para avaliação por um banco de dados. Mas o aplicativo não quer que o usuário
+   possa fazer alterações arbitrárias no banco de dados. Um autorizador poderia então ser colocado em
+   prática enquanto o SQL inserido pelo usuário está sendo preparado, o que proíbe tudo exceto
+   declarações SELECT.
   </para>
   <para>
-   The authorizer callback may be called multiple times for each statement prepared by
-   SQLite. A <literal>SELECT</literal> or <literal>UPDATE</literal> query will call the
-   authorizer for every column that would be read or updated.
+   O retorno de chamada do autorizador pode ser chamado várias vezes para cada declaração preparada pelo
+   SQLite. Uma consulta <literal>SELECT</literal> ou <literal>UPDATE</literal> chamará o
+   autorizador para cada coluna que seria lida ou atualizada.
   </para>
   <para>
-   The authorizer is called with up to five parameters. The first parameter is always
-   given, and is an <type>int</type> (action code) matching a constant from
-   <literal>SQLite3</literal>. The other parameters are only passed for some actions. The
-   following table describes the second and third parameters according to the action:
+   O autorizador é chamado com até cinco parâmetros. O primeiro parâmetro é sempre
+   fornecido e é um <type>int</type> (código de ação) correspondente a uma constante de
+   <literal>SQLite3</literal>. Os outros parâmetros são passados apenas para algumas ações. A
+   tabela a seguir descreve o segundo e o terceiro parâmetros de acordo com a ação:
    <table>
-    <title>List of action codes and parameters</title>
+    <title>Lista de códigos de ação e parâmetros</title>
     <tgroup cols="3">
      <thead>
       <row>
-       <entry>Action</entry>
-       <entry>Second parameter</entry>
-       <entry>Third parameter</entry>
+       <entry>Ação</entry>
+       <entry>Segundo parâmetro</entry>
+       <entry>Terceiro parâmetro</entry>
       </row>
      </thead>
      <tbody>
@@ -82,55 +82,55 @@
    </table>
   </para>
   <para>
-   The 4th parameter will be the name of the database (<literal>"main"</literal>,
-   <literal>"temp"</literal>, etc.) if applicable.
+   O 4º parâmetro será o nome do banco de dados (<literal>"main"</literal>,
+   <literal>"temp"</literal>, etc.) se aplicável.
   </para>
   <para>
-   The 5th parameter to the authorizer callback is the name of the inner-most trigger or
-   view that is responsible for the access attempt or &null; if this access attempt is
-   directly from top-level SQL code.
+   O 5º parâmetro para o retorno de chamada do autorizador é o nome do trigger ou
+   view mais interno que é responsável pela tentativa de acesso ou &null; se esta tentativa de acesso for
+   direta do código SQL de nível superior.
   </para>
   <para>
-   When the callback returns <constant>SQLite3::OK</constant>, that means the operation
-   requested is accepted. When the callback returns <constant>SQLite3::DENY</constant>,
-   the call that triggered the authorizer will fail with an error message explaining that
-   access is denied.
+   Quando o retorno de chamada retorna <constant>SQLite3::OK</constant>, isso significa que a operação
+   solicitada é aceita. Quando o retorno de chamada retorna <constant>SQLite3::DENY</constant>,
+   a chamada que acionou o autorizador falhará com uma mensagem de erro explicando que o
+   acesso foi negado.
   </para>
   <para>
-   If the action code is <constant>SQLite3::READ</constant> and the callback returns
-   <constant>SQLite3::IGNORE</constant> then the prepared statement is
-   constructed to substitute a &null; value in place of the table column that would have
-   been read if <constant>SQLite3::OK</constant> had been returned. The
-   <constant>SQLite3::IGNORE</constant> return can be used to deny an untrusted user
-   access to individual columns of a table.
+   Se o código de ação for <constant>SQLite3::READ</constant> e o retorno de chamada retornar
+   <constant>SQLite3::IGNORE</constant>, então a declaração preparada é
+   construída para substituir um valor &null; no lugar da coluna da tabela que
+   seria lida se <constant>SQLite3::OK</constant> tivesse sido retornado. O
+   retorno <constant>SQLite3::IGNORE</constant> pode ser usado para negar a um usuário
+   não confiável o acesso a colunas individuais de uma tabela.
   </para>
   <para>
-   When a table is referenced by a <literal>SELECT</literal> but no column values are
-   extracted from that table (for example in a query like <literal>"SELECT count(*) FROM
-   table"</literal>) then the <constant>SQLite3::READ</constant> authorizer callback is
-   invoked once for that table with a column name that is an empty string.
+   Quando uma tabela é referenciada por um <literal>SELECT</literal>, mas nenhum valor de coluna é
+   extraído dessa tabela (por exemplo, em uma consulta como <literal>"SELECT count(*) FROM
+   table"</literal>), então o retorno de chamada do autorizador <constant>SQLite3::READ</constant> é
+   invocado uma vez para essa tabela com um nome de coluna que é uma string vazia.
   </para>
   <para>
-   If the action code is <constant>SQLite3::DELETE</constant> and the callback returns
-   <constant>SQLite3::IGNORE</constant> then the DELETE operation proceeds but the
-   truncate optimization is disabled and all rows are deleted individually.
+   Se o código de ação for <constant>SQLite3::DELETE</constant> e o retorno de chamada retornar
+   <constant>SQLite3::IGNORE</constant>, então a operação DELETE prossegue, mas a
+   otimização de truncamento é desativada e todas as linhas são excluídas individualmente.
   </para>
   <para>
-   Only a single authorizer can be in place on a database connection at a time. Each call
-   to <methodname>SQLite3::setAuthorizer</methodname> overrides the previous call. Disable the
-   authorizer by installing a &null; callback. The authorizer is disabled by default.
+   Apenas um autorizador pode estar em vigor em uma conexão de banco de dados de cada vez. Cada chamada
+   para <methodname>SQLite3::setAuthorizer</methodname> substitui a chamada anterior. Desative o
+   autorizador instalando um retorno de chamada &null;. O autorizador é desativado por padrão.
   </para>
   <para>
-   The authorizer callback must not do anything that will modify the database connection
-   that invoked the authorizer callback.
+   O retorno de chamada do autorizador não deve fazer nada que modifique a conexão de banco de dados
+   que invocou o retorno de chamada do autorizador.
   </para>
   <para>
-   Note that the authorizer is only called when a statement is prepared, not when it's
-   executed.
+   Observe que o autorizador é chamado apenas quando uma declaração é preparada, não quando ela é
+   executada.
   </para>
   <para>
-   More details can be found in the
-   <link xlink:href="&url.sqlite;c3ref/set_authorizer.html">SQLite3 documentation</link>.
+   Mais detalhes podem ser encontrados na
+   <link xlink:href="&url.sqlite;c3ref/set_authorizer.html">documentação do SQLite3</link>.
   </para>
  </refsect1>
 
@@ -141,10 +141,10 @@
     <term><parameter>callback</parameter></term>
     <listitem>
      <para>
-      The <type>callable</type> to be called.
+      O <type>callable</type> a ser chamado.
      </para>
      <para>
-      If &null; is passed instead, this will disable the current authorizer callback.
+      Se &null; for passado, isso desativará o retorno de chamada do autorizador atual.
      </para>
     </listitem>
    </varlistentry>
@@ -161,20 +161,20 @@
  <refsect1 role="errors">
   &reftitle.errors;
   <para>
-   This method doesn't throw any error, but if an authorizer is enabled and returns an
-   invalid value, the statement preparation will throw an error (or exception, depending
-   on the use of the <methodname>SQLite3::enableExceptions</methodname> method).
+   Este método não lança nenhum erro, mas se um autorizador estiver habilitado e retornar um
+   valor inválido, a preparação da declaração lançará um erro (ou exceção, dependendo
+   do uso do método <methodname>SQLite3::enableExceptions</methodname>).
   </para>
  </refsect1>
 
  <refsect1 role="examples">
   &reftitle.examples;
   <example>
-   <title><methodname>SQLite3::setAuthorizer</methodname> example</title>
+   <title>Exemplo de <methodname>SQLite3::setAuthorizer</methodname></title>
    <para>
-     This only allows access to reading, and only some columns of the
-     <literal>users</literal> table will be returned. Other columns will be replaced with
-     &null;.
+    Isso permite apenas o acesso à leitura, e apenas algumas colunas da
+    tabela <literal>users</literal> serão retornadas. Outras colunas serão substituídas por
+    &null;.
    </para>
    <programlisting role="php">
 <![CDATA[
