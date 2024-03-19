@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 66fffcdfbb9d97a1618b9e47f9be19a83f80e32b Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<refentry xml:id="function.sqlsrv-next-result" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>sqlsrv_next_result</refname>
+  <refpurpose>Torna o próximo resultado da declaração especificada ativo</refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>mixed</type><methodname>sqlsrv_next_result</methodname>
+   <!-- Example: Required parameter -->
+   <methodparam><type>resource</type><parameter>stmt</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Torna o próximo resultado da declaração especificada ativo. Os resultados incluem
+   conjuntos de resultados, contagens de linhas e parâmetros de saída.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>stmt</parameter></term>
+     <listitem>
+      <para>
+       A declaração na qual o próximo resultado está sendo chamado.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna &true; se o próximo resultado foi obtido com sucesso, &false; se ocorrer um
+   erro e &null; se não houver mais resultados para recuperar.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>sqlsrv_next_result</function></title>
+    <para>
+     O exemplo a seguir executa uma consulta em lote que insere em uma tabela e
+     depois seleciona da tabela. Isso produz dois resultados na declaração:
+     um para as linhas afetadas pela INSERT e outro para as linhas retornadas pela
+     SELECT. Para chegar às linhas retornadas pela SELECT,
+     é necessário chamar <function>sqlsrv_next_result</function> para passar pelo primeiro resultado.
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$serverName = "serverName\sqlexpress";
+$connectionInfo = array("Database"=>"dbName", "UID"=>"userName", "PWD"=>"password");
+$conn = sqlsrv_connect( $serverName, $connectionInfo);
+
+$query = "INSERT INTO Table_1 (id, data) VALUES (?,?); SELECT * FROM TABLE_1;";
+$params = array(1, "some data");
+$stmt = sqlsrv_query($conn, $query, $params);
+
+// Consome o primeiro resultado (linhas afetadas por INSERT) sem chamar sqlsrv_next_result.
+echo "Rows affected: ".sqlsrv_rows_affected($stmt)."<br />";
+
+// Move para o próximo resultado e exibe os resultados.
+$next_result = sqlsrv_next_result($stmt);
+if( $next_result ) {
+   while( $row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC)){
+      echo $row['id'].": ".$row['data']."<br />";
+   }
+} elseif( is_null($next_result)) {
+     echo "No more results.<br />";
+} else {
+     die(print_r(sqlsrv_errors(), true));
+}
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>sqlsrv_query</function></member>
+    <member><function>sqlsrv_fetch_array</function></member>
+    <member><function>sqlsrv_rows_affected</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

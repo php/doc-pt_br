@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 4754397753fd79f1c846868b66a2448babab1c54 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<refentry xml:id="function.sqlsrv-connect" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>sqlsrv_connect</refname>
+  <refpurpose>Abre uma conexão com um banco de dados Microsoft SQL Server</refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>resource</type><methodname>sqlsrv_connect</methodname>
+   <methodparam><type>string</type><parameter>serverName</parameter></methodparam>
+   <methodparam choice="opt"><type>array</type><parameter>connectionInfo</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Abre uma conexão com um banco de dados Microsoft SQL Server. Por padrão, a conexão
+   é tentada usando a Autenticação do Windows. Para conectar usando
+   Autenticação do SQL Server, inclua "UID" e "PWD" no array de opções de conexão.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>serverName</parameter></term>
+     <listitem>
+      <para>
+       O nome do servidor ao qual uma conexão é estabelecida. Para conectar
+       a uma instância específica, siga o nome do servidor com uma barra invertida
+       e o nome da instância (por exemplo, serverName\sqlexpress).
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>connectionInfo</parameter></term>
+     <listitem>
+      <para>
+       Um array associativo que especifica opções para conectar ao servidor.
+       Se os valores para as chaves UID e PWD não forem especificados, a conexão
+       será tentada usando a Autenticação do Windows. Para uma lista completa de
+       chaves suportadas, consulte <link xlink:href="&url.sqlsrv.connection.options;">Opções de Conexão SQLSRV</link>.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Um recurso de conexão. Se uma conexão não puder ser aberta com sucesso, &false; é retornado.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Conectar usando Autenticação do Windows.</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$serverName = "serverName\\sqlexpress"; //serverName\instanceName
+
+// Como UID e PWD não são especificados no array $connectionInfo,
+// A conexão será tentada usando a Autenticação do Windows.
+$connectionInfo = array( "Database"=>"dbName");
+$conn = sqlsrv_connect( $serverName, $connectionInfo);
+
+if( $conn ) {
+     echo "Connection established.<br />";
+}else{
+     echo "Connection could not be established.<br />";
+     die( print_r( sqlsrv_errors(), true));
+}
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Conectar especificando um nome de usuário e senha.</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$serverName = "serverName\\sqlexpress"; //serverName\instanceName
+$connectionInfo = array( "Database"=>"dbName", "UID"=>"userName", "PWD"=>"password");
+$conn = sqlsrv_connect( $serverName, $connectionInfo);
+
+if( $conn ) {
+     echo "Connection established.<br />";
+}else{
+     echo "Connection could not be established.<br />";
+     die( print_r( sqlsrv_errors(), true));
+}
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Conectar em uma porta expecífica.</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$serverName = "serverName\\sqlexpress, 1542"; //serverName\instanceName, portNumber (default is 1433)
+$connectionInfo = array( "Database"=>"dbName", "UID"=>"userName", "PWD"=>"password");
+$conn = sqlsrv_connect( $serverName, $connectionInfo);
+
+if( $conn ) {
+     echo "Connection established.<br />";
+}else{
+     echo "Connection could not be established.<br />";
+     die( print_r( sqlsrv_errors(), true));
+}
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <para>
+   Por padrão, o <function>sqlsrv_connect</function> usa pooling de conexão para
+   melhorar o desempenho da conexão. Para desativar o pooling de conexão (ou seja, forçar uma
+   nova conexão em cada chamada), defina a opção "ConnectionPooling" no
+   array $connectionOptions para 0 (ou &false;). Para mais informações, consulte
+   <link xlink:href="&url.sqlsrv.connection.pooling;">Pooling de Conexão SQLSRV</link>.
+  </para>
+  <para>
+   A extensão SQLSRV não possui uma função dedicada para alterar qual
+   banco de dados está conectado. O banco de dados de destino é especificado no
+   array $connectionOptions que é passado para sqlsrv_connect. Para alterar o
+   banco de dados em uma conexão aberta, execute a seguinte consulta "USE dbName"
+   (por exemplo, sqlsrv_query($conn, "USE dbName")).
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>sqlsrv_close</function></member>
+    <member><function>sqlsrv_errors</function></member>
+    <member><function>sqlsrv_query</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
