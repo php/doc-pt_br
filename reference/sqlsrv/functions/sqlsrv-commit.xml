@@ -3,7 +3,7 @@
 <refentry xml:id="function.sqlsrv-commit" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>sqlsrv_commit</refname>
-  <refpurpose>Commits a transaction that was begun with <function>sqlsrv_begin_transaction</function></refpurpose>
+  <refpurpose>Confirma uma transação que foi iniciada com <function>sqlsrv_begin_transaction</function></refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
@@ -12,14 +12,14 @@
    <methodparam><type>resource</type><parameter>conn</parameter></methodparam>
   </methodsynopsis>
   <para>
-   Commits a transaction that was begun with <function>sqlsrv_begin_transaction</function>.
-   The connection is returned to auto-commit mode after <function>sqlsrv_commit</function>
-   is called. The transaction that is committed includes all statements that were
-   executed after the call to <function>sqlsrv_begin_transaction</function>.
-   Explicit transactions should be started and committed or rolled back using these
-   functions instead of executing SQL statements that begin and commit/roll back
-   transactions. For more information, see
-   <link xlink:href="&url.sqlsrv.transaction.handling;">SQLSRV Transactions</link>.
+   Confirma uma transação que foi iniciada com <function>sqlsrv_begin_transaction</function>.
+   A conexão é retornada ao modo de auto-commit após a chamada de <function>sqlsrv_commit</function>.
+   A transação que é confirmada inclui todas as declarações que foram
+   executadas após a chamada para <function>sqlsrv_begin_transaction</function>.
+   Transações explícitas devem ser iniciadas e confirmadas ou revertidas usando essas
+   funções em vez de executar declarações SQL que iniciam e confirmam/revertem
+   transações. Para mais informações, consulte
+   <link xlink:href="&url.sqlsrv.transaction.handling;">Transações SQLSRV</link>.
   </para>
  </refsect1>
 
@@ -31,7 +31,7 @@
      <term><parameter>conn</parameter></term>
      <listitem>
       <para>
-       The connection on which the transaction is to be committed.
+       A conexão na qual a transação será confirmada.
       </para>
      </listitem>
     </varlistentry>
@@ -50,11 +50,11 @@
   &reftitle.examples;
   <para>
    <example>
-    <title><function>sqlsrv_commit</function> example</title>
+    <title>Exemplo de <function>sqlsrv_commit</function></title>
     <para>
-    The following example demonstrates how to use <function>sqlsrv_commit</function>
-    together with <function>sqlsrv_begin_transaction</function> and
-    <function>sqlsrv_rollback</function>.
+     O exemplo a seguir demonstra como usar <function>sqlsrv_commit</function>
+     juntamente com <function>sqlsrv_begin_transaction</function> e
+     <function>sqlsrv_rollback</function>.
     </para>
     <programlisting role="php">
 <![CDATA[
@@ -66,29 +66,29 @@ if( $conn === false ) {
     die( print_r( sqlsrv_errors(), true ));
 }
 
-/* Begin the transaction. */
+/* Inicia a transação. */
 if ( sqlsrv_begin_transaction( $conn ) === false ) {
      die( print_r( sqlsrv_errors(), true ));
 }
 
-/* Initialize parameter values. */
+/* Inicializa os valores dos parâmetros. */
 $orderId = 1; $qty = 10; $productId = 100;
 
-/* Set up and execute the first query. */
+/* Configura e executa a primeira consulta. */
 $sql1 = "INSERT INTO OrdersTable (ID, Quantity, ProductID)
          VALUES (?, ?, ?)";
 $params1 = array( $orderId, $qty, $productId );
 $stmt1 = sqlsrv_query( $conn, $sql1, $params1 );
 
-/* Set up and execute the second query. */
+/* Configura e executa a segunda consulta. */
 $sql2 = "UPDATE InventoryTable
          SET Quantity = (Quantity - ?)
          WHERE ProductID = ?";
 $params2 = array($qty, $productId);
 $stmt2 = sqlsrv_query( $conn, $sql2, $params2 );
 
-/* If both queries were successful, commit the transaction. */
-/* Otherwise, rollback the transaction. */
+/* Se ambas as consultas forem bem-sucedidas, confirma a transação. */
+/* Caso contrário, reverte a transação. */
 if( $stmt1 && $stmt2 ) {
      sqlsrv_commit( $conn );
      echo "Transaction committed.<br />";
