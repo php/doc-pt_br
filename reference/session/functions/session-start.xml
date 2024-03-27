@@ -3,7 +3,7 @@
 <refentry xml:id="function.session-start" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>session_start</refname>
-  <refpurpose>Inicia uma nova sessão ou resume uma sessão existente</refpurpose>
+  <refpurpose>Inicia uma nova sessão ou continua uma sessão existente</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
@@ -13,22 +13,22 @@
    <methodparam choice="opt"><type>array</type><parameter>options</parameter><initializer>[]</initializer></methodparam>
   </methodsynopsis>
   <para>
-   <function>session_start</function> cria uma sessão ou resume a
-   sessão atual baseado em um id de sessão passado via GET ou POST,
+   <function>session_start</function> cria uma sessão ou continua a
+   sessão atual baseado em um ID de sessão passado via GET ou POST,
    ou passado via cookie.
   </para>
   <para>
    Quando <function>session_start</function> é chamada ou quando uma sessão inicia automaticamente,
-   o PHP chamará os manipuladores open e read.  Eles serão manipuladores de gravação internos (built-in)
+   o PHP chamará os manipuladores de gravação de sessão de abertura e de leitura.  Eles serão manipuladores de gravação internos
    fornecidos por padrão ou por extensões do PHP (como SQLite ou Memcached); ou podem ser
    manipuladores personalizados definidos por <function>session_set_save_handler</function>.
-   O callback read recuperará qualquer informação de sessão existente (armazenada em um formato serializado especial)
-   e será deserializado e usado para preencher automaticamente a super global $_SESSION quando o
-   callback read retornar de volta os dados salvos em sessão para o manipulador de sessão do PHP.
+   A função de leitura recuperará qualquer informação de sessão existente (armazenada em um formato serializado especial)
+   e será desserializado e usado para preencher automaticamente a variável super global $_SESSION quando a
+   função de leitura retornar os dados de sessão gravados para o tratamento de sessão do PHP.
   </para>
   <para>
-   Para utilizar uma sessão com nome, execute
-   <function>session_name</function> antes de executar
+   Para utilizar uma sessão com nome,
+   <function>session_name</function> deve ser chamada antes de
    <function>session_start</function>.
   </para>
   <para>
@@ -51,7 +51,7 @@
     <term><parameter>options</parameter></term>
     <listitem>
      <para>
-      Se informado, este é um array associativo de opções que vão sobrepor
+      Se informado, este é um array associativo de opções que irão substituir
       os que estiverem configurados nas
       <link linkend="session.configuration">diretivas de configuração de sessão</link>.
       As chaves não devem incluir o prefixo <literal>session.</literal>.
@@ -123,10 +123,10 @@ $_SESSION['favcolor'] = 'green';
 $_SESSION['animal']   = 'cat';
 $_SESSION['time']     = time();
 
-// Funciona se o cookie de seção foi aceito
+// Funciona se o cookie de sessão foi aceito
 echo '<br /><a href="page2.php">page 2</a>';
 
-// Ou talves passando o ID da seção se necessário
+// Ou talvez passando o ID da sessão se necessário
 echo '<br /><a href="page2.php?' . SID . '">page 2</a>';
 ?>
 ]]>
@@ -136,9 +136,9 @@ echo '<br /><a href="page2.php?' . SID . '">page 2</a>';
    <para>
     Após acessar <filename>page1.php</filename>, a segunda página
     <filename>page2.php</filename> magicamente terá os dados da
-    seção.  Leia <link linkend="ref.session">funções para sessão</link>
+    sessão. Leia <link linkend="ref.session">funções para sessão</link>
     para informações sobre <link linkend="session.idpassing">propagação de
-    ids de sessão</link> já que, por exemplo, explica tudo sobre a constante
+    IDs de sessão</link> já que, por exemplo, explica o que é a constante
     <constant>SID</constant>.
    </para>
    <para>
@@ -157,7 +157,7 @@ echo $_SESSION['favcolor']; // green
 echo $_SESSION['animal'];   // cat
 echo date('Y m d H:i:s', $_SESSION['time']);
 
-// Você pode querer usar o SID aqui, como fizemos em page1.php
+// Pode ser desejado usar o SID aqui, como foi feito em page1.php
 echo '<br /><a href="page1.php">page 1</a>';
 ?>
 ]]>
@@ -173,7 +173,7 @@ echo '<br /><a href="page1.php">page 1</a>';
     <programlisting role="php">
 <![CDATA[
 <?php
-// Envia o cookie persistente que dura um dia
+// Isto envia um cookie persistente que dura um dia
 session_start([
     'cookie_lifetime' => 86400,
 ]);
@@ -188,8 +188,8 @@ session_start([
 <![CDATA[
 <?php
 // Se não houver necessidade de alterar nada na
-// sessão, pode-se apenas lê-la e já fechá-la para avitar
-// que o arquivo de sessão seja travado e então bloqueie outras páginas
+// sessão, pode-se apenas lê-la e já fechá-la para evitar
+// travar o arquivo de sessão e bloquear outras páginas
 session_start([
     'cookie_lifetime' => 86400,
     'read_and_close'  => true,
@@ -205,7 +205,7 @@ session_start([
   <note>
    <para>
     Para usar sessões baseadas em cookies, <function>session_start</function>
-    deve ser chamada antes de enviar qualquer saída (output) para o browser.
+    deve ser chamada antes de enviar qualquer saída para o browser.
    </para>
   </note>
   <note>
