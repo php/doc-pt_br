@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 082ddc19f53e6e254010de1a1fbbe485ff744ec1 Maintainer: leonardolara Status: ready -->
+<refentry xml:id="pdo.prepare" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>PDO::prepare</refname>
+  <refpurpose>
+   Prepara uma instrução para execução e retorna um objeto de instrução
+  </refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis role="PDO">
+   <modifier>public</modifier> <type class="union"><type>PDOStatement</type><type>false</type></type><methodname>PDO::prepare</methodname>
+   <methodparam><type>string</type><parameter>query</parameter></methodparam>
+   <methodparam choice="opt"><type>array</type><parameter>options</parameter><initializer>[]</initializer></methodparam>
+  </methodsynopsis>
+
+  <para>
+   Prepara uma instrução SQL para ser executada pelo
+   método <methodname>PDOStatement::execute</methodname>. O modelo de instrução pode
+   conter zero ou mais marcadores de parâmetros nomeados (:name) ou pontos de interrogação (?)
+   para os quais os valores reais serão substituídos quando a instrução for executada.
+   Os marcadores de parâmetros nomeados e de ponto de interrogação não podem ser usados ​​no mesmo
+   modelo de instrução; apenas um ou outro estilo de parâmetro.
+   Use esses parâmetros para vincular qualquer entrada do usuário, não inclua a entrada do usuário
+   diretamente na consulta.
+  </para>
+  <para>
+   Deve-se incluir um marcador de parâmetro exclusivo para cada valor que se deseja passar
+   para a instrução ao chamar <methodname>PDOStatement::execute</methodname>.
+   Um marcador de parâmetro nomeado com o mesmo nome não pode ser usado mais de uma vez em uma instrução
+   preparada, a menos que o modo de emulação esteja ativado.
+  </para>
+  <note>
+   <para>
+    Os marcadores de parâmetro podem representar apenas um literal de dados completo.
+    Nem parte do literal, nem palavra-chave, nem identificador, nem qualquer parte arbitrária
+    da consulta podem ser vinculadas usando parâmetros. Por exemplo, não se pode vincular múltiplos valores
+    a um único parâmetro na cláusula IN() de uma instrução SQL.
+   </para>
+  </note>
+  <para>
+   Chamar <methodname>PDO::prepare</methodname> e
+   <methodname>PDOStatement::execute</methodname> para instruções que serão
+   emitidas diversas vezes com valores de parâmetros diferentes otimiza o
+   desempenho da aplicação, permitindo que o driver negocie
+   cache no lado do cliente e/ou do servidor do plano de consulta e metainformações. Além disso, chamar <methodname>PDO::prepare</methodname> e
+   <methodname>PDOStatement::execute</methodname> ajuda a evitar ataques de injeção de SQL, eliminando a necessidade de
+   inserir aspas e escapar manualmente dos parâmetros.
+  </para>
+  <para>
+   O PDO irá emular instruções preparadas/parâmetros vinculados para drivers que
+   não os suportam nativamente, e também pode reescrever marcadores de parâmetros nomeados
+   ou no estilo ponto de interrogação para algo mais apropriado, se o driver
+   suportar um estilo, mas não o outro.
+  </para>
+  <note>
+   <simpara>
+    O analisador usado para instruções preparadas emuladas e para
+    reescrever parâmetros nomeados ou no estilo de ponto de interrogação suporta escapes
+    de barra invertida não padrão para aspas simples e duplas. Isso significa que aspas
+    de término imediatamente precedidas por uma barra invertida não são reconhecidas como tal, o que
+    pode resultar na detecção incorreta de parâmetros, fazendo com que a instrução preparada
+    falhe quando for executada. Uma solução alternativa é não usar preparações emuladas para
+    essas consultas SQL e evitar a reescrita de parâmetros usando um estilo de parâmetro
+    que seja suportado nativamente pelo driver.
+   </simpara>
+  </note>
+  <para>
+   A partir do PHP 7.4.0, os pontos de interrogação podem ser escapados duplicando-os. Isso significa que
+   a string <literal>??</literal> será traduzida para <literal>?</literal>
+   ao enviar a consulta ao banco de dados.
+  </para>
+ </refsect1>
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>query</parameter></term>
+     <listitem>
+      <para>
+       Este deve ser um modelo de instrução SQL válido para o servidor de banco de dados de destino.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>options</parameter></term>
+     <listitem>
+      <para>
+       Este array contém um ou mais pares chave=&gt;valor para definir
+       valores de atributos para o objeto PDOStatement que esse método
+       retorna. Normalmente usa-se isso para definir o
+       valor <literal>PDO::ATTR_CURSOR</literal> como
+       <literal>PDO::CURSOR_SCROLL</literal> para solicitar um cursor rolável.
+       Alguns drivers têm opções específicas que podem ser definidas no
+       momento da preparação.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Se o servidor de banco de dados preparar a instrução com sucesso,
+   <methodname>PDO::prepare</methodname> retornará um
+   objeto <classname>PDOStatement</classname>.
+   Se o servidor de banco de dados não conseguir preparar a instrução com sucesso,
+   <methodname>PDO::prepare</methodname> retornará &false; ou emitirá
+   uma exceção <classname>PDOException</classname> (dependendo do <link linkend="pdo.error-handling">tratamento de erros</link>).
+  </para>
+  <note>
+   <para>
+    Instruções preparadas emuladas não se comunicam com o servidor de banco de dados,
+    portanto <methodname>PDO::prepare</methodname> não verifica a instrução.
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  &pdo.errors;
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example><title>Modelo de instrução SQL com parâmetros nomeados</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+/* Executa uma instrução preparada passando uma matriz de valores */
+$sql = 'SELECT name, colour, calories
+    FROM fruit
+    WHERE calories < :calories AND colour = :colour';
+$sth = $dbh->prepare($sql, [PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY]);
+$sth->execute(['calories' => 150, 'colour' => 'red']);
+$red = $sth->fetchAll();
+/* Chaves de arrays podem ser prefizadas com dois-pontos ":" também (opcional) */
+$sth->execute([':calories' => 175, ':colour' => 'yellow']);
+$yellow = $sth->fetchAll();
+?>
+]]>
+    </programlisting>
+   </example>
+   <example>
+    <title>Modelo de instrução SQL com parâmetros de ponto de interrogação</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+/* Executa uma instrução preparada passando uma matriz de valores */
+$sth = $dbh->prepare('SELECT name, colour, calories
+    FROM fruit
+    WHERE calories < ? AND colour = ?');
+$sth->execute([150, 'red']);
+$red = $sth->fetchAll();
+$sth->execute([175, 'yellow']);
+$yellow = $sth->fetchAll();
+?>
+]]>
+    </programlisting>
+   </example>
+   <example>
+    <title>Modelo de instrução SQL com ponto de interrogação escapado</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+/* nota: isso só é válido em bancos de dados PostgreSQL */
+$sth = $dbh->prepare('SELECT * FROM issues WHERE tag::jsonb ?? ?');
+$sth->execute(['feature']);
+$featureIssues = $sth->fetchAll();
+$sth->execute(['performance']);
+$performanceIssues = $sth->fetchAll();
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><methodname>PDO::exec</methodname></member>
+    <member><methodname>PDO::query</methodname></member>
+    <member><methodname>PDOStatement::execute</methodname></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
