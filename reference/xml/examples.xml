@@ -3,12 +3,12 @@
 <chapter xml:id="xml.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  &reftitle.examples;
  <section xml:id="example.xml-structure">
-  <title>XML Element Structure Example</title>
+  <title>Exemplo de Estrutura de Elemento XML</title>
   <para>
-   This first example displays the structure of the start elements in
-   a document with indentation.
+   Este primeiro exemplo exibe a estrutura dos elementos de início em
+   um documento com indentação.
    <example>
-    <title>Show XML Element Structure</title>
+    <title>Mostrar Estrutura de Elemento XML</title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -54,15 +54,15 @@ xml_parser_free($xml_parser);
  </section>
 
  <section xml:id="example.xml-map-tags">
-  <title>XML Tag Mapping Example</title>
+  <title>Exemplo de Mapeamento de Tags XML</title>
   <para>
    <example>
-    <title>Map XML to HTML</title>
+    <title>Mapear XML para HTML</title>
     <para>
-     This example maps tags in an XML document directly to HTML
-     tags.  Elements not found in the "map array" are ignored.  Of
-     course, this example will only work with a specific XML
-     document type.
+     Este exemplo mapeia tags em um documento XML diretamente para tags
+     HTML. Elementos não encontrados na "matriz de mapeamento" são ignorados.
+     Obviamente, este exemplo funcionará apenas com um tipo específico de
+     documento XML.
     </para>
     <programlisting role="php">
 <![CDATA[
@@ -96,17 +96,17 @@ function characterData($parser, $data)
 }
 
 $xml_parser = xml_parser_create();
-// use case-folding so we are sure to find the tag in $map_array
+// use dobramento de caso para termos certeza de encontrar a tag em $map_array
 xml_parser_set_option($xml_parser, XML_OPTION_CASE_FOLDING, true);
 xml_set_element_handler($xml_parser, "startElement", "endElement");
 xml_set_character_data_handler($xml_parser, "characterData");
 if (!($fp = fopen($file, "r"))) {
-    die("could not open XML input");
+    die("não foi possível abrir a entrada XML");
 }
 
 while ($data = fread($fp, 4096)) {
     if (!xml_parse($xml_parser, $data, feof($fp))) {
-        die(sprintf("XML error: %s at line %d",
+        die(sprintf("Erro XML: %s na linha %d",
                     xml_error_string(xml_get_error_code($xml_parser)),
                     xml_get_current_line_number($xml_parser)));
     }
@@ -120,21 +120,21 @@ xml_parser_free($xml_parser);
  </section>
 
  <section xml:id="example.xml-external-entity">
-  <title>XML External Entity Example</title>
+  <title>Exemplo de Entidade Externa XML</title>
   <para>
-   This example highlights XML code.  It illustrates how to use an
-   external entity reference handler to include and parse other
-   documents, as well as how PIs can be processed, and a way of
-   determining "trust" for PIs containing code.
+   Este exemplo destaca código XML. Ilustra como usar um
+   manipulador de referência de entidade externa para incluir e analisar outros
+   documentos, bem como como PIs podem ser processados, e uma maneira de
+   determinar "confiança" para PIs contendo código.
   </para>
   <para>
-   XML documents that can be used for this example are found below
-   the example (<filename>xmltest.xml</filename> and
-   <filename>xmltest2.xml</filename>.)
+   Documentos XML que podem ser usados para este exemplo são encontrados abaixo
+   do exemplo (<filename>xmltest.xml</filename> e
+   <filename>xmltest2.xml</filename>).
   </para>
   <para>
    <example>
-    <title>External Entity Example</title>
+    <title>Exemplo de Entidade Externa</title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -142,7 +142,7 @@ $file = "xmltest.xml";
 
 function trustedFile($file)
 {
-    // only trust local files owned by ourselves
+    // confie apenas em arquivos locais de nossa propriedade
     if (!preg_match("@^([a-z][a-z0-9+.-]*)\:\/\/@i", $file)
         && fileowner($file) == getmyuid()) {
             return true;
@@ -177,13 +177,13 @@ function PIHandler($parser, $target, $data)
     switch (strtolower($target)) {
         case "php":
             global $parser_file;
-            // If the parsed document is "trusted", we say it is safe
-            // to execute PHP code inside it.  If not, display the code
-            // instead.
+            // Se o documento analisado for "confiável", dizemos que é seguro
+            // para executar o código PHP dentro dele. Caso contrário, exiba o código
+            // em vez disso.
             if (trustedFile($parser_file[$parser])) {
                 eval($data);
             } else {
-                printf("Untrusted PHP code: <i>%s</i>",
+                printf("Código PHP não confiável: <i>%s</i>",
                         htmlspecialchars($data));
             }
             break;
@@ -205,13 +205,13 @@ function externalEntityRefHandler($parser, $openEntityNames, $base, $systemId,
                                   $publicId) {
     if ($systemId) {
         if (!list($parser, $fp) = new_xml_parser($systemId)) {
-            printf("Could not open entity %s at %s\n", $openEntityNames,
+            printf("Não foi possível abrir a entidade %s em %s\n", $openEntityNames,
                    $systemId);
             return false;
         }
         while ($data = fread($fp, 4096)) {
             if (!xml_parse($parser, $data, feof($fp))) {
-                printf("XML error: %s at line %d while parsing entity %s\n",
+                printf("Erro XML: %s na linha %d ao analisar a entidade %s\n",
                        xml_error_string(xml_get_error_code($parser)),
                        xml_get_current_line_number($parser), $openEntityNames);
                 xml_parser_free($parser);
@@ -247,19 +247,19 @@ function new_xml_parser($file)
 }
 
 if (!(list($xml_parser, $fp) = new_xml_parser($file))) {
-    die("could not open XML input");
+    die("não foi possível abrir a entrada XML");
 }
 
 echo "<pre>";
 while ($data = fread($fp, 4096)) {
     if (!xml_parse($xml_parser, $data, feof($fp))) {
-        die(sprintf("XML error: %s at line %d\n",
+        die(sprintf("Erro XML: %s na linha %d\n",
                     xml_error_string(xml_get_error_code($xml_parser)),
                     xml_get_current_line_number($xml_parser)));
     }
 }
 echo "</pre>";
-echo "parse complete\n";
+echo "análise concluída\n";
 xml_parser_free($xml_parser);
 
 ?>
@@ -278,7 +278,7 @@ xml_parser_free($xml_parser);
 <!ENTITY systemEntity SYSTEM "xmltest2.xml">
 ]>
 <chapter>
- <TITLE>Title &plainEntity;</TITLE>
+ <TITLE>Título &plainEntity;</TITLE>
  <para>
   <informaltable>
    <tgroup cols="3">
@@ -292,10 +292,10 @@ xml_parser_free($xml_parser);
  </para>
  &systemEntity;
  <section id="about">
-  <title>About this Document</title>
+  <title>Sobre este documento</title>
   <para>
-   <!-- this is a comment -->
-   <?php echo 'Hi!  This is PHP version ' . phpversion(); ?>
+   <!-- isto é um comentário -->
+   <?php echo 'Oi! Esta é a versão PHP' . phpversion(); ?>
   </para>
  </section>
 </chapter>
@@ -304,7 +304,7 @@ xml_parser_free($xml_parser);
    </example>
   </para>
   <para>
-   This file is included from <filename>xmltest.xml</filename>:
+   Este arquivo é incluído de <filename>xmltest.xml</filename>:
    <example>
     <title>xmltest2.xml</title>
     <programlisting role="xml">
@@ -316,7 +316,7 @@ xml_parser_free($xml_parser);
 <foo>
    <element attrib="value"/>
    &testEnt;
-   <?php echo "This is some more PHP code being executed."; ?>
+   <?php echo "Este é mais um código PHP sendo executado."; ?>
 </foo>
 ]]>
     </programlisting>
