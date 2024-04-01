@@ -1,0 +1,632 @@
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 0ec4999397fd6f7dd382120d620b72e48103a683 Maintainer: leonardolara Status: ready -->
+<chapter xml:id="outcontrol.user-level-output-buffers" xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude">
+ <section>
+  <title>Buffers de Saída em Nível de Usuário</title>
+  <para>
+   Os buffers de saída no nível do usuário podem ser iniciados, manipulados
+   e finalizados a partir do código PHP.
+   Cada um desses buffers inclui um buffer de saída
+   e uma função de manipulador de saída associada.
+  </para>
+ </section>
+
+ <section xml:id="outcontrol.what-output-is-buffered">
+  <title>Que Saída é Armazenada em Buffer?</title>
+  <para>
+   Os buffers de saída em nível de usuário do PHP armazenam toda a saída após serem iniciados,
+   até que sejam desligados ou o script termine.
+   A saída no contexto do buffer de saída no nível do usuário do PHP
+   é tudo o que o PHP exibiria ou enviaria de volta ao navegador.
+   Em termos práticos, a saída são dados de comprimento diferente de zero que são:
+   <itemizedlist>
+    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('outputcontrol.what-is-output')/*)"><xi:fallback/></xi:include>
+   </itemizedlist>
+  </para>
+  <note>
+   <simpara>
+    Os dados gravados diretamente em <literal>stdout</literal>
+    ou passados ​​para uma função SAPI com funcionalidade semelhante
+    não serão capturados pelos buffers de saída no nível do usuário.
+    Isso inclui
+    escrever dados em <literal>stdout</literal> com <function>fwrite</function>
+    ou enviar cabeçalhos usando <function>header</function>
+    ou <function>setcookie</function>.
+   </simpara>
+  </note>
+ </section>
+
+ <section>
+  <title>Ativando o buffer de saída</title>
+  <para>
+   O buffer de saída pode ser ativado usando
+   a função <function>ob_start</function> ou definindo
+   as configurações <link linkend="ini.output-buffering">output_buffering</link>
+   e <link linkend="ini.output-handler">output_handler</link>
+   do &php.ini;.
+   Embora ambas possam criar buffers de saída,
+   <function>ob_start</function> é mais flexível,
+   pois aceita funções definidas pelo usuário como manipuladores de saída
+   e as operações permitidas no buffer (liberar, limpar, remover)
+   também podem ser definidas.
+   Buffers iniciados com <function>ob_start</function> estarão ativos
+   a partir da linha em que a função foi chamada,
+   enquanto aqueles iniciados com
+   <link linkend="ini.output-buffering">output_buffering</link>
+   irão armazenar a saída em buffer a partir da primeira linha do script.
+  </para>
+  <para>
+   O PHP também é fornecido com um manipulador de saída <literal>"URL-Rewriter"</literal>
+   integrado que inicia seu próprio buffer de saída e permite
+   até no máximo duas instâncias dele em execução a qualquer momento
+   (uma para reescrita de URL no nível de usuário
+   e uma para suporte transparente ao ID de sessão).
+   Esses buffers podem ser iniciados chamando
+   a função <function>output_add_rewrite_var</function>
+   e/ou ativando a configuração
+   <link linkend="ini.session.use-trans-sid">session.use_trans_sid</link>
+   do &php.ini;.
+  </para>
+  <para>
+   A extensão <literal>zlib</literal> incluída tem seu próprio
+   buffer de saída que pode ser ativado usando a configuração
+   <link linkend="ini.zlib.output-compression">zlib.output_compression</link>
+   do &php.ini;.
+  </para>
+  <note>
+   <simpara>
+    Embora <literal>"URL-Rewriter"</literal> seja especial
+    porque permite apenas até duas instâncias dele em execução ao mesmo tempo,
+    todos os buffers de saída em nível de usuário usam os mesmos buffers subjacentes
+    usados ​​por <function>ob_start</function>
+    com sua funcionalidade implementada por uma função de manipulador de saída personalizada.
+    Como tal, todas as suas funcionalidades podem ser emuladas pelo código do usuário.
+   </simpara>
+  </note>
+ </section>
+
+ <section xml:id="outcontrol.nesting-output-buffers">
+  <title>Aninhando Buffers de Saída</title>
+  <para>
+   Se houver um buffer de saída ativo quando um novo buffer for iniciado,
+   o novo buffer será aninhado dentro do buffer ativo anteriormente.
+   O buffer interno se comportará da mesma maneira, independentemente de estar aninhado,
+   mas a saída armazenada em buffer por ele não será armazenada em buffer pelo buffer externo.
+   Somente a saída liberada pelo buffer interno será armazenada no buffer externo.
+  </para>
+  <para>
+   A maioria das funções <literal>ob_<replaceable>*</replaceable></literal> só funcionam
+   com o buffer de saída ativo (o último iniciado),
+   portanto, apenas o buffer ativo pode ser descarregado, limpo e desligado.
+   As funções que funcionam com outros buffers são
+   <function>ob_list_handlers</function>
+   que retorna a lista de todos os manipuladores de saída em uso
+   e <function>ob_get_status</function>
+   que pode retornar informações apenas sobre o buffer ativo
+   ou sobre todos os buffers em uso .
+  </para>
+  <para>
+   Chamar <function>ob_get_level</function>
+   ou <function>ob_get_status</function> retornará
+   o nível de aninhamento do buffer de saída ativo.
+  </para>
+  <caution>
+   <simpara>
+    O valor para níveis idênticos entre <function>ob_get_level</function>
+    e <function>ob_get_status</function> está desfasado em um.
+    Para <function>ob_get_level</function>
+    o primeiro nível é <literal>1</literal>,
+    enquanto para <function>ob_get_status</function>
+    o primeiro nível é <literal>0</literal>.
+   </simpara>
+  </caution>
+ </section>
+
+ <section xml:id="outcontrol.buffer-size">
+  <title>Tamanho do Buffer</title>
+  <para>
+   Os tamanhos dos buffers são expressos por números inteiros
+   e representam o número de bytes que o buffer pode armazenar sem descarregar.
+   Quando o tamanho da saída no buffer excede o tamanho do buffer,
+   o conteúdo do buffer é enviado para o manipulador de saída,
+   seu valor de retorno é descarregado e o buffer é limpo.
+  </para>
+  <para>
+   Com exceção de <literal>"URL-Rewriter"</literal>,
+   o tamanho dos buffers de saída pode ser definido quando o buffer é iniciado.
+   Se definido como <literal>0</literal>,
+   o buffer de saída será limitado apenas pela memória disponível para o PHP.
+   Se definido como <literal>1</literal>,
+   o buffer será descarregado após cada bloco de código produzir
+   qualquer saída de comprimento diferente de zero.
+  </para>
+  <para>
+   O tamanho dos buffers de saída pode ser recuperado chamando
+   <function>ob_get_status</function>.
+  </para>
+  <para>
+   Buffers de saída iniciados com <function>ob_start</function>
+   terão seus tamanhos de buffer definidos para o valor inteiro passado para
+   o segundo parâmetro <parameter>chunk_size</parameter> da função.
+   Se omitido, será definido como <literal>0</literal>.
+  </para>
+  <para>
+   O buffer de saída iniciado com
+   <link linkend="ini.output-buffering">output_buffering</link>
+   definido como <literal>"On"</literal> terá seu tamanho de buffer definido como 0.
+   Se definido como um número inteiro, o tamanho do buffer corresponderá a esse número.
+  </para>
+  <para>
+   O tamanho do buffer do <literal>"URL-Rewriter"</literal>está definido como <literal>0</literal>,
+   portanto ele é limitado apenas pela memória disponível para o PHP.
+  </para>
+  <para>
+   O tamanho do buffer de saída do <literal>zlib</literal> é controlado pela configuração
+   <link linkend="ini.zlib.output-compression">zlib.output_compression</link>
+   do &php.ini;.
+   Se definido como <literal>"On"</literal> o tamanho do buffer será
+   <literal>"16K"</literal>(<literal>16384</literal>).
+   Se definido como um número inteiro, o tamanho do buffer corresponderá a esse número em bytes.
+  </para>
+ </section>
+
+ <section xml:id="outcontrol.operations-on-buffers">
+  <title>Operações permitidas em buffers</title>
+  <para>
+   As operações permitidas em buffers podem ser controladas
+   passando uma das
+   <link linkend="outcontrol.constants.buffer-control-flags">opções de controle de buffer</link>
+   para o terceiro parâmetro <parameter>flags</parameter>
+   de <function>ob_start</function>.
+   Se omitido, todas as operações serão permitidas por padrão.
+   Se <literal>0</literal> for usado,
+   o buffer não poderá ser descarregado, limpo ou removido,
+   mas seu conteúdo ainda poderá ser recuperado.
+  </para>
+  <para>
+   <constant>PHP_OUTPUT_HANDLER_CLEANABLE</constant> permite que
+   <function>ob_clean</function> limpe o conteúdo do buffer.
+  </para>
+  <warning>
+   <simpara>
+    A ausência da opção <constant>PHP_OUTPUT_HANDLER_CLEANABLE</constant>
+    não impedirá que <function>ob_end_clean</function>
+    ou <function>ob_get_clean</function> limpem o conteúdo do buffer.
+   </simpara>
+  </warning>
+  <para>
+   <constant>PHP_OUTPUT_HANDLER_FLUSHABLE</constant> permite que
+   <function>ob_flush</function> descarregue o conteúdo do buffer.
+  </para>
+  <warning>
+   <simpara>
+    A ausência da opção <constant>PHP_OUTPUT_HANDLER_FLUSHABLE</constant>
+    não impedriá que <function>ob_end_flush</function>
+    ou <function>ob_get_flush</function> descarreguem o conteúdo do buffer.
+   </simpara>
+  </warning>
+  <para>
+   <constant>PHP_OUTPUT_HANDLER_REMOVABLE</constant> permite que
+   <function>ob_end_clean</function>, <function>ob_end_flush</function>,
+   <function>ob_get_clean</function> ou <function>ob_get_flush</function>
+   desliguem o buffer.
+  </para>
+  <para>
+   <constant>PHP_OUTPUT_HANDLER_STDFLAGS</constant>,
+   a combinação das três opções irá permitir que cada uma das três operações
+   seja realizada no buffer.
+  </para>
+ </section>
+
+ <section>
+  <title>Descarregando, Acessando e Limpando o Conteúdo do Buffer</title>
+  <para>
+   A descarga envia e descarta o conteúdo do buffer ativo.
+   Os buffers de saída são descarregados quando o tamanho da saída
+   excede o tamanho do buffer; quando o script termina; ou quando
+   <function>ob_flush</function>, <function>ob_end_flush</function>
+   ou <function>ob_get_flush</function> são chamados.
+  </para>
+  <caution>
+   <simpara>
+    Chamar <function>ob_end_flush</function>
+    ou <function>ob_get_flush</function> irá desligar o buffer ativo.
+   </simpara>
+  </caution>
+  <caution>
+   <simpara>
+    A descarga de buffers liberará o valor de retorno do manipulador de saída,
+    que pode ser diferente do conteúdo do buffer.
+    Por exemplo, usar <function>ob_gzhandler</function> compactará
+    a saída e liberará a saída compactada.
+   </simpara>
+  </caution>
+  <para>
+   O conteúdo do buffer ativo pode ser recuperado chamando
+   <function>ob_get_contents</function>, <function>ob_get_clean</function>
+   ou <function>ob_get_flush</function>.
+  </para>
+  <para>
+   Se apenas o comprimento do conteúdo do buffer for necessário,
+   <function>ob_get_length</function> ou <function>ob_get_status</function>
+   retornação o comprimento do conteúdo em bytes.
+  </para>
+  <caution>
+   <simpara>
+    Chamar <function>ob_get_clean</function>
+    ou <function>ob_get_flush</function> irá desligar o buffer ativo
+    depois de retornar seu conteúdo.
+   </simpara>
+  </caution>
+  <para>
+   O conteúdo do buffer ativo pode ser limpo chamando
+   <function>ob_clean</function>, <function>ob_end_clean</function>
+   ou <function>ob_get_clean</function>.
+  </para>
+  <caution>
+   <simpara>
+    Chamar <function>ob_end_clean</function>
+    ou <function>ob_get_clean</function> desligará o buffer ativo.
+   </simpara>
+  </caution>
+ </section>
+
+ <section>
+  <title>Desligando Buffers</title>
+  <para>
+   Buffers de saída podem ser desligados chamando
+   <function>ob_end_clean</function>, <function>ob_end_flush</function>,
+   <function>ob_get_flush</function> ou <function>ob_get_clean</function>.
+  </para>
+  <warning>
+   <simpara>
+    Buffers de saída iniciados sem a opção
+    <constant>PHP_OUTPUT_HANDLER_REMOVABLE</constant>
+    não podem ser desligados e podem gerar um <constant>E_NOTICE</constant>.
+   </simpara>
+  </warning>
+  <para>
+   Todo buffer de saída que não tiver sido fechado até o final do script,
+   ou quando a função <function>exit</function> for chamada, será descarregado
+   e desligado pelo processo de desligamento do PHP.
+   Os buffers serão descarregados e desligados na ordem inversa
+   de sua inicialização.
+   O último buffer iniciado será o primeiro,
+   o primeiro buffer iniciado será o último a ser descarregado e desligado.
+  </para>
+  <caution>
+   <simpara>
+    Se a descarga do conteúdo do buffer não for desejada,
+    um manipulador de saída personalizado deverá ser usado para evitar a descarga durante o desligamento.
+   </simpara>
+  </caution>
+ </section>
+
+ <section xml:id="outcontrol.output-handlers">
+  <title>Manipuladores de Saída</title>
+  <para>
+   Manipuladores de saída são funções do tipo <type>callable</type> associadas com buffers de saída
+   que são invocados ao chamar <function>ob_clean</function>,
+   <function>ob_flush</function>, <function>ob_end_flush</function>,
+   <function>ob_get_flush</function>, <function>ob_end_clean</function>,
+   <function>ob_get_clean</function> ou durante o processo de desligamento do PHP.
+  </para>
+  <note>
+   <simpara>
+    O processo de desligamento irá descarregar o valor de retorno do manipulador.
+   </simpara>
+  </note>
+  <para>
+   Se omitido ou &null; ao iniciar o buffer de saída,
+   o <literal>"default output handler"</literal> (manipulador de saída padão) interno será usado,
+   retornando o conteúdo não modificado do buffer quando invocado.
+   Manipuladores de saída podem ser usados ​​para retornar uma versão modificada
+   do conteúdo do buffer e/ou ter efeitos colaterais (por exemplo, enviar cabeçalhos).
+  </para>
+  <para>
+   O PHP vem com dois manipuladores de saída internos:
+   <literal>"default output handler"</literal>
+   e <literal>"URL-Rewriter"</literal> (que é integrado em
+   seu próprio buffer de saída e no máximo duas instâncias dele podem ser iniciadas).
+  </para>
+  <para>
+   As extensões incluídas no PHP são equipadas com quatro manipuladores de saída adicionais:
+   <function>mb_output_handler</function>, <function>ob_gzhandler</function>,
+   <function>ob_iconv_handler</function> e <function>ob_tidyhandler</function>.
+  </para>
+ </section>
+
+ <section xml:id="outcontrol.working-with-output-handlers">
+  <title>Trabalhando com Manipuladores de Saída</title>
+  <para>
+   Quando invocados, os manipuladores de saída recebem o conteúdo do buffer
+   e uma máscara de bits indicando o status do buffer de saída.
+  </para>
+  <para>
+   <methodsynopsis>
+    <type>string</type>
+    <methodname>
+     <replaceable>handler</replaceable>
+    </methodname>
+    <methodparam>
+     <type>string</type>
+     <parameter>buffer</parameter>
+    </methodparam>
+    <methodparam choice="opt">
+     <type>int</type>
+     <parameter>phase</parameter>
+    </methodparam>
+   </methodsynopsis>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>buffer</parameter></term>
+     <listitem>
+      <simpara>
+       Conteúdo do buffer de saída.
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>phase</parameter></term>
+     <listitem>
+      <simpara>
+       Máscara de bits das
+       constantes
+       <link linkend="constant.php-output-handler-start">
+        <constant>PHP_OUTPUT_HANDLER_<replaceable>*</replaceable></constant>
+       </link>.
+      </simpara>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+  <warning>
+   <simpara>
+    Chamar qualquer das funções a seguir de dentro de um manipulador de saída
+    resultará em um erro fatal:
+    <function>ob_clean</function>, <function>ob_end_clean</function>,
+    <function>ob_end_flush</function>, <function>ob_flush</function>,
+    <function>ob_get_clean</function>, <function>ob_get_flush</function> ou
+    <function>ob_start</function>.
+   </simpara>
+  </warning>
+  <note>
+   <simpara>
+    Se a constante <constant>PHP_OUTPUT_HANDLER_DISABLED</constant> de um manipulador estiver definida,
+    ele não será invocado chamando
+    <function>ob_end_clean</function>, <function>ob_end_flush</function>,
+    <function>ob_get_clean</function>, <function>ob_get_flush</function>
+    ou durante o processo de desligamento do PHP.
+    Esta opção não tem efeito ao chamar <function>ob_clean</function>
+    ou <function>ob_flush</function>.
+   </simpara>
+  </note>
+  <note>
+   <simpara>
+    O diretório de trabalho do script pode mudar dentro da função de desligamento
+    em alguns servidores web, por ex. Apache ou o servidor web integrado.
+   </simpara>
+  </note>
+ </section>
+
+ <section xml:id="outcontrol.flags-passed-to-output-handlers">
+  <title>Opções Passadas aos Manipuladores de Saída</title>
+  <para>
+   A máscara de bits passada para o segundo parâmetro <parameter>phase</parameter>
+   do manipulador de saída fornece informações sobre a invocação do manipulador.
+  </para>
+  <note>
+   <simpara>
+    A máscara de bits pode incluir mais de uma opção
+    e o operador binário <literal>&amp;</literal> deve ser usado
+    para verificar se uma opção está definida.
+   </simpara>
+  </note>
+  <warning>
+   <simpara>
+    O valor de <constant>PHP_OUTPUT_HANDLER_WRITE</constant> e seu apelido
+    <constant>PHP_OUTPUT_HANDLER_CONT</constant> é <literal>0</literal>
+    portanto, se ele está definido ou não só pode ser determinado
+    usando-se um
+    <link linkend="language.operators.comparison">operador de igualdade</link>
+    (<literal>==</literal> ou <literal>===</literal>).
+   </simpara>
+  </warning>
+  <para>
+   As seguintes opções são definidas em uma fase específica do ciclo de vida do manipulador:
+   <constant>PHP_OUTPUT_HANDLER_START</constant> é definida
+   quando um manipulador é invocado pela primeira vez.
+   <constant>PHP_OUTPUT_HANDLER_FINAL</constant>
+   ou seu apelido <constant>PHP_OUTPUT_HANDLER_END</constant>
+   é definida quando um manipulador é invocado pela última vez,
+   ou seja, ele está sendo desligado. Esta opção também é definida
+   quando os buffers estão sendo desligados pelo processo de desligamento do PHP.
+  </para>
+  <para>
+   As seguintes opções são definidas por uma invocação específica do manipulador:
+   <constant>PHP_OUTPUT_HANDLER_FLUSH</constant> é definida
+   quando o manipulador é invocado chamando-se <function>ob_flush</function>.
+   <constant>PHP_OUTPUT_HANDLER_WRITE</constant>
+   ou seu apelido <constant>PHP_OUTPUT_HANDLER_CONT</constant>
+   é definida quando o tamanho de seu conteúdo é igual ou excede o tamanho do buffer
+   e o manipulador é invocado enquanto o buffer está sendo descarregado automaticamente.
+   <constant>PHP_OUTPUT_HANDLER_FLUSH</constant> é definida
+   quando o manipulador é invocado chamando-se <function>ob_clean</function>,
+   <function>ob_end_clean</function> ou <function>ob_get_clean</function>.
+   Quando <function>ob_end_clean</function> ou <function>ob_get_clean</function>
+   são chamados, <constant>PHP_OUTPUT_HANDLER_FINAL</constant> também é definida.
+  </para>
+  <note>
+   <simpara>
+    Quando <function>ob_end_flush</function> ou <function>ob_get_flush</function>
+    são chamadas, <constant>PHP_OUTPUT_HANDLER_FINAL</constant> é definida
+    mas <constant>PHP_OUTPUT_HANDLER_FLUSH</constant> não é.
+   </simpara>
+  </note>
+ </section>
+
+ <section xml:id="outcontrol.output-handler-return-values">
+  <title>Valores de Retorno do Menipulador de Saída</title>
+  <para>
+   O valor de retorno do manipulador de saída é internamente forçado para uma string
+   seguindo a semântica padrão de tipos do PHP, com duas exceções:
+   <type>array</type>s e <type>bool</type>eanos.
+  </para>
+  <para>
+   Arrays são convertidos na string <literal>"Array"</literal>
+   mas o alerta <literal>Array to string conversion</literal> (conversão de array para string)
+   não é emitido.
+  </para>
+  <para>
+   Se o manipulador retorna &false;, o conteúdo do buffer é retornado.
+   Se o manipulador retorna &true;, uma string vazia é retornada.
+  </para>
+  <note>
+   <simpara>
+    Se o manipulador retorna &false; ou lança uma exceção,
+    sua constante de estado <constant>PHP_OUTPUT_HANDLER_DISABLED</constant> é definida.
+   </simpara>
+  </note>
+ </section>
+
+ <section>
+  <title>Exceções Lançadas em Manipuladores de Saída</title>
+  <para>
+   Se uma exceção não capturada é lançada em um manipulador de saída,
+   o programa termina e o manipulador é invocado
+   pelo processo de desligamento depois do qual
+   a mensagem de erro <literal>"Uncaught Exception"</literal> (exceção não capturada) é descarregada.
+  </para>
+  <para>
+   Se a exceção não capturada é lançada em um manipulador
+   invocado por <function>ob_flush</function>,
+   <function>ob_end_flush</function> ou <function>ob_get_flush</function>,
+   o conteúdo do buffer é descarregado antes da mensagem de erro.
+  </para>
+  <para>
+   Se uma exceção não capturada é lançada em um manipulador de saída durante o desligamento,
+   o manipulador é terminado e nem o conteúdo do buffer
+   nem a mensagem de erro são descarregados.
+  </para>
+  <note>
+   <simpara>
+    Se um manipulador lança uma exceção,
+    sua constante de estado <constant>PHP_OUTPUT_HANDLER_DISABLED</constant> é definida.
+   </simpara>
+  </note>
+ </section>
+
+ <section>
+  <title>Erros Emitidos em Manipuladores de Saída</title>
+  <para>
+   Se um erro não fatal for gerado em um manipulador de saída,
+   o programa continuará a execução.
+  </para>
+  <para>
+   Se o erro não fatal for gerado em um manipulador invocado por
+   <function>ob_flush</function>, <function>ob_end_flush</function>
+   ou <function>ob_get_flush</function>,
+   o buffer descarrega determinados dados dependendo do valor de retorno do manipulador.
+   Se o manipulador retornar &false;, o buffer e a mensagem de erro são descarregados.
+   Se retornar qualquer outra coisa, o valor de retorno do manipulador será descarregado,
+   mas a mensagem de erro não.
+  </para>
+  <note>
+   <simpara>
+    Se um manipulador returnar &false;,
+    sua constante de estado <constant>PHP_OUTPUT_HANDLER_DISABLED</constant> sera definida.
+   </simpara>
+  </note>
+  <para>
+   Se um erro fatal for gerado em um manipulador de saída,
+   o programa será encerrado e o manipulador será invocado
+   pelo processo de desligamento, após o qual a mensagem de erro será descarregada.
+  </para>
+  <para>
+   Se o erro fatal for gerado em um manipulador
+   invocado por <function>ob_flush</function>,
+   <function>ob_end_flush</function> ou <function>ob_get_flush</function>,
+   o conteúdo dos buffers será descarregado antes da mensagem de erro.
+  </para>
+  <para>
+   Se um erro fatal for gerado em um manipulador de saída durante o desligamento,
+   o programa será encerrado sem descarregar o buffer ou a mensagem de erro.
+  </para>
+ </section>
+
+ <section>
+  <title>Saída nos Manipuladores de Saída</title>
+  <para>
+   Em circunstâncias específicas, a saída produzida no manipulador é descarregada
+   junto com o conteúdo do buffer.
+   Esta saída não é anexada ao buffer e não faz parte da string
+   retornada por <function>ob_get_flush</function>.
+  </para>
+  <para>
+   Durante operações de descarga (ao chamar <function>ob_flush</function>,
+   <function>ob_end_flush</function>, <function>ob_get_flush</function>
+   e durante o desligamento),
+   se o valor de retorno de um manipulador for &false;,
+   o conteúdo do buffer é descarregado seguido pela saída.
+   Se o manipulador não for invocado durante o desligamento,
+   o fato do manipulador lançar uma exceção ou chamar a função <function>exit</function>
+   resultará no mesmo comportamento.
+  </para>
+  <note>
+   <simpara>
+    Se um manipulador retornar &false;,
+    sua constante de estado <constant>PHP_OUTPUT_HANDLER_DISABLED</constant> é definida.
+   </simpara>
+  </note>
+ </section>
+
+ <section>
+  <title>Constantes de Estado do Manipulador de Saída</title>
+  <para>
+   As
+   <link linkend="outcontrol.constants.flags-returned-by-handler">
+   constantes de estado de manipulador
+   </link> da máscara de bits <literal>flags</literal> do buffer
+   são definidas toda vez que o manipulador de saída é invocado
+   e são parte das <literal>flags</literal> retornadas por
+   <function>ob_get_status</function>.
+   Se o manipulador executa com sucesso e não retorna &false;,
+   <constant>PHP_OUTPUT_HANDLER_STARTED</constant> e
+   <constant>PHP_OUTPUT_HANDLER_PROCESSED</constant> são definidas.
+   Se o manipulador retonar &false; ou lança uma exceção durante a execução,
+   <constant>PHP_OUTPUT_HANDLER_STARTED</constant> e
+   <constant>PHP_OUTPUT_HANDLER_DISABLED</constant> são definidas.
+  </para>
+  <note>
+   <simpara>
+    Se a constante <constant>PHP_OUTPUT_HANDLER_DISABLED</constant> de um manipulador for definida,
+    o manipulador não será invocado chamando-se
+    <function>ob_end_clean</function>, <function>ob_end_flush</function>,
+    <function>ob_get_clean</function>, <function>ob_get_flush</function>
+    ou durante o processo de desligamento do PHP.
+    Esta constante não tem efeito ao chamar <function>ob_clean</function>
+    ou <function>ob_flush</function>.
+   </simpara>
+  </note>
+ </section>
+
+</chapter>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
