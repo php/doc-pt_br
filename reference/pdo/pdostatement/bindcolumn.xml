@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 082ddc19f53e6e254010de1a1fbbe485ff744ec1 Maintainer: leonardolara Status: ready -->
+<refentry xml:id="pdostatement.bindcolumn" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>PDOStatement::bindColumn</refname>
+  <refpurpose>
+   Vincula uma coluna a uma variável PHP
+  </refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+   <methodsynopsis role="PDOStatement">
+   <modifier>public</modifier> <type>bool</type><methodname>PDOStatement::bindColumn</methodname>
+   <methodparam><type class="union"><type>string</type><type>int</type></type><parameter>column</parameter></methodparam>
+   <methodparam><type>mixed</type><parameter role="reference">var</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>type</parameter><initializer>PDO::PARAM_STR</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>maxLength</parameter><initializer>0</initializer></methodparam>
+   <methodparam choice="opt"><type>mixed</type><parameter>driverOptions</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+
+  <para>
+   <methodname>PDOStatement::bindColumn</methodname> faz com que
+   uma variável em particular seja vinculada a uma coluna informada, no conjunto de resultados de
+   uma consulta. Cada chamada a <methodname>PDOStatement::fetch</methodname> ou
+   <methodname>PDOStatement::fetchAll</methodname> irá atualizar todas as variáveis
+   que estejam vinculadas a colunas.
+  </para>
+  <note>
+   <para>
+    Como as informações sobre a coluna não estão sempre disponíveis ao PDO até que
+    a instrução seja executada, aplicações portáteis devem chamar esta
+    função <emphasis>após</emphasis> <methodname>PDOStatement::execute</methodname>.
+   </para>
+   <para>
+    Entretanto, para que seja possível vincular uma coluna LOB como um fluxo ao usar o
+    <emphasis>driver PgSQL</emphasis>, aplicações devem chamar este método
+    <emphasis>antes</emphasis> de chamada a <methodname>PDOStatement::execute</methodname>,
+    caso contrário o OID de objeto grande será retornado como um inteiro.
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>column</parameter></term>
+     <listitem>
+      <para>
+       Número da coluna (índices iniciando em 1) ou nome da coluna no conjunto de resultados.
+       Se o nome da coluna estiver sendo usado, o nome deve ter as maiúsculas/minúsculas correspondentes
+       à coluna, como retornada pelo driver.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>var</parameter></term>
+     <listitem>
+      <para>
+       Nome da variável PHP à qual a coluna será vinculada.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>type</parameter></term>
+     <listitem>
+      <para>
+       Tipo de dado do parâmetro, especificado pelas <link linkend="pdo.constants">constantes <literal>PDO::PARAM_*</literal>
+       </link>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>maxLength</parameter></term>
+     <listitem>
+      <para>
+       Um dica para pré-alocação.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>driverOptions</parameter></term>
+     <listitem>
+      <para>
+       Um ou mais parâmetros opcionais para o driver.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.success;
+  </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  &pdo.errors;
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Vinculando a saída do conjunto de resultados a variáveis PHP</title>
+    <para>
+     Vincular colunas no conjunto de resultados a variáveis PHP é uma maneira
+     eficaz de fazer com que os dados contidos em cada linha estejam imediatamente disponíveis para
+     a aplicação. O exemplo a seguir demonstra como o PDO permite
+     que se vincule e se recupere colunas com uma variedade de opções e com
+     padrões inteligentes.
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$stmt = $dbh->prepare('SELECT name, colour, calories FROM fruit');
+$stmt->execute();
+
+/* Vincula por número da coluna */
+$stmt->bindColumn(1, $name);
+$stmt->bindColumn(2, $colour);
+
+/* Vincula por nome da coluna */
+$stmt->bindColumn('calories', $cals);
+
+while ($stmt->fetch(PDO::FETCH_BOUND)) {
+    print $name . "\t" . $colour . "\t" . $cals . "\n";
+}
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+apple   red     150
+banana  yellow  175
+kiwi    green   75
+orange  orange  150
+mango   red     200
+strawberry      red     25
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><methodname>PDOStatement::execute</methodname></member>
+    <member><methodname>PDOStatement::fetch</methodname></member>
+    <member><methodname>PDOStatement::fetchAll</methodname></member>
+    <member><methodname>PDOStatement::fetchColumn</methodname></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
