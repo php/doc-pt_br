@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 082ddc19f53e6e254010de1a1fbbe485ff744ec1	Maintainer: leonardolara Status: ready -->
+<refentry xml:id="pdostatement.execute" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>PDOStatement::execute</refname>
+  <refpurpose>
+   Executa ums instrução preparada
+  </refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis role="PDOStatement">
+   <modifier>public</modifier> <type>bool</type><methodname>PDOStatement::execute</methodname>
+   <methodparam choice="opt"><type class="union"><type>array</type><type>null</type></type><parameter>params</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Executa a <link linkend="pdo.prepared-statements">instrução
+   preparada</link>. Se a instrução preparada inclui marcadores de parâmetros:
+   <itemizedlist>
+    <listitem><para><methodname>PDOStatement::bindParam</methodname> e/ou
+     <methodname>PDOStatement::bindValue</methodname> devem ser chamadas para vincular variáveis ou
+     valores (respectivamente) aos marcadores de parâmetros. Variáveis vinculadas passam
+     seus valores como entrada e recebem o valor de saída, se houver, de seus
+     marcadores de parâmetros associados</para></listitem>
+    <listitem>
+     <para>ou um array de valores de parâmetros, de entrada somente, deve ser passado</para>
+    </listitem>
+   </itemizedlist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>params</parameter></term>
+     <listitem>
+      <para>
+       Um array de valores com tantos elementos quantos forem os
+       parâmetros vinculados na instrução SQL sendo executada.
+       Todos os valores são tratados como <constant>PDO::PARAM_STR</constant>.
+      </para>
+      <para>
+       Valores múltiplos não podem ser vinculados a um parâmetro único; por exemplo,
+       não é permitido vincular dois valores a um único parâmetro nomeado em uma cláusula
+       IN().
+      </para>
+      <para>
+       Vincular mais valores que o especificado não é possível; se existirem mais chaves em
+       <parameter>params</parameter> que no SQL especificado
+       em <methodname>PDO::prepare</methodname>, a instrução
+       falhará e um erro será emitido.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.success;
+  </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  &pdo.errors;
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example><title>Executa uma instrução preparada com variável e valor vinculados</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+/* Executa uma instrução preparada vinculando uma variável e um valor */
+$calorias = 150;
+$cor = 'ver';
+$sth = $dbh->prepare('SELECT nome, cor, calorias
+    FROM frutas
+    WHERE calorias < :calorias AND cor LIKE :cor');
+$sth->bindParam('calorias', $calorias, PDO::PARAM_INT);
+/* Nomes podem ser prefixados com dois-pontos ":" também (opcional) */
+$sth->bindValue(':cor', "%$cor%");
+$sth->execute();
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <example><title>Executa uma instrução preparada com um array de valores nomeados</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+/* Executa uma instrução preparada passando um array de valores de inserção */
+$calorias = 150;
+$cor = 'vermelha';
+$sth = $dbh->prepare('SELECT nome, cor, calorias
+    FROM frutas
+    WHERE calorias < :calorias AND cor = :cor');
+$sth->execute(array('calorias' => $calorias, 'cor' => $cor));
+/* Chaves de array podem ser prefixadas com dois-pontos ":" também (opcional) */
+$sth->execute(array(':calorias' => $calorias, ':cor' => $cor));
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <example><title>Executa uma instrução preparada com um array de valores posicionais</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+/* Executa uma instrução preparada passando um array de valores de inserção */
+$calorias = 150;
+$cor = 'vermelha';
+$sth = $dbh->prepare('SELECT nome, cor, calorias
+    FROM frutas
+    WHERE calorias < ? AND cor = ?');
+$sth->execute(array($calorias, $cor));
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <example><title>Executa uma instrução preparada com variáveis vinculadas a reservas de espço posicionais</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+/* Executa uma instrução preparada vinculando variáveis PHP */
+$calorias = 150;
+$cor = 'vermelha';
+$sth = $dbh->prepare('SELECT nome, cor, calorias
+    FROM frutas
+    WHERE calorias < ? AND cor = ?');
+$sth->bindParam(1, $calorias, PDO::PARAM_INT);
+$sth->bindParam(2, $cor, PDO::PARAM_STR, 12);
+$sth->execute();
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <example><title>Executa uma instrução preparada usando array para cláusula IN</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+/* Executa uma instrução preparada usando um array de valores para uma cláusula IN */
+$params = array(1, 21, 63, 171);
+/* Cria uma string para reservas de espaço de parâmetros preenchidas com o número de parâmetros */
+$place_holders = implode(',', array_fill(0, count($params), '?'));
+
+/*
+    Isto prepara a instrução com reservas de espaço anônimas suficientes para cada valor
+    no array $params. Os valores do array $params são então vinculados às reservas
+    de espaço na instrução preparada quando ele é executada.
+    Isto não é a mesma coisa que usar PDOStatement::bindParam() já que isso
+    requer uma referência à variável. PDOStatement::execute() apenas vincula
+    por valor.
+*/
+$sth = $dbh->prepare("SELECT id, nome FROM contatos WHERE id IN ($place_holders)");
+$sth->execute($params);
+?>
+]]>
+   </programlisting>
+  </example>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    Alguns drivers requerem que o <link linkend="pdostatement.closecursor">cursor seja
+    fechado</link> antes que a próxima instrução seja executada.
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><methodname>PDO::prepare</methodname></member>
+    <member><methodname>PDOStatement::bindParam</methodname></member>
+    <member><methodname>PDOStatement::fetch</methodname></member>
+    <member><methodname>PDOStatement::fetchAll</methodname></member>
+    <member><methodname>PDOStatement::fetchColumn</methodname></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
