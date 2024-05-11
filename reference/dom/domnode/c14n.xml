@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 4f5e2b22575131fa5e9c3004b1c874e1acb06573 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<!-- EN-Revision: 2a72c95c0a3773a6404d10602005dc453b024843 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto, leonardolara -->
 <refentry xml:id="domnode.c14n" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>DOMNode::C14N</refname>
@@ -42,11 +42,7 @@
    </varlistentry>
    <varlistentry>
     <term><parameter>xpath</parameter></term>
-    <listitem>
-     <para>
-      Um array de expressões <literal>xpath</literal> para filtrar os nós.
-     </para>
-    </listitem>
+    &dom.c14n.xpath_array;
    </varlistentry>
    <varlistentry>
     <term><parameter>nsPrefixes</parameter></term>
@@ -63,6 +59,47 @@
   &reftitle.returnvalues;
   <para>
    Retorna nós canonizados como uma string&return.falseforfailure;
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo com consulta XPath</title>
+    <para>
+     Este exemplo demonstra um uso avançado canonizando e filtrando os nós por um consulta XPath.
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$dom = new DOMDocument;
+$dom->loadXML(<<<XML
+<root xmlns:comida="urn:comida">
+    <!-- declaração de namespace redundante será canonizada -->
+    <comida:fruta xmlns:comida="urn:comida">Maçã</comida:fruta>
+    <comida:fruta>Laranja</comida:fruta>
+    <comida:fruta>Pera</comida:fruta>
+    <!-- folhas aqui -->
+    <comida:folha>Alface</comida:folha>
+</root>
+XML);
+
+echo $dom->C14N(true, false, [
+    "query" => ".//f:fruta|.//f:fruta/text()",
+    "namespaces" => ["f" => "urn:comida"],
+]);
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+<comida:fruta>Maçã</comida:fruta><comida:fruta>Laranja</comida:fruta><comida:fruta>Pera</comida:fruta>
+]]>
+    </screen>
+   </example>
   </para>
  </refsect1>
 
