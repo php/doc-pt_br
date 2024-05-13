@@ -1,1188 +1,1633 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 40667918dcff1d5c9f7ecdc88b5caca24ba0686c Maintainer: leonardolara Status: ready -->
-<chapter xml:id="mysqlnd.stats" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 55089a115125366b79adbd0f99299d53e561fc10 Maintainer: leonardolara Status: ready -->
+<chapter xml:id="mysqlnd.stats" xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude">
  <title>Estatísticas</title>
- <para>
-  <emphasis role="bold">Usando Dados Estatísticos</emphasis>
- </para>
+
  <para>
   O Driver Nativo MySQL contém suporte para coleta de estatísticas sobre a
   comunicação entre o cliente e o servidor. As estatísticas
   recolhidas são de dois tipos principais:
+  <itemizedlist>
+   <listitem>
+    <simpara>Estatísticas de cliente</simpara>
+   </listitem>
+   <listitem>
+    <simpara>Estatísticas de conexão</simpara>
+   </listitem>
+  </itemizedlist>
  </para>
- <itemizedlist>
-  <listitem>
-   <para>
-    Estatísticas de cliente
-   </para>
-  </listitem>
-  <listitem>
-   <para>
-    Estatísticas de conexão
-   </para>
-  </listitem>
- </itemizedlist>
  <para>
-  Se extensão <literal>mysqli</literal> estiver sendo utilizada, essas
+  Ao usar a extensão <link linkend="book.mysqli">mysqli</link>, essas
   estatísticas poderão ser obtidas através de duas chamadas de API:
+  <itemizedlist>
+   <listitem>
+    <simpara><function>mysqli_get_client_stats</function></simpara>
+   </listitem>
+   <listitem>
+   <simpara><function>mysqli_get_connection_stats</function></simpara>
+   </listitem>
+  </itemizedlist>
  </para>
- <itemizedlist>
-  <listitem>
-   <para>
-    <function>mysqli_get_client_stats</function>
-   </para>
-  </listitem>
-  <listitem>
-   <para>
-    <function>mysqli_get_connection_stats</function>
-   </para>
-  </listitem>
- </itemizedlist>
+
  <note>
-  <para>
+  <simpara>
    As estatísticas são agregadas entre todas as extensões que utilizam o Driver Nativo
-   MySQL. Por exemplo, ao compilar <literal>ext/mysql</literal>
-   e <literal>ext/mysqli</literal> no Driver Nativo MySQL, ambas
-   as chamadas de função de <literal>ext/mysql</literal> e
-   <literal>ext/mysqli</literal> mudará as estatísticas. Não há
-   como saber o quanto uma determinada chamada de API de qualquer extensão que tenha
-   sido compilada contra o Driver Nativo MySQL tenha impactado uma determinada
-   estatística. Pode-se configurar o Driver MySQL PDO,
-   <literal>ext/mysql</literal> e <literal>ext/mysqli</literal> para
-   opcionalmente utilizar o Driver Nativo MySQL. Ao fazer isso, todas as três
-   extensões alterarão as estatísticas.
-  </para>
+   MySQL.
+   Por exemplo, se a extensão <link linkend="book.mysqli">mysqli</link>
+   e o driver PDO MySQL estiverem ambos configurados para usar MySQLnd,
+   as chamadas de função de <link linkend="book.mysqli">mysqli</link> e
+   chamadas de métodos do PDO afetarão as estatísticas.
+  </simpara>
+  <simpara>
+   Não há como saber o quanto uma determinada chamada de API de qualquer extensão
+   que tenha sido compilada contra o Driver Nativo MySQL tenha impactado uma determinada
+   estatística.
+  </simpara>
  </note>
- <para>
-  <emphasis role="bold">Acessando Estatísticas de Cliente</emphasis>
- </para>
- <para>
-  Para acessar as estatísticas do cliente, é necessário chamar
-  <function>mysqli_get_client_stats</function>. A chamada de função
-  não requer nenhum parâmetro.
- </para>
- <para>
-  A função retorna uma matriz associativa que contém o nome da
-  estatística como chave e os dados estatísticos como valor.
- </para>
- <para>
-  As estatísticas do cliente também podem ser acessadas chamando a
-  função <function>phpinfo</function>.
- </para>
- <para>
-  <emphasis role="bold">Acessando Estatísticas de Conexão</emphasis>
- </para>
- <para>
-  Para acessar as estatísticas de conexão, é necessário chamar
-  <function>mysqli_get_connection_stats</function>. Isso usa o
-  identificador de conexão do banco de dados como parâmetro.
- </para>
- <para>
-  A função retorna uma matriz associativa que contém o nome da
-  estatística como chave e os dados estatísticos como valor.
- </para>
- <para>
-  <emphasis role="bold">Conjunto de Resultados com e sem Buffer</emphasis>
- </para>
- <para>
-  Os conjuntos de resultados podem ser armazenados em buffer ou sem buffer. Usando configurações padrão,
-  <literal>ext/mysql</literal> e <literal>ext/mysqli</literal> funcionam
-  com conjuntos de resultados armazenados em buffer para consultas normais (instruções não preparadas).
-  Os conjuntos de resultados armazenados em buffer são armazenados em cache no cliente. Após a execução
-  da consulta todos os resultados são buscados no servidor MySQL e armazenados em
-  cache no cliente. A grande vantagem dos conjuntos de resultados em buffer é
-  que eles permitem que o servidor libere todos os recursos alocados para um conjunto de
-  resultados, uma vez que os resultados tenham sido buscados pelo cliente.
- </para>
- <para>
-  Por outro lado, os conjuntos de resultados sem buffer são mantidos por muito mais tempo no
-  servidor. Se for desejado reduzir o consumo de memória no cliente, mas
-  aumentando a carga no servidor, use resultados sem buffer. Se for observada
-  uma carga alta no servidor e os números dos conjuntos de resultados sem buffer forem
-  altos, considere mover a carga para os clientes. Os clientes
-  normalmente escalam melhor que os servidores. <quote>Carga</quote> não se refere
-  apenas a buffers de memória - o servidor também precisa manter outros
-  recursos abertos, por exemplo, identificadores de arquivos e threads, antes que um conjunto
-  de resultados possa ser liberado.
- </para>
- <para>
-  As instruções preparadas usam conjuntos de resultados sem buffer por padrão. Entretanto,
-  pode-se usar <function>mysqli_stmt_store_result</function> para habilitar
-  conjuntos de resultados em buffer.
- </para>
- <para>
-  <emphasis role="bold">Estetísticas Retornadas pelo Driver Nativo
-  MySQL</emphasis>
- </para>
- <para>
-  A tabela a seguir mostra uma lista de estatísticas retornadas pelas funções
-  <function>mysqli_get_client_stats</function> e
-  <function>mysqli_get_connection_stats</function>.
- </para>
- <table xml:id="mysqlnd.stats.returns">
-  <title>Estatísticas mysqlnd retornadas: Rede</title>
-  <tgroup cols="4">
-   <colspec colwidth="10*"/>
-   <colspec colwidth="10*"/>
-   <colspec colwidth="40*"/>
-   <colspec colwidth="40*"/>
-   <thead>
-    <row>
-     <entry>Estatística</entry>
-     <entry>Escopo</entry>
-     <entry>Descrição</entry>
-     <entry>Notas</entry>
-    </row>
-   </thead>
-   <tbody>
-    <row>
-     <entry><literal>bytes_sent</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de bytes enviados pelo PHP para o servidor MySQL</entry>
-     <entry>Pode ser usada para verificar a eficiência do protocolo de compressão</entry>
-    </row>
-    <row>
-     <entry><literal>bytes_received</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de bytes recebidos do servidor MySQL</entry>
-     <entry>Pode ser usada para verificar a eficiência do protocolo de compressão</entry>
-    </row>
-    <row>
-     <entry><literal>packets_sent</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de pacotes do protocolo Cliente-Servidor do MySQL enviados</entry>
-     <entry>Usada para depurar a implementação do protocolo Cliente-Servidor</entry>
-    </row>
-    <row>
-     <entry><literal>packets_received</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de pacotes do protocolo Cliente-Servidor do MySQL recebidos</entry>
-     <entry>Usada para depurar a implementação do protocolo Cliente-Servidor</entry>
-    </row>
-    <row>
-     <entry><literal>protocol_overhead_in</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Sobrecarga do protocolo Cliente-Servidor do MySQL em bytes para tráfego de entrada.
-      Atualmente apenas o Cabeçalho do Pacote (4 bytes) é considerado
-      sobrecarga. protocol_overhead_in = pacotes_recebidos * 4</entry>
-     <entry>Usada para depurar a implementação do protocolo Cliente-Servidor</entry>
-    </row>
-    <row>
-     <entry><literal>protocol_overhead_out</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Sobrecarga do protocolo Cliente-Servidor do MySQL em bytes para tráfego de saída.
-      Atualmente apenas o Cabeçalho do Pacote (4 bytes) é considerado
-      sobrecarga. protocol_overhead_out = pacotes_enviados * 4</entry>
-     <entry>Usada para depurar a implementação do protocolo Cliente-Servidor</entry>
-    </row>
-    <row>
-     <entry><literal>bytes_received_ok_packet</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Tamanho total de bytes de pacotes OK do protocolo Cliente-Servidor do MySQL recebidos.
-      Pacotes OK podem conter uma mensagem de status. O comprimento da mensagem de status
-      pode variar e, portanto, o tamanho de um pacote OK não é fixo.</entry>
-     <entry>Usado para depurar a implementação do protocolo CS. Observe que o tamanho total
-      em bytes inclui o tamanho do pacote de cabeçalho (4 bytes, consulte
-      sobrecarga de protocolo).</entry>
-    </row>
-    <row>
-     <entry><literal>packets_received_ok</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de pacotes OK recebidos pelo protocolo Cliente-Servidor do MySQL.</entry>
-     <entry>Usado para depurar a implementação do protocolo CS. Observe que o tamanho total
-      em bytes inclui o tamanho do pacote de cabeçalho (4 bytes, consulte
-      sobrecarga de protocolo).</entry>
-    </row>
-    <row>
-     <entry><literal>bytes_received_eof_packet</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Tamanho total em bytes dos pacotes EOF do protocolo Cliente-Servidor do MySQL
-      recebidos. O EOF pode variar em tamanho dependendo da versão do servidor.
-      Além disso, o EOF pode transportar uma mensagem de erro.</entry>
-     <entry>Usado para depurar a implementação do protocolo CS. Observe que o tamanho total
-      em bytes inclui o tamanho do pacote de cabeçalho (4 bytes, consulte
-      sobrecarga de protocolo).</entry>
-    </row>
-    <row>
-     <entry><literal>packets_received_eof</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de pacotes EOF do protocolo Cliente-Servidor do MySQL. Tal como acontece com
-      outras estatísticas de pacotes, o número de pacotes aumentará mesmo se
-      o PHP não receber o pacote esperado, mas, por exemplo, uma
-      mensagem de erro.</entry>
-     <entry>Usado para depurar a implementação do protocolo CS. Observe que o tamanho total
-      em bytes inclui o tamanho do pacote de cabeçalho (4 bytes, consulte
-      sobrecarga de protocolo).</entry>
-    </row>
-    <row>
-     <entry><literal>bytes_received_rset_header_packet</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Tamanho total em bytes dos pacotes de cabeçalho do conjunto de resultados do protocolo
-      Cliente-Servidor do MySQL. O tamanho dos pacotes varia dependendo da carga
+
+ <section xml:id="mysqlnd.stats.retrieve" annotations="chunk:false">
+  <title>Obtendo estatísticas</title>
+
+  <simpara>
+   Estatísticas do cliente podem ser obtidas chamando a função
+   <function>mysqli_get_client_stats</function>
+  </simpara>
+
+  <simpara>
+   Estatísticas de conexão podem ser obtidas chamando a função
+   <function>mysqli_get_connection_stats</function>.
+  </simpara>
+
+  <simpara>
+   Ambas as funções retornam um array associativo,
+   onde o nome da estatística é a chave para o dado estatístico
+   correspondente.
+  </simpara>
+ </section>
+
+ <section xml:id="mysqlnd.stats.statistics" annotations="chunk:false">
+  <title>Estatísticas do Driver Nativo MySQL</title>
+  <simpara>
+   A maior parte das estatíticas são associadas a uma conexão mas algumas são associadas
+   ao processo, e neste caso isto será mencionado no texto.
+   <!-- Processo executando o servidor? -->
+  </simpara>
+  <simpara>
+   As seguintes estatísticas são produzidas pelo Driver Nativo MySQL:
+  </simpara>
+
+  <variablelist>
+   <title>Estatísticas Relacionadas à Rede</title>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.bytes-sent">
+    <term><literal>bytes_sent</literal></term>
+    <listitem>
+     <simpara>
+      Número de bytes enviados do PHP para o servidor MySQL.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.bytes-received">
+    <term><literal>bytes_received</literal></term>
+    <listitem>
+     <simpara>
+      Número de bytes recebidos do servidor MySQL.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.packets-sent">
+    <term><literal>packets_sent</literal></term>
+    <listitem>
+     <simpara>
+      Número de pacotes enviados pelo protocolo Cliente Servidor do MySQL.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.packets-received">
+    <term><literal>packets_received</literal></term>
+    <listitem>
+     <simpara>
+      Número de pacotes recebidos pelo protocolo Cliente Servidor do MySQL.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.protocol-overhead-in">
+    <term><literal>protocol_overhead_in</literal></term>
+    <listitem>
+     <simpara>
+      Sobrecarga do protocolo Cliente Servidor do MySQL em bytes para o tráfego de entrada.
+      Atualmente apenas o Cabeçalho do Pacote (4 bytes) é considerado como sobrecarga.
+      <code>protocol_overhead_in = packets_received * 4</code>
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.protocol-overhead-out">
+    <term><literal>protocol_overhead_out</literal></term>
+    <listitem>
+     <simpara>
+      Sobrecarga do protocolo Cliente Servidor do MySQL em bytes para o tráfego de saída.
+      Atualmente apenas o Cabeçalho do Pacote (4 bytes) é considerado como sobrecarga.
+      <code>protocol_overhead_out = packets_received * 4</code>
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.bytes-received-ok-packet">
+    <term><literal>bytes_received_ok_packet</literal></term>
+    <listitem>
+     <simpara>
+      Tamanho total em bytes de pacotes OK recebidos pelo protocolo Cliente Servidor do MySQL.
+      Pacotes OK podem conter uma mensagem de status.
+      O comprimento da mensagem de status pode variar e portanto o tamanho de um
+      pacote OK não é fixo.
+     </simpara>
+     <note>
+      <simpara>
+       O tamanho total em bytes inclui o tamanho do pacote de cabeçalho.
+       (4 bytes, consulte sobre sobrecarga do protocolo)
+      </simpara>
+     </note>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.packets-received-ok">
+    <term><literal>packets_received_ok</literal></term>
+    <listitem>
+     <simpara>
+      Número de pacotes OK recebidos pelo protocolo Cliente Servidor do MySQL.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.bytes-received-eof-packet">
+    <term><literal>bytes_received_eof_packet</literal></term>
+    <listitem>
+     <simpara>
+      Tamanho total em bytes de pacotes EOF recebidos pelo protocolo Cliente Servidor do MySQL.
+      EOF pode variar em tamanho dependendo da versão do servidor.
+      Além disso, EOF pode transportar uma mensagem de erro.
+     </simpara>
+     <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('mysqlnd.stats.statistics.bytes-received-ok-packet')/db:listitem/db:note)">
+      <xi:fallback/>
+     </xi:include>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.packets-received-eof">
+    <term><literal>packets_received_eof</literal></term>
+    <listitem>
+     <simpara>
+      Número de pacotes EOF recebidos pelo protocolo Cliente Servidor do MySQL.
+     </simpara>
+     <simpara>
+      Como acontece com outras estatísticas de pacotes, o número de pacotes será
+      incrementado mesmo se o PHP não receber o pacote esperado mas,
+      por exemplo, receber uma mensagem de erro.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.bytes-received-rset-header-packet">
+    <term><literal>bytes_received_rset_header_packet</literal></term>
+    <listitem>
+     <simpara>
+      Tamanho total em bytes dos pacotes de cabeçalho do conjunto de resultados
+      recebido pelo protocolo Cliente Servidor do MySQL.
+      O tamanho dos pacotes varia dependendo da carga
       (<literal>LOAD LOCAL INFILE</literal>, <literal>INSERT</literal>,
-      <literal>UPDATE</literal>, <literal>SELECT</literal>, mensagem de
-      erro).</entry>
-     <entry>Usado para depurar a implementação do protocolo CS. Observe que o tamanho total
-      em bytes inclui o tamanho do pacote de cabeçalho (4 bytes, consulte
-      sobrecarga de protocolo).</entry>
-    </row>
-    <row>
-     <entry><literal>packets_received_rset_header</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de pacotes de cabeçalho do conjunto de resultados do protocolo Cliente-Servidor do MySQL.</entry>
-     <entry>Usado para depurar a implementação do protocolo CS. Observe que o tamanho total
-      em bytes inclui o tamanho do pacote de cabeçalho (4 bytes, consulte
-      sobrecarga de protocolo).</entry>
-    </row>
-    <row>
-     <entry><literal>bytes_received_rset_field_meta_packet</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Tamanho total em bytes dos pacotes (informação de campo) dos metadados do conjunto de resultados do protocolo
-      Cliente-Servidor do MySQL. Obviamente o tamanho varia com os
-      campos do conjunto de resultados. O pacote também pode transportar um erro
-      ou um pacote de EOF no caso de COM_LIST_FIELDS.</entry>
-     <entry>Útil somente para depurar a implementação do protocolo CS. Observe que o tamanho total
-      em bytes inclui o tamanho do pacote de cabeçalho (4 bytes, consulte
-      sobrecarga de protocolo).</entry>
-    </row>
-    <row>
-     <entry><literal>packets_received_rset_field_meta</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de pacotes (informação de campo) dos metadados do conjunto de resultados do protocolo
-      Cliente-Servidor do MySQL.</entry>
-     <entry>Útil somente para depurar a implementação do protocolo CS. Observe que o tamanho total
-      em bytes inclui o tamanho do pacote de cabeçalho (4 bytes, consulte
-      sobrecarga de protocolo).</entry>
-    </row>
-    <row>
-     <entry><literal>bytes_received_rset_row_packet</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Tamanho total em bytes dos pacotes de dados do conjunto de resultados do protocolo
-      Cliente-Servidor do MySQL. O pacote também pode transportar um erro ou um pacote de EOF.
-      Pode-se fazer engenharia reversa do número de erros e pacotes EOF
-      subtraindo <literal>rows_fetched_from_server_normal</literal>
-      e <literal>rows_fetched_from_server_ps</literal> de
-      <literal>bytes_received_rset_row_packet</literal>.</entry>
-     <entry>Útil somente para depurar a implementação do protocolo CS. Observe que o tamanho total
-      em bytes inclui o tamanho do pacote de cabeçalho (4 bytes, consulte
-      sobrecarga de protocolo).</entry>
-    </row>
-    <row>
-     <entry><literal>packets_received_rset_row</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de pacotes de dados do conjunto de resultados do protocolo Cliente-Servidor do MySQL e
-      seu tamanho total em bytes.</entry>
-     <entry>Útil somente para depurar a implementação do protocolo CS. Observe que o tamanho total
-      em bytes inclui o tamanho do pacote de cabeçalho (4 bytes, consulte
-      sobrecarga de protocolo).</entry>
-    </row>
-    <row>
-     <entry><literal>bytes_received_prepare_response_packet</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Tamanho total em bytes dos pacotes OK para Inicialização de Instruções Preparadas do protocolo
-      Cliente-Servidor do MySQL.
-      O pacote também pode transportar um erro. O tamanho do pacote
-      depende da versão MySQL: 9 bytes com MySQL 4.1 e 12 bytes
-      a partir do MySQL 5.0. Não existe maneira segura de saber quantos erros
-      aconteceram. Pode ser possível inferir que um erro ocorreu se,
-      por exemplo, sempre se conectar ao MySQL 5.0 ou superior e
-      <literal>bytes_received_prepare_response_packet</literal> !=
-      <literal>packets_received_prepare_response</literal> * 12. Consulte
-      também <literal>ps_prepared_never_executed</literal> e
-      <literal>ps_prepared_once_executed</literal>.</entry>
-     <entry>Útil somente para depurar a implementação do protocolo CS. Observe que o tamanho total
-      em bytes inclui o tamanho do pacote de cabeçalho (4 bytes, consulte
-      sobrecarga de protocolo).</entry>
-    </row>
-    <row>
-     <entry><literal>packets_received_prepare_response</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de pacotes OK para Inicialização de Instruções Preparadas do protocolo
-      Cliente-Servidor do MySQL.</entry>
-     <entry>Útil somente para depurar a implementação do protocolo CS. Observe que o tamanho total
-      em bytes inclui o tamanho do pacote de cabeçalho (4 bytes, consulte
-      sobrecarga de protocolo).</entry>
-    </row>
-    <row>
-     <entry><literal>bytes_received_change_user_packet</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Tamanho total em bytes dos pacotes COM_CHANGE_USER do protocolo Cliente-Servidor
-      do MySQL. O pacote pode também transportar um erro ou um EOF.</entry>
-     <entry>Útil somente para depurar a implementação do protocolo CS. Observe que o tamanho total
-      em bytes inclui o tamanho do pacote de cabeçalho (4 bytes, consulte
-      sobrecarga de protocolo).</entry>
-    </row>
-    <row>
-     <entry><literal>packets_received_change_user</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Number de pacotes COM_CHANGE_USER do protocolo Cliente-Servidor do MySQL</entry>
-     <entry>Útil somente para depurar a implementação do protocolo CS. Observe que o tamanho total
-      em bytes inclui o tamanho do pacote de cabeçalho (4 bytes, consulte
-      sobrecarga de protocolo).</entry>
-    </row>
-    <row>
-     <entry><literal>packets_sent_command</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de comandos enviados do PHP para o MySQL no protocolo Cliente-Servidor do MySQL.
-      Não há como saber que comandos específicos ou quantos
-      deles foram enviados. No melhor caso pode-se usar esta estatística para verificar se o PHP
-      enviou algum comando para o MySQL, para saber se pode-se considerar
-      desabilitar o suporte ao MySQL no binário PHP. Também não há como fazer
-      engenharia reversa do número de erros que podem ter ocorrido durante
-      envio de dados para o MySQL. O único erro registrado é
-      command_buffer_too_small (veja abaixo).</entry>
-     <entry>Útil somente para depurar a implementação do protocolo CS.</entry>
-    </row>
-    <row>
-     <entry><literal>bytes_received_real_data_normal</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de bytes da carga buscada pelo cliente PHP a partir do
-      <literal>mysqlnd</literal> usando o protocolo de texto.</entry>
-     <entry>Este é o tamanho dos dados reais contidos nos conjuntos de resultados que não
-      se originam de instruções preparadas e que foram buscados pelo
-      cliente PHP. Observe que embora um conjunto de resultados completo pode ter sido
-      puxado do MySQL pelo <literal>mysqlnd</literal>, esta estatística
-      conta somente dados reais puxados do <literal>mysqlnd</literal> pelo
-      cliente PHP. Um exemplo de uma sequência de código que irá aumentar
-      o valor está apresentado abaixo:
-<programlisting>
+      <literal>UPDATE</literal>, <literal>SELECT</literal>, mensagem de erro).
+     </simpara>
+     <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('mysqlnd.stats.statistics.bytes-received-ok-packet')/db:listitem/db:note)">
+      <xi:fallback/>
+     </xi:include>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.packets-received-rset-header">
+    <term><literal>packets_received_rset_header</literal></term>
+    <listitem>
+     <simpara>
+      Número de pacotes de cabeçalho de conjunto de resultados recebidos pelo protocolo Cliente Servidor do MySQL.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.bytes-received-rset-field-meta-packet">
+    <term><literal>bytes_received_rset_field_meta_packet</literal></term>
+    <listitem>
+     <simpara>
+      Tamanho total em bytes de pacotes de metadados (informação de campo) de conjunto de resultados
+      recebidos pelo protocolo Cliente Servidor do MySQL.
+      É evidente que o tamanho varia com os campos no conjunto de resultados.
+      O pacotes também pode transportar um pacote de erro ou de EOF em caso de
+      COM_LIST_FIELDS.
+     </simpara>
+     <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('mysqlnd.stats.statistics.bytes-received-ok-packet')/db:listitem/db:note)">
+      <xi:fallback/>
+     </xi:include>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.packets-received-rset-field-meta">
+    <term><literal>packets_received_rset_field_meta</literal></term>
+    <listitem>
+     <simpara>
+      Número de pacotesde metadados (informação de campo) de conjunto de resultados
+      recebidos pelo protocolo Cliente Servidor do MySQL.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.bytes-received-rset-row-packet">
+    <term><literal>bytes_received_rset_row_packet</literal></term>
+    <listitem>
+     <simpara>
+      Tamanho total em bytes dos pacotes de dados de registros do conjunto de resultados
+      recebidos pelo protocolo Cliente Servidor do MySQL.
+      O pacote também pode transportar uma mensagem de erro ou de EOF.
+      Pode-se computar o número de pacotes de erro e de EOF subtraindo-se
+      <literal>rows_fetched_from_server_normal</literal>
+      e <literal>rows_fetched_from_server_ps</literal>
+      de <literal>bytes_received_rset_row_packet</literal>.
+     </simpara>
+     <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('mysqlnd.stats.statistics.bytes-received-ok-packet')/db:listitem/db:note)">
+      <xi:fallback/>
+     </xi:include>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.packets-received-rset-row">
+    <term><literal>packets_received_rset_row</literal></term>
+    <listitem>
+     <simpara>
+      Número de pacotes de dados de registros do conjunto de resultados recebidos pelo protocolo Cliente Servidor do MySQL.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.bytes-received-prepare-response-packet">
+    <term><literal>bytes_received_prepare_response_packet</literal></term>
+    <listitem>
+     <simpara>
+      Tamanho total em bytes dos pacotes de Inicialização OK para Instruções Preparadas (pacotes de
+      inicialização de instrução preparada) recebidos pelo protocolo Cliente Servidor do MySQL.
+      O pacote também pode transportar um erro.
+      O tamanho do pacote depende da versão MySQL.
+     </simpara>
+     <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('mysqlnd.stats.statistics.bytes-received-ok-packet')/db:listitem/db:note)">
+      <xi:fallback/>
+     </xi:include>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.packets-received-prepare-response">
+    <term><literal>packets_received_prepare_response</literal></term>
+    <listitem>
+     <simpara>
+      Número de pacotes de inicialização de instruções preparadas recebidos
+      pelo protocolo Cliente Servidor do MySQL.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.bytes-received-change-user-packet">
+    <term><literal>bytes_received_change_user_packet</literal></term>
+    <listitem>
+     <simpara>
+      Tamanho total em bytes de pacotes COM_CHANGE_USER recebidos pelo protocolo Cliente Servidor do MySQL.
+      O pacote também pode transportar um erro ou um EOF.
+     </simpara>
+     <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('mysqlnd.stats.statistics.bytes-received-ok-packet')/db:listitem/db:note)">
+      <xi:fallback/>
+     </xi:include>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.packets-received-change-user">
+    <term><literal>packets_received_change_user</literal></term>
+    <listitem>
+     <simpara>
+      Número de pacotes COM_CHANGE_USER recebidos pelo protocolo Cliente Servidor do MySQL.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.packets-sent-command">
+    <term><literal>packets_sent_command</literal></term>
+    <listitem>
+     <simpara>
+      Número de comandos do protocolo Cliente Servidor do MySQL enviados pelo PHP ao MySQL.
+     </simpara>
+     <simpara>
+      Não há como saber quais foram os comandos específicos e quantos deles
+      foram enviados.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.bytes-received-real-data_normal">
+    <term><literal>bytes_received_real_data_normal</literal></term>
+    <listitem>
+     <simpara>
+      Número de bytes dos dados reais buscados pelo cliente PHP vindos do
+      <literal>mysqlnd</literal> usando o protocolo de texto.
+     </simpara>
+     <simpara>
+      Este é o tamanho dos dados reais contidos nos conjuntos de resultados que não
+      se originaram de instruções preparadas e que foram buscados pelo cliente PHP.
+     </simpara>
+     <simpara>
+      Observe que embora um conjunto de resultados completo possa ter sido puxado do MySQL
+      pelo <literal>mysqlnd</literal>, esta estatística apenas conta dados reais
+      puxados a partir do <literal>mysqlnd</literal> pelo cliente PHP.
+     </simpara>
+     <para>
+      A seguir é apresentado um exemplo de sequência de código que irá incrementar o valor:
+      <programlisting>
 <![CDATA[
 $mysqli = new mysqli();
 $res = $mysqli->query("SELECT 'abc'");
 $res->fetch_assoc();
 $res->close();
 ]]>
-</programlisting>
-      <para>
-       Cada operação de busca irá aumentar o valor.
-      </para>
-
-      <para>
-       A estatística não aumentará se o conjunto de resultados for apenas armazenado
-       em buffer no cliente, mas não buscado, como no exemplo
-       a seguir:
-      </para>
-<programlisting>
+      </programlisting>
+      Cada operação de busca irá incrementar o valor.
+     </para>
+     <para>
+      Entretanto, a estatística não será incrementada se o conjunto de resultados estiver sujeito
+      a buffer no lado do cliente mas não for buscado, como no exemplo a seguir:
+      <programlisting>
 <![CDATA[
 $mysqli = new mysqli();
 $res = $mysqli->query("SELECT 'abc'");
 $res->close();
 ]]>
-</programlisting>
-      </entry>
-    </row>
-    <row>
-     <entry><literal>bytes_received_real_data_ps</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de bytes da carga buscada pelo cliente PHP a partir do
-      <literal>mysqlnd</literal> usando o protocolo de instruções preparadas.</entry>
-     <entry>Este é o tamanho dos dados reais contidos nos conjuntos de resultados que
-      se originam de instruções preparadas e que foram buscados pelo
-      cliente PHP. O valor não será aumentado se o conjunto de resultados
-      não for subsequentemente lido pelo cliente PHP. Observe que embora um
-      conjunto de resultados completo pode ter sido puxado do MySQL pelo
-      <literal>mysqlnd</literal>, esta estatística conta apenas dados reais
-      puxados do <literal>mysqlnd</literal> pelo cliente PHP. Consulte também
-      <literal>bytes_received_real_data_normal</literal>.</entry>
-    </row>
-   </tbody>
-  </tgroup>
- </table>
- <para>
-  <emphasis role="bold">Conjunto de Resultados</emphasis>
- </para>
- <table xml:id="mysqlnd.stats.results">
-  <title>Estatísticas retornadas pelo mysqlnd: Conjunto de Resultados</title>
-  <tgroup cols="4">
-   <colspec colwidth="10*"/>
-   <colspec colwidth="10*"/>
-   <colspec colwidth="40*"/>
-   <colspec colwidth="40*"/>
-   <thead>
-    <row>
-     <entry>Estatística</entry>
-     <entry>Escopo</entry>
-     <entry>Descrição</entry>
-     <entry>Notas</entry>
-    </row>
-   </thead>
-   <tbody>
-    <row>
-     <entry><literal>result_set_queries</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de consultas que geraram um conjunto de resultados. Exemplos de consultas
-      que geram um conjunto de resultados: <literal>SELECT</literal>,
-      <literal>SHOW</literal>. A estatística não será incrementada se
-      houver um erro ao ler, da linha, o pacote de cabeçalho do conjunto de
-      resultados.</entry>
-     <entry>Pode-se usar uma medida indireta para o número de consultas que o PHP
-      enviou ao MySQL, por exemplo, para identificar um cliente que causa uma
-      carga alta no banco de dados.</entry>
-    </row>
-    <row>
-     <entry><literal>non_result_set_queries</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de consultas que não geraram um conjunto de resultados. Exemplos de
-      consultas que não geram um conjunto de resultados:
-      <literal>INSERT</literal>, <literal>UPDATE</literal>,
-      <literal>LOAD DATA</literal>. A
-      estatística não será incrementada se houver um erro ao ler,
-      da linha, o pacote de cabeçalho do conjunto de resultados.</entry>
-     <entry>Pode-se usar uma medida indireta para o número de consultas que o PHP
-      enviou ao MySQL, por exemplo, para identificar um cliente que causa uma
-      carga alta no banco de dados.</entry>
-    </row>
-    <row>
-     <entry><literal>no_index_used</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de consultas que geraram um conjunto de resultados mas não usaram um
-      índice (veja também a opção de início do mysqld
-      –log-queries-not-using-indexes). Se for desejado que estas consultas sejam
-      reportadas pode-se usar mysqli_report(MYSQLI_REPORT_INDEX) para fazer com que
-      ext/mysqli lance uma exceção. Se for preferido um alerta ao invés de
-      uma exceção, use mysqli_report(MYSQLI_REPORT_INDEX ^
-      MYSQLI_REPORT_STRICT).</entry>
-     <entry></entry>
-    </row>
-    <row>
-     <entry><literal>bad_index_used</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de consultas que geraram um conjunto de resultados mas não usaram um
-      índice bom (veja também a opção de início do mysqld –log-slow-queries).</entry>
-     <entry>Se for desejado que estas consultas sejam reportadas pode-se usar
-      mysqli_report(MYSQLI_REPORT_INDEX) para fazer com que ext/mysqli lance uma
-      exceção. Se for preferido um alerta ao invés de uma exceção, use
-      mysqli_report(MYSQLI_REPORT_INDEX ^ MYSQLI_REPORT_STRICT)</entry>
-    </row>
-    <row>
-     <entry><literal>slow_queries</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Instruções SQL que levaram mais de <literal>long_query_time</literal>
-      segundos para serem executadas e que precisaram de pelo menos
-      <literal>min_examined_row_limit</literal> linhas examinadas.</entry>
-     <entry>Não reportada através de <function>mysqli_report</function></entry>
-    </row>
-    <row>
-     <entry><literal>buffered_sets</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de conjuntos de resultados em buffer retornados por consultas
-      <quote>normais</quote>. <quote>Normais</quote> significam aquelas que <quote>não são
-      instruções preparadas</quote> nas notas a seguir.</entry>
-     <entry>Examplos de chamadas de API que farão uso de buffer de conjuntos de resultados no cliente:
-      <function>mysql_query</function>,
-      <function>mysqli_query</function>,
-      <function>mysqli_store_result</function>,
-      <function>mysqli_stmt_get_result</function>. Fazer buffer de resultados
-      no cliente assegura que os recursos do servidor são liberados assim que
-      possível e torna a rolagem do conjunto de resultados mais fácil. A desvantagem é
-      o consumo adicional de memória no cliente para armazenar os dados
-      em buffer. Observe que o mysqlnd (ao contrário da Biblioteca Cliente MySQL) respeita
-      o limite de memória do PHP porque usa as funções de gerenciamento internas
-      do PHP para alocar memória. Esta também é a razão
-      pela qual <function>memory_get_usage</function> reporta um consumo maior
-      de memória quando usa o mysqlnd ao invés da Biblioteca Cliente do
-      MySQL. <function>memory_get_usage</function> não mede de
-      maneira nenhuma o consumo de memória da Biblioteca Cliente MySQL porque
-      a biblioteca não usa as funções de gerenciamento de memória internas
-      do PHP, monitoradas pela função!</entry>
-    </row>
-    <row>
-     <entry><literal>unbuffered_sets</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de conjuntos de resultados sem buffer retornados por consultas normais
-     (instruções não preparadas).</entry>
-     <entry>Examplos de chamadas de API que não farão uso de buffer de conjuntos de resultados no cliente:
-      <function>mysqli_use_result</function></entry>
-    </row>
-    <row>
-     <entry><literal>ps_buffered_sets</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de conjuntos de resultados com buffer retornados por instruções preparadas. Por
-      padrão, instruções preparadas são sem buffer.</entry>
-     <entry>Examplos de chamadas de API que farão uso de buffer de conjuntos de resultados no cliente:
-      <literal>mysqli_stmt_store_result</literal></entry>
-    </row>
-    <row>
-     <entry><literal>ps_unbuffered_sets</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de conjuntos de resultados sem buffer retornados por instruções preparadas.</entry>
-     <entry>Por padrão, instruções preparadas são sem buffer.</entry>
-    </row>
-    <row>
-     <entry><literal>flushed_normal_sets</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de conjuntos de resultados de consultas normais (instrução não preparada) com
-      dados não lidos que foram liberados silenciosamente. A liberação
-      ocorre apenas com conjuntos de resultados sem buffer.</entry>
-     <entry>Os conjuntos de resultados sem buffer devem ser buscados completamente antes que uma nova consulta possa
-      ser executada na conexão, caso contrário o MySQL gerará um erro. Se
-      a aplicação não buscar todas as linhas de um conjunto de resultados sem
-      buffer, o mysqlnd buscará implicitamente o conjunto de resultados para limpar a
-      linha. Veja também <literal>rows_skipped_normal</literal>,
-      <literal>rows_skipped_ps</literal>. Algumas causas possíveis para uma
-      liberação implícita:
+      </programlisting>
+     </para>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.bytes-received-real-data-ps">
+    <term><literal>bytes_received_real_data_ps</literal></term>
+    <listitem>
+     <simpara>
+      Número de bytes dos dados reais buscados pelo cliente PHP vindos do
+      <literal>mysqlnd</literal> usando o protocolo de instruções preparadas.
+     </simpara>
+     <simpara>
+      Este é o tamanho dos dados reais contidos nos conjuntos de resultados que
+      se originaram de instruções preparadas e que foram buscados pelo cliente PHP.
+     </simpara>
+     <simpara>
+      O valor não será incrementado se o conjunto de resultados não for subsequentemente lido pelo cliente PHP.
+     </simpara>
+     <simpara>
+      Observe que embora um conjunto de resultados completo possa ter sido puxado do MySQL
+      pelo <literal>mysqlnd</literal>, esta estatística apenas conta dados reais
+      puxados a partir do <literal>mysqlnd</literal> pelo cliente PHP.
+     </simpara>
+     <simpara>
+      Consulte também <literal>bytes_received_real_data_normal</literal>.
+     </simpara>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+
+  <variablelist>
+   <title>Estatísticas Relacionadas ao Conjunto de Resultados</title>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.result-set-queries">
+    <term><literal>result_set_queries</literal></term>
+    <listitem>
+     <simpara>
+      Número de consultas que geraram um conjunto de resultados.
+      Exemplos de consultas que geram um conjunto de resultados:
+      <literal>SELECT</literal>, <literal>SHOW</literal>.
+     </simpara>
+     <simpara>
+      A estatística não será incrementada se ocorrer um erro ao ler
+      o pacote de cabeçalho do conjunto de resultados.
+     </simpara>
+     <note>
+      <simpara>
+       Esta estatística pode ser usada como uma medição indireta do número de
+       consultas que o PHP enviou ao MySQL.
+       Isto pode ajudar a identificar um cliente que causa uma carga alta no banco de dados.
+      </simpara>
+     </note>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.non-result-set-queries">
+    <term><literal>non_result_set_queries</literal></term>
+    <listitem>
+     <simpara>
+      Número de consultas que não geraram um conjunto de resultados.
+      Exemplos de consultas que não geram um conjunto de resultados:
+      <literal>INSERT</literal>, <literal>UPDATE</literal>, <literal>LOAD DATA</literal>.
+     </simpara>
+     <simpara>
+      A estatística não será incrementada se ocorrer um erro ao ler
+      o pacote de cabeçalho do conjunto de resultados.
+     </simpara>
+     <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('mysqlnd.stats.statistics.result-set-queries')/db:listitem/db:note)">
+      <xi:fallback/>
+     </xi:include>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.no-index-used">
+    <term><literal>no_index_used</literal></term>
+    <listitem>
+     <simpara>
+      Número de consultas que geraram um conjunto de resultados mas não usaram um índice.
+      (Consulte também a opção de início do mysqld <literal>--log-queries-not-using-indexes</literal>).
+     </simpara>
+     <note>
+      <simpara>
+       Essas consultas podem ser reportadas através de uma exceção com
+       <code>mysqli_report(MYSQLI_REPORT_INDEX);</code>.
+       É possível reportá-las também através de um alerta com
+       <code>mysqli_report(MYSQLI_REPORT_INDEX ^ MYSQLI_REPORT_STRICT);</code>.
+      </simpara>
+     </note>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.bad-index-used">
+    <term><literal>bad_index_used</literal></term>
+    <listitem>
+     <simpara>
+      Número de consultas que geraram um conjunto de resultados e não usaram um índice bom.
+      (Consulte também a opção de início do mysqld <literal>--log-slow-queries</literal>).
+     </simpara>
+     <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('mysqlnd.stats.statistics.no-index-used')/db:listitem/db:note)">
+      <xi:fallback/>
+     </xi:include>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.slow-queries">
+    <term><literal>slow_queries</literal></term>
+    <listitem>
+     <simpara>
+      Instruções SQL que levaram mais de <literal>long_query_time</literal>
+      segundos para execução e requereram que pelo menos
+      <literal>min_examined_row_limit</literal> registros fossem examinados.
+     </simpara>
+     <caution>
+      <simpara>
+       Não reportada através de <function>mysqli_report</function>.
+      </simpara>
+     </caution>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.buffered-sets">
+    <term><literal>buffered_sets</literal></term>
+    <listitem>
+     <simpara>
+      Número de conjuntos de resultados em buffer retornados por consultas
+      normais (isto é, não por via de instrução preparada).
+     </simpara>
+     <para>
+      Exemplos de chamadas API que armazenarão conjuntos de resultados em buffer no cliente:
+      <simplelist type="inline">
+       <member><function>mysqli_query</function></member>
+       <member><function>mysqli_store_result</function></member>
+       <member><function>mysqli_stmt_get_result</function></member>
+      </simplelist>
+     </para>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.unbuffered-sets">
+    <term><literal>unbuffered_sets</literal></term>
+    <listitem>
+     <simpara>
+      Número de conjuntos de resultados sem buffer retornados por consultas
+      normais (isto é, não por via de instrução preparada).
+     </simpara>
+     <para>
+      Exemplos de chamadas API que não armazenarão conjuntos de resultados em buffer no cliente:
+      <simplelist type="inline">
+       <member><function>mysqli_use_result</function></member>
+      </simplelist>
+     </para>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.ps-buffered-sets">
+    <term><literal>ps_buffered_sets</literal></term>
+    <listitem>
+     <simpara>
+      Número de conjuntos de resultados em buffer retornados por instruções preparadas.
+     </simpara>
+     <para>
+      Exemplos de chamadas API que armazenarão conjuntos de resultados em buffer no cliente:
+      <simplelist type="inline">
+       <member><function>mysqli_stmt_store_result</function></member>
+      </simplelist>
+     </para>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.ps-unbuffered-sets">
+    <term><literal>ps_unbuffered_sets</literal></term>
+    <listitem>
+     <simpara>
+      Número de conjuntos de resultados sem buffer retornados por instruções preparadas.
+     </simpara>
+     <simpara>
+      Por padrão, instruções preparadas não são armazenadas em buffer,
+      portanto a maioria das instruções preparadas será considerada nesta estatísitica.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.flushed-normal-sets">
+    <term><literal>flushed_normal_sets</literal></term>
+    <listitem>
+     <simpara>
+      Número de conjuntos de resultados retornados por consultas
+      normais (isto é, não por via de instrução preparada)
+      com dados não lidos que foram silenciosamente descarregados.
+     </simpara>
+
+     <note>
+      <simpara>
+       Os descarregamento ocorre somente com conjuntos de resultados sem buffer.
+      </simpara>
+      <simpara>
+       Conjuntos de resultados sem buffer devem ser buscados integralmente antes que uma nova consulta possa
+       ser executada na conexão, caso contrário o MySQL lançará um erro.
+       Se a aplicação não buscar todos os registros de um conjunto de resultados sem buffer,
+       o mysqlnd não busca implicitamente o conjunto de resultados para limpar a linha de dados.
+      </simpara>
+      <simpara>
+       Consulta também <literal>rows_skipped_normal</literal>, <literal>rows_skipped_ps</literal>.
+      </simpara>
+      <para>
+       Algumas causas possíveis para um descarregamento implícito:
+       <itemizedlist>
+        <listitem>
+         <simpara>
+          Aplicação cliente com falhas
+         </simpara>
+        </listitem>
+        <listitem>
+         <simpara>
+          Cliente parou de ler depois de ter encontrado o que estava procurando
+          mas fez o MySQL calcular mais registros que o necessário
+         </simpara>
+        </listitem>
+        <listitem>
+         <simpara>
+          Aplicação cliente parou inesperadamente
+         </simpara>
+        </listitem>
+       </itemizedlist>
+      </para>
+     </note>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.flushed-ps-sets">
+    <term><literal>flushed_ps_sets</literal></term>
+    <listitem>
+     <simpara>
+      Número de conjuntos de resultados de instruções preparadas
+      com dados não lidos que foram silenciosamente descarregados.
+     </simpara>
+
+     <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('mysqlnd.stats.statistics.flushed-normal-sets')/db:listitem/db:note)">
+      <xi:fallback/>
+     </xi:include>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.ps-prepared-never-executed">
+    <term><literal>ps_prepared_never_executed</literal></term>
+    <listitem>
+     <simpara>
+      Número de intruções preparadas mas nunca executadas.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.ps-prepared-once-executed">
+    <term><literal>ps_prepared_once_executed</literal></term>
+    <listitem>
+     <simpara>
+      Número de intruções preparadas executadas apenas uma vez.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.rows-fetched-from-server-normal">
+    <term><literal>rows_fetched_from_server_normal</literal></term>
+    <term><literal>rows_fetched_from_server_ps</literal></term>
+    <listitem>
+     <simpara>
+      Número total de registros do conjunto de resultados buscados do servidor.
+      Isto inclui os registros que não foram lidos pelo cliente mas
+      foram buscados implicitamente devido a conjuntos de resultados sem buffer descarregados.
+     </simpara>
+     <simpara>
+      Consulte também <literal>packets_received_rset_row</literal>.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.rows-buffered-from-server-normal">
+    <term><literal>rows_buffered_from_client_normal</literal></term>
+    <listitem>
+     <simpara>
+      Número total de registros em buffer originários de uma consulta normal.
+     </simpara>
+     <simpara>
+      Este é o número de registros que foram buscados do MySQL e armazenados em buffer no cliente.
+     </simpara>
+     <para>
+      Exemplos de consultas que irão armazenar resultados em buffer:
+      <simplelist>
+       <member><function>mysqli_query</function></member>
+       <member><function>mysqli_store_result</function></member>
+      </simplelist>
+     </para>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.rows-buffered-from-server-ps">
+    <term><literal>rows_buffered_from_server_ps</literal></term>
+    <listitem>
+     <simpara>
+      O mesmo que <literal>rows_buffered_from_client_normal</literal>,
+      porém para instruções preparadas.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.rows-fetched-from-client-normal-buffered">
+    <term><literal>rows_fetched_from_client_normal_buffered</literal></term>
+    <listitem>
+     <simpara>
+      Número total de registros buscados pelo cliente a partir de um conjunto de resultados em buffer
+      criado por uma consulta normal.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.rows-fetched-from-client-ps-buffered">
+    <term><literal>rows_fetched_from_client_ps_buffered</literal></term>
+    <listitem>
+     <simpara>
+      Número total de registros buscados pelo cliente a partir de um conjunto de resultados em buffer
+      criado por uma instrução preparada.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.rows-fetched-from-client-normal-unbuffered">
+    <term><literal>rows_fetched_from_client_normal_unbuffered</literal></term>
+    <listitem>
+     <simpara>
+      Número total de registros buscados pelo cliente a partir de um conjunto de resultados sem buffer
+      criado por uma consulta normal.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.rows-fetched-from-client-ps-unbuffered">
+    <term><literal>rows_fetched_from_client_ps_unbuffered</literal></term>
+    <listitem>
+     <simpara>
+      Número total de registros buscados pelo cliente a partir de um conjunto de resultados sem buffer
+      criado por uma instrução preparada.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.rows-fetched-from-client-ps-cursor">
+    <term><literal>rows_fetched_from_client_ps_cursor</literal></term>
+    <listitem>
+     <simpara>
+      Número total de registros buscados pelo cliente a partir de um cursor criado por uma
+      instrução preparada.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <!-- TODO: This seems to actually be supported, check and document -->
+   <varlistentry xml:id="mysqlnd.stats.statistics.rows-skipped-normal">
+    <term><literal>rows_skipped_normal</literal></term>
+    <term><literal>rows_skipped_ps</literal></term>
+    <listitem>
+     <simpara>
+      Reservada para uso futuro (atualmente não suportada).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.copy-on-write">
+    <term><literal>copy_on_write_saved</literal></term>
+    <term><literal>copy_on_write_performed</literal></term>
+    <listitem>
+     <simpara>
+      Esta é uma estatística cujo escopo está no nível de processo.
+     </simpara>
+     <simpara>
+      Com o mysqlnd, variáveis retornadas pelas extensões apontam para os
+      buffers de resultados da rede interna do mysqlnd.
+      Se os dados não foram modificados, os dados buscados são mantidos apenas uma vez na memória.
+      Entretanto, qualquer modificação nos dados irá requerer que o mysqlnd realize
+      uma operação de cópia-na-escrita.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.free-result">
+    <term><literal>explicit_free_result</literal></term>
+    <term><literal>implicit_free_result</literal></term>
+    <listitem>
+     <simpara>
+      Esta é uma estatística cujo escopo está no nível de conexão e de processo.
+     </simpara>
+     <simpara>
+      Número total de conjuntos de resultados liberados.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-null">
+    <term><literal>proto_text_fetched_null</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_NULL</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-null">
+    <term><literal>proto_binary_fetched_null</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_NULL</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-bit">
+    <term><literal>proto_text_fetched_bit</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_BIT</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-bit">
+    <term><literal>proto_binary_fetched_bit</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_BIT</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-tinyint">
+    <term><literal>proto_text_fetched_tinyint</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_TINY</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-tinyint">
+    <term><literal>proto_binary_fetched_tinyint</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_TINY</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-short">
+    <term><literal>proto_text_fetched_short</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_SHORT</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-short">
+    <term><literal>proto_binary_fetched_short</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_SHORT</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-int24">
+    <term><literal>proto_text_fetched_int24</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_INT24</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-int24">
+    <term><literal>proto_binary_fetched_int24</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_INT24</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-int">
+    <term><literal>proto_text_fetched_int</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_LONG</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-int">
+    <term><literal>proto_binary_fetched_int</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_LONG</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-bigint">
+    <term><literal>proto_text_fetched_bigint</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_LONGLONG</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-bigint">
+    <term><literal>proto_binary_fetched_bigint</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_LONGLONG</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-decimal">
+    <term><literal>proto_text_fetched_decimal</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas dos tipos
+      <literal>MYSQL_TYPE_DECIMAL</literal> ou <literal>MYSQL_TYPE_NEWDECIMAL</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-decimal">
+    <term><literal>proto_binary_fetched_decimal</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas dos tipos
+      <literal>MYSQL_TYPE_DECIMAL</literal> ou <literal>MYSQL_TYPE_NEWDECIMAL</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-float">
+    <term><literal>proto_text_fetched_float</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_FLOAT</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-float">
+    <term><literal>proto_binary_fetched_float</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_FLOAT</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-double">
+    <term><literal>proto_text_fetched_double</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_DOUBLE</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-double">
+    <term><literal>proto_binary_fetched_double</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_DOUBLE</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-date">
+    <term><literal>proto_text_fetched_date</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_DATE</literal>, or <literal>MYSQL_TYPE_NEWDATE</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-date">
+    <term><literal>proto_binary_fetched_date</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_DATE</literal>, or <literal>MYSQL_TYPE_NEWDATE</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-year">
+    <term><literal>proto_text_fetched_year</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_YEAR</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-year">
+    <term><literal>proto_binary_fetched_year</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_YEAR</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-time">
+    <term><literal>proto_text_fetched_time</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_TIME</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-time">
+    <term><literal>proto_binary_fetched_time</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_TIME</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-datetime">
+    <term><literal>proto_text_fetched_datetime</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_DATETIME</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-datetime">
+    <term><literal>proto_binary_fetched_datetime</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_DATETIME</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-timestamp">
+    <term><literal>proto_text_fetched_timestamp</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_TIMESTAMP</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-timestamp">
+    <term><literal>proto_binary_fetched_timestamp</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_TIMESTAMP</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-string">
+    <term><literal>proto_text_fetched_string</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas dos tipos
+      <literal>MYSQL_TYPE_STRING</literal>, <literal>MYSQL_TYPE_VARSTRING</literal> ou <literal>MYSQL_TYPE_VARCHAR</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-string">
+    <term><literal>proto_binary_fetched_string</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas dos tipos
+      <literal>MYSQL_TYPE_STRING</literal>, <literal>MYSQL_TYPE_VARSTRING</literal> ou <literal>MYSQL_TYPE_VARCHAR</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-blob">
+    <term><literal>proto_text_fetched_blob</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas dos tipos
+      <literal>MYSQL_TYPE_TINY_BLOB</literal>,
+      <literal>MYSQL_TYPE_MEDIUM_BLOB</literal>,
+      <literal>MYSQL_TYPE_LONG_BLOB</literal>
+      ou <literal>MYSQL_TYPE_BLOB</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-blob">
+    <term><literal>proto_binary_fetched_blob</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas dos tipos
+      <literal>MYSQL_TYPE_TINY_BLOB</literal>,
+      <literal>MYSQL_TYPE_MEDIUM_BLOB</literal>,
+      <literal>MYSQL_TYPE_LONG_BLOB</literal>
+      ou <literal>MYSQL_TYPE_BLOB</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-enum">
+    <term><literal>proto_text_fetched_enum</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_ENUM</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-enum">
+    <term><literal>proto_binary_fetched_enum</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_ENUM</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-set">
+    <term><literal>proto_text_fetched_set</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_SET</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-set">
+    <term><literal>proto_binary_fetched_set</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_SET</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-geometry">
+    <term><literal>proto_text_fetched_geometry</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_GEOMETRY</literal>
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-geometry">
+    <term><literal>proto_binary_fetched_geometry</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas do tipo
+      <literal>MYSQL_TYPE_GEOMETRY</literal>
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-text-fetched-other">
+    <term><literal>proto_text_fetched_other</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas dos tipos
+      <literal>MYSQL_TYPE_<replaceable>*</replaceable></literal>
+      não listadas previamente e
+      buscadas por uma consulta normal (protocolo de texto MySQL).
+     </simpara>
+     <note>
+      <simpara>
+       Em teoria, deveria ser sempre <literal>0</literal>.
+      </simpara>
+     </note>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.proto-binary-fetched-other">
+    <term><literal>proto_binary_fetched_other</literal></term>
+    <listitem>
+     <simpara>
+      Número total de colunas dos tipos
+      <literal>MYSQL_TYPE_<replaceable>*</replaceable></literal>
+      não listadas previamente e
+      buscadas por uma instrução preparada (protocolo binário MySQL).
+     </simpara>
+     <note>
+      <simpara>
+       Em teoria, deveria ser sempre <literal>0</literal>.
+      </simpara>
+     </note>
+    </listitem>
+   </varlistentry>
+
+  </variablelist>
+
+  <variablelist>
+   <title>Estatísticas Relacionadas a Conexões</title>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.connect-success">
+    <term><literal>connect_success</literal></term>
+    <listitem>
+     <simpara>
+      Número total de tentativas bem sucedidas de conexões.
+     </simpara>
+     <note>
+      <simpara>
+       <literal>connect_success</literal> contém a soma de tentativas bem sucedidas
+       de conexões persistentes e não persistentes.
+       Portanto, o número de tentativas bem sucedidas de conexões não persistentes
+       é <literal>connect_success - pconnect_success</literal>.
+      </simpara>
+     </note>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.pconnect-success">
+    <term><literal>pconnect_success</literal></term>
+    <listitem>
+     <simpara>
+      Número total de tentativas bem sucedidas de conexões persistentes.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.connect-failure">
+    <term><literal>connect_failure</literal></term>
+    <listitem>
+     <simpara>
+      Número total de tentativas falhadas de conexões.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.reconnect">
+    <term><literal>reconnect</literal></term>
+    <listitem>
+     <simpara>
+      Esta é uma estatística cujo escopo está no nível de processo.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.active-connections">
+    <term><literal>active_connections</literal></term>
+    <listitem>
+     <simpara>
+      Esta é uma estatística cujo escopo está no nível de processo.
+     </simpara>
+     <simpara>
+      Número total de conexões ativas, persistentes e não persistentes.
+     </simpara>
+     <note>
+      <simpara>
+       Número total de conexões ativas não persistentes é
+       <literal>active_connections - active_persistent_connections</literal>.
+      </simpara>
+     </note>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.active-persistent-connections">
+    <term><literal>active_persistent_connections</literal></term>
+    <listitem>
+     <simpara>
+      Esta é uma estatística cujo escopo está no nível de processo.
+     </simpara>
+     <simpara>
+      Número total de conexões ativas persistentes.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.explicit-close">
+    <term><literal>explicit_close</literal></term>
+    <listitem>
+     <simpara>
+      Número total de conexões fechadas explicitamente.
+     </simpara>
+     <example>
+      <title>Exemplos de trechos de código que causam um fechamento explícito</title>
       <itemizedlist>
        <listitem>
-        <para>
-         Aplicação cliente com defeito
-        </para>
+        <programlisting>
+<![CDATA[
+$link = new mysqli(/* ... */);
+$link->close(/* ... */);
+]]>
+        </programlisting>
        </listitem>
        <listitem>
-        <para>
-         O cliente parou de ler depois de encontrar o que procurava,
-         mas fez o MySQL calcular mais registros do que o necessário
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         A aplicação cliente parou inesperadamente
-        </para>
-       </listitem>
-      </itemizedlist></entry>
-    </row>
-    <row>
-     <entry><literal>flushed_ps_sets</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de conjuntos de resultados de instruções preparadas com dados não lidos que
-      foram liberados silenciosamente para você. A liberação ocorre apenas com
-      conjuntos de resultados sem buffer.</entry>
-     <entry>Conjuntos de resultados sem buffer devem ser buscados completamente antes que uma nova consulta possa
-      ser executada na conexão, caso contrário o MySQL irá gerar um erro. Se
-      a aplicação não buscar todas as linhas de um conjunto de resultados sem
-      buffer, o mysqlnd buscará implicitamente o conjunto de resultados para limpar a
-      linha. Veja também <literal>rows_skipped_normal</literal>,
-      <literal>rows_skipped_ps</literal>. Algumas causas possíveis para uma
-      liberação implícita:
-      <itemizedlist>
-       <listitem>
-        <para>
-         Aplicação cliente com defeito
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         O cliente parou de ler depois de encontrar o que procurava,
-         mas fez o MySQL calcular mais registros do que o necessário
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         A aplicação cliente parou inesperadamente
-        </para>
-       </listitem>
-      </itemizedlist></entry>
-    </row>
-    <row>
-     <entry><literal>ps_prepared_never_executed</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de instruções preparadas mas nunca executadas.</entry>
-     <entry>As instruções preparadas ocupam recursos do servidor. Não se
-      deve preparar uma declaração se não se planeja executá-la.</entry>
-    </row>
-    <row>
-     <entry><literal>ps_prepared_once_executed</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de instruções preparadas executadas apenas uma vez.</entry>
-     <entry>Uma das ideias por trás das instruções preparadas é que a mesma consulta seja
-      executada repetidamente (com parâmetros diferentes) e algum
-      trabalho de análise e preparação possa ser salvo, se a execução
-      da instrução for dividida em estágios separados de preparação e execução. A
-      idéia é preparar uma vez e fazer <quote>cache</quote> dos resultados, por
-      exemplo, da árvore de análise a ser reutilizada durante a execução de múltiplas
-      instruções. Se uma instrução preparada for executada apenas uma vez, o
-      processamento em dois estágios poderá ser ineficiente em comparação
-      com consultas <quote>normais</quote> porque todo o armazenamento em cache significa
-      trabalho extra e são necessários recursos (limitados) do servidor para armazenar as
-      informações armazenadas em cache. Conseqüentemente, instruções preparadas que são
-      executadas apenas uma vez podem causar danos ao desempenho.</entry>
-    </row>
-    <row>
-     <entry><literal>rows_fetched_from_server_normal</literal>,
-      <literal>rows_fetched_from_server_ps</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número total de linhas do conjunto de resultados obtidas com sucesso do MySQL,
-      independentemente da aplicação cliente as ter consumido ou não.
-      Algumas das linhas podem não ter sido buscadas pela aplicação
-      cliente, mas podem ter sido liberadas implicitamente.</entry>
-     <entry>Veja também <literal>packets_received_rset_row</literal></entry>
-    </row>
-    <row>
-     <entry><literal>rows_buffered_from_client_normal</literal>,
-      <literal>rows_buffered_from_client_ps</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número total de linhas armazenadas em buffer com êxito originadas de uma consulta
-      "normal" ou de uma instrução preparada. Este é o número de linhas que
-      foram buscadas no MySQL e armazenadas em buffer no cliente. Observe que
-      existem duas estatísticas distintas sobre linhas que foram armazenadas em buffer
-      (MySQL para buffer interno do mysqlnd) e linhas armazenadas em buffer que foram
-      buscadas pela aplicação cliente (buffer interno do mysqlnd para
-      aplicação cliente). Se o número de linhas em buffer for maior que
-      o número de linhas em buffer buscadas, isso pode significar que a aplicação
-      cliente executa consultas que causam conjuntos de resultados maiores do que o necessário,
-      resultando em linhas não lidas pelo cliente.</entry>
-     <entry>Exemplos de consultas que armazenarão resultados em buffer:
-      <function>mysqli_query</function>,
-      <function>mysqli_store_result</function></entry>
-    </row>
-    <row>
-     <entry><literal>rows_fetched_from_client_normal_buffered</literal>,
-      <literal>rows_fetched_from_client_ps_buffered</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número total de linhas buscadas pelo cliente de um conjunto de resultados em buffer
-      criado por uma consulta "normal" ou uma instrução preparada.</entry>
-     <entry></entry>
-    </row>
-    <row>
-     <entry><literal>rows_fetched_from_client_normal_unbuffered</literal>,
-      <literal>rows_fetched_from_client_ps_unbuffered</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número total de linhas buscadas pelo cliente de um conjunto de resultados sem buffer
-      criado por uma consulta "normal" ou uma instrução preparada.</entry>
-     <entry></entry>
-    </row>
-    <row>
-     <entry><literal>rows_fetched_from_client_ps_cursor</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número total de linhas buscadas pelo cliente a partir de um cursor criado por uma
-      instrução preparada.</entry>
-     <entry></entry>
-    </row>
-    <row>
-     <entry><literal>rows_skipped_normal</literal>,
-      <literal>rows_skipped_ps</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Reservada para uso futuro (atualmente não suportada)</entry>
-     <entry></entry>
-    </row>
-    <row>
-     <entry><literal>copy_on_write_saved</literal>,
-      <literal>copy_on_write_performed</literal></entry>
-     <entry>Process</entry>
-     <entry>Com o mysqlnd, as variáveis ​​retornadas pelas extensões apontam para os buffers de
-      resultados da rede interna do mysqlnd. Se as variáveis não forem
-      alteradas, os dados buscados serão mantidos apenas uma vez na memória. Se
-      as variáveis forem alteradas, o mysqlnd deverá executar uma cópia na gravação para
-      proteger os buffers de resultados da rede interna contra alterações.
-      Com a Biblioteca Cliente MySQL os dados buscados são sempre mantidos duas vezes
-      na memória. Uma vez nos buffers internos da Biblioteca Cliente MySQL e
-      uma vez nas variáveis ​​retornadas pelas extensões. Em teoria,
-      o mysqlnd pode economizar até 40% de memória. Entretanto, observe que a economia
-      de memória não pode ser medida usando
-      <function>memory_get_usage</function>.</entry>
-     <entry></entry>
-    </row>
-    <row>
-     <entry><literal>explicit_free_result</literal>,
-      <literal>implicit_free_result</literal></entry>
-     <entry>Conexão, Processo (somente durante limpeza de instrução preparada)</entry>
-     <entry>Número total de conjuntos de resultados liberados.</entry>
-     <entry>A liberação é sempre considerada explícita exceto para conjuntos de resultados criados por um
-      comando init, por exemplo ,
-      <literal>mysqli_options(MYSQLI_INIT_COMMAND , ...)</literal></entry>
-    </row>
-    <row>
-     <entry><literal>proto_text_fetched_null</literal>,
-      <literal>proto_text_fetched_bit</literal>,
-      <literal>proto_text_fetched_tinyint</literal>
-      <literal>proto_text_fetched_short</literal>,
-      <literal>proto_text_fetched_int24</literal>,
-      <literal>proto_text_fetched_int</literal>
-      <literal>proto_text_fetched_bigint</literal>,
-      <literal>proto_text_fetched_decimal</literal>,
-      <literal>proto_text_fetched_float</literal>
-      <literal>proto_text_fetched_double</literal>,
-      <literal>proto_text_fetched_date</literal>,
-      <literal>proto_text_fetched_year</literal>
-      <literal>proto_text_fetched_time</literal>,
-      <literal>proto_text_fetched_datetime</literal>,
-      <literal>proto_text_fetched_timestamp</literal>
-      <literal>proto_text_fetched_string</literal>,
-      <literal>proto_text_fetched_blob</literal>,
-      <literal>proto_text_fetched_enum</literal>
-      <literal>proto_text_fetched_set</literal>,
-      <literal>proto_text_fetched_geometry</literal>,
-      <literal>proto_text_fetched_other</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número total de colunas de um certo tipo buscadas por uma consulta normal
-      (protocolo de texto do MySQL).</entry>
-     <entry>Mapeamento de tipos API C / metadados MySQL para o nome da estatística:
-      <itemizedlist>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_NULL</literal> - proto_text_fetched_null
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_BIT</literal> - proto_text_fetched_bit
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_TINY</literal> - proto_text_fetched_tinyint
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_SHORT</literal> - proto_text_fetched_short
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_INT24</literal> - proto_text_fetched_int24
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_LONG</literal> - proto_text_fetched_int
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_LONGLONG</literal> -
-         proto_text_fetched_bigint
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_DECIMAL</literal>,
-         <literal>MYSQL_TYPE_NEWDECIMAL</literal> -
-         proto_text_fetched_decimal
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_FLOAT</literal> - proto_text_fetched_float
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_DOUBLE</literal> -
-         proto_text_fetched_double
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_DATE</literal>,
-         <literal>MYSQL_TYPE_NEWDATE</literal> - proto_text_fetched_date
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_YEAR</literal> - proto_text_fetched_year
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_TIME</literal> - proto_text_fetched_time
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_DATETIME</literal> -
-         proto_text_fetched_datetime
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_TIMESTAMP</literal> -
-         proto_text_fetched_timestamp
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_STRING</literal>,
-         <literal>MYSQL_TYPE_VARSTRING</literal>,
-         <literal>MYSQL_TYPE_VARCHAR</literal> -
-         proto_text_fetched_string
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_TINY_BLOB</literal>,
-         <literal>MYSQL_TYPE_MEDIUM_BLOB</literal>,
-         <literal>MYSQL_TYPE_LONG_BLOB</literal>,
-         <literal>MYSQL_TYPE_BLOB</literal> - proto_text_fetched_blob
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_ENUM</literal> - proto_text_fetched_enum
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_SET</literal> - proto_text_fetched_set
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>MYSQL_TYPE_GEOMETRY</literal> -
-         proto_text_fetched_geometry
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         Qualquer <literal>MYSQL_TYPE_*</literal> não listado antes (não deve
-         ter faltado nenhum) - proto_text_fetched_other
-        </para>
+        <programlisting>
+<![CDATA[
+$link = new mysqli(/* ... */);
+$link->connect(/* ... */);
+]]>
+        </programlisting>
        </listitem>
       </itemizedlist>
-      <para>
-       Observe que as constantes MYSQL_*-type podem não estar associadas com
-       os mesmos tipos de colunas SQL em todas as versões do MySQL.
-      </para></entry>
-    </row>
-    <row>
-     <entry><literal>proto_binary_fetched_null</literal>,
-      <literal>proto_binary_fetched_bit</literal>,
-      <literal>proto_binary_fetched_tinyint</literal>
-      <literal>proto_binary_fetched_short</literal>,
-      <literal>proto_binary_fetched_int24</literal>,
-      <literal>proto_binary_fetched_int</literal>,
-      <literal>proto_binary_fetched_bigint</literal>,
-      <literal>proto_binary_fetched_decimal</literal>,
-      <literal>proto_binary_fetched_float</literal>,
-      <literal>proto_binary_fetched_double</literal>,
-      <literal>proto_binary_fetched_date</literal>,
-      <literal>proto_binary_fetched_year</literal>,
-      <literal>proto_binary_fetched_time</literal>,
-      <literal>proto_binary_fetched_datetime</literal>,
-      <literal>proto_binary_fetched_timestamp</literal>,
-      <literal>proto_binary_fetched_string</literal>,
-      <literal>proto_binary_fetched_blob</literal>,
-      <literal>proto_binary_fetched_enum</literal>,
-      <literal>proto_binary_fetched_set</literal>,
-      <literal>proto_binary_fetched_geometry</literal>,
-      <literal>proto_binary_fetched_other</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número total de colunas de um certo tipo buscadas por uma instrução
-      preparada (protocolo binário do MySQL).</entry>
-     <entry>Para mapeamento de tipos, consulte <literal>proto_text_*</literal> descrito no
-      texto anterior.</entry>
-    </row>
-   </tbody>
-  </tgroup>
- </table>
- <table xml:id="mysqlnd.stats.connection">
-  <title>Estatísticas retornadas pelo mysqlnd: Conexão</title>
-  <tgroup cols="4">
-   <colspec colwidth="10*"/>
-   <colspec colwidth="10*"/>
-   <colspec colwidth="40*"/>
-   <colspec colwidth="40*"/>
-   <thead>
-    <row>
-     <entry>Estatística</entry>
-     <entry>Escopo</entry>
-     <entry>Descrição</entry>
-     <entry>Notas</entry>
-    </row>
-   </thead>
-   <tbody>
-    <row>
-     <entry><literal>connect_success</literal>, <literal>connect_failure</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número total de tentativas de conexão bem sucedidas ou falhadas.</entry>
-     <entry>Conexões reutilizadas e todos os outros tipos de conexão são incluídos.</entry>
-    </row>
-    <row>
-     <entry><literal>reconnect</literal></entry>
-     <entry>Processo</entry>
-     <entry>Número total de tentativas de (real_)connect feitas em um identificador
-      de conexão já aberta.</entry>
-     <entry>A sequência de código <literal>$link = new mysqli(...);
-      $link-&gt;real_connect(...)</literal> causará uma reconexão. Porém,
-      <literal>$link = new mysqli(...); $link-&gt;connect(...)</literal>
-      não causará porque <literal>$link-&gt;connect(...)</literal> irá
-      fechar explicitamente a conexão existente antes que uma nova conexão
-      seja estabelecida.</entry>
-    </row>
-    <row>
-     <entry><literal>pconnect_success</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número total de tentativas de conexões persistentes bem sucedidas.</entry>
-     <entry>Observe que <literal>connect_success</literal> mantém a soma de tentativas de
-      conexões persistentes e não persistentes. O número de tentativas de conexões não
-      persistentes bem sucedidas é
-      <literal>connect_success</literal> -
-      <literal>pconnect_success</literal>.</entry>
-    </row>
-    <row>
-     <entry><literal>active_connections</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número total de conexões ativas persistentes e não persistentes.</entry>
-     <entry></entry>
-    </row>
-    <row>
-     <entry><literal>active_persistent_connections</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número total de conexões ativas persistentes.</entry>
-     <entry>O número total de conexões ativas não persistentes é
-      <literal>active_connections</literal> -
-      <literal>active_persistent_connections</literal>.</entry>
-    </row>
-    <row>
-     <entry><literal>explicit_close</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número total de conexões fechadas explicitamente (somente ext/mysqli).</entry>
-     <entry>Exemplos de trechos de código que causam um fechamento explícito:
-<programlisting>
-<![CDATA[
-$link = new mysqli(...); $link->close(...)
-$link = new mysqli(...); $link->connect(...)
-]]>
-</programlisting></entry>
-    </row>
-    <row>
-     <entry><literal>implicit_close</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número total de conexões fechadas implicitamente (somente ext/mysqli).</entry>
-     <entry>Exemplos de trecho de código que causam um fechamento implícito:
-      <itemizedlist>
-       <listitem>
-        <para>
-         <literal>$link = new mysqli(...);
-         $link-&gt;real_connect(...)</literal>
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         <literal>unset($link)</literal>
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         Conexão persistente: conexão agrupada foi criada com
-         real_connect e pode haver opções desconhecidas definidas - fecha
-         implicitamente para evitar retorno de uma conexão com opções desconhecidas
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         Conexão persistente: ping/change_user falha e ext/mysqli
-         fecha a conexão
-        </para>
-       </listitem>
-       <listitem>
-        <para>
-         Fim de execução do script: fecha conexões que não foram
-         fechadas pelo usuário
-        </para>
-       </listitem>
-      </itemizedlist></entry>
-    </row>
-    <row>
-     <entry><literal>disconnect_close</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Falhas de conexão indicadas pela chamada da API C
-      <function>mysql_real_connect</function> durante uma tentativa de
-      se estabelecer uma conexão.</entry>
-     <entry>É chamada de <literal>disconnect_close</literal> porque o identificador de
-      conexão passado à chamada da API C será fechado.</entry>
-    </row>
-    <row>
-     <entry><literal>in_middle_of_command_close</literal></entry>
-     <entry>Processo</entry>
-     <entry>Uma conexão foi fechada no meio de uma execução de comando
-      (conjunto de resultados não buscado, após consulta enviada e
-      antes da obtenção de uma resposta, durante busca de dados, enquanto
-      se transfere dados com LOAD DATA).</entry>
-     <entry>A menos que consultas assíncronas estejam sendo usadas, isto só deve acontecer se o
-      script parar inesperadamente e o PHP fechar as
-      conexões.</entry>
-    </row>
-    <row>
-     <entry><literal>init_command_executed_count</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número total de execuções do comando init, por exemplo,
-      <literal>mysqli_options(MYSQLI_INIT_COMMAND , ...)</literal>.</entry>
-     <entry>O número de execuções bem sucedidas é
-      <literal>init_command_executed_count</literal> -
-      <literal>init_command_failed_count</literal>.</entry>
-    </row>
-    <row>
-     <entry><literal>init_command_failed_count</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número total de comandos init falhados.</entry>
-     <entry></entry>
-    </row>
-   </tbody>
-  </tgroup>
- </table>
- <table xml:id="mysqlnd.stats.com">
-  <title>Estatísticas retornadas pelo mysqlnd: Comando COM_*</title>
-  <tgroup cols="4">
-   <colspec colwidth="10*"/>
-   <colspec colwidth="10*"/>
-   <colspec colwidth="40*"/>
-   <colspec colwidth="40*"/>
-   <thead>
-    <row>
-     <entry>Estatística</entry>
-     <entry>Escopo</entry>
-     <entry>Descrição</entry>
-     <entry>Notas</entry>
-    </row>
-   </thead>
-   <tbody>
-    <row>
-     <entry><literal>com_quit</literal>, <literal>com_init_db</literal>,
-      <literal>com_query</literal>, <literal>com_field_list</literal>,
-      <literal>com_create_db</literal>, <literal>com_drop_db</literal>,
-      <literal>com_refresh</literal>, <literal>com_shutdown</literal>,
-      <literal>com_statistics</literal>,
-      <literal>com_process_info</literal>,
-      <literal>com_connect</literal>,
-      <literal>com_process_kill</literal>, <literal>com_debug</literal>,
-      <literal>com_ping</literal>, <literal>com_time</literal>,
-      <literal>com_delayed_insert</literal>,
-      <literal>com_change_user</literal>,
-      <literal>com_binlog_dump</literal>,
-      <literal>com_table_dump</literal>,
-      <literal>com_connect_out</literal>,
-      <literal>com_register_slave</literal>,
-      <literal>com_stmt_prepare</literal>,
-      <literal>com_stmt_execute</literal>,
-      <literal>com_stmt_send_long_data</literal>,
-      <literal>com_stmt_close</literal>,
-      <literal>com_stmt_reset</literal>,
-      <literal>com_stmt_set_option</literal>,
-      <literal>com_stmt_fetch</literal>, <literal>com_daemon</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número total de tentativas de envio de um comando COM_* específico do PHP para
-      o MySQL.</entry>
-     <entry><para>
-      As estatísticas são incrementadas após a verificação da linha e
-      imediatamente antes de enviar o pacote de protocolo cliente-servidor MySQL
-      correspondente. Se o mysqlnd falhar ao enviar o pacote pela
-      rede, as estatísticas não serão decrementadas. Em caso de falha,
-      o mysqlnd emite um alerta do PHP <quote>Error while sending %s packet.
-      PID=%d.</quote> (Erro ao enviar o pacote %s.)
-      </para>
+     </example>
+    </listitem>
+   </varlistentry>
 
-      <para>
-       Exemplos de uso:
-      </para>
+   <varlistentry xml:id="mysqlnd.stats.statistics.implicit-close">
+    <term><literal>implicit_close</literal></term>
+    <listitem>
+     <simpara>
+      Número total de conexões fechadas implicitamente.
+     </simpara>
+     <example>
+      <title>Exemplos de trechos de código que causam um fechamento implícito</title>
+      <itemizedlist>
+       <listitem>
+        <programlisting>
+<![CDATA[
+$link = new mysqli(/* ... */);
+$link->real_connect(/* ... */);
+]]>
+        </programlisting>
+       </listitem>
+       <listitem>
+        <programlisting>
+         <code>unset($link)</code>
+        </programlisting>
+       </listitem>
+       <listitem>
+        <simpara>
+         Conexão persistente: conexão em fila foi criada com
+         real_connect e podem haver opções desconhecidas definidas - fecha
+         implicitamente para evitar o retorno de uma conexão com opções desconhecidas
+        </simpara>
+       </listitem>
+       <listitem>
+        <simpara>
+         Conexão persistente: ping/change_user falha e a extensão mysqli
+         fecha a conexão
+        </simpara>
+       </listitem>
+       <listitem>
+        <simpara>
+         Fim de execução de script: fecha conexões que não foram
+         fechadas pelo usuário
+        </simpara>
+       </listitem>
+      </itemizedlist>
+     </example>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.disconnect-close">
+    <term><literal>disconnect_close</literal></term>
+    <listitem>
+     <simpara>
+      Falhas de conexão indicadas pela chamada API C
+      <literal>mysql_real_connect</literal> durante uma tentativa de se
+      estabalecer uma conexão.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.in-middle-of-command-close">
+    <term><literal>in_middle_of_command_close</literal></term>
+    <listitem>
+     <simpara>
+      Esta é uma estatística cujo escopo está no nível de processo.
+     </simpara>
+     <simpara>
+      Uma conexão foi fechada no meio de uma execução de comando
+      (conjuntos de resultados não buscados, após enviar uma consulta e
+      antes de receber uma resposta, durante a busca de dados, enquanto
+      dados são transferidos com LOAD DATA).
+     </simpara>
+     <warning>
+      <simpara>
+       A menos que consultas assíncronas sejam usadas,
+       isto só deve acontecer se a aplicação PHP terminar inesperadamente
+       e o PHP fechar a conexão automaticamente.
+      </simpara>
+     </warning>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.init-command-executed-count">
+    <term><literal>init_command_executed_count</literal></term>
+    <listitem>
+     <simpara>
+      Número total de execuções do comando init.
+      Por exemplo: <code>mysqli_options(MYSQLI_INIT_COMMAND , $value)</code>.
+     </simpara>
+     <simpara>
+      O número total de execuções bem sucedidas é
+      <literal>init_command_executed_count - init_command_failed_count</literal>.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.init-command-failed-count">
+    <term><literal>init_command_failed_count</literal></term>
+    <listitem>
+     <simpara>
+      Número total de comandos init falhados.
+     </simpara>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+
+  <variablelist>
+   <title>Estatísticas Relacionadas aos Comandos <literal>COM_*</literal></title>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.com">
+    <term><literal>com_quit</literal></term>
+    <term><literal>com_init_db</literal></term>
+    <term><literal>com_query</literal></term>
+    <term><literal>com_field_list</literal></term>
+    <term><literal>com_create_db</literal></term>
+    <term><literal>com_drop_db</literal></term>
+    <term><literal>com_refresh</literal></term>
+    <term><literal>com_shutdown</literal></term>
+    <term><literal>com_statistics</literal></term>
+    <term><literal>com_process_info</literal></term>
+    <term><literal>com_connect</literal></term>
+    <term><literal>com_process_kill</literal></term>
+    <term><literal>com_debug</literal></term>
+    <term><literal>com_ping</literal></term>
+    <term><literal>com_time</literal></term>
+    <term><literal>com_delayed_insert</literal></term>
+    <term><literal>com_change_user</literal></term>
+    <term><literal>com_binlog_dump</literal></term>
+    <term><literal>com_table_dump</literal></term>
+    <term><literal>com_connect_out</literal></term>
+    <term><literal>com_register_slave</literal></term>
+    <term><literal>com_stmt_prepare</literal></term>
+    <term><literal>com_stmt_execute</literal></term>
+    <term><literal>com_stmt_send_long_data</literal></term>
+    <term><literal>com_stmt_close</literal></term>
+    <term><literal>com_stmt_reset</literal></term>
+    <term><literal>com_stmt_set_option</literal></term>
+    <term><literal>com_stmt_fetch</literal></term>
+    <term><literal>com_daemon</literal></term>
+    <listitem>
+     <simpara>
+      Número total de tentativas de envio de um certo comando <literal>COM_*</literal>
+      do PHP para o MySQL.
+     </simpara>
+     <simpara>
+      As estatísticas são incrementadas após verificação da linha de dados e imediatamente
+      antes do envio do pacote correspondente do protocolo Cliente Servidor do MySQL.
+     </simpara>
+     <caution>
+      <simpara>
+       Se o MySQLnd falhar ao enviar o pacote pela rede, a estatística não será decrementada.
+       Em caso de falha, o MySQLnd emite um alerta do PHP
+       <quote>Error while sending %s packet. PID=%d.</quote>
+      </simpara>
+     </caution>
+
+     <example>
+      <title>Exemplos de uso</title>
       <itemizedlist>
        <listitem>
         <para>
-         Verificar se o PHP envia certos comando ao MySQL, por exemplo,
-         verificando se o cliente envia <literal>COM_PROCESS_KILL</literal>
+         Verificar se o PHP envia certos comandos ao MySQL, por exemplo,
+         verificar se o cliente envia <literal>COM_PROCESS_KILL</literal>
         </para>
        </listitem>
        <listitem>
         <para>
-         Calcular a média de execução de instruções preparadas
-         comparando-se <literal>COM_EXECUTE</literal> com
+         Calcular o número médio de execuções de instruções preparadas
+         comparando <literal>COM_EXECUTE</literal> com
          <literal>COM_PREPARE</literal>
         </para>
        </listitem>
        <listitem>
         <para>
-         Verificar se o PHP executou alguma instrução SQL não preparada,
-         verificando se <literal>COM_QUERY</literal> é zero
+         Verificar se o PHP executou alguma instrução SQL não preparada
+         observando se <literal>COM_QUERY</literal> é igual a zero
         </para>
        </listitem>
        <listitem>
         <para>
-         Identificar os scripts PHP que executam um número excessivo de instruções
+         Identificar scripts PHP que executam um número excessivo de instruções
          SQL, verificando <literal>COM_QUERY</literal> e
          <literal>COM_EXECUTE</literal>
         </para>
        </listitem>
-      </itemizedlist></entry>
-    </row>
-   </tbody>
-  </tgroup>
- </table>
- <para>
-  <emphasis role="bold">Miscelâneos</emphasis>
- </para>
- <table xml:id="mysqlnd.stats.misc">
-  <title>Estatísticas retornadas pelo mysqlnd: Miscelâneos</title>
-  <tgroup cols="4">
-   <colspec colwidth="10*"/>
-   <colspec colwidth="10*"/>
-   <colspec colwidth="40*"/>
-   <colspec colwidth="40*"/>
-   <thead>
-    <row>
-     <entry>Estatística</entry>
-     <entry>Escopo</entry>
-     <entry>Descrição</entry>
-     <entry>Notas</entry>
-    </row>
-   </thead>
-   <tbody>
-    <row>
-     <entry><literal>explicit_stmt_close</literal>,
-      <literal>implicit_stmt_close</literal></entry>
-     <entry>Processo</entry>
-     <entry>Número total de fechamento de instruções preparadas.</entry>
-     <entry>Um fechamento é sempre considerado explícito exceto para uma preparação falhada.</entry>
-    </row>
-    <row>
-     <entry><literal>mem_emalloc_count</literal>,
-      <literal>mem_emalloc_ammount</literal>,
-      <literal>mem_ecalloc_count</literal>,
-      <literal>mem_ecalloc_ammount</literal>,
-      <literal>mem_erealloc_count</literal>,
-      <literal>mem_erealloc_ammount</literal>,
-      <literal>mem_efree_count</literal>,
-      <literal>mem_malloc_count</literal>,
-      <literal>mem_malloc_ammount</literal>,
-      <literal>mem_calloc_count</literal>,
-      <literal>mem_calloc_ammount</literal>,
-      <literal>mem_realloc_count</literal>,
-      <literal>mem_realloc_ammount</literal>,
-      <literal>mem_free_count</literal></entry>
-     <entry>Processo</entry>
-     <entry>Chamadas de gerenciamento de memória.</entry>
-     <entry>Somente desenvolvimento.</entry>
-    </row>
-    <row>
-     <entry><literal>command_buffer_too_small</literal></entry>
-     <entry>Conexão</entry>
-     <entry>Número de extensões de buffer de comando de rede ao enviar comandos do
-      PHP para o MySQL.</entry>
-     <entry><para>
-       mysqlnd aloca um buffer de comando/rede interno com tamanho de
-       <literal>mysqlnd.net_cmd_buffer_size</literal>
-       (<filename>php.ini</filename>) bytes para cada conexão. Se um comando do
-       protocolo Cliente-Servidor do MySQL, por exemplo,
-       <literal>COM_QUERY</literal> (consulta normal), não couber no
-       buffer, o mysqlnd aumentará o tamanho do buffer para o que for necessário para
-       enviar o comando. Sempre que o buffer for estendido para uma
-       conexão, <literal>command_buffer_too_small</literal> será
-       incrementado em uma unidade.
-      </para>
+      </itemizedlist>
+     </example>
+    </listitem>
+   </varlistentry>
+  </variablelist>
 
-      <para>
-       Se o mysqlnd tiver que aumentar o buffer além de seu tamanho inicial em bytes definido em
-       <literal>mysqlnd.net_cmd_buffer_size</literal>
-       (<filename>php.ini</filename>) para quase toda conexão,
-       deve-se considerar aumentar o tamanho padrão para evitar
-       realocações.
-      </para>
+  <variablelist>
+   <title>Estatísticas Miscelâneas</title>
 
-      <para>
-       O tamanho padrão do buffer é de 4096 bytes, que é o menor valor possível. O padrão pode
-       ser alterado através da configuração <literal>mysqlnd.net_cmd_buffer_size</literal> do
-       <filename>php.ini</filename> ou usando
-       <literal>mysqli_options(MYSQLI_OPT_NET_CMD_BUFFER_SIZE, int
-       size)</literal>.
-      </para></entry>
-    </row>
-    <row>
-     <entry><literal>connection_reused</literal></entry>
-     <entry></entry>
-     <entry></entry>
-     <entry></entry>
-    </row>
-   </tbody>
-  </tgroup>
- </table>
+   <varlistentry xml:id="mysqlnd.stats.statistics.stmt-close">
+    <term><literal>explicit_stmt_close</literal></term>
+    <term><literal>implicit_stmt_close</literal></term>
+    <listitem>
+     <simpara>
+      Esta é uma estatística cujo escopo está no nível de processo.
+     </simpara>
+     <simpara>
+      Número total de instruções preparadas fechadas.
+     </simpara>
+     <note>
+      <simpara>
+       Uma instrução preparada é sempre fechada explicitamente. O único momento em que ela é fechaada implicitamente é quando sua preparação falha.
+      </simpara>
+     </note>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.memory-management">
+    <term><literal>mem_emalloc_count</literal></term>
+    <term><literal>mem_emalloc_ammount</literal></term>
+    <term><literal>mem_ecalloc_count</literal></term>
+    <term><literal>mem_ecalloc_ammount</literal></term>
+    <term><literal>mem_realloc_count</literal></term>
+    <term><literal>mem_realloc_ammount</literal></term>
+    <term><literal>mem_efree_count</literal></term>
+    <term><literal>mem_malloc_count</literal></term>
+    <term><literal>mem_malloc_ammount</literal></term>
+    <term><literal>mem_calloc_count</literal></term>
+    <term><literal>mem_calloc_ammount</literal></term>
+    <term><literal>mem_ealloc_count</literal></term>
+    <term><literal>mem_ealloc_ammount</literal></term>
+    <term><literal>mem_free_count</literal></term>
+    <listitem>
+     <simpara>
+      Esta é uma estatística cujo escopo está no nível de processo.
+     </simpara>
+     <simpara>
+      Chamadas de gerenciamento de memória.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.command-buffer-too-small">
+    <term><literal>command_buffer_too_small</literal></term>
+    <!-- TODO: XInclude/sync description of INI setting
+     ini.mysqlnd.net-cmd-buffer-size with this statistic -->
+    <listitem>
+     <simpara>
+      Número de extensões de buffer de comandos de rede ao enviar comandos do
+      PHP para o MySQL.
+     </simpara>
+     <simpara>
+      MySQLnd aloca um buffer interno de comando/rede de
+      <link linkend="ini.mysqlnd.net-cmd-buffer-size">mysqlnd.net_cmd_buffer_size</link>
+      bytes para cada conexão.
+     </simpara>
+     <simpara>
+      Se um comando do protocolo Cliente Servidor do MySQL,
+      por exemplo <literal>COM_QUERY</literal> (consulta normal),
+      não couber no buffer,
+      o MySQLnd aumentará o buffer para o tamanho necessário para envio do comando.
+      Sempre que o buffer for estendido para uma conexão,
+      <literal>command_buffer_too_small</literal> será incrementada em uma unidade.
+     </simpara>
+     <simpara>
+      Se o MySQLnd tiver que aumentar o buffer para além do seu tamanho inicial de
+      <link linkend="ini.mysqlnd.net-cmd-buffer-size">mysqlnd.net_cmd_buffer_size</link>
+      bytes para quase todas as conexões,
+      deve ser considerado aumento do tamanho padrão para evitar
+      realocações.
+     </simpara>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="mysqlnd.stats.statistics.connection-reused">
+    <term><literal>connection_reused</literal></term>
+    <listitem>
+     <simpara>
+      O número total de vezes em que uma conexão persistente foi reutilizada.
+     </simpara>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </section>
 </chapter>
 <!-- Keep this comment at the end of the file
 Local variables:
