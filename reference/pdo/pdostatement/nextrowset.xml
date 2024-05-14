@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 661e6858acade9f5a08fc8f9c07b605f42f4a700	Maintainer: leonardolara Status: ready -->
+<refentry xml:id="pdostatement.nextrowset" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>PDOStatement::nextRowset</refname>
+  <refpurpose>
+   Avança para o próximo conjunto de registros em um identificados de instrução com múltiplos conjuntos de registros
+  </refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis role="PDOStatement">
+   <modifier>public</modifier> <type>bool</type><methodname>PDOStatement::nextRowset</methodname>
+   <void/>
+  </methodsynopsis>
+
+  <para>
+   Alguns servidores de bancos de dados suportam procedimentos armazenados que retornam mais de um
+   conjunto de registros (também conhecido como conjunto de resultados).
+   <methodname>PDOStatement::nextRowset</methodname> habilita o acesso ao
+   segundo conjunto de registros, e subsequentes, associados com um objeto PDOStatement. Cada
+   conjunto de registros pode ter um conjunto diferente de colunas em relação ao conjunto anterior.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  &no.function.parameters;
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.success;
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Buscando múltiplos conjuntos de registros de um procedimento armazenado</title>
+    <para>
+     O exemplo a seguir mostra como chamar um procedimento armazenado,
+     <literal>MULTIPLE_ROWSETS</literal>, que retorna três conjuntos de registros. É usado um laço
+     <link linkend="control-structures.do.while">do-while</link> para
+     chamar o método <methodname>PDOStatement::nextRowset</methodname> até que ele
+     retorne &false; e termine o laço quando não houver mais conjuntos de registros disponíveis.
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$sql = 'CALL multiple_rowsets()';
+$stmt = $conn->query($sql);
+$i = 1;
+do {
+    $rowset = $stmt->fetchAll(PDO::FETCH_NUM);
+    if ($rowset) {
+        printResultSet($rowset, $i);
+    }
+    $i++;
+} while ($stmt->nextRowset());
+
+function printResultSet(&$rowset, $i) {
+    print "Conjunto de resultados $i:\n";
+    foreach ($rowset as $row) {
+        foreach ($row as $col) {
+            print $col . "\t";
+        }
+        print "\n";
+    }
+    print "\n";
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Conjunto de resultados 1:
+apple    red
+banana   yellow
+
+Conjunto de resultados 2:
+orange   orange    150
+banana   yellow    175
+
+Conjunto de resultados 3:
+lime     green
+apple    red
+banana   yellow
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><methodname>PDOStatement::columnCount</methodname></member>
+    <member><methodname>PDOStatement::execute</methodname></member>
+    <member><methodname>PDOStatement::getColumnMeta</methodname></member>
+    <member><methodname>PDO::query</methodname></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
