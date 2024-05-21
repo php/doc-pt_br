@@ -3,11 +3,11 @@
 <chapter xml:id="event.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  &reftitle.examples;
  <example>
-  <title>Simple HTTP client</title>
+  <title>Cliente HTTP simples</title>
   <programlisting role="php">
 <![CDATA[
 <?php
-// Read callback
+// Retorno de chamada de leitura
 function readcb($bev, $base) {
     //$input = $bev->input; //$bev->getInput();
 
@@ -19,7 +19,7 @@ function readcb($bev, $base) {
     }
 }
 
-// Event callback
+// Retorno de chamada de evento
 function eventcb($bev, $events, $base) {
     if ($events & EventBufferEvent::CONNECTED) {
         echo "Connected.\n";
@@ -46,7 +46,7 @@ EOS;
 
 $base = new EventBase();
 
-$dns_base = new EventDnsBase($base, TRUE); // We'll use async DNS resolving
+$dns_base = new EventDnsBase($base, TRUE); // Usaremos resolução de DNS assíncrona
 if (!$dns_base) {
     exit("Failed to init DNS Base\n");
 }
@@ -108,7 +108,7 @@ Done
   </screen>
  </example>
  <example>
-  <title>HTTP client using asynchronous DNS resolver</title>
+  <title>Cliente HTTP usando resolvedor DNS assíncrono</title>
   <programlisting role="php">
 <![CDATA[
 <?php
@@ -122,7 +122,7 @@ Done
  * 3. Asyncronously read the response and print it to stdout.
  */
 
-// Read callback
+// Retorno de chamada de leitura
 function readcb($bev, $base) {
     $input = $bev->getInput();
 
@@ -131,7 +131,7 @@ function readcb($bev, $base) {
     }
 }
 
-// Event callback
+// Retorno de chamada de evento
 function eventcb($bev, $events, $base) {
     if ($events & EventBufferEvent::CONNECTED) {
         echo "Connected.\n";
@@ -169,37 +169,37 @@ if (!$output->add(
     exit("Failed adding request to output buffer\n");
 }
 
-/* Connect to the host syncronously.
-We know the IP, and don't need to resolve DNS. */
+/* Conecta-se ao host de forma síncrona.
+Conhecemos o IP e não precisamos resolver o DNS. */
 if (!$bev->connect("127.0.0.1:80")) {
     exit("Can't connect to host\n");
 }
 
-// Dispatch pending events
+// Despachar eventos pendentes
 $base->dispatch();
 ?>
 ]]>
   </programlisting>
  </example>
  <example>
-  <title>Echo server</title>
+  <title>Servidor de eco</title>
   <programlisting role="php">
 <![CDATA[
 <?php
 /*
- * Simple echo server based on libevent's connection listener.
- *
- * Usage:
- * 1) In one terminal window run:
- *
- * $ php listener.php 9881
- *
- * 2) In another terminal window open up connection, e.g.:
- *
- * $ nc 127.0.0.1 9881
- *
- * 3) start typing. The server should repeat the input.
- */
+  * Servidor de eco simples baseado no ouvinte de conexão do libevent.
+  *
+  * Uso:
+  * 1) Em uma janela de terminal, execute:
+  *
+  * $ php listener.php 9881
+  *
+  * 2) Em outra janela do terminal abra a conexão, por exemplo:
+  *
+  * $ nc 127.0.0.1 9881
+  *
+  * 3) comece a digitar. O servidor deve repetir a entrada.
+  */
 
 class MyListenerConnection {
     private $bev, $base;
@@ -223,12 +223,12 @@ class MyListenerConnection {
     }
 
     public function echoReadCallback($bev, $ctx) {
-        // Copy all the data from the input buffer to the output buffer
+        // Copia todos os dados do buffer de entrada para o buffer de saída
 
-        // Variant #1
+        // Variante #1
         $bev->output->addBuffer($bev->input);
 
-        /* Variant #2 */
+        /* Variante #2 */
         /*
         $input    = $bev->getInput();
         $output = $bev->getOutput();
@@ -265,7 +265,7 @@ class MyListener {
             exit(1);
         }
 
-        // Variant #1
+        // Variante #1
         /*
         $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         if (!socket_bind($this->socket, '0.0.0.0', $port)) {
@@ -278,7 +278,7 @@ class MyListener {
             -1, $this->socket);
          */
 
-        // Variant #2
+        // Variante #2
          $this->listener = new EventListener($this->base,
              array($this, "acceptConnCallback"), $this->base,
              EventListener::OPT_CLOSE_ON_FREE | EventListener::OPT_REUSEABLE, -1,
@@ -296,9 +296,9 @@ class MyListener {
         $this->base->dispatch();
     }
 
-    // This callback is invoked when there is data to read on $bev
+    // Este retorno de chamada é invocado quando há dados para ler em $bev
     public function acceptConnCallback($listener, $fd, $address, $ctx) {
-        // We got a new connection! Set up a bufferevent for it. */
+        // Conseguimos uma nova conexão! Configure um bufferevent para ele. */
         $base = $this->base;
         $this->conn[] = new MyListenerConnection($base, $fd);
     }
@@ -331,18 +331,18 @@ $l->dispatch();
   </programlisting>
  </example>
  <example>
-  <title>SSL echo server</title>
+  <title>Servidor de eco SSL</title>
   <programlisting role="php">
 <![CDATA[
 <?php
 /*
- * SSL echo server
+ * Servidor de eco SSL
  *
- * To test:
- * 1) Run:
+ * Para testar:
+ * 1) Execute:
  * $ php examples/ssl-echo-server/server.php 9998
  *
- * 2) in another terminal window run:
+ * 2) em outra janela do terminal execute:
  * $ socat - SSL:127.0.0.1:9998,verify=1,cafile=examples/ssl-echo-server/cert.pem
  */
 
@@ -379,7 +379,7 @@ class MySslEchoServer {
         $this->base->dispatch();
     }
 
-    // This callback is invoked when there is data to read on $bev.
+    // Este retorno de chamada é invocado quando há dados para ler em $bev.
     function ssl_read_cb($bev, $ctx) {
         $in = $bev->input; //$bev->getInput();
 
@@ -390,11 +390,11 @@ class MySslEchoServer {
         $bev->writeBuffer($in);
     }
 
-    // This callback is invoked when some even occurs on the event listener,
-    // e.g. connection closed, or an error occurred
+    // Este retorno de chamada é invocado quando algum evento ocorre no ouvinte de evento,
+    // por exemplo. conexão fechada ou ocorreu um erro
     function ssl_event_cb($bev, $events, $ctx) {
         if ($events & EventBufferEvent::ERROR) {
-            // Fetch errors from the SSL error stack
+            // Buscar erros da pilha de erros SSL
             while ($err = $bev->sslError()) {
                 fprintf(STDERR, "Bufferevent error %s.\n", $err);
             }
@@ -405,9 +405,9 @@ class MySslEchoServer {
         }
     }
 
-    // This callback is invoked when a client accepts new connection
+    // Este retorno de chamada é invocado quando um cliente aceita uma nova conexão
     function ssl_accept_cb($listener, $fd, $address, $ctx) {
-        // We got a new connection! Set up a bufferevent for it.
+        // Conseguimos uma nova conexão! Configure um bufferevent para ele.
         $this->bev = EventBufferEvent::sslSocket($this->base, $fd, $this->ctx,
             EventBufferEvent::SSL_ACCEPTING, EventBufferEvent::OPT_CLOSE_ON_FREE);
 
@@ -422,7 +422,7 @@ class MySslEchoServer {
             array($this, "ssl_event_cb"), NULL);
     }
 
-    // This callback is invoked when we failed to setup new connection for a client
+    // Este retorno de chamada é invocado quando não conseguimos configurar uma nova conexão para um cliente
     function accept_error_cb($listener, $ctx) {
         fprintf(STDERR, "Got an error %d (%s) on the listener. "
             ."Shutting down.\n",
@@ -432,10 +432,10 @@ class MySslEchoServer {
         $this->base->exit(NULL);
     }
 
-    // Initialize SSL structures, create an EventSslContext
-    // Optionally create self-signed certificates
+    // Inicializa estruturas SSL, cria um EventSslContext
+    // Opcionalmente, crie certificados autoassinados
     function init_ssl() {
-        // We *must* have entropy. Otherwise there's no point to crypto.
+        // Nós *devemos* ter entropia. Caso contrário, não há sentido em criptografar.
         if (!EventUtil::sslRandPoll()) {
             exit("EventUtil::sslRandPoll failed\n");
         }
@@ -465,7 +465,7 @@ class MySslEchoServer {
     }
 }
 
-// Allow to override the port
+// Permitir substituir a porta
 $port = 9999;
 if ($argc > 1) {
     $port = (int) $argv[1];
@@ -482,23 +482,23 @@ $l->dispatch();
   </programlisting>
  </example>
  <example>
-  <title>Signal handler</title>
+  <title>Manipulador de sinal</title>
   <programlisting role="php">
 <![CDATA[
 <?php
 /*
-Launch it in a terminal window:
+Inicie-o em uma janela de terminal:
 
 $ php examples/signal.php
 
-In another terminal window find out the pid and send SIGTERM, e.g.:
+Em outra janela do terminal descubra o pid e envie o SIGTERM, por exemplo:
 
 $ ps aux | grep examp
 ruslan    3976  0.2  0.0 139896 11256 pts/1    S+   10:25   0:00 php examples/signal.php
 ruslan    3978  0.0  0.0   9572   864 pts/2    S+   10:26   0:00 grep --color=auto examp
 $ kill -TERM 3976
 
-At the first terminal window you should catch the following:
+Na primeira janela do terminal você deve pegar o seguinte:
 
 Caught signal 15
 */
@@ -528,11 +528,11 @@ event_base_loop($base);
   </programlisting>
  </example>
  <example>
-  <title>Use libevent's loop to process requests of `eio' extension</title>
+  <title>Use o loop do libevent para processar solicitações da extensão `eio'</title>
   <programlisting role="php">
 <![CDATA[
 <?php
-// Callback for eio_nop()
+// Retorno de chamada para eio_nop()
 function my_nop_cb($d, $r) {
     echo "step 6\n";
 }
@@ -577,7 +577,7 @@ echo "Done\n";
   </programlisting>
  </example>
  <example>
-  <title>Miscellaneous</title>
+  <title>Diversos</title>
   <programlisting role="php">
 <![CDATA[
 <?php
@@ -587,13 +587,13 @@ foreach (Event::getSupportedMethods() as $m) {
     echo $m, PHP_EOL;
 }
 
-// Avoiding "select" method
+// Evitando o método "select"
 $cfg = new EventConfig();
 if ($cfg->avoidMethod("select")) {
     echo "'select' method avoided\n";
 }
 
-// Create event_base associated with the config
+// Crie event_base associado à configuração
 $base = new EventBase($cfg);
 echo "Event method used: ", $base->getMethod(), PHP_EOL;
 
@@ -603,7 +603,7 @@ $features = $base->getFeatures();
 ($features & EventConfig::FEATURE_O1) and print "O1 - O(1) operation for adding/deleting events\n";
 ($features & EventConfig::FEATURE_FDS) and print "FDS - arbitrary file descriptor types, and not just sockets\n";
 
-// Require FDS feature
+// Exigir recurso FDS
 if ($cfg->requireFeatures(EventConfig::FEATURE_FDS)) {
     echo "FDS feature is now required\n";
 
@@ -635,18 +635,18 @@ $base->loop();
   </programlisting>
  </example>
  <example>
-  <title>Simple HTTP server</title>
+  <title>Servidor HTTP simples</title>
   <programlisting role="php">
 <![CDATA[
 <?php
 /*
- * Simple HTTP server.
+ * Servidor HTTP simples.
  *
- * To test it:
- * 1) Run it on a port of your choice, e.g.:
+ * Para testar:
+ * 1) Execute-o em uma porta de sua escolha, por exemplo:
  * $ php examples/http.php 8010
- * 2) In another terminal connect to some address on this port
- * and make GET or POST request(others are turned off here), e.g.:
+ * 2) Em outro terminal conecte-se a algum endereço nesta porta
+ * e faça uma solicitação GET ou POST (outros estão desativados aqui), por exemplo:
  * $ nc -t 127.0.0.1 8010
  * POST /about HTTP/1.0
  * Content-Type: text/plain
@@ -654,7 +654,7 @@ $base->loop();
  * Connection: close
  * (press Enter)
  *
- * It will output
+ * Ele produzirá
  * a=12
  * HTTP/1.0 200 OK
  * Content-Type: text/html; charset=ISO-8859-1
@@ -667,7 +667,7 @@ $base->loop();
  * Connection: close
  * (press Enter)
  *
- * It will output:
+ * Ele produzirá:
  * HTTP/1.0 200 OK
  * Content-Type: text/html; charset=ISO-8859-1
  * Connection: close
@@ -677,12 +677,12 @@ $base->loop();
  * GET /unknown HTTP/1.0
  * Connection: close
  *
- * It will output:
+ * Ele produzirá:
  * HTTP/1.0 200 OK
  * Content-Type: text/html; charset=ISO-8859-1
  * Connection: close
  *
- * 3) See what the server outputs on the previous terminal window.
+ * 3) Veja o que o servidor gera na janela do terminal anterior.
  */
 
 function _http_dump($req, $data) {
@@ -773,15 +773,15 @@ Connection: close
   </screen>
  </example>
  <example>
-  <title>Simple HTTPS server</title>
+  <title>Servidor HTTPS simples</title>
   <programlisting role="php">
 <![CDATA[
 <?php
 /*
- * Simple HTTPS server.
+ * Servidor HTTPS simples.
  *
- * 1) Run the server: `php examples/https.php 9999`
- * 2) Test it: `php examples/ssl-connection.php 9999`
+ * 1) Execute o servidor: `php examples/https.php 9999`
+ * 2) Teste: `php examples/ssl-connection.php 9999`
  */
 
 function _http_dump($req, $data) {
@@ -874,18 +874,18 @@ $base->dispatch();
   </programlisting>
  </example>
  <example>
-  <title>OpenSSL connection</title>
+  <title>Conexão OpenSSL</title>
   <programlisting role="php">
 <![CDATA[
 <?php
 /*
  * Sample OpenSSL client.
  *
- * Usage:
- * 1) Launch a server, e.g.:
+ * Uso:
+ * 1) Inicie um servidor, por exemplo:
  * $ php examples/https.php 9999
  *
- * 2) Launch the client in another terminal:
+ * 2) Inicie o cliente em outro terminal:
  * $ php examples/ssl-connection.php 9999
  */
 
@@ -921,7 +921,7 @@ function _init_ssl() {
 }
 
 
-// Allow to override the port
+// Permitir substituir a porta
 $port = 9999;
 if ($argc > 1) {
     $port = (int) $argv[1];
@@ -960,7 +960,7 @@ echo "END\n";
  </example>
  <example>
   <title>
-   <function>EventHttpConnection::makeRequest</function> example</title>
+   Exemplo de <function>EventHttpConnection::makeRequest</function></title>
   <programlisting role="php">
 <![CDATA[
 <?php
@@ -1018,24 +1018,24 @@ PHP, date:
  </example>
  <example>
   <title>
-   Connection listener based on a UNIX domain socket</title>
+   Ouvinte de conexão baseado em um socket de domínio UNIX</title>
   <programlisting role="php">
 <![CDATA[
 <?php
 /*
- * Simple echo server based on libevent's connection listener.
+ * Servidor de eco simples baseado no ouvinte de conexão do libevent.
  *
- * Usage:
- * 1) In one terminal window run:
+ * Uso:
+ * 1) Em uma janela de terminal, execute:
  *
  * $ php unix-domain-listener.php [path-to-socket]
  *
- * 2) In another terminal window open up connection
- * to the socket, e.g.:
+ * 2) Em outra janela do terminal abra a conexão
+ * com o socket, por exemplo:
  *
  * $ socat - GOPEN:/tmp/1.sock
  *
- * 3) Start typing. The server should repeat the input.
+ * 3) Comece a digitar. O servidor deve repetir a entrada.
  */
 
 class MyListenerConnection {
@@ -1062,7 +1062,7 @@ class MyListenerConnection {
     }
 
     public function echoReadCallback($bev, $ctx) {
-        // Copy all the data from the input buffer to the output buffer
+        // Copie todos os dados do buffer de entrada para o buffer de saída
         $bev->output->addBuffer($bev->input);
     }
 
@@ -1115,9 +1115,9 @@ class MyListener {
         $this->base->dispatch();
     }
 
-    // This callback is invoked when there is data to read on $bev
+    // Este retorno de chamada é invocado quando há dados para ler em $bev
     public function acceptConnCallback($listener, $fd, $address, $ctx) {
-        // We got a new connection! Set up a bufferevent for it. */
+        // Conseguimos uma nova conexão! Configure um bufferevent para ele. */
         $base = $this->base;
         $this->conn[] = new MyListenerConnection($base, $fd);
     }
@@ -1146,19 +1146,19 @@ $l->dispatch();
   </programlisting>
  </example>
  <example xml:id="event.example.smtp">
-  <title>Simple SMTP server</title>
+  <title>Servidor SMTP simples</title>
   <programlisting role="php">
 <![CDATA[
 <?php
  /*
- * Author: Andrew Rose <hello at andrewrose dot co dot uk>
+ * Autor: Andrew Rose <hello at andrewrose dot co dot uk>
  *
- * Usage:
- * 1) Prepare cert.pem certificate and privkey.pem private key files.
- * 2) Launch the server script
- * 3) Open TLS connection, e.g.:
+ * Uso:
+ * 1) Prepare o certificado cert.pem e os arquivos de chave privada privkey.pem.
+ * 2) Inicie o script do servidor
+ * 3) Abra a conexão TLS, por exemplo:
  *      $ openssl s_client -connect localhost:25 -starttls smtp -crlf
- * 4) Start testing the commands listed in `cmd` method below.
+ * 4) Comece a testar os comandos listados no método `cmd` abaixo.
  */
 
 class Handler {
