@@ -22,23 +22,23 @@ function readcb($bev, $base) {
 // Retorno de chamada de evento
 function eventcb($bev, $events, $base) {
     if ($events & EventBufferEvent::CONNECTED) {
-        echo "Connected.\n";
+        echo "Conectado.\n";
     } elseif ($events & (EventBufferEvent::ERROR | EventBufferEvent::EOF)) {
         if ($events & EventBufferEvent::ERROR) {
-            echo "DNS error: ", $bev->getDnsErrorString(), PHP_EOL;
+            echo "Erro de DNS: ", $bev->getDnsErrorString(), PHP_EOL;
         }
 
-        echo "Closing\n";
+        echo "Fechando\n";
         $base->exit();
-        exit("Done\n");
+        exit("Pronto\n");
     }
 }
 
 if ($argc != 3) {
     echo <<<EOS
-Trivial HTTP 0.x client
-Syntax: php {$argv[0]} [hostname] [resource]
-Example: php {$argv[0]} www.google.com /
+Cliente HTTP Trivial 0.x
+Sintaxe: php {$argv[0]} [servidor] [recurso]
+Exemplo: php {$argv[0]} www.google.com /
 
 EOS;
     exit();
@@ -48,15 +48,15 @@ $base = new EventBase();
 
 $dns_base = new EventDnsBase($base, TRUE); // Usaremos resolução de DNS assíncrona
 if (!$dns_base) {
-    exit("Failed to init DNS Base\n");
+    exit("Falha ao iniciar Base DNS\n");
 }
 
-$bev = new EventBufferEvent($base, /* use internal socket */ NULL,
+$bev = new EventBufferEvent($base, /* usa socket interno */ NULL,
     EventBufferEvent::OPT_CLOSE_ON_FREE | EventBufferEvent::OPT_DEFER_CALLBACKS,
     "readcb", /* writecb */ NULL, "eventcb"
 );
 if (!$bev) {
-    exit("Failed creating bufferevent socket\n");
+    exit("Falha ao criar socket de bufferevent\n");
 }
 
 //$bev->setCallbacks("readcb", /* writecb */ NULL, "eventcb", $base);
@@ -68,11 +68,11 @@ if (!$output->add(
     "Host: {$argv[1]}\r\n".
     "Connection: Close\r\n\r\n"
 )) {
-    exit("Failed adding request to output buffer\n");
+    exit("Falha ao adicionar requisição ao buffer de saída\n");
 }
 
 if (!$bev->connectHost($dns_base, $argv[1], 80, EventUtil::AF_UNSPEC)) {
-    exit("Can't connect to host {$argv[1]}\n");
+    exit("Não foi possível conectar ao servidor {$argv[1]}\n");
 }
 
 $base->dispatch();
@@ -82,7 +82,7 @@ $base->dispatch();
   &example.outputs.similar;
   <screen>
 <![CDATA[
-Connected.
+Conectado.
 HTTP/1.1 301 Moved Permanently
 Date: Fri, 01 Mar 2013 18:47:48 GMT
 Location: http://www.google.co.uk/
@@ -102,8 +102,8 @@ Connection: close
 The document has moved
 <A HREF="http://www.google.co.uk/">here</A>.
 </BODY></HTML>
-Closing
-Done
+Fechando
+Pronto
 ]]>
   </screen>
  </example>
@@ -113,13 +113,13 @@ Done
 <![CDATA[
 <?php
 /*
- * 1. Connect to 127.0.0.1 at port 80
- * by means of EventBufferEvent::connect().
+ * 1. Conecta a 127.0.0.1 na porta 80
+ * através de EventBufferEvent::connect().
  *
- * 2. Request /index.cphp via HTTP/1.0
- * using the output buffer.
+ * 2. Solicita /index.cphp via HTTP/1.0
+ * usando o buffer de saída.
  *
- * 3. Asyncronously read the response and print it to stdout.
+ * 3. Lê a resposta de forma assíncrona e mostra na saída padrão.
  */
 
 // Retorno de chamada de leitura
@@ -134,45 +134,45 @@ function readcb($bev, $base) {
 // Retorno de chamada de evento
 function eventcb($bev, $events, $base) {
     if ($events & EventBufferEvent::CONNECTED) {
-        echo "Connected.\n";
+        echo "Conectado.\n";
     } elseif ($events & (EventBufferEvent::ERROR | EventBufferEvent::EOF)) {
         if ($events & EventBufferEvent::ERROR) {
-            echo "DNS error: ", $bev->getDnsErrorString(), PHP_EOL;
+            echo "Erro de DNS: ", $bev->getDnsErrorString(), PHP_EOL;
         }
 
-        echo "Closing\n";
+        echo "Fechando\n";
         $base->exit();
-        exit("Done\n");
+        exit("Pronto\n");
     }
 }
 
 $base = new EventBase();
 
-echo "step 1\n";
-$bev = new EventBufferEvent($base, /* use internal socket */ NULL,
+echo "passo 1\n";
+$bev = new EventBufferEvent($base, /* usa socket interno */ NULL,
     EventBufferEvent::OPT_CLOSE_ON_FREE | EventBufferEvent::OPT_DEFER_CALLBACKS);
 if (!$bev) {
-    exit("Failed creating bufferevent socket\n");
+    exit("Falha ao criar socket de bufferevent\n");
 }
 
-echo "step 2\n";
+echo "passo 2\n";
 $bev->setCallbacks("readcb", /* writecb */ NULL, "eventcb", $base);
 $bev->enable(Event::READ | Event::WRITE);
 
-echo "step 3\n";
-// Send request
+echo "passo 3\n";
+// Envia a requisição
 $output = $bev->getOutput();
 if (!$output->add(
     "GET /index.cphp HTTP/1.0\r\n".
     "Connection: Close\r\n\r\n"
 )) {
-    exit("Failed adding request to output buffer\n");
+    exit("Falha ao adicionar a requisição ao buffer de saída\n");
 }
 
 /* Conecta-se ao host de forma síncrona.
 Conhecemos o IP e não precisamos resolver o DNS. */
 if (!$bev->connect("127.0.0.1:80")) {
-    exit("Can't connect to host\n");
+    exit("Não foi possível conectar ao servidor\n");
 }
 
 // Despachar eventos pendentes
@@ -198,7 +198,7 @@ $base->dispatch();
   *
   * $ nc 127.0.0.1 9881
   *
-  * 3) comece a digitar. O servidor deve repetir a entrada.
+  * 3) Comece a digitar. O servidor deve repetir a entrada.
   */
 
 class MyListenerConnection {
@@ -217,7 +217,7 @@ class MyListenerConnection {
             array($this, "echoEventCallback"), NULL);
 
         if (!$this->bev->enable(Event::READ)) {
-            echo "Failed to enable READ\n";
+            echo "Falha ao habilitar LEITURA\n";
             return;
         }
     }
@@ -238,7 +238,7 @@ class MyListenerConnection {
 
     public function echoEventCallback($bev, $events, $ctx) {
         if ($events & EventBufferEvent::ERROR) {
-            echo "Error from bufferevent\n";
+            echo "Erro do bufferevent\n";
         }
 
         if ($events & (EventBufferEvent::EOF | EventBufferEvent::ERROR)) {
@@ -261,7 +261,7 @@ class MyListener {
     public function __construct($port) {
         $this->base = new EventBase();
         if (!$this->base) {
-            echo "Couldn't open event base";
+            echo "Não foi possível abrir a base de evento";
             exit(1);
         }
 
@@ -269,7 +269,7 @@ class MyListener {
         /*
         $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         if (!socket_bind($this->socket, '0.0.0.0', $port)) {
-            echo "Unable to bind socket\n";
+            echo "Não foi possível ligação ao socket\n";
             exit(1);
         }
         $this->listener = new EventListener($this->base,
@@ -285,7 +285,7 @@ class MyListener {
              "0.0.0.0:$port");
 
         if (!$this->listener) {
-            echo "Couldn't create listener";
+            echo "Não foi possível criar o ouvinte";
             exit(1);
         }
 
@@ -298,7 +298,7 @@ class MyListener {
 
     // Este retorno de chamada é invocado quando há dados para ler em $bev
     public function acceptConnCallback($listener, $fd, $address, $ctx) {
-        // Conseguimos uma nova conexão! Configure um bufferevent para ele. */
+        // Conseguimos uma nova conexão! Configure um bufferevent para ela. */
         $base = $this->base;
         $this->conn[] = new MyListenerConnection($base, $fd);
     }
@@ -306,8 +306,8 @@ class MyListener {
     public function accept_error_cb($listener, $ctx) {
         $base = $this->base;
 
-        fprintf(STDERR, "Got an error %d (%s) on the listener. "
-            ."Shutting down.\n",
+        fprintf(STDERR, "Houve um erro %d (%s) no ouvinte. "
+            ."Desligando.\n",
             EventUtil::getLastSocketErrno(),
             EventUtil::getLastSocketError());
 
@@ -321,7 +321,7 @@ if ($argc > 1) {
     $port = (int) $argv[1];
 }
 if ($port <= 0 || $port > 65535) {
-    exit("Invalid port");
+    exit("Porta inválida");
 }
 
 $l = new MyListener($port);
@@ -357,12 +357,12 @@ class MySslEchoServer {
         $this->port = $port;
         $this->ctx = $this->init_ssl();
         if (!$this->ctx) {
-            exit("Failed creating SSL context\n");
+            exit("Falha ao criar contexto SSL\n");
         }
 
         $this->base = new EventBase();
         if (!$this->base) {
-            exit("Couldn't open event base\n");
+            exit("Não foi possível abrir a base de eventos\n");
         }
 
         $this->listener = new EventListener($this->base,
@@ -370,7 +370,7 @@ class MySslEchoServer {
             EventListener::OPT_CLOSE_ON_FREE | EventListener::OPT_REUSEABLE,
             -1, "$host:$port");
         if (!$this->listener) {
-            exit("Couldn't create listener\n");
+            exit("Não foi possível criar o ouvinte\n");
         }
 
         $this->listener->setErrorCallback(array($this, "accept_error_cb"));
@@ -383,7 +383,7 @@ class MySslEchoServer {
     function ssl_read_cb($bev, $ctx) {
         $in = $bev->input; //$bev->getInput();
 
-        printf("Received %zu bytes\n", $in->length);
+        printf("Recebidos %zu bytes\n", $in->length);
         printf("----- data ----\n");
         printf("%ld:\t%s\n", (int) $in->length, $in->pullup(-1));
 
@@ -396,7 +396,7 @@ class MySslEchoServer {
         if ($events & EventBufferEvent::ERROR) {
             // Buscar erros da pilha de erros SSL
             while ($err = $bev->sslError()) {
-                fprintf(STDERR, "Bufferevent error %s.\n", $err);
+                fprintf(STDERR, "Erro Bufferevent %s.\n", $err);
             }
         }
 
@@ -407,12 +407,12 @@ class MySslEchoServer {
 
     // Este retorno de chamada é invocado quando um cliente aceita uma nova conexão
     function ssl_accept_cb($listener, $fd, $address, $ctx) {
-        // Conseguimos uma nova conexão! Configure um bufferevent para ele.
+        // Conseguimos uma nova conexão! Configure um bufferevent para ela.
         $this->bev = EventBufferEvent::sslSocket($this->base, $fd, $this->ctx,
             EventBufferEvent::SSL_ACCEPTING, EventBufferEvent::OPT_CLOSE_ON_FREE);
 
         if (!$this->bev) {
-            echo "Failed creating ssl buffer\n";
+            echo "Falha ao criar buffer SSL\n";
             $this->base->exit(NULL);
             exit(1);
         }
@@ -424,8 +424,8 @@ class MySslEchoServer {
 
     // Este retorno de chamada é invocado quando não conseguimos configurar uma nova conexão para um cliente
     function accept_error_cb($listener, $ctx) {
-        fprintf(STDERR, "Got an error %d (%s) on the listener. "
-            ."Shutting down.\n",
+        fprintf(STDERR, "Houve um erro %d (%s) no ouvinte. "
+            ."Desligando.\n",
             EventUtil::getLastSocketErrno(),
             EventUtil::getLastSocketError());
 
@@ -437,15 +437,15 @@ class MySslEchoServer {
     function init_ssl() {
         // Nós *devemos* ter entropia. Caso contrário, não há sentido em criptografar.
         if (!EventUtil::sslRandPoll()) {
-            exit("EventUtil::sslRandPoll failed\n");
+            exit("EventUtil::sslRandPoll falhou\n");
         }
 
         $local_cert = __DIR__."/cert.pem";
         $local_pk   = __DIR__."/privkey.pem";
 
         if (!file_exists($local_cert) || !file_exists($local_pk)) {
-            echo "Couldn't read $local_cert or $local_pk file.  To generate a key\n",
-                "and self-signed certificate, run:\n",
+            echo "Não foi possível ler o arquivo $local_cert ou $local_pk.  Para gerar uma chave\n",
+                "e certificado auto-assinado, execute:\n",
                 "  openssl genrsa -out $local_pk 2048\n",
                 "  openssl req -new -key $local_pk -out cert.req\n",
                 "  openssl x509 -req -days 365 -in cert.req -signkey $local_pk -out $local_cert\n";
@@ -471,7 +471,7 @@ if ($argc > 1) {
     $port = (int) $argv[1];
 }
 if ($port <= 0 || $port > 65535) {
-    exit("Invalid port\n");
+    exit("Porta inválida\n");
 }
 
 
@@ -500,7 +500,7 @@ $ kill -TERM 3976
 
 Na primeira janela do terminal você deve pegar o seguinte:
 
-Caught signal 15
+Capturado sinal 15
 */
 class MyEventSignal {
     private $base;
@@ -510,7 +510,7 @@ class MyEventSignal {
     }
 
     function eventSighandler($no, $c) {
-        echo "Caught signal $no\n";
+        echo "Capturado sinal $no\n";
         event_base_loopexit($c->base);
     }
 }
@@ -534,7 +534,7 @@ event_base_loop($base);
 <?php
 // Retorno de chamada para eio_nop()
 function my_nop_cb($d, $r) {
-    echo "step 6\n";
+    echo "passo 6\n";
 }
 
 $dir = "/tmp/abc-eio-temp";
@@ -542,11 +542,11 @@ if (file_exists($dir)) {
     rmdir($dir);
 }
 
-echo "step 1\n";
+echo "passo 1\n";
 
 $base = new EventBase();
 
-echo "step 2\n";
+echo "passo 2\n";
 
 eio_init();
 
@@ -554,7 +554,7 @@ eio_mkdir($dir, 0750, EIO_PRI_DEFAULT, "my_nop_cb");
 
 $event = new Event($base, eio_get_event_stream(),
     Event::READ | Event::PERSIST, function ($fd, $events, $base) {
-    echo "step 5\n";
+    echo "passo 5\n";
 
     while (eio_nreqs()) {
         eio_poll();
@@ -563,15 +563,15 @@ $event = new Event($base, eio_get_event_stream(),
     $base->stop();
 }, $base);
 
-echo "step 3\n";
+echo "passo 3\n";
 
 $event->add();
 
-echo "step 4\n";
+echo "passo 4\n";
 
 $base->dispatch();
 
-echo "Done\n";
+echo "Pronto\n";
 ?>
 ]]>
   </programlisting>
@@ -581,8 +581,8 @@ echo "Done\n";
   <programlisting role="php">
 <![CDATA[
 <?php
-/* {{{ Config & supported stuff */
-echo "Supported methods:\n";
+/* {{{ Parte de configuração e suporte */
+echo "Métodos suportados:\n";
 foreach (Event::getSupportedMethods() as $m) {
     echo $m, PHP_EOL;
 }
@@ -590,26 +590,26 @@ foreach (Event::getSupportedMethods() as $m) {
 // Evitando o método "select"
 $cfg = new EventConfig();
 if ($cfg->avoidMethod("select")) {
-    echo "'select' method avoided\n";
+    echo "Método 'select' evitado\n";
 }
 
 // Crie event_base associado à configuração
 $base = new EventBase($cfg);
-echo "Event method used: ", $base->getMethod(), PHP_EOL;
+echo "Método de evento utilizado: ", $base->getMethod(), PHP_EOL;
 
-echo "Features:\n";
+echo "Recursos:\n";
 $features = $base->getFeatures();
 ($features & EventConfig::FEATURE_ET) and print "ET - edge-triggered IO\n";
-($features & EventConfig::FEATURE_O1) and print "O1 - O(1) operation for adding/deleting events\n";
-($features & EventConfig::FEATURE_FDS) and print "FDS - arbitrary file descriptor types, and not just sockets\n";
+($features & EventConfig::FEATURE_O1) and print "O1 - Operação O(1) para adicionar/remover eventos\n";
+($features & EventConfig::FEATURE_FDS) and print "FDS - tipos de descritor de arquivos arbitrários, e não somente sockets\n";
 
 // Exigir recurso FDS
 if ($cfg->requireFeatures(EventConfig::FEATURE_FDS)) {
-    echo "FDS feature is now required\n";
+    echo "Recurso FDS agora é requerido\n";
 
     $base = new EventBase($cfg);
     ($base->getFeatures() & EventConfig::FEATURE_FDS)
-        and print "FDS - arbitrary file descriptor types, and not just sockets\n";
+        and print "FDS - tipos de descritor de arquivos arbitrários, e não somente sockets\n";
 }
 /* }}} */
 
@@ -619,8 +619,8 @@ $event = new Event($base, STDIN, Event::READ | Event::PERSIST, function ($fd, $e
     static $max_iterations = 0;
 
     if (++$max_iterations >= 5) {
-        /* exit after 5 iterations with timeout of 2.33 seconds */
-        echo "Stopping...\n";
+        /* sai após 5 iterações com tempo limite de 2.33 segundos */
+        echo "Parando...\n";
         $arg[0]->exit(2.33);
     }
 
@@ -690,36 +690,36 @@ function _http_dump($req, $data) {
     static $max_requests = 2;
 
     if (++$counter >= $max_requests)  {
-        echo "Counter reached max requests $max_requests. Exiting\n";
+        echo "Contador atingiu o máximo de $max_requests requisições. Saindo\n";
         exit();
     }
 
-    echo __METHOD__, " called\n";
-    echo "request:"; var_dump($req);
-    echo "data:"; var_dump($data);
+    echo __METHOD__, " chamado\n";
+    echo "requisição:"; var_dump($req);
+    echo "dados:"; var_dump($data);
 
-    echo "\n===== DUMP =====\n";
-    echo "Command:", $req->getCommand(), PHP_EOL;
+    echo "\n===== DESPEJO =====\n";
+    echo "Comando:", $req->getCommand(), PHP_EOL;
     echo "URI:", $req->getUri(), PHP_EOL;
-    echo "Input headers:"; var_dump($req->getInputHeaders());
-    echo "Output headers:"; var_dump($req->getOutputHeaders());
+    echo "Cabeçalhos de entrada:"; var_dump($req->getInputHeaders());
+    echo "Cabeçalhos de saída:"; var_dump($req->getOutputHeaders());
 
-    echo "\n >> Sending reply ...";
+    echo "\n >> Enviando resposta ...";
     $req->sendReply(200, "OK");
     echo "OK\n";
 
-    echo "\n >> Reading input buffer ...\n";
+    echo "\n >> Lendo buffer de entrada ...\n";
     $buf = $req->getInputBuffer();
     while ($s = $buf->readLine(EventBuffer::EOL_ANY)) {
         echo $s, PHP_EOL;
     }
-    echo "No more data in the buffer\n";
+    echo "Não há mais dados no buffer\n";
 }
 
 function _http_about($req) {
     echo __METHOD__, PHP_EOL;
     echo "URI: ", $req->getUri(), PHP_EOL;
-    echo "\n >> Sending reply ...";
+    echo "\n >> Enviando resposta ...";
     $req->sendReply(200, "OK");
     echo "OK\n";
 }
@@ -727,7 +727,7 @@ function _http_about($req) {
 function _http_default($req, $data) {
     echo __METHOD__, PHP_EOL;
     echo "URI: ", $req->getUri(), PHP_EOL;
-    echo "\n >> Sending reply ...";
+    echo "\n >> Enviando resposta ...";
     $req->sendReply(200, "OK");
     echo "OK\n";
 }
@@ -737,7 +737,7 @@ if ($argc > 1) {
     $port = (int) $argv[1];
 }
 if ($port <= 0 || $port > 65535) {
-    exit("Invalid port");
+    exit("Porta inválida");
 }
 
 $base = new EventBase();
@@ -789,21 +789,21 @@ function _http_dump($req, $data) {
     static $max_requests = 200;
 
     if (++$counter >= $max_requests)  {
-        echo "Counter reached max requests $max_requests. Exiting\n";
+        echo "Contador atingiu o máximo de $max_requests requisições. Saindo\n";
         exit();
     }
 
-    echo __METHOD__, " called\n";
-    echo "request:"; var_dump($req);
-    echo "data:"; var_dump($data);
+    echo __METHOD__, " chamado\n";
+    echo "requisição:"; var_dump($req);
+    echo "dados:"; var_dump($data);
 
-    echo "\n===== DUMP =====\n";
-    echo "Command:", $req->getCommand(), PHP_EOL;
+    echo "\n===== DESPEJO =====\n";
+    echo "Comando:", $req->getCommand(), PHP_EOL;
     echo "URI:", $req->getUri(), PHP_EOL;
-    echo "Input headers:"; var_dump($req->getInputHeaders());
-    echo "Output headers:"; var_dump($req->getOutputHeaders());
+    echo "Cabeçalhos de entrada:"; var_dump($req->getInputHeaders());
+    echo "Cabeçalhos de saída:"; var_dump($req->getOutputHeaders());
 
-    echo "\n >> Sending reply ...";
+    echo "\n >> Enviando resposta ...";
     $req->sendReply(200, "OK");
     echo "OK\n";
 
@@ -812,13 +812,13 @@ function _http_dump($req, $data) {
     while ($s = $buf->read(1024)) {
         echo $s;
     }
-    echo "\nNo more data in the buffer\n";
+    echo "\nNão há mais dados no buffer\n";
 }
 
 function _http_about($req) {
     echo __METHOD__, PHP_EOL;
     echo "URI: ", $req->getUri(), PHP_EOL;
-    echo "\n >> Sending reply ...";
+    echo "\n >> Enviando resposta ...";
     $req->sendReply(200, "OK");
     echo "OK\n";
 }
@@ -826,7 +826,7 @@ function _http_about($req) {
 function _http_default($req, $data) {
     echo __METHOD__, PHP_EOL;
     echo "URI: ", $req->getUri(), PHP_EOL;
-    echo "\n >> Sending reply ...";
+    echo "\n >> Enviando resposta ...";
     $req->sendReply(200, "OK");
     echo "OK\n";
 }
@@ -854,7 +854,7 @@ if ($argc > 1) {
     $port = (int) $argv[1];
 }
 if ($port <= 0 || $port > 65535) {
-    exit("Invalid port");
+    exit("Porta inválida");
 }
 $ip = '0.0.0.0';
 
@@ -879,7 +879,7 @@ $base->dispatch();
 <![CDATA[
 <?php
 /*
- * Sample OpenSSL client.
+ * Exemplo de cliente OpenSSL.
  *
  * Uso:
  * 1) Inicie um servidor, por exemplo:
@@ -893,18 +893,18 @@ function _request_handler($req, $base) {
     echo __FUNCTION__, PHP_EOL;
 
     if (is_null($req)) {
-        echo "Timed out\n";
+        echo "Tempo limite atingido\n";
     } else {
         $response_code = $req->getResponseCode();
 
         if ($response_code == 0) {
-            echo "Connection refused\n";
+            echo "Conexão recusada\n";
         } elseif ($response_code != 200) {
-            echo "Unexpected response: $response_code\n";
+            echo "Resposta inesperada: $response_code\n";
         } else {
-            echo "Success: $response_code\n";
+            echo "Sucesso: $response_code\n";
             $buf = $req->getInputBuffer();
-            echo "Body:\n";
+            echo "Corpo:\n";
             while ($s = $buf->readLine(EventBuffer::EOL_ANY)) {
                 echo $s, PHP_EOL;
             }
@@ -927,18 +927,18 @@ if ($argc > 1) {
     $port = (int) $argv[1];
 }
 if ($port <= 0 || $port > 65535) {
-    exit("Invalid port\n");
+    exit("Porta inválida\n");
 }
 $host = '127.0.0.1';
 
 $ctx = _init_ssl();
 if (!$ctx) {
-    trigger_error("Failed creating SSL context", E_USER_ERROR);
+    trigger_error("Falha ao criar contexto SSL", E_USER_ERROR);
 }
 
 $base = new EventBase();
 if (!$base) {
-    trigger_error("Failed to initialize event base", E_USER_ERROR);
+    trigger_error("Falha ao inicializar a base de eventos", E_USER_ERROR);
 }
 
 $conn = new EventHttpConnection($base, NULL, $host, $port, $ctx);
@@ -953,7 +953,7 @@ $buf->add("<html>HTML TEST</html>");
 $conn->makeRequest($req, EventHttpRequest::CMD_POST, "/dump");
 
 $base->dispatch();
-echo "END\n";
+echo "FIM\n";
 ?>
 ]]>
   </programlisting>
@@ -968,18 +968,18 @@ function _request_handler($req, $base) {
     echo __FUNCTION__, PHP_EOL;
 
     if (is_null($req)) {
-        echo "Timed out\n";
+        echo "Tempo limite atingido\n";
     } else {
         $response_code = $req->getResponseCode();
 
         if ($response_code == 0) {
-            echo "Connection refused\n";
+            echo "Conexão recusada\n";
         } elseif ($response_code != 200) {
-            echo "Unexpected response: $response_code\n";
+            echo "Resposta inesperada: $response_code\n";
         } else {
-            echo "Success: $response_code\n";
+            echo "Sucesso: $response_code\n";
             $buf = $req->getInputBuffer();
-            echo "Body:\n";
+            echo "Corpo:\n";
             while ($s = $buf->readLine(EventBuffer::EOL_ANY)) {
                 echo $s, PHP_EOL;
             }
@@ -1009,8 +1009,8 @@ $base->loop();
    <screen>
 <![CDATA[
 _request_handler
-Success: 200
-Body:
+Sucesso: 200
+Corpo:
 PHP, date:
 2013-03-13T20:27:52+05:00
 ]]>
@@ -1062,7 +1062,7 @@ class MyListenerConnection {
     }
 
     public function echoReadCallback($bev, $ctx) {
-        // Copie todos os dados do buffer de entrada para o buffer de saída
+        // Copia todos os dados do buffer de entrada para o buffer de saída
         $bev->output->addBuffer($bev->input);
     }
 
@@ -1091,7 +1091,7 @@ class MyListener {
     public function __construct($sock_path) {
         $this->base = new EventBase();
         if (!$this->base) {
-            echo "Couldn't open event base";
+            echo "Não foi possível abrir a base de eventos";
             exit(1);
         }
 
@@ -1105,7 +1105,7 @@ class MyListener {
              "unix:$sock_path");
 
         if (!$this->listener) {
-            trigger_error("Couldn't create listener", E_USER_ERROR);
+            trigger_error("Não foi possível criar o ouvinte", E_USER_ERROR);
         }
 
         $this->listener->setErrorCallback(array($this, "accept_error_cb"));
@@ -1117,7 +1117,7 @@ class MyListener {
 
     // Este retorno de chamada é invocado quando há dados para ler em $bev
     public function acceptConnCallback($listener, $fd, $address, $ctx) {
-        // Conseguimos uma nova conexão! Configure um bufferevent para ele. */
+        // Conseguimos uma nova conexão! Configure um bufferevent para ela. */
         $base = $this->base;
         $this->conn[] = new MyListenerConnection($base, $fd);
     }
@@ -1125,8 +1125,8 @@ class MyListener {
     public function accept_error_cb($listener, $ctx) {
         $base = $this->base;
 
-        fprintf(STDERR, "Got an error %d (%s) on the listener. "
-            ."Shutting down.\n",
+        fprintf(STDERR, "Ocorreu um erro %d (%s) no ouvinte. "
+            ."Desligando.\n",
             EventUtil::getLastSocketErrno(),
             EventUtil::getLastSocketError());
 
@@ -1135,7 +1135,7 @@ class MyListener {
 }
 
 if ($argc <= 1) {
-    exit("Socket path is not provided\n");
+    exit("Caminho do socket não fornecido\n");
 }
 $sock_path = $argv[1];
 
@@ -1172,8 +1172,8 @@ class Handler {
             EventSslContext::OPT_LOCAL_CERT  => 'cert.pem',
             EventSslContext::OPT_LOCAL_PK    => 'privkey.pem',
             //EventSslContext::OPT_PASSPHRASE  => '',
-            EventSslContext::OPT_VERIFY_PEER => false, // change to true with authentic cert
-            EventSslContext::OPT_ALLOW_SELF_SIGNED => true // change to false with authentic cert
+            EventSslContext::OPT_VERIFY_PEER => false, // mudar para true com certificado autêntico
+            EventSslContext::OPT_ALLOW_SELF_SIGNED => true // mudar para false com certificado autêntico
         ]);
 
         $this->base = new EventBase();
