@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: e4831ebb56bd2a2392dbe8958ca90d7917c19c00 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<!-- EN-Revision: a4563933821baeb67ce9af86e875d4528eeb8c26 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto, leonardolara -->
 <refentry xml:id="soapclient.dorequest" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>SoapClient::__doRequest</refname>
@@ -111,11 +111,12 @@
     <programlisting role="php">
 <![CDATA[
 <?php
-function Add($x,$y) {
-  return $x+$y;
+function Add($x, $y) {
+  return $x + $y;
 }
 
 class LocalSoapClient extends SoapClient {
+  private $server;
 
   function __construct($wsdl, $options) {
     parent::__construct($wsdl, $options);
@@ -123,7 +124,7 @@ class LocalSoapClient extends SoapClient {
     $this->server->addFunction('Add');
   }
 
-  function __doRequest($request, $location, $action, $version, $one_way = 0) {
+  function __doRequest($request, $location, $action, $version, $one_way = false): ?string {
     ob_start();
     $this->server->handle($request);
     $response = ob_get_contents();
@@ -133,9 +134,8 @@ class LocalSoapClient extends SoapClient {
 
 }
 
-$x = new LocalSoapClient(NULL,array('location'=>'test://',
-                                   'uri'=>'http://testuri.org'));
-var_dump($x->Add(3,4));
+$x = new LocalSoapClient(NULL, ['location'=>'test://', 'uri'=>'http://testuri.org']);
+var_dump($x->Add(3, 4));
 ?>
 ]]>
     </programlisting>
