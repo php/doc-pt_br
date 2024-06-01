@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 5f2da51e3cc91d9459ecd064203afb8cac3ac5cc Maintainer: ae Status: ready --><!-- CREDITS: royopa,ae,fabioluciano,lhsazevedo -->
+<!-- EN-Revision: 31d42a7a6e9ecf4227f6b1dc6936eccd40846fa7 Maintainer: ae Status: ready --><!-- CREDITS: royopa,ae,fabioluciano,lhsazevedo,leonardolara -->
 <chapter xml:id="language.generators" xmlns="http://docbook.org/ns/docbook">
  <title>Generators</title>
 
  <sect1 xml:id="language.generators.overview">
-  <title>Generators, visão geral</title>
+  <title>Geradores, visão geral</title>
   <?phpdoc print-version-for="generators"?>
 
   <para>
-   Os generators fornecem uma maneira fácil de implementar simples
-   <link linkend="language.oop5.iterations">iterators</link> sem a
+   Os geradores fornecem uma maneira fácil de implementar
+   <link linkend="language.oop5.iterations">iteradores</link> simples sem a
    sobrecarga ou complexidade de criar uma classe que implemente
    a interface <classname>Iterator</classname>.
   </para>
 
   <para>
-   Um generator permite que você escreva código que use &foreach; para iterar
+   Um gerador permite que você escreva código que use &foreach; para iterar
    em um conjunto de dados sem precisar construir um array em memória, o que
    pode fazer com que o limite de memória seja ultrapassado ou exigir uma
    quantidade considerável de tempo de processamento para a geração. Em vez
-   disso, você pode escrever uma função generator, que é o mesmo que uma
+   disso, você pode escrever uma função geradora, que é o mesmo que uma
    <link linkend="functions.user-defined">função</link> normal, exceto que
    ao invés do
    <link linkend="functions.returning-values">retorno</link> ocorrer
@@ -31,27 +31,27 @@
    Um exemplo simples para isso é reimplementar a função
    <function>range</function>. A função <function>range</function> padrão
    tem que gerar um array com cada valor dentro dele e retorná-lo, o que pode
-   resultar em grandes arrays: por exemplo, chamando
+   resultar em grandes arrays: por exemplo, chamar
    <command>range(0, 1000000)</command> irá resultar numa utilização de memória
    de mais de 100 MB.
   </para>
 
   <para>
-   Como alternativa, nós podemos implementar um generator
+   Como alternativa, nós podemos implementar um gerador
    <literal>xrange()</literal>, que só precisará de memória suficiente para
    criar um objeto <classname>Iterator</classname> e acompanhar o estado atual
-   do generator internamente, que utiliza menos de 1 kilobyte de memória.
+   do gerador internamente, que utiliza menos de 1 kilobyte de memória.
   </para>
 
   <example>
-   <title>Implementando <function>range</function> como um generator</title>
+   <title>Implementando <function>range</function> como um gerador</title>
    <programlisting role="php">
 <![CDATA[
 <?php
 function xrange($start, $limit, $step = 1) {
     if ($start <= $limit) {
         if ($step <= 0) {
-            throw new LogicException('Step precisa ser positivo');
+            throw new LogicException('O passo precisa ser positivo');
         }
 
         for ($i = $start; $i <= $limit; $i += $step) {
@@ -59,7 +59,7 @@ function xrange($start, $limit, $step = 1) {
         }
     } else {
         if ($step >= 0) {
-            throw new LogicException('Step precisa ser negativo');
+            throw new LogicException('O passo precisa ser negativo');
         }
 
         for ($i = $start; $i >= $limit; $i += $step) {
@@ -96,7 +96,7 @@ Números ímpares a partir de xrange(): 1 3 5 7 9
   </example>
 
   <sect2 xml:id="language.generators.object">
-   <title><classname>Generator</classname> objects</title>
+   <title>Objetos <classname>Generator</classname></title>
    <para>
     Quando uma função geradora é chamada, um objeto interno
     de tipo <classname>Generator</classname> é retornado. Este objeto
@@ -109,44 +109,44 @@ Números ímpares a partir de xrange(): 1 3 5 7 9
  </sect1>
 
  <sect1 xml:id="language.generators.syntax">
-  <title>Sintaxe do Generator</title>
+  <title>Sintaxe do Gerador</title>
 
   <para>
-   Uma função generator se parece com uma função normal, exceto que ao invés
-   de retornar um valor, um generator pode executar &yield; quantas vezes forem necessárias.
-   Qualquer função que contenha &yield; é uma função generator.
+   Uma função geradora se parece com uma função normal, exceto que ao invés
+   de retornar um valor, um gerador pode executar &yield; quantas vezes forem necessárias.
+   Qualquer função que contenha &yield; é uma função geradora.
   </para>
 
   <para>
-   Quando uma função generator é chamada, ela retorna um objeto que pode ser
+   Quando uma função geradora é chamada, ela retorna um objeto que pode ser
    iterado. Quando você itera através desse objeto (por exemplo, por um loop
    &foreach;), o PHP irá chamar os métodos de iteração do objeto toda vez que precisar de
-   um valor, em seguida salva o estado do generator quando o valor é produzido,
+   um valor, em seguida salva o estado do gerador quando o valor é produzido,
    de modo que possa ser retomado quando o próximo valor for necessário.
   </para>
 
   <para>
-   Uma vez que não há mais valores a serem produzidos, a generator pode
-   simplesmente sair, e a chamada de código continua como se um array tivesse
-   executado os valores.
+   Quando não houver mais valores a serem produzidos, o gerador pode
+   simplesmente retornar, e o código que chamou continua como se um array tivesse
+   ficado sem valores.
   </para>
 
   <note>
    <para>
-    Um generator pode retornar valores, que podem ser recuperados usando
+    Um gerador pode retornar valores, que podem ser recuperados usando
     <methodname>Generator::getReturn</methodname>.
    </para>
   </note>
 
   <sect2 xml:id="control-structures.yield">
-   <title>A palavra chave <command>yield</command></title>
+   <title>A palavra-chave <command>yield</command></title>
 
    <para>
-    O coração de uma função generator é a palavra chave <command>yield</command>.
+    O coração de uma função gerador é a palavra-chave <command>yield</command>.
     Na sua forma mais simples, uma declaração yield se parece muito com um
     retorno, exceto que em vez de parar a execução da função e retornar, o
-    yield fornece um valor para o código de loop sobre o generator e pausa a
-    execução da função do generator.
+    yield fornece um valor para o código de loop sobre o gerador e pausa a
+    execução da função do gerador.
    </para>
 
    <example>
@@ -189,7 +189,7 @@ foreach ($generator as $value) {
     <title>Produzindo valores com chaves</title>
 
     <para>
-     O PHP suporta arrays associativos e generators não são diferentes. Além
+     O PHP suporta arrays associativos e geradores não são diferentes. Além
      do produzir valores simples, como mostrado acima, você também pode produzir
      uma chave ao mesmo tempo.
     </para>
@@ -258,7 +258,7 @@ foreach (input_parser($input) as $id => $fields) {
     </para>
 
     <example>
-     <title>Produzindo valores &null;os</title>
+     <title>Produzindo valores &null;</title>
      <programlisting role="php">
 <![CDATA[
 <?php
@@ -292,7 +292,7 @@ array(3) {
     <title>Produzindo valores por referência</title>
 
     <para>
-     Funções generator são capazes de produzir valores por referência bem como
+     Funções geradoras são capazes de produzir valores por referência bem como
      por valor. Isso é feito da mesma forma que
      <link linkend="functions.returning-values">retornar referências de funções</link>:
      incluindo um &amp; no início do nome da função.
@@ -332,7 +332,7 @@ foreach (gen_reference() as &$number) {
    </sect3>
 
    <sect3 xml:id="control-structures.yield.from">
-    <title>Delegação de gerador via<command>yield from</command></title>
+    <title>Delegação de gerador via <command>yield from</command></title>
 
     <para>
      A delegação de gerador permite retornar valores de outro
@@ -353,7 +353,7 @@ foreach (gen_reference() as &$number) {
      <title>Armazenando em um array (por exemplo, com <function>iterator_to_array</function>)</title>
 
       <para>
-       <command>yield from</command> não reseta as chaves. Ele preserva
+       <command>yield from</command> não redefine as chaves. Ele preserva
        as chaves retornadas pelo objeto <classname>Traversable</classname>, ou
        <type>array</type>. Deste modo alguns valores podem compartilhar uma chave em comum com outro
        <command>yield</command> ou <command>yield from</command>, o qual, após
@@ -364,7 +364,7 @@ foreach (gen_reference() as &$number) {
        Um caso onde isso importa é a função <function>iterator_to_array</function>
        retornando um array com chaves por padrão, levando a resultados possivelmente inesperados.
        <function>iterator_to_array</function> possui um segundo parâmetro
-       <parameter>preserve_keys</parameter> que pode ser setado como &false; para coletar
+       <parameter>preserve_keys</parameter> que pode ser definido como &false; para coletar
        todos os valores enquanto ignora as chaves retornadas pelo <classname>Generator</classname>.
       </para>
 
@@ -374,14 +374,14 @@ foreach (gen_reference() as &$number) {
 <![CDATA[
 <?php
 function inner() {
-    yield 1; // key 0
-    yield 2; // key 1
-    yield 3; // key 2
+    yield 1; // chave 0
+    yield 2; // chave 1
+    yield 3; // chave 2
 }
 function gen() {
-    yield 0; // key 0
-    yield from inner(); // keys 0-2
-    yield 4; // key 1
+    yield 0; // chave 0
+    yield from inner(); // chaves 0-2
+    yield 4; // chave 1
 }
 // Passe false no segundo parâmetro para obter um array [0, 1, 2, 3, 4]
 var_dump(iterator_to_array(gen()));
@@ -490,10 +490,10 @@ echo $gen->getReturn();
  </sect1>
 
  <sect1 xml:id="language.generators.comparison">
-  <title>Comparando generators com objetos <classname>Iterator</classname></title>
+  <title>Comparando geradores com objetos <classname>Iterator</classname></title>
 
   <para>
-   A principal vantagem dos generators é a sua simplicidade. Muito menos código
+   A principal vantagem dos geradores é a sua simplicidade. Muito menos código
    clichê tem de ser reescrito em comparação com a implementação de uma classe
    <classname>Iterator</classname>, e o código geralmente é muito mais legível.
    Por exemplo, a seguinte função e classe são equivalentes:
@@ -515,7 +515,7 @@ function getLinesFromFile($fileName) {
     fclose($fileHandle);
 }
 
-// ao invéz de:
+// ao invés de:
 
 class LineIterator implements Iterator {
     protected $fileHandle;
@@ -525,7 +525,7 @@ class LineIterator implements Iterator {
 
     public function __construct($fileName) {
         if (!$this->fileHandle = fopen($fileName, 'r')) {
-            throw new RuntimeException('Couldn\'t open file "' . $fileName . '"');
+            throw new RuntimeException('Não foi possível abrir o arquivo "' . $fileName . '"');
         }
     }
 
@@ -564,9 +564,9 @@ class LineIterator implements Iterator {
   </informalexample>
 
   <para>
-   No entanto essa flexibilidade tem um custo: os generators somente movem-se
+   No entanto essa flexibilidade tem um custo: os geradores somente movem-se
    para frente e não podem ser rebobinados após a iteração ter sido iniciada.
-   Isso também significa que o generator não pode ser iterado múltiplas vezes:
+   Isso também significa que o geradores não pode ser iterado múltiplas vezes:
    o gerador precisará ser reconstruído chamando a função geradora novamente.
   </para>
 
