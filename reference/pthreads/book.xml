@@ -9,124 +9,124 @@
  <preface xml:id="intro.pthreads">
   &reftitle.intro;
   <para>
-   pthreads is an object-orientated API that provides all of the tools needed
-   for multi-threading in PHP. PHP applications can create, read, write,
-   execute and synchronize with Threads, Workers and Threaded objects.
+   pthreads é uma API orientada a objetos que fornece todas as ferramentas necessárias
+   para multithreading em PHP. Aplicações PHP podem criar, ler, escrever,
+   executar e sincronizar com Threads, Workers e objetos Threaded.
   </para>
   <warning>
    <simpara>
-    This extension is considered unmaintained and dead.
+    Esta extensão é considerada sem manutenção e inoperante.
    </simpara>
   </warning>
   <tip>
    <simpara>
-    Consider using <link linkend="book.parallel">parallel</link> instead.
+    Considere usar <link linkend="book.parallel">parallel</link> no lugar.
    </simpara>
   </tip>
   <warning>
    <para>
-    The pthreads extension cannot be used in a web server environment.
-    Threading in PHP is therefore restricted to CLI-based applications only.
+    A extensão pthreads não pode ser usada em um ambiente de servidor web.
+    Threading em PHP é, portanto, restrito apenas a aplicações baseadas em CLI.
    </para>
   </warning>
   <warning>
    <para>
-    pthreads (v3) can only be used with PHP 7.2+: This is due to ZTS
-    mode being unsafe in 7.0 and 7.1.
+    pthreads (v3) só pode ser usado com PHP 7.2+: Isso ocorre porque o modo ZTS
+    não é seguro em 7.0 e 7.1.
    </para>
   </warning>
   <para>
-   The <classname>Threaded</classname> class forms the basis of the
-   functionality that allows pthreads to operate. It exposes synchronization
-   methods and some useful interfaces for the programmer.
+   A classe <classname>Threaded</classname> forma a base da
+   funcionalidade que permite a operação dos pthreads. Expõe métodos de sincronização
+   e algumas interfaces úteis para o programador.
   </para>
   <para>
-   The <classname>Thread</classname> class enables for threads to be created by
-   simply extending it and implementing a <literal>run</literal> method. Any
-   members can be written to and read by any context with a reference to the
-   thread. Any context can also execute any public and protected methods.
-   The body of the run method will be executed in a separate thread when the
-   <methodname>Thread::start</methodname> method of the implementation is
-   called from the context that created it. Only the context that creates a
-   thread can start and join it.
+   A classe <classname>Thread</classname> permite que threads sejam criadas
+   simplesmente estendendo-as e implementando um método <literal>run</literal>. Quaisquer
+   membros podem ser gravados e lidos por qualquer contexto com uma referência ao
+   thread. Qualquer contexto também pode executar qualquer método público e protegido.
+   O corpo do método run será executado em um thread separado quando o
+   método <methodname>Thread::start</methodname> da implementação for
+   chamado a partir do contexto que o criou. Somente o contexto que cria um
+   thread pode iniciar e ingressar nele.
   </para>
   <para>
-   The <classname>Worker</classname> class has a persistent state, and will be
-   available from the call to <methodname>Thread::start</methodname> (an
-   inherited method) until the object goes out of scope, or is explicitly
-   shutdown (via <methodname>Worker::shutdown</methodname>). Any context with a
-   reference to the worker object can stack tasks onto the Worker (via
-   <methodname>Worker::stack</methodname>), where these tasks will be executed
-   by the worker in a separate thread. The <literal>run</literal> method of a
-   worker object will be executed before any objects on the worker's stack,
-   enabling for resources to be initialized that the objects to be executed may
-   need.
+   A classe <classname>Worker</classname> tem um estado persistente e estará
+   disponível a partir da chamada para <methodname>Thread::start</methodname> (um
+   método herdado) até que o objeto saia do escopo ou seja explicitamente
+   desligamento (via <methodname>Worker::shutdown</methodname>). Qualquer contexto com uma
+   referência ao objeto worker pode empilhar tarefas no Worker (via
+   <methodname>Worker::stack</methodname>), onde essas tarefas serão executadas
+   pelo worker em um thread separado. O método <literal>run</literal> de um
+   objeto worker será executado antes de qualquer objeto na pilha do worker,
+   permitindo a inicialização de recursos que os objetos a serem executados possam
+   necessitar.
   </para>
   <para>
-   The <classname>Pool</classname> class is used to create a group of workers
-   to distribute <classname>Threaded</classname> objects amongst them. It is
-   the easiest and most efficient way of using multiple threads in PHP
-   applications.
+   A classe <classname>Pool</classname> é usada para criar um grupo de workers
+   para distribuir objetos <classname>Threaded</classname> entre eles. É a
+   maneira mais fácil e eficiente de usar vários threads em
+   aplicações PHP.
   </para>
   <caution>
    <para>
-    The <classname>Pool</classname> class does not extend the
-    <classname>Threaded</classname> class, and so pool-based objects are
-    considered a normal PHP objects. As such, its instances of it should not be
-    shared amongst different contexts.
+    A classe <classname>Pool</classname> não estende a classe
+    <classname>Threaded</classname> e, portanto, objetos baseados em pool são
+    considerados objetos PHP normais. Como tal, as suas instâncias não devem ser
+    partilhadas entre diferentes contextos.
    </para>
   </caution>
   <para>
-   The <classname>Volatile</classname> class is new to pthreads v3. It is used
-   to denote mutable <classname>Threaded</classname> properties of
-   <classname>Threaded</classname> classes (since these are now immutable by
-   default). It is also used to store PHP arrays in
-   <classname>Threaded</classname> contexts.
+   A classe <classname>Volatile</classname> é nova no pthreads v3. É usado
+   para denotar propriedades <classname>Threaded</classname> mutáveis de classes
+   <classname>Threaded</classname> (uma vez que agora são imutáveis por
+   padrão). Também é usado para armazenar arrays PHP em
+   contextos <classname>Threaded</classname>.
   </para>
   <para>
-   Synchronization is an important ability when threading. All of the objects
-   that pthreads creates have built in synchronization in the (which will be
-   familiar to java programmers) form of
-   <methodname>Threaded::wait</methodname> and
-   <methodname>Threaded::notify</methodname>. Calling
-   <methodname>Threaded::wait</methodname> on an object will cause the context
-   to wait for another context to call
-   <methodname>Threaded::notify</methodname> on the same object. This mechanism
-   allows for powerful synchronization between <classname>Threaded</classname>
-   objects in PHP.
+   A sincronização é uma habilidade importante durante o threading. Todos os objetos
+   que o pthreads cria possuem sincronização integrada na forma (que será
+   familiar aos programadores java) de
+   <methodname>Threaded::wait</methodname> e
+   <methodname>Threaded::notify</methodname>. Chamar
+   <methodname>Threaded::wait</methodname> em um objeto fará com que o contexto
+   espere por outro contexto para chamar
+   <methodname>Threaded::notify</methodname> no mesmo objeto. Este mecanismo
+   permite uma sincronização poderosa entre objetos <classname>Threaded</classname>
+   em PHP.
   </para>
   <caution>
   <para>
-   Any objects that are intended for use in the multi-threaded parts of your
-   application should extend <classname>Threaded</classname>.
+   Quaisquer objetos destinados ao uso nas partes multithread de sua
+   aplicação devem estender <classname>Threaded</classname>.
   </para>
   </caution>
   <para>
- Data Storage:
- As a rule of thumb, any data type that can be serialized can be used as a member of a Threaded object, it can be read and written from any context with a reference to the Threaded Object.
- Not every type of data is stored serially, basic types are stored in their true form.
- Complex types, Arrays, and Objects that are not Threaded are stored serially; they can be read and written to the Threaded Object from any context with a reference.
- With the exception of Threaded Objects any reference used to set a member of a Threaded Object is separated from the reference in the Threaded Object;
- the same data can be read directly from the Threaded Object at any time by any context with a reference to the Threaded Object.
+   Armazenamento de dados:
+   Como regra geral, qualquer tipo de dados que possa ser serializado pode ser usado como membro de um objeto Threaded, ele pode ser lido e escrito a partir de qualquer contexto com uma referência ao objeto Threaded.
+   Nem todo tipo de dados é armazenado em série; os tipos básicos são armazenados em sua forma verdadeira.
+   Tipos complexos, arrays e objetos que não são encadeados são armazenados serialmente; eles podem ser lidos e gravados no Threaded Object a partir de qualquer contexto com uma referência.
+   Com exceção dos Objetos Threaded, qualquer referência usada para definir um membro de um Objeto Threaded é separada da referência no Objeto Threaded;
+   os mesmos dados podem ser lidos diretamente do Objeto Threaded a qualquer momento por qualquer contexto com uma referência ao Objeto Threaded.
   </para>
   <para>
- Static Members:
- When a new context is created ( Thread or Worker ), they are generally copied, but resources and objects with internal state are nullified (for safety reasons). This allows them to function as a kind of thread local storage. For example, upon starting the context, a class whose static members include connection information for a database server, and the connection itself, will only have the simple connection information copied, not the connection. Allowing the new context to initiate a connection in the same way as the context that created it, storing the connection in the same place without affecting the original context.
+   Membros Estáticos:
+   Quando um novo contexto é criado (Thread ou Worker), geralmente eles são copiados, mas recursos e objetos com estado interno são anulados (por questões de segurança). Isso permite que eles funcionem como uma espécie de armazenamento local de threads. Por exemplo, ao iniciar o contexto, uma classe cujos membros estáticos incluem informações de conexão para um servidor de banco de dados, e a própria conexão, terá apenas as informações de conexão simples copiadas, não a conexão. Permitir que o novo contexto inicie uma conexão da mesma forma que o contexto que a criou, armazenando a conexão no mesmo local sem afetar o contexto original.
   </para>
   <caution>
   <para>
- When print_r, var_dump and other object debug functions are executed, they do not include recursion protection.
+   Quando print_r, var_dump e outras funções de depuração de objetos são executadas, elas não incluem proteção recursiva.
   </para>
   </caution>
   <note>
    <para>
- Resources:
- The extensions and functionality that define resources in PHP are completely unprepared for this kind of environment; pthreads makes provisions for Resources to be shared among contexts, however, for most types of resource it should be considered unsafe. Extreme caution and care should be used when sharing resources among contexts.
+    Recursos:
+    As extensões e funcionalidades que definem recursos em PHP são completamente despreparadas para este tipo de ambiente; O pthreads prevê que os recursos sejam compartilhados entre contextos; no entanto, para a maioria dos tipos de recursos, isso deve ser considerado inseguro. Deve-se ter extrema cautela e cuidado ao compartilhar recursos entre contextos.
    </para>
   </note>
   <caution>
    <para>
- In the environment which pthreads executes, some restrictions and limitations are necessary in order to provide a stable environment.
+    No ambiente em que o pthreads é executado, algumas restrições e limitações são necessárias para fornecer um ambiente estável.
    </para>
   </caution>
  </preface>
