@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 7a3899eea90f3df8dcfe8fd350900162f3490bed Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://docbook.org/ns/docbook" xml:id="function.echo">
+ <refnamediv>
+  <refname>echo</refname>
+  <refpurpose>Envia uma ou mais strings para a saída</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>void</type><methodname>echo</methodname>
+   <methodparam rep="repeat"><type>string</type><parameter>expressions</parameter></methodparam>
+  </methodsynopsis>
+  <simpara>
+   Envia uma ou mais expressões para a saída, sem novas linhas ou espaços adicionais.
+  </simpara>
+  <para>
+   <literal>echo</literal> não é uma função mas sim uma construção de linguagem.
+   Seus argumentos são uma lista de expressões logo após a palavra-chave <literal>echo</literal>,
+   separadas por vírgulas e não delimitadas por parênteses.
+   Diferentemente de outras construções de linguagem, <literal>echo</literal> não tem
+   nenhum valor de retorno, portando não pode ser usada no contexto de uma expressão.
+  </para>
+  <para>
+   <literal>echo</literal> também tem uma sintaxe de atalho em HTML, onde pode-se
+   seguir imediatamente a etiqueta de abertura com um sinal de igual. Esta sintaxe está disponível
+   mesmo que a configuração <link linkend="ini.short-open-tag">short_open_tag</link>
+   esteja desabilitada.
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+I have <?=$foo?> foo.
+]]>
+    </programlisting>
+   </informalexample>
+  </para>
+  <para>
+   As principais diferenças para a função <function>print</function> são que
+   <literal>echo</literal> aceita múltiplos argumentos e não tem um valor de retorno.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>expressions</parameter></term>
+     <listitem>
+      <para>
+       Uma ou mais expressões a serem enviadas para a saída, separadas por vírgula.
+       Valores não-string serão convertidas forçadamente para strings, mesmo quando
+       <link linkend="language.types.declarations.strict">a
+       diretiva <literal>strict_types</literal></link> estiver habilitada.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.void;
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplos de <literal>echo</literal></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+echo "echo não requer parênteses.";
+
+// Strings podem ser passadas individualmente como múltiplos argumentos ou
+// concatenadas e passadas como um único argumento
+echo 'Esta ', 'string ', 'foi ', 'criada ', 'com múltiplos parâmetros.', "\n";
+echo 'Esta ' . 'string ' . 'foi ' . 'criada ' . 'com concatenação.' . "\n";
+
+// Nenhuma nova linha ou espaço são adicionados; o código abaixo mostra "olámundo" em apenas uma linha
+echo "olá";
+echo "mundo";
+
+// O mesmo que o exemplo acima
+echo "olá", "mundo";
+
+echo "Esta string ocupa
+múltiplas linhas. As novas linhas
+também estarão na saída.";
+
+echo "Esta string ocupa\nmúltiplas linhas. As novas linhas\ntambém estarão na saída.";
+
+// O argumento pode ser qualquer expressão que produza uma string
+$foo = "exemplo";
+echo "foo é um $foo"; // foo é um exemplo
+
+$fruits = ["limão", "laranja", "banana"];
+echo implode(" e ", $fruits); // limão e laranja e banana
+
+// Expressões não-string não convertidas à força para string, mesmo se declare(strict_types=1) for usada
+echo 6 * 7; // 42
+
+// Como echo não se comporta como uma expressão, o código a seguir é inválido.
+($some_var) ? echo 'true' : echo 'false';
+
+// Entretando os exemplos a seguir irão funcionar:
+($some_var) ? print 'true' : print 'false'; // print também é uma contrução de linguagem, mas
+                                            // é uma expressão válida, retornando 1,
+                                            // portanto pode ser usada neste contexto.
+
+echo $some_var ? 'true': 'false'; // primeiro avalia a expressão e depois passa para echo
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  &note.language-construct;
+
+  <note>
+   <title>Usando com parênteses</title>
+   <para>
+    Envolver um argumento de <literal>echo</literal> com parênteses não irá
+    causar um erro de sintaxe, e produzirá uma sintaxe que se parece com uma
+    chamade normal de uma função. Entretanto, isto pode gerar confusão, porque os parênteses, na verdade,
+    são parte da expressão que será enviada para a saída, e não parte da sintaxe de <literal>echo</literal>
+    em si.
+   </para>
+   <para>
+    <example>
+     <title/>
+     <programlisting role="php">
+     <![CDATA[
+<?php
+echo "olá";
+// mostra "olá"
+
+echo("olá");
+// também mostra "olá", porque ("olá") é uma expressão válida
+
+echo(1 + 2) * 3;
+// mostra "9"; os parênteses fazem com que 1+2 seja avaliada primeiro, e depois 3*3
+// a instrução echo enxerga toda a expressão como um só argumento
+
+echo "olá", " mundo";
+// mostra "olá mundo"
+
+echo("olá"), (" mundo");
+// mostra "olá mundo"; os parênteses são parte de cada expressão
+
+echo("olá", " mundo");
+// Lança um erro de interpretação porque ("olá", " mundo") não é uma expressão válida
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  </note>
+
+  <tip>
+   <para>
+    Passar múltiplos argumentos para <literal>echo</literal> pode evitar
+    complicações que surgem com a precedência do operador de concatenação no
+    PHP. Por exemplo, o operador de concatenação tem precedência maior que o
+    operador ternário, e antes do PHP 8.0.0 tinha a mesma precedência que adição
+    e subtração:
+   </para>
+   <programlisting role="php">
+    <![CDATA[
+<?php
+// Abaixo, a expressão 'Olá ' . isset($name) é avaliada primeiro,
+// e é sempre verdadeira, portanto o argumento para echo será sempre $name
+echo 'Olá ' . isset($name) ? $name : 'Maria Rodrigues' . '!';
+
+// O comportamento pretendido requer parênteses adicionais
+echo 'Olá ' . (isset($name) ? $name : 'Maria Rodrigues') . '!';
+
+// Nas versões do PHP anteriores à 8.0.0, o código abaixo mostra "2" ao invés de "Soma: 3"
+echo 'Soma: ' . 1 + 2;
+
+// Da mesma forma, adicionar parênteses assegura a ordem pretendida de avaliação
+echo 'Soma: ' . (1 + 2);
+]]>
+   </programlisting>
+   <para>
+    Se múltiplos argumentos forem passados, os parênteses não serão
+    necessário para reforçar precedência, pois cada expressão é independente:
+   </para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+echo "Olá ", isset($name) ? $name : "Maria Rodrigues", "!";
+
+echo "Soma: ", 1 + 2;
+]]>
+   </programlisting>
+  </tip>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>print</function></member>
+    <member><function>printf</function></member>
+    <member><function>flush</function></member>
+    <member><link linkend="language.types.string">Formas de especificar strings literais</link></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
