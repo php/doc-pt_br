@@ -4,7 +4,7 @@
 <refentry xml:id="function.pg-send-prepare" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>pg_send_prepare</refname>
-  <refpurpose>Sends a request to create a prepared statement with the given parameters, without waiting for completion</refpurpose>
+  <refpurpose>Envia uma solicitação para criar uma instrução preparada com os parâmetros fornecidos, sem esperar pela conclusão</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
@@ -16,16 +16,16 @@
    <methodparam><type>string</type><parameter>query</parameter></methodparam>
   </methodsynopsis>
   <para>
-    Sends a request to create a prepared statement with the given parameters,
-    without waiting for completion.
+   Envia uma solicitação para criar uma instrução preparada com os parâmetros fornecidos,
+   sem aguardar a conclusão.
   </para>
   <para>
-    This is an asynchronous version of <function>pg_prepare</function>: it returns &true; if it was able to
-    dispatch the request, and &false; if not. After a successful call, call
-    <function>pg_get_result</function> to determine whether the server successfully created the
-    prepared statement. The function's parameters are handled identically to
-    <function>pg_prepare</function>. Like <function>pg_prepare</function>, it will not work
-    on pre-7.4 versions of PostgreSQL.
+   Esta é uma versão assíncrona de <function>pg_prepare</function>: ela retorna &true; se conseguiu
+   despachar a solicitação e &false; se não. Após uma chamada bem-sucedida, chame
+   <function>pg_get_result</function> para determinar se o servidor criou com êxito a
+   instrução preparada. Os parâmetros da função são tratados de forma idêntica a
+   <function>pg_prepare</function>. Assim como <function>pg_prepare</function>, não funcionará
+   em versões anteriores à 7.4 do PostgreSQL.
   </para>
  </refsect1>
 
@@ -43,9 +43,9 @@
      <term><parameter>statement_name</parameter></term>
      <listitem>
       <para>
-       The name to give the prepared statement.  Must be unique per-connection.  If
-       "" is specified, then an unnamed statement is created, overwriting any
-       previously defined unnamed statement.
+       O nome para dar a declaração preparada. Deve ser exclusivo por conexão. Se
+       "" for especificado, uma instrução sem nome será criada, substituindo qualquer
+       instrução sem nome definida anteriormente.
       </para>
      </listitem>
     </varlistentry>
@@ -53,9 +53,9 @@
      <term><parameter>query</parameter></term>
      <listitem>
       <para>
-       The parameterized SQL statement.  Must contain only a single statement.
-       (multiple statements separated by semi-colons are not allowed.)  If any parameters
-       are used, they are referred to as $1, $2, etc.
+       A instrução SQL parametrizada. Deve conter apenas uma única instrução.
+       (múltiplas instruções separadas por ponto e vírgula não são permitidas.) Se algum parâmetro
+       for usado, ele será chamado de $1, $2, etc.
       </para>
      </listitem>
     </varlistentry>
@@ -66,8 +66,8 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Returns &true; on success, &false; or <literal>0</literal> on failure.  Use <function>pg_get_result</function>
-   to determine the query result.
+   Retorna &true; em caso de sucesso, &false; ou <literal>0</literal> em caso de falha. Use <function>pg_get_result</function>
+   para determinar o resultado da consulta.
   </para>
  </refsect1>
 
@@ -92,26 +92,26 @@
   &reftitle.examples;
   <para>
    <example>
-    <title>Using <function>pg_send_prepare</function></title>
+    <title>Usando <function>pg_send_prepare</function></title>
     <programlisting role="php">
 <![CDATA[
 <?php
-  $dbconn = pg_connect("dbname=publisher") or die("Could not connect");
+  $dbconn = pg_connect("dbname=publisher") or die("Não foi possível conectar");
 
-  // Prepare a query for execution
+  // Prepara uma consulta para execução
   if (!pg_connection_busy($dbconn)) {
     pg_send_prepare($dbconn, "my_query", 'SELECT * FROM shops WHERE name = $1');
     $res1 = pg_get_result($dbconn);
   }
 
-  // Execute the prepared query.  Note that it is not necessary to escape
-  // the string "Joe's Widgets" in any way
+  // Executa a consulta preparada. Observe que não é necessário escapar
+  // a string "Joe's Widgets" de qualquer forma
   if (!pg_connection_busy($dbconn)) {
     pg_send_execute($dbconn, "my_query", array("Joe's Widgets"));
     $res2 = pg_get_result($dbconn);
   }
 
-  // Execute the same prepared query, this time with a different parameter
+  // Executa a mesma consulta preparada, desta vez com um parâmetro diferente
   if (!pg_connection_busy($dbconn)) {
     pg_send_execute($dbconn, "my_query", array("Clothes Clothes Clothes"));
     $res3 = pg_get_result($dbconn);
