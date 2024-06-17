@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: c2eca73ef79ebe78cebb34053e41b565af504c4f Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<!-- splitted from ./en/functions/pgsql.xml, last change in rev 1.82 -->
+<refentry xml:id="function.pg-pconnect" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>pg_pconnect</refname>
+  <refpurpose>Abre uma conexão PostgreSQL persistente</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>PgSql\Connection</type><type>false</type></type><methodname>pg_pconnect</methodname>
+   <methodparam><type>string</type><parameter>connection_string</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>flags</parameter><initializer>0</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   <function>pg_pconnect</function> abre uma conexão com um
+   banco de dados PostgreSQL. Ele retorna uma instância <classname>PgSql\Connection</classname> que é
+   necessária para outras funções do PostgreSQL.
+  </para>
+  <para>
+   Se uma segunda chamada for feita para <function>pg_pconnect</function> com
+   o mesmo <parameter>connection_string</parameter> de uma conexão existente, a
+   conexão existente será retornada a menos que você passe
+   <constant>PGSQL_CONNECT_FORCE_NEW</constant> como
+   <parameter>flags</parameter>.
+  </para>
+  <para>
+   Para ativar a conexão persistente, a diretiva <link linkend="ini.pgsql.allow-persistent">pgsql.allow_persistent</link>
+   no &php.ini; deve ser definida como &quot;On&quot; (que é o padrão).
+   O número máximo de conexões persistentes pode ser definido com a diretiva <link linkend="ini.pgsql.max-persistent">pgsql.max_persistent</link>
+   no &php.ini; (o padrão é -1 para nenhum limite). O número total
+   de conexões pode ser definido com a diretiva <link linkend="ini.pgsql.max-links">pgsql.max_links</link>
+   no &php.ini;.
+  </para>
+  <para>
+   <function>pg_close</function> não irá fechar conexões persistentes
+   geradas por <function>pg_pconnect</function>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>connection_string</parameter></term>
+     <listitem>
+      <para>
+       O <parameter>connection_string</parameter> pode estar vazio para usar todos os parâmetros padrão ou
+       pode conter uma ou mais configurações de parâmetro separadas por espaços em branco.
+       Cada configuração de parâmetro está no formato <literal>palavra-chave = valor</literal>. Os espaços ao redor
+       do sinal de igual são opcionais. Para escrever um valor vazio ou
+       contendo espaços, coloque-o entre aspas simples, por exemplo, <literal>palavra-chave =
+       'um valor'</literal>. Aspas simples e barras invertidas dentro do valor devem ser
+       escapadas com uma barra invertida, ou seja, \' e \\.
+      </para>
+      <para>
+       As palavras-chave de parâmetro atualmente reconhecidas são:
+       <parameter>host</parameter>, <parameter>hostaddr</parameter>, <parameter>port</parameter>,
+       <parameter>dbname</parameter>, <parameter>user</parameter>,
+       <parameter>password</parameter>, <parameter>connect_timeout</parameter>,
+       <parameter>options</parameter>, <parameter>tty</parameter> (ignorada), <parameter>sslmode</parameter>,
+       <parameter>requiressl</parameter> (descontinuada em favor de <parameter>sslmode</parameter>), e
+       <parameter>service</parameter>.  Quais desses argumentos existem depende
+       da sua versão do PostgreSQL.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>flags</parameter></term>
+     <listitem>
+      <para>
+       Se <constant>PGSQL_CONNECT_FORCE_NEW</constant> for passado, então uma nova conexão
+       será criada, mesmo que <parameter>connection_string</parameter> seja idêntico a
+       uma conexão existente.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna uma instância <classname>PgSql\Connection</classname> em caso de sucesso, &return.falseforfailure;.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.1.0</entry>
+      <entry>
+       Retorna uma instância <classname>PgSql\Connection</classname> agora;
+       anteriormente, um &resource; era retornado.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Usando <function>pg_pconnect</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$dbconn = pg_pconnect("dbname=mary");
+//conecta a um banco de dados chamado "mary"
+
+$dbconn2 = pg_pconnect("host=localhost port=5432 dbname=mary");
+//conecta a um banco de dados chamado "mary" em "localhost" na porta "5432"
+
+$dbconn3 = pg_pconnect("host=sheep port=5432 dbname=mary user=lamb password=foo");
+//conecta a um banco de dados chamado "mary" no host "sheep" com usuário e senha
+
+$conn_string = "host=sheep port=5432 dbname=test user=lamb password=bar";
+$dbconn4 = pg_pconnect($conn_string);
+//conecta a um banco de dados chamado "test" no host "sheep" com usuário e senha
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>pg_connect</function></member>
+    <member>
+     <link linkend="features.persistent-connections">
+     Conexões de banco de dados persistentes</link>
+    </member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

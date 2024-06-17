@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: c2eca73ef79ebe78cebb34053e41b565af504c4f Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<!-- splitted from ./en/functions/pgsql.xml, last change in rev 1.2 -->
+<refentry xml:id="function.pg-query-params" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>pg_query_params</refname>
+  <refpurpose>Envia um comando ao servidor e aguarda o resultado, com a capacidade de passar parâmetros separadamente do texto do comando SQL</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>PgSql\Result</type><type>false</type></type><methodname>pg_query_params</methodname>
+   <methodparam choice="opt"><type>PgSql\Connection</type><parameter>connection</parameter></methodparam>
+   <methodparam><type>string</type><parameter>query</parameter></methodparam>
+   <methodparam><type>array</type><parameter>params</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Envia um comando ao servidor e aguarda o resultado, podendo passar parâmetros
+   separadamente do texto do comando SQL.
+  </para>
+  <para>
+   <function>pg_query_params</function> é como <function>pg_query</function>,
+   mas oferece funcionalidade adicional: os valores dos parâmetros
+   podem ser especificados separadamente da string de comando propriamente dita.
+   <function>pg_query_params</function> é compatível apenas com conexões PostgreSQL 7.4 ou
+   superior; falhará ao usar versões anteriores.
+  </para>
+  <para>
+   Se parâmetros forem usados, eles serão referidos na string
+   <parameter>query</parameter> como $1, $2, etc. O mesmo parâmetro pode
+   aparecer mais de uma vez na <parameter>query</parameter>; o mesmo valor
+   será usado nesse caso. <parameter>params</parameter> especifica os
+   valores reais dos parâmetros. Um valor &null; neste array significa que o
+   parâmetro correspondente é SQL <literal>NULL</literal>.
+  </para>
+  <para>
+   A principal vantagem de <function>pg_query_params</function> sobre <function>pg_query</function>
+   é que os valores dos parâmetros
+   podem ser separados da string <parameter>query</parameter>, evitando assim a necessidade de tarefas tediosas
+   e propensas a erros de escape. Ao contrário de <function>pg_query</function>,
+   <function>pg_query_params</function> permite no
+   máximo um comando SQL na string fornecida. (Pode haver ponto-e-vírgula,
+   mas não mais do que um comando não vazio.)
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>connection</parameter></term>
+     <listitem>
+      &pgsql.parameter.connection-with-unspecified-default;
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>query</parameter></term>
+     <listitem>
+      <para>
+       A instrução SQL parametrizada. Deve conter apenas uma única instrução.
+       (múltiplas instruções separadas por ponto e vírgula não são permitidas.) Se algum parâmetro
+       for usado, ele será chamado de $1, $2, etc.
+      </para>
+      <para>
+       Os valores fornecidos pelo usuário devem sempre ser passados como parâmetros, não
+       interpolados na string de consulta, onde formam possíveis vetores de ataque de
+       <link linkend="security.database.sql-injection"> injeção de SQL</link>
+       e introduzem bugs ao manipular dados contendo aspas.
+       Se por algum motivo você não puder usar um parâmetro, certifique-se de que os
+       valores interpolados foram <link linkend="function.pg-escape-string">escapados corretamente</link>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>params</parameter></term>
+     <listitem>
+      <para>
+       Um array de valores de parâmetros para substituir os espaços reservados $1, $2, etc.
+       na string de consult original preparada. O número de elementos no array
+       deve corresponder ao número de espaços reservados.
+      </para>
+      <para>
+       Valores destinados a campos <literal>bytea</literal> não são suportados como
+       parâmetros. Use <function>pg_escape_bytea</function> ou use as funções de
+       objetos grandes.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+    Uma instância <classname>PgSql\Result</classname> em caso de sucesso, &return.falseforfailure;.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     &pgsql.changelog.return-result-object;
+     &pgsql.changelog.connection-object;
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Usando <function>pg_query_params</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// Conecta a um banco de dados chamado "mary"
+$dbconn = pg_connect("dbname=mary");
+
+// Encontre todas as lojas chamadas Joe's Widgets. Observe que não é necessário
+// escapar "Joe's Widgets"
+$result = pg_query_params($dbconn, 'SELECT * FROM shops WHERE name = $1', array("Joe's Widgets"));
+
+// Compara com apenas o uso de pg_query
+$str = pg_escape_string("Joe's Widgets");
+$result = pg_query($dbconn, "SELECT * FROM shops WHERE name = '{$str}'");
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>pg_query</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
