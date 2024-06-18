@@ -2,55 +2,55 @@
 <!-- EN-Revision: c7e29d3ab5328b52f83edb88bde973e211a37659 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
 
 <chapter xml:id="philosophy.parallel" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
- <title>Philosophy</title>
+ <title>Filosofia</title>
  <para>
-  This section contains philosophies important to writing parallel code and some details about the internal implementation of parallel.
+  Esta seção contém filosofias importantes para escrever código paralelo e alguns detalhes sobre a implementação interna do parallel.
  </para>
  <simplesect role="sharing">
-   <title>Do not communicate by sharing memory; instead, share memory by communicating.</title>
+   <title>Não se comunique compartilhando memória; em vez disso, compartilhe a memória comunicando-se.</title>
    <para>
-    This philosophy which is embraced by parallel has its origins in Go, one of the most widely admired if not used platforms for writing parallel code at the moment.
-    Go programmers have to work hard to live up to this ideal: PHP and parallel do all the hard work for the programmer, and by default.
+    Essa filosofia abraçada pelo parallel tem sua origem no Go, uma das plataformas mais admiradas, senão utilizadas, para escrever código paralelo no momento.
+    Os programadores Go precisam trabalhar duro para atingir esse ideal: PHP e parallel fazem todo o trabalho duro para o programador, e por padrão.
    </para>
    <para>
-    In conventional threading models found in other languages, generally threads are communicating with one another through nothing more than by virtue of the fact that
-    they operate in the same address space.
-    The programmer must deploy mutual exclusion, condition variables, and other low level threading or synchronization primitives in order to ensure proper communication
-    of state and consistency.
+    Em modelos convencionais de threading encontrados em outras linguagens, geralmente os threads se comunicam entre si apenas pelo fato de
+    operarem no mesmo espaço de endereço.
+    O programador deve implantar exclusão mútua, variáveis de condição e outras primitivas de threading ou sincronização de baixo nível para garantir a comunicação adequada
+    de estado e consistência.
    </para>
    <para>
-    When the conventional model is inversed, it means that threads only share memory as a result of communication (a variable is passed over a Channel for example).
+    Quando o modelo convencional é invertido, significa que as threads só compartilham memória como resultado da comunicação (uma variável é passada por um Channel, por exemplo).
    </para>
    <para>
-    When parallel passes a variable from one thread to another by any means - Task arguments, return via Future, and Channels - it is passed by value.
-    In all but the case of unbuffered channels, the variable is also buffered so that it may not change (or be destroyed) before it is used in whichever thread the variable
-    is being passed to. An unbuffered read over a channel is the only instance in which a thread directly reads memory allocated by another thread, it can do so safely because
-    the thread that owns the memory is waiting for the read to complete before it can continue to manipulate it, and the thread that does not own the memory reads by value. When
-    both threads continue, they are no longer sharing memory.
+    Quando o parallel passa uma variável de um thread para outro por qualquer meio - argumentos de Task, retorno via Future e Channels - ela é passada por valor.
+    Em todos os casos, exceto no caso de canais sem buffer, a variável também é armazenada em buffer para que não possa ser alterada (ou destruída) antes de ser usada em qualquer thread para o qual a variável
+    está sendo passada. Uma leitura sem buffer em um canal é a única instância em que um thread lê diretamente a memória alocada por outro thread, pode fazê-lo com segurança porque
+    o thread que possui a memória está aguardando a conclusão da leitura antes de poder continuar a manipulá-la, e o thread que não possui a memória lê por valor. Quando
+    ambos os threads continuam, eles não estão mais compartilhando memória.
    </para>
    <para>
-    This makes writing and reasoning about parallel code much easier than the conventional model of threading. It means the programmer does not need to consider that threads
-    may be manipulating data concurrently, because that is not possible.
+    Isso torna a escrita e o raciocínio sobre código paralelo muito mais fáceis do que o modelo convencional de threading. Isso significa que o programador não precisa considerar que threads
+    podem estar manipulando dados simultaneamente, porque isso não é possível.
    </para>
    <para>
-    This also makes PHP the perfect platform for implementing a parallel concurrency API based on CSP (message passing over channels), because PHP itself is shared nothing -
-    PHP threads operate in their own virtual address space by default, and so may only share memory by communicating.
+    Isso também torna o PHP a plataforma perfeita para implementar uma API de simultaneidade paralela baseada em CSP (passagem de mensagens por canais), porque o PHP em si não é compartilhado -
+    threads PHP operam em seu próprio espaço de endereço virtual por padrão e, portanto, só podem compartilhar memória comunicando-se.
    </para>
  </simplesect>
  <simplesect role="owning">
-  <title>Data should have a definitive single owner</title>
+  <title>Os dados devem ter um único proprietário definitivo</title>
   <para>
-   When approaching the CSP model for the first time, a programmer versed in the traditional model of threading may find themselves looking for concurrent data structures,
-   because that is what they are used too: they pass around shared objects for manipulation.
+   Ao abordar o modelo CSP pela primeira vez, um programador versado no modelo tradicional de threading pode se encontrar procurando estruturas de dados simultâneas,
+   porque é por isso que elas também são usadas: elas passam objetos compartilhados para manipulação.
   </para>
   <para>
-   When it comes to the CSP model, there is no need for data structures to be shared by many tasks, and indeed, it is simpler if they are not. The data should be owned
-   by a single task, changes to (or operations on) that data structure should be communicated over channels and performed by the owner of the data, the success, failure,
-   or result (state) of the change (or operation) being communicated back.
+   Quando se trata do modelo CSP, não há necessidade de as estruturas de dados serem compartilhadas por muitas tarefas e, na verdade, é mais simples se não forem. Os dados devem pertencer
+   a uma única tarefa, as alterações (ou operações) nessa estrutura de dados devem ser comunicadas através de canais e executadas pelo proprietário dos dados, o sucesso, a falha
+   ou o resultado (estado) da alteração (ou operação) sendo comunicado de volta.
   </para>
   <para>
-   Once again the share nothing nature of PHP and copy by value nature of parallel helps the programmer to achieve this goal, no data will be shared by accident,
-   only ever as a result of communication.
+   Mais uma vez a natureza de compartilhamento de nada do PHP e a natureza de cópia por valor do parallel ajudam o programador a atingir esse objetivo, nenhum dado será compartilhado por acidente,
+   apenas como resultado de comunicação.
   </para>
  </simplesect>
 </chapter>
