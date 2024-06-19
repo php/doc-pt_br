@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: bbfa9738785f054752e6cb565cd0a58e71015bc6 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+
+<book xml:id="book.parallel" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
+ <?phpdoc extension-membership="pecl" ?>
+ <title>parallel</title>
+ <titleabbrev>parallel</titleabbrev>
+
+ <preface xml:id="intro.parallel">
+  &reftitle.intro;
+  <para>
+   parallel é uma extensão de simultaneidade paralela para PHP ≥ 7.2.0.
+   A partir do parallel 1.2.0, PHP ≥ 8.0.0 é necessário.
+  </para>
+  <para>
+   Segue uma breve descrição dos conceitos básicos do parallel; informações mais detalhadas podem ser encontradas nesta seção do manual.
+  </para>
+  <simplesect>
+   <title>Runtime</title>
+   <para>
+    Um <classname>parallel\Runtime</classname> representa um thread interpretador de PHP. Um <classname>parallel\Runtime</classname> é configurado com um arquivo de bootstrap opcional passado para <methodname>parallel\Runtime::__construct</methodname>, normalmente é um autoloader
+    ou alguma outra rotina de pré-carregamento: O arquivo de bootstrap irá ser incluído antes de qualquer tarefa ser executada.
+   </para>
+   <para>
+    Após a construção, o <classname>parallel\Runtime</classname> permanece disponível até ser fechado, eliminado ou destruído pelas regras normais de escopo dos objetos PHP.
+    <methodname>parallel\Runtime::run</methodname> permite ao programador agendar tarefas para execução em paralelo.
+    Um <classname>parallel\Runtime</classname> possui um agendamento FIFO, as tarefas serão executadas na ordem em que foram agendadas.
+   </para>
+  </simplesect>
+  <simplesect>
+   <title>API funcional</title>
+   <para>
+    parallel implementa uma API funcional de nível superior sobre <classname>parallel\Runtime</classname> que fornece um único ponto de entrada de função para executar código paralelo
+    com agendamento automático: <function>parallel\run</function>.
+   </para>
+  </simplesect>
+  <simplesect>
+   <title>Task</title>
+   <para>
+    Uma tarefa é simplesmente um <classname>Closure</classname> destinado à execução paralela. O <classname>Closure</classname> pode conter quase qualquer instrução, incluindo closures aninhados.
+    Porém, existem algumas instruções que são proibidas nas tarefas:
+    <itemizedlist>
+     <listitem>
+     <para>yield</para>
+     </listitem>
+     <listitem>
+     <para>operador 'use' por referência</para>
+     </listitem>
+     <listitem>
+     <para>declaração de classe</para>
+     </listitem>
+     <listitem>
+     <para>declaração de função com nome</para>
+     </listitem>
+    </itemizedlist>
+   </para>
+   <note>
+    <para>
+     Closures aninhados podem ter 'use' por referência ou 'yield', mas não devem conter declarações de classe ou de função nomeada.
+    </para>
+   </note>
+   <note>
+    <para>
+     Nenhuma instrução é proibida nos arquivos que a tarefa pode incluir.
+    </para>
+   </note>
+  </simplesect>
+  <simplesect>
+   <title>Future</title>
+   <para>
+    <classname>parallel\Future</classname> é usado para acessar o valor de retorno da tarefa e expõe uma API para cancelamento da tarefa.
+   </para>
+  </simplesect>
+  <simplesect>
+   <title>Channel</title>
+   <para>
+    Uma tarefa pode ser agendada com argumentos, usar variáveis de escopo léxico (por valor) e retornar um valor (através de um <classname>parallel\Future</classname>), mas estes só permitem comunicação unidirecional:
+    Eles permitem que o programador envie e recupere dados de uma tarefa, mas não permitem a comunicação bidirecional entre tarefas.
+    A API <classname>parallel\Channel</classname> permite a comunicação bidirecional entre tarefas, um <classname>parallel\Channel</classname> é uma conexão entre tarefas semelhante a um soquete que o programador pode usar para enviar e receber dados.
+   </para>
+  </simplesect>
+  <simplesect>
+   <title>Events</title>
+   <para>
+    A API <classname>parallel\Events</classname> implementa um loop de eventos de sensação nativa (<classname>Traversable</classname>) e um método <methodname>parallel\Events::poll</methodname>.
+    Permite ao programador trabalhar com conjuntos de channels e/ou futures.
+    O programador simplesmente adiciona channels e futures ao loop de eventos, opcionalmente definindo a entrada para gravações com <methodname>parallel\Events::setInput</methodname>,
+    e entra em um foreach: parallel irá ler e escrever em objetos à medida que eles se tornam disponíveis produzindo objetos <classname>parallel\Events\Event</classname>
+    que descrevem as operações que ocorreram.
+   </para>
+  </simplesect>
+   <simplesect role="seealso">
+   &reftitle.seealso;
+   <simplelist>
+    <member><xref linkend="philosophy.parallel" /></member>
+   </simplelist>
+  </simplesect>
+ </preface>
+
+ &reference.parallel.setup;
+ &reference.parallel.philosophy;
+ &reference.parallel.functional;
+ &reference.parallel.parallel.runtime;
+ &reference.parallel.parallel.future;
+ &reference.parallel.parallel.channel;
+ &reference.parallel.parallel.events;
+ &reference.parallel.parallel.events.input;
+ &reference.parallel.parallel.events.event;
+ &reference.parallel.parallel.events.event.type;
+
+ &reference.parallel.parallel.sync;
+ <!--&reference.parallel.examples;-->
+
+</book>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
