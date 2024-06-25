@@ -2,27 +2,27 @@
 <!-- EN-Revision: e9214a2619efc5906fab59cd42fb7404c4dc49a5 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
 
 <book xml:id="mongodb.architecture" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
- <titleabbrev>Driver Architecture and Internals</titleabbrev>
- <title>Explains the driver architecture, and special features</title>
+ <titleabbrev>Arquitetura do driver e componentes internos</titleabbrev>
+ <title>Explica a arquitetura do driver e recursos especiais</title>
 
  <article xml:id="mongodb.overview">
-  <titleabbrev>Architecture</titleabbrev>
-  <title>Architecture Overview</title>
+  <titleabbrev>Arquitetura</titleabbrev>
+  <title>Visão geral da arquitetura</title>
 
   <para>
-   This article explains how all the different components of the PHP driver fit
-   together, from base system libraries, through the extension, and to the PHP
-   libraries on top.
+   Este artigo explica como todos os diferentes componentes do driver PHP se
+   encaixam, desde as bibliotecas básicas do sistema, passando pela extensão, até as bibliotecas
+   PHP superiores.
   </para>
 
   <para>
    <mediaobject>
     <alt>
-     MongoDB PHP Driver Architecture Diagram. The lowest level of the driver is
-     our system libraries: libmongoc, libbson, and libmongocrypt. The middle
-     level is the MongoDB PHP extension. The upper level is PHP userland and
-     includes the MongoDB PHP library and higher-level packages such as
-     framework integrations and applications.
+     Diagrama de arquitetura do driver MongoDB PHP. O nível mais baixo do driver são
+     nossas bibliotecas de sistema: libmongoc, libbson e libmongocrypt. O nível
+     intermediário é a extensão MongoDB PHP. O nível superior é a área de usuário do PHP e
+     inclui a biblioteca MongoDB PHP e pacotes de nível superior, como
+     integrações de estrutura e aplicações.
     </alt>
     <imageobject>
      <imagedata fileref="en/reference/mongodb/images/driver_arch.svg" width="625" depth="450" format="SVG" />
@@ -31,55 +31,55 @@
   </para>
 
   <para>
-   At the top of this stack sits a
-   <link xlink:href="&url.mongodb.library;">PHP library</link>,
-   which is distributed as a
-   <link xlink:href="https://packagist.org/packages/mongodb/mongodb">Composer package</link>.
-   This library provides an API consistent with other MongoDB
-   <link xlink:href="&url.mongodb.drivers;">drivers</link>
-   and implements various cross-driver
-   <link xlink:href="&url.mongodb.specs;">specifications</link>.
-   While the extension can be used directly, the library has minimal overhead and
-   should be a common dependency for most applications built with MongoDB.
+   No topo desta pilha está uma
+   <link xlink:href="&url.mongodb.library;">biblioteca PHP</link>,
+   que é distribuída como um
+   <link xlink:href="https://packagist.org/ packages/mongodb/mongodb">Pacote Composer</link>.
+   Esta biblioteca fornece uma API consistente com outros
+   <link xlink:href="&url.mongodb.drivers;">drivers</link> do MongoDB
+   e implementa várias
+   <link xlink:href="&url.mongodb.specs;"> especificações</link> de drivers cruzados.
+   Embora a extensão possa ser usada diretamente, a biblioteca tem sobrecarga mínima e
+   deve ser uma dependência comum para a maioria das aplicações criadas com MongoDB.
   </para>
 
   <para>
-   Sitting below that library is a PHP extension, which is distributed through
+   Abaixo dessa biblioteca está uma extensão PHP, que é distribuída através de
    <link xlink:href="&url.pecl.package;mongodb">PECL</link>.
-   The extension forms the glue between PHP and our system libraries
+   A extensão forma a ligação entre o PHP e nossas bibliotecas de sistema
    (<link xlink:href="&url.mongodb.libmongoc;">libmongoc</link>,
-   <link xlink:href="&url.mongodb.libbson;">libbson</link>, and
+   <link xlink:href="&url.mongodb.libbson;">libbson</link> e
    <link xlink:href="&url.mongodb.libmongocrypt;">libmongocrypt</link>).
-   Its public API provides only the most essential functionality:
+   Sua API pública fornece apenas as funcionalidades mais essenciais:
 
    <simplelist>
-    <member>Connection management</member>
-    <member>BSON encoding and decoding</member>
-    <member>Object document serialization (to support ODM libraries)</member>
-    <member>Executing commands, queries, and write operations</member>
-    <member>Handling cursors for command and query results</member>
+    <member>Gerenciamento de conexões</member>
+    <member>Codificação e decodificação BSON</member>
+    <member>Serialização de documentos de objetos (para suportar bibliotecas ODM)</member>
+    <member>Executar comandos, consultas e operações de gravação</member>
+    <member>Manipulação de cursores para resultados de comandos e consultas</member>
    </simplelist>
   </para>
 
   <para>
    <table>
-    <title>Driver Source Code and JIRA Projects</title>
+    <title>ódigo-fonte do driver e projetos JIRA</title>
     <tgroup cols="3">
      <thead>
       <row>
-       <entry>Project</entry>
+       <entry>Projeto</entry>
        <entry>GitHub</entry>
        <entry>JIRA</entry>
       </row>
      </thead>
      <tbody>
       <row>
-       <entry>PHP Library</entry>
+       <entry>Biblioteca PHP</entry>
        <entry><link xlink:href="&url.mongodb.github.phplib;">mongodb/mongo-php-library</link></entry>
        <entry><link xlink:href="&url.mongodb.jira.phplib;">PHPLIB</link></entry>
       </row>
       <row>
-       <entry>PHP Extension</entry>
+       <entry>Extensão PHP</entry>
        <entry><link xlink:href="&url.mongodb.github.phpc;">mongodb/mongo-php-driver</link></entry>
        <entry><link xlink:href="&url.mongodb.jira.phpc;">PHPC</link></entry>
       </row>
@@ -90,43 +90,43 @@
  </article>
 
  <article xml:id="mongodb.connection-handling">
-  <titleabbrev>Connections</titleabbrev>
-  <title>Connection handling and persistence</title>
+  <titleabbrev>Conexões</titleabbrev>
+  <title>Manipulação de conexão e persistência</title>
 
   &mongodb.note.forking;
 
   <section>
-   <title>Connection and topology persistence (PHP version since 1.2.0)</title>
+   <title>Persistência de conexão e topologia (versão PHP desde 1.2.0)</title>
 
    <para>
-    All versions of the extension since 1.2.0 persist the
-    <link xlink:href="&url.mongodb.libmongoc;">libmongoc</link> client object in
-    the PHP worker process, which allows it to re-use database connections,
-    authentication states, <emphasis>and</emphasis> topology information across
-    multiple requests.
+    Todas as versões da extensão desde 1.2.0 persistem o
+    objeto cliente <link xlink:href="&url.mongodb.libmongoc;">libmongoc</link> no
+    processo de trabalho do PHP, o que permite reutilizar conexões de banco de dados,
+    autenticação de estados, <emphasis>e</emphasis> informações de topologia em
+    diversas solicitações.
    </para>
 
    <para>
-    When <methodname>MongoDB\Driver\Manager::__construct</methodname> is
-    invoked, a hash is created from its arguments (i.e. URI string and array
-    options). The extension will attempt to find a previously persisted
-    <link xlink:href="&url.mongodb.libmongoc;">libmongoc</link> client object for
-    that hash. If an existing client cannot be found for the hash, a new client
-    will be created and persisted for future use. This behavior can be disabled
-    via the <literal>"disableClientPersistence"</literal> driver option.
+    Quando <methodname>MongoDB\Driver\Manager::__construct</methodname> é
+    invocado, um hash é criado a partir de seus argumentos (ou seja, string URI e
+    opções de array). A extensão tentará encontrar um objeto cliente
+    <link xlink:href="&url.mongodb.libmongoc;">libmongoc</link> anteriormente persistente para
+    esse hash. Se um cliente existente não puder ser encontrado para o hash, um novo cliente
+    será criado e persistido para uso futuro. Este comportamento pode ser desabilitado
+    através da opção do driver <literal>"disableClientPersistence"</literal>.
    </para>
 
    <para>
-    Each client contains its own database connections and a view of the server
-    topology (e.g. standalone, replica set, shard cluster). By persisting the
-    client between PHP requests, the extension is able to re-use established
-    database connections and remove the need for
-    <link xlink:href="&url.mongodb.sdam;">discovering the server topology</link>
-    on each request.
+    Cada cliente contém suas próprias conexões de banco de dados e uma visão da topologia do servidor
+    (por exemplo, standalone, replica set, shard cluster). Ao persistir o
+    cliente entre solicitações PHP, a extensão é capaz de reutilizar conexões de banco
+    de dados estabelecidas e eliminar a necessidade de
+    <link xlink:href="&url.mongodb.sdam;">descobrir a topologia do servidor</link>
+    em cada solicitação.
    </para>
 
    <para>
-    Consider the following example:
+    Considere o seguinte exemplo:
    </para>
 
    <programlisting role="php">
@@ -149,104 +149,104 @@ foreach ($managers as $manager) {
    </programlisting>
 
    <para>
-    The first two Manager objects will share the same
-    <link xlink:href="&url.mongodb.libmongoc;">libmongoc</link> client since
-    their constructor arguments are identical. The third and fourth objects will
-    each use their own client. In total, three clients will be created and the
-    PHP worker executing this script will open two connections to
-    <literal>127.0.0.1</literal> and one connection to each of
-    <literal>rs1.example.com</literal> and <literal>rs2.example.com</literal>.
-    If the extension discovers additional members of the replica set after
-    issuing <literal>hello</literal> commands, it will open additional
-    connections to those servers as well.
+    Os dois primeiros objetos Manager compartilharão o mesmo
+    cliente <link xlink:href="&url.mongodb.libmongoc;">libmongoc</link>, pois
+    seus argumentos construtores são idênticos. O terceiro e o quarto objetos usarão
+    cada um seu próprio cliente. No total, três clientes serão criados e o
+    worker PHP que executa este script abrirá duas conexões para
+    <literal>127.0.0.1</literal> e uma conexão para cada um de
+    <literal>rs1.example.com</literal> e <literal>rs2.example.com</literal>.
+    Se a extensão descobrir membros adicionais do conjunto de réplicas após
+    emitir comandos <literal>hello</literal>, ela também abrirá conexões adicionais
+    com esses servidores.
    </para>
 
    <para>
-    If the same worker executes the script again in a second request, the three
-    clients will be re-used and no new connections will be made. Depending on
-    how long ago the previous request was served, the extension may need to
-    issue additional <literal>hello</literal> commands to update its view of the
-    topologies.
+    Se o mesmo worker executar o script novamente em uma segunda solicitação, os três
+    clientes serão reutilizados e nenhuma nova conexão será feita. Dependendo de há
+    quanto tempo a solicitação anterior foi atendida, a extensão pode precisar
+    emitir comandos <literal>hello</literal> adicionais para atualizar sua visualização das
+    topologias.
    </para>
   </section>
 
   <section>
-   <title>Socket persistence (PHP versions before 1.2.0)</title>
+   <title>Persistência de socket (versões PHP anteriores a 1.2.0)</title>
 
    <para>
-    Versions of the extension before 1.2.0 utilize PHP&apos;s Streams API for
-    database connections, using an API within
-    <link xlink:href="&url.mongodb.libmongoc;">libmongoc</link> to designate
-    custom handlers for socket communication; however, a new libmongoc client is
-    created for each <classname>MongoDB\Driver\Manager</classname>. As a result,
-    the extension persists individual database connections but not
-    authentication state or topology information. This means that the extension
-    needs to issue commands at the start of each request to authenticate and
-    <link xlink:href="&url.mongodb.sdam;">discover the server topology</link>.
+    Versões da extensão anteriores a 1.2.0 utilizam a API Streams do PHP para
+    conexões de banco de dados, usando uma API dentro de
+    <link xlink:href="&url.mongodb.libmongoc;">libmongoc</link> para designar
+    manipuladores personalizados para comunicação de socket; entretanto, um novo cliente libmongoc é
+    criado para cada <classname>MongoDB\Driver\Manager</classname>. Como resultado,
+    a extensão persiste em conexões de banco de dados individuais, mas não no
+    estado de autenticação ou nas informações de topologia. Isso significa que a extensão
+    precisa emitir comandos no início de cada solicitação para autenticar e
+    <link xlink:href="&url.mongodb.sdam;">descobrir a topologia do servidor</link>.
    </para>
 
    <para>
-    Database connections are persisted by a hash derived from the server&apos;s
-    host, port, and the URI string used to construct the
-    <classname>MongoDB\Driver\Manager</classname>. The constructor&apos;s array
-    options are not included in this hash.
+    As conexões de banco de dados são persistidas por um hash derivado do host do
+    servidor, da porta e da string URI usada para construir o
+    <classname>MongoDB\Driver\Manager</classname>. As opções de array do construtor n
+    ão estão incluídas neste hash.
    </para>
 
    <note>
     <simpara>
-     Versions of the extension &gt;= 1.1.8 and &lt; 1.2.0 do not persist sockets
-     for SSL connections. See
-     <link xlink:href="&url.mongodb.jira.phpc;-720">PHPC-720</link> for
-     additional information.
+     Versões da extensão &gt;= 1.1.8 e &lt; 1.2.0 não persiste sockets
+     para conexões SSL. Consulte
+     <link xlink:href="&url.mongodb.jira.phpc;-720">PHPC-720</link> para
+     obter informações adicionais.
     </simpara>
    </note>
 
    <para>
-    Despite its shortcomings with persisting SSL connections when and topology
-    information, this version of the extension supports all
-    <link linkend="context.ssl">SSL context options</link> since it uses
-    PHP&apos;s Streams API.
+    Apesar de suas deficiências com conexões SSL persistentes e informações de
+    topologia, esta versão da extensão suporta todas as
+    <link linkend="context.ssl">opções de contexto SSL</link>, uma vez que usa a
+    API Streams do PHP.
    </para>
   </section>
  </article>
 
  <article xml:id="mongodb.persistence">
-  <titleabbrev>Persisting Data</titleabbrev>
-  <title>Serialization and deserialization of PHP variables into MongoDB</title>
+  <titleabbrev>Dados Persistentes</titleabbrev>
+  <title>Serialização e desserialização de variáveis PHP no MongoDB</title>
 
   <para>
-   This document discusses how compound structures (i.e. documents, arrays, and
-   objects) are converted between BSON and PHP values.
+   Este documento discute como estruturas compostas (ou seja, documentos, arrays e
+   objetos) são convertidas entre valores BSON e PHP.
   </para>
 
   <section xml:id="mongodb.persistence.serialization">
-   <title>Serialization to BSON</title>
+   <title>Serialização para BSON</title>
 
    <section>
     <title>Arrays</title>
 
     <para>
-     If an array is a <emphasis>packed array</emphasis> — i.e. empty array or
-     the keys start at 0 and are sequential without gaps: <emphasis>BSON
-     array</emphasis>.
+     Se um array for um <emphasis>array compactado</emphasis> - ou seja, um array vazio ou
+     as chaves começam em 0 e são sequenciais sem lacunas: <emphasis>array
+     BSON</emphasis>.
     </para>
 
     <para>
-     If the array is not packed — i.e. having associative (string) keys, the
-     keys don't start at 0, or when there are gaps:: <emphasis>BSON
-     object</emphasis>
+     Se o array não estiver compactado - ou seja, tiver chaves associativas (string), as
+     chaves não começam em 0 ou quando há lacunas:: <emphasis>objeto
+     BSON</emphasis>
     </para>
 
     <para>
-     A top-level (root) document, <emphasis>always</emphasis> serializes as a
-     BSON document.
+     Um documento de nível superior (raiz), <emphasis>sempre</emphasis> serializa como um
+     documento BSON.
     </para>
 
     <section>
-     <title>Examples</title>
+     <title>exemplos</title>
 
      <para>
-      These serialize as a BSON array:
+      Eles serializam como um array BSON:
      </para>
 
      <programlisting role="text">
@@ -257,7 +257,7 @@ foreach ($managers as $manager) {
      </programlisting>
 
      <para>
-      These serialize as a BSON document:
+      Eles serializam como um documento BSON:
      </para>
 
      <programlisting role="text">
@@ -269,118 +269,113 @@ foreach ($managers as $manager) {
      </programlisting>
 
      <para>
-      Note that the five examples are <emphasis>extracts</emphasis> of a full
-      document, and represent only <emphasis>one</emphasis> value inside a
-      document.
+      Observe que os cinco exemplos são <emphasis>extraídos</emphasis> de um documento
+      completo e representam apenas <emphasis>um</emphasis> valor dentro de um
+      documento.
      </para>
 
     </section>
    </section>
 
    <section>
-    <title>Objects</title>
+    <title>Objetos</title>
 
      <para>
-      If an object is of the <classname>stdClass</classname> class, serialize
-      as a <emphasis>BSON document</emphasis>.
-     </para>
-
-     <para>
-      If an object is a supported class that implements
-      <interfacename>MongoDB\BSON\Type</interfacename>, then use the BSON
-      serialization logic for that specific type.
-      <interfacename>MongoDB\BSON\Type</interfacename> instances (excluding
-      <interfacename>MongoDB\BSON\Serializable</interfacename> may only be
-      serialized as a document field value. Attempting to serialize such an
-      object as a root document will throw a
+      Se um objeto for uma classe suportada que implementa
+      <interfacename>MongoDB\BSON\Type</interfacename>, use a lógica de serialização BSON
+      para esse tipo específico.
+      Instâncias <interfacename>MongoDB\BSON\Type</interfacename>, excluindo
+      <interfacename>MongoDB\BSON\Serializable</interfacename>, só podem ser
+      serializadas como um valor de campo de documento. Tentar serializar tal
+      objeto como um documento raiz lançará um
       <classname>MongoDB\Driver\Exception\UnexpectedValueException</classname>
      </para>
 
      <para>
-      If an object is of an unknown class implementing the
-      <interfacename>MongoDB\BSON\Type</interfacename> interface, then throw a
+      Se um objeto for de uma classe desconhecida que implementa a
+      interface <interfacename>MongoDB\BSON\Type</interfacename>, então lança um
       <classname>MongoDB\Driver\Exception\UnexpectedValueException</classname>
      </para>
 
      <para>
-      If an object is of any other class, without implementing any special
-      interface, serialize as a <emphasis>BSON document</emphasis>. Keep only
-      <emphasis>public</emphasis> properties, and ignore
-      <emphasis>protected</emphasis> and <emphasis>private</emphasis>
-      properties.
+      Se um objeto for de qualquer outra classe, sem implementar nenhuma interface
+      especial, serialize como um <emphasis>documento BSON</emphasis>. Mantenha apenas
+      propriedades <emphasis>públicas</emphasis> e ignore
+      propriedades <emphasis>protegidas</emphasis> e
+      <emphasis>privadas</emphasis>.
      </para>
 
      <para>
-      If an object is of a class that implements the
-      <interfacename>MongoDB\BSON\Serializable</interfacename> interface, call
-      <methodname>MongoDB\BSON\Serializable::bsonSerialize</methodname> and use
-      the returned array or <classname>stdClass</classname> to serialize as a
-      BSON document or array. The BSON type will be determined by the following:
+      Se um objeto for de uma classe que implementa a
+      interface <interfacename>MongoDB\BSON\Serializable</interfacename>, chame
+      <methodname>MongoDB\BSON\Serializable::bsonSerialize</methodname> e use
+      o array retornado ou <classname>stdClass</classname> para serializar como um
+      documento ou array BSON. O tipo BSON será determinado pelo seguinte:
      </para>
 
      <para>
       <orderedlist>
        <listitem>
-        <para>Root documents must be serialized as a BSON
-        document.
+        <para>Os documentos raiz devem ser serializados como um
+        documento BSON.
         </para>
        </listitem>
        <listitem>
         <para>
-         <interfacename>MongoDB\BSON\Persistable</interfacename> objects must be
-         serialized as a BSON document.
+         Os objetos <interfacename>MongoDB\BSON\Persistable</interfacename> devem ser
+         serializados como um documento BSON.
         </para>
        </listitem>
        <listitem>
         <para>
-         If <methodname>MongoDB\BSON\Serializable::bsonSerialize</methodname>
-         returns a packed array, serialize as a BSON array.
+         Se <methodname>MongoDB\BSON\Serializable::bsonSerialize</methodname>
+         retornar um array compactado, serialize como um array BSON.
         </para>
        </listitem>
        <listitem>
         <para>
-         If <methodname>MongoDB\BSON\Serializable::bsonSerialize</methodname>
-         returns a non-packed array or <classname>stdClass</classname>,
-         serialize as a BSON document.
+         Se <methodname>MongoDB\BSON\Serializable::bsonSerialize</methodname>
+         retornar um array não compactado ou <classname>stdClass</classname>,
+         serialize como um documento BSON.
         </para>
        </listitem>
        <listitem>
         <para>
-         If <methodname>MongoDB\BSON\Serializable::bsonSerialize</methodname>
-         did not return an array or <classname>stdClass</classname>, throw an
-         <classname>MongoDB\Driver\Exception\UnexpectedValueException</classname>
-         exception.
+         Se <methodname>MongoDB\BSON\Serializable::bsonSerialize</methodname>
+         não retornou uma matriz ou <classname>stdClass</classname>, lance uma
+         exceção
+         <classname>MongoDB\Driver\Exception\UnexpectedValueException</classname>.
         </para>
        </listitem>
       </orderedlist>
      </para>
 
      <para>
-      If an object is of a class that implements the
-      <interfacename>MongoDB\BSON\Persistable</interfacename> interface (which
-      implies <interfacename>MongoDB\BSON\Serializable</interfacename>), obtain
-      the properties in a similar way as in the previous paragraphs, but
-      <emphasis>also</emphasis> add an additional property
-      <property>__pclass</property> as a Binary value, with subtype
-      <literal>0x80</literal> and data bearing the fully qualified class name
-      of the object that is being serialized.
+      Se um objeto for de uma classe que implementa a
+      interface <interfacename>MongoDB\BSON\Persistable</interfacename> (o que
+      implica <interfacename>MongoDB\BSON\Serializable</interfacename>), obtenha
+      as propriedades de maneira semelhante à parágrafos anteriores, mas
+      <emphasis>também</emphasis> adicione uma propriedade adicional
+      <property>__pclass</property> como um valor binário, com subtipo
+      <literal>0x80</literal> e dados contendo o nome completo da classe do objeto
+      que está sendo serializado.
      </para>
 
      <para>
-      The <property>__pclass</property> property is added to the array or
-      object returned by
-      <methodname>MongoDB\BSON\Serializable::bsonSerialize</methodname>, which
-      means it will overwrite any <property>__pclass</property> key/property in
-      the <methodname>MongoDB\BSON\Serializable::bsonSerialize</methodname>
-      return value. If you want to avoid this behaviour and set your own
-      <property>__pclass</property> value, you must <emphasis>not</emphasis>
-      implement <interfacename>MongoDB\BSON\Persistable</interfacename> and
-      should instead implement
-      <interfacename>MongoDB\BSON\Serializable</interfacename> directly.
+      A propriedade <property>__pclass</property> é adicionada ao array ou
+      objeto retornado por
+      <methodname>MongoDB\BSON\Serializable::bsonSerialize</methodname>, o que
+      significa que ela substituirá qualquer chave/propriedade <property>__pclass</property> no
+      valor de retorno <methodname>MongoDB\BSON\Serializable::bsonSerialize</methodname>.
+      Se você quiser evitar esse comportamento e definir seu próprio
+      valor <property>__pclass</property>, você <emphasis>não</emphasis> deve
+      implementar <interfacename>MongoDB\BSON\Persistable</interfacename> e,
+      em vez disso, deve implementar
+      <interfacename >MongoDB\BSON\Serializable</interfacename> diretamente.
      </para>
 
      <section>
-      <title>Examples</title>
+      <title>Exemplos</title>
 
       <programlisting role="php">
 <![CDATA[
@@ -470,22 +465,22 @@ class UpperClass implements MongoDB\BSON\Persistable {
   </section>
 
   <section xml:id="mongodb.persistence.deserialization">
-   <title>Deserialization from BSON</title>
+   <title>Desserialização do BSON</title>
 
    &mongodb.warning.duplicate-keys;
 
    <para>
-    The legacy <code>mongo</code> extension deserialized
-    both BSON documents and arrays as PHP arrays. While PHP arrays are
-    convenient to work with, this behavior was problematic because different
-    BSON types could deserialize to the same PHP value (e.g.
-    <literal>{"0": "foo"}</literal> and <literal>["foo"]</literal>) and make it
-    impossible to infer the original BSON type. By default, the
-    <code>mongodb</code> extension addresses this concern by ensuring that BSON
-    arrays and documents are converted to PHP arrays and objects, respectively.
+    A extensão <code>mongo</code> herdada desserializou
+    documentos BSON e arrays como arrays PHP. Embora arrays PHP sejam c
+    onvenientes para trabalhar, esse comportamento era problemático porque diferentes
+    tipos de BSON poderiam desserializar para o mesmo valor PHP (por exemplo,
+    <literal>{"0": "foo"}</literal> e <literal>["foo"]</literal>) e torna
+    impossível inferir o tipo BSON original. Por padrão, a
+    extensão <code>mongodb</code> aborda essa preocupação garantindo que arrays e
+    documentos BSON sejam convertidos em arrays e objetos PHP, respectivamente.
    </para>
    <para>
-    For compound types, there are three data types:
+    Para tipos compostos, existem três tipos de dados:
    </para>
 
    <para>
@@ -494,7 +489,7 @@ class UpperClass implements MongoDB\BSON\Persistable {
       <term>root</term>
       <listitem>
        <para>
-        refers to the top-level BSON document <emphasis>only</emphasis>
+        refere-se ao documento BSON de nível superior <emphasis>apenas</emphasis>
        </para>
       </listitem>
      </varlistentry>
@@ -502,7 +497,7 @@ class UpperClass implements MongoDB\BSON\Persistable {
       <term>document</term>
       <listitem>
        <para>
-        refers to embedded BSON documents <emphasis>only</emphasis>
+        refere-se a documentos BSON incorporados <emphasis>apenas</emphasis>
        </para>
       </listitem>
      </varlistentry>
@@ -510,7 +505,7 @@ class UpperClass implements MongoDB\BSON\Persistable {
       <term>array</term>
       <listitem>
        <para>
-        refers to a BSON array
+        refere-se a um array BSON
        </para>
       </listitem>
      </varlistentry>
@@ -518,13 +513,13 @@ class UpperClass implements MongoDB\BSON\Persistable {
    </para>
 
    <para>
-    Besides the three collective types, it is also possible to configure
-    specific fields in your document to map to the data types mentioned below.
-    As an example, the following type map allows you to
-    map each embedded document within an <literal>"addresses"</literal> array to
-    an <classname>Address</classname> class <emphasis>and</emphasis> each
-    <literal>"city"</literal> field within those embedded address documents to
-    a <classname>City</classname> class:
+    Além dos três tipos de coletivos, também é possível configurar
+    campos específicos em seu documento para mapear os tipos de dados mencionados abaixo.
+    Como exemplo, o seguinte mapa de tipos permite a você
+    mapear cada documento incorporado dentro de um array <literal>"addresses"</literal> para
+    uma classe <classname>Address</classname> <emphasis>e</emphasis> cada
+    <literal >"city"</literal> dentro desses documentos de endereço incorporados para
+    uma classe <classname>City</classname>:
 
     <programlisting role="text">
 <![CDATA[
@@ -539,71 +534,71 @@ class UpperClass implements MongoDB\BSON\Persistable {
    </para>
 
    <para>
-    Each of those three data types, as well as the field specific mappings,
-    can be mapped against different PHP types. The possible mapping values
-    are:
+    Cada um desses três tipos de dados, bem como os mapeamentos específicos de campo,
+    podem ser mapeados em diferentes tipos de PHP. Os possíveis valores de mapeamento
+    são:
    </para>
 
    <para>
     <variablelist>
      <varlistentry>
-      <term><emphasis>not set</emphasis> or <type>NULL</type> (default)</term>
+      <term><<emphasis>não definido</emphasis> ou <type>NULL</type> (padrão)</term>
       <listitem>
        <para>
         <itemizedlist>
          <listitem>
           <para>
-           A BSON array will be deserialized as a PHP <type>array</type>.
+           Um array BSON será desserializado como um <type>array</type> PHP.
           </para>
          </listitem>
          <listitem>
           <para>
-           A BSON document (root or embedded) without a
-           <property>__pclass</property> property
+           Um documento BSON (raiz ou incorporado) sem uma
+           propriedade <property>__pclass</property>
            <footnote xml:id="mongodb.pclass">
             <para>
-             A __pclass property is only deemed to exist if
-             there exists a property with that name, and it is a Binary value,
-             and the sub-type of the Binary value is 0x80. If any of these three
-             conditions is not met, the __pclass property does not exist and
-             should be treated as any other normal property.
+             Uma propriedade __pclass só é considerada existente se
+             existir uma propriedade com esse nome, e for um valor Binário,
+             e o subtipo do valor Binário for 0x80. Se alguma dessas três
+             condições não for atendida, a propriedade __pclass não existe e
+             deverá ser tratada como qualquer outra propriedade normal.
             </para>
            </footnote>
-           becomes a PHP <classname>stdClass</classname> object, with each
-           BSON document key set as a public <classname>stdClass</classname>
-           property.
+           torna-se um objeto PHP <classname>stdClass</classname>, com cada
+           chave de documento BSON definida como uma propriedade pública
+           <classname>stdClass</classname>.
           </para>
          </listitem>
          <listitem>
           <para>
-           A BSON document (root or embedded) with a
-           <property>__pclass</property> property <footnoteref linkend="mongodb.pclass"/> becomes a PHP object of
-           the class name as defined by the <property>__pclass</property>
-           property.
+           Um documento BSON (raiz ou incorporado) com uma
+           propriedade <property>__pclass</property> <footnoteref linkend="mongodb.pclass"/> torna-se um objeto PHP com
+           o nome da classe conforme definido pela propriedade
+           <property>__pclass</property>.
           </para>
           <para>
-           If the named class implements the
-           <interfacename>MongoDB\BSON\Persistable</interfacename> interface,
-           then the properties of the BSON document, including the
-           <property>__pclass</property> property, are sent as an associative
-           array to the
-           <methodname>MongoDB\BSON\Unserializable::bsonUnserialize</methodname>
-           function to initialise the object's properties.
+           Se a classe nomeada implementar a
+           interface <interfacename>MongoDB\BSON\Persistable</interfacename>,
+           então as propriedades do documento BSON, incluindo a
+           propriedade <property>__pclass</property>, serão enviadas como um array
+           associativo para a função
+           <methodname >MongoDB\BSON\Unserializable::bsonUnserialize</methodname>
+           para inicializar as propriedades do objeto.
           </para>
           <para>
-           If the named class does not exist or does not implement the
-           <interfacename>MongoDB\BSON\Persistable</interfacename> interface,
-           <classname>stdClass</classname> will be used and each BSON document
-           key (including <property>__pclass</property>) will be set as a
-           public <classname>stdClass</classname> property.
+           Se a classe nomeada não existir ou não implementar a
+           interface <interfacename>MongoDB\BSON\Persistable</interfacename>,
+           <classname>stdClass</classname> será usada e cada chave de documento BSON
+           (incluindo <property>__pclass</property>) será definido como uma
+           propriedade pública <classname>stdClass</classname>.
           </para>
           <para>
-           The <property>__pclass</property> functionality relies on the
-           property being part of a retrieved MongoDB document. If you use a
-           <link linkend="mongodb-driver-query.construct-queryOptions">projection</link>
-           when querying for documents, you need to include the
-           <property>__pclass</property> field in the projection for this
-           functionality to work.
+           A funcionalidade <property>__pclass</property> depende da
+           propriedade fazer parte de um documento MongoDB recuperado. Se você usar uma
+           <link linkend="mongodb-driver-query.construct-queryOptions">projeção</link>
+           ao consultar documentos, será necessário incluir o campo
+           <property>__pclass</property> na projeção para esta
+           funcionalidade trabalhar.
           </para>
          </listitem>
         </itemizedlist>
@@ -615,23 +610,23 @@ class UpperClass implements MongoDB\BSON\Persistable {
       <term><literal>"array"</literal></term>
       <listitem>
        <para>
-        Turns a BSON array or BSON document into a PHP array. There will be no
-        special treatment of a <property>__pclass</property> property <footnoteref linkend="mongodb.pclass"/>,
-        but it may be set as an element in the returned array if it was
-        present in the BSON document.
+        Transforma um array BSON ou documento BSON em um array PHP. Não haverá tratamento
+        especial para uma propriedade <property>__pclass</property> <footnoteref linkend="mongodb.pclass"/>,
+        mas ela poderá ser definida como um elemento no array retornado se estiver
+        presente no documento BSON.
        </para>
       </listitem>
      </varlistentry>
 
      <varlistentry>
-      <term><literal>"object"</literal> or <literal>"stdClass"</literal></term>
+      <term><literal>"object"</literal> ou <literal>"stdClass"</literal></term>
       <listitem>
        <para>
-        Turns a BSON array or BSON document into a
-        <classname>stdClass</classname> object. There will be no special
-        treatment of a <property>__pclass</property> property <footnoteref linkend="mongodb.pclass"/>, but it may
-        be set as a public property in the returned object if it was present
-        in the BSON document.
+        Transforma um array BSON ou documento BSON em um
+        objeto <classname>stdClass</classname>. Não haverá tratamento especial
+        para uma propriedade <property>__pclass</property> <footnoteref linkend="mongodb.pclass"/>, mas ela poderá
+        ser definida como uma propriedade pública no objeto retornado se estiver presente
+        no documento BSON.
        </para>
       </listitem>
      </varlistentry>
@@ -640,51 +635,51 @@ class UpperClass implements MongoDB\BSON\Persistable {
       <term><literal>"bson"</literal></term>
       <listitem>
        <para>
-        Turns a BSON array into a <classname>MongoDB\BSON\PackedArray</classname>
-        and a BSON document into a <classname>MongoDB\BSON\Document</classname>,
-        regardless of whether the BSON document has a <property>__pclass</property>
-        property <footnoteref linkend="mongodb.pclass"/>.
+        Transforma um array BSON em um <classname>MongoDB\BSON\PackedArray</classname>
+        e um documento BSON em um <classname>MongoDB\BSON\Document</classname>,
+        independentemente de o documento BSON ter uma propriedade <property>__pclass</property>
+        <footnoteref linkend="mongodb.pclass"/>.
        </para>
        <note>
         <simpara>
-         The <literal>bson</literal> value is only available for the three root
-         types, not in the field specific mappings.
+         O valor <literal>bson</literal> está disponível apenas para os três tipos de
+         raiz, não nos mapeamentos específicos do campo.
         </simpara>
        </note>
       </listitem>
      </varlistentry>
 
      <varlistentry>
-      <term>any other string</term>
+      <term>qualquer outra string</term>
       <listitem>
        <para>
-        Defines the class name that the BSON array or BSON object should be
-        deserialized as. For BSON objects that include
-        <property>__pclass</property> properties, that class will take
-        priority.
+        Define o nome da classe como um array BSON ou o objeto BSON deve ser
+        desserializado. Para objetos BSON que incluem
+        propriedades <property>__pclass</property>, essa classe terá
+        prioridade.
        </para>
 
        <para>
-        If the named class does not exist, is not concrete (i.e. it is
-        abstract or an interface), or does not implement
-        <interfacename>MongoDB\BSON\Unserializable</interfacename> then an
-        <classname>MongoDB\Driver\Exception\InvalidArgumentException</classname>
-        exception is thrown.
+        Se a classe nomeada não existir, não for concreta (ou seja, for
+        abstrata ou uma interface) ou não implementar
+        <interfacename>MongoDB\BSON\Unserializable</interfacename> então uma
+        exceção <classname>MongoDB\Driver\Exception\InvalidArgumentException</classname>
+        é lançada.
        </para>
 
        <para>
-        If the BSON object has a <property>__pclass</property> property and
-        that class exists and implements
-        <interfacename>MongoDB\BSON\Persistable</interfacename> it will
-        supersede the class provided in the type map.
+        Se o objeto BSON tiver uma propriedade <property>__pclass</property> e
+        essa classe existir e implementar
+        <interfacename>MongoDB\BSON\Persistable</interfacename> ela
+        substituirá a classe fornecida no mapa de tipos.
        </para>
 
        <para>
-        The properties of the BSON document, <emphasis>including</emphasis>
-        the <property>__pclass</property> property if it exists, will be sent
-        as an associative array to the
+        As propriedades do documento BSON, <emphasis>incluindo</emphasis>
+        a propriedade <property>__pclass</property> se existir, serão enviadas
+        como um array associativo para a função
         <methodname>MongoDB\BSON\Unserializable::bsonUnserialize</methodname>
-        function to initialise the object's properties.
+        para inicializar as propriedades do objeto.
        </para>
       </listitem>
      </varlistentry>
@@ -694,30 +689,30 @@ class UpperClass implements MongoDB\BSON\Persistable {
    <section xml:id="mongodb.persistence.typemaps">
     <title>TypeMaps</title>
 
-     <para>
-      TypeMaps can be set through the
-      <methodname>MongoDB\Driver\Cursor::setTypeMap</methodname> method on a
-      <classname>MongoDB\Driver\Cursor</classname> object, or the
-      <literal>$typeMap</literal> argument of
-      <function>MongoDB\BSON\toPHP</function>,
-      <methodname>MongoDB\BSON\Document::toPHP</methodname>, and
-      <methodname>MongoDB\BSON\PackedArray::toPHP</methodname>. Each of the three
-      classes (<emphasis>root</emphasis>, <emphasis>document</emphasis>, and
-      <emphasis>array</emphasis>) can be individually set, in addition to the
-      field specific types.
-     </para>
+    <para>
+     TypeMaps podem ser definidos através do
+     método <methodname>MongoDB\Driver\Cursor::setTypeMap</methodname> em um
+     objeto <classname>MongoDB\Driver\Cursor</classname> ou do
+     argumento <literal>$typeMap</literal> de
+     <function>MongoDB\BSON\toPHP</function>,
+     <methodname>MongoDB\BSON\Document::toPHP</methodname> e
+     <methodname>MongoDB\BSON\PackedArray::toPHP</methodname>. Cada uma das três
+     classes (<emphasis>root</emphasis>, <emphasis>document</emphasis> e
+     <emphasis>array</emphasis>) pode ser definida individualmente, além dos tipos
+     específicos de campo.
+    </para>
 
-     <para>
-      If the value in the map is <type>NULL</type>, it means the same as the
-      <emphasis>default</emphasis> value for that item.
-     </para>
-    </section>
+    <para>
+     Se o valor no mapa for <type>NULL</type>, significa o mesmo que o valor
+     <emphasis>padrão</emphasis> para esse item.
+    </para>
+   </section>
 
     <section>
-     <title>Examples</title>
+     <title>Exemplos</title>
 
      <para>
-      These examples use the following classes:
+      Esses exemplos usam as seguintes classes:
      </para>
 
      <para>
@@ -726,7 +721,7 @@ class UpperClass implements MongoDB\BSON\Persistable {
         <term>MyClass</term>
         <listitem>
          <para>
-          which does <emphasis>not</emphasis> implement any interface
+          que <emphasis>não</emphasis> implementa nenhuma interface
          </para>
         </listitem>
        </varlistentry>
@@ -734,7 +729,7 @@ class UpperClass implements MongoDB\BSON\Persistable {
         <term>YourClass</term>
         <listitem>
          <para>
-          which implements
+          que implementa
           <interfacename>MongoDB\BSON\Unserializable</interfacename>
          </para>
         </listitem>
@@ -743,7 +738,7 @@ class UpperClass implements MongoDB\BSON\Persistable {
         <term>OurClass</term>
         <listitem>
          <para>
-          which implements
+          que implementa
           <interfacename>MongoDB\BSON\Persistable</interfacename>
          </para>
         </listitem>
@@ -752,7 +747,7 @@ class UpperClass implements MongoDB\BSON\Persistable {
         <term>TheirClass</term>
         <listitem>
          <para>
-          which extends OurClass
+          que estende OurClass
          </para>
         </listitem>
        </varlistentry>
@@ -760,10 +755,10 @@ class UpperClass implements MongoDB\BSON\Persistable {
      </para>
 
      <para>
-      The <methodname>MongoDB\BSON\Unserializable::bsonUnserialize</methodname>
-      method of YourClass, OurClass, TheirClass iterate over the array and set
-      the properties without modifications. It <emphasis>also</emphasis> sets
-      the <literal>$unserialized</literal> property to &true;:
+      O método <methodname>MongoDB\BSON\Unserializable::bsonUnserialize</methodname>
+      de YourClass, OurClass, TheirClass itera sobre o array e define
+      as propriedades sem modificações. Ele <emphasis>também</emphasis> define
+      a propriedade <literal>$unserialized</literal> como &true;:
 
       <programlisting role="php">
 <![CDATA[
