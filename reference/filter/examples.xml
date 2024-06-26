@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 247c617b3d54ac8b8fcd8d82516a476c751ddafd Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+
+<chapter xml:id="filter.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ &reftitle.examples;
+
+ <section xml:id="filter.examples.validation">
+  <title>Validação</title>
+  <para>
+   <example>
+    <title>Validando um endereço de e-mail com <function>filter_var</function></title>
+    <programlisting role="php" xml:id="filter.examples.validation.email">
+<![CDATA[
+<?php
+$email_a = 'joe@example.com';
+$email_b = 'bogus';
+
+if (filter_var($email_a, FILTER_VALIDATE_EMAIL)) {
+    echo "O endereço de e-mail '$email_a' é considerado válido.\n";
+}
+if (filter_var($email_b, FILTER_VALIDATE_EMAIL)) {
+    echo "O endereço de e-mail '$email_b' é considerado válido.\n";
+} else {
+    echo "O endereço de e-mail '$email_b' é considerado inválido.\n";
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+O endereço de e-mail 'joe@example.com' é considerado válido.
+O endereço de e-mail 'bogus' é considerado inválido.
+]]>
+    </screen>
+   </example>
+  </para>
+
+  <para>
+   <example>
+    <title>Validando endereço IP com <function>filter_var</function></title>
+    <programlisting role="php" xml:id="filter.examples.validation.ip">
+<![CDATA[
+<?php
+$ip_a = '127.0.0.1';
+$ip_b = '42.42';
+
+if (filter_var($ip_a, FILTER_VALIDATE_IP)) {
+    echo "O endereço IP '$ip_a' é considerado válido.";
+}
+if (filter_var($ip_b, FILTER_VALIDATE_IP)) {
+    echo "O endereço IP '$ip_b' é considerado inválido.";
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+O endereço IP '127.0.0.1' é considerado válido.
+]]>
+    </screen>
+   </example>
+  </para>
+
+  <para>
+   <example>
+    <title>Passando opções para <function>filter_var</function></title>
+    <programlisting role="php" xml:id="filter.examples.validation.options">
+<![CDATA[
+<?php
+$int_a = '1';
+$int_b = '-1';
+$int_c = '4';
+$options = array(
+    'options' => array(
+        'min_range' => 0,
+        'max_range' => 3,
+    )
+);
+if (filter_var($int_a, FILTER_VALIDATE_INT, $options) !== FALSE) {
+    echo "O inteiro A '$int_a' é considerado válido (entre 0 e 3).\n";
+}
+if (filter_var($int_b, FILTER_VALIDATE_INT, $options) !== FALSE) {
+    echo "O inteiro B '$int_b' é considerado válido (entre 0 e 3).\n";
+}
+if (filter_var($int_c, FILTER_VALIDATE_INT, $options) !== FALSE) {
+    echo "O inteiro C '$int_c' é considerado válido (entre 0 e 3).\n";
+}
+
+$options['options']['default'] = 1;
+if (($int_c = filter_var($int_c, FILTER_VALIDATE_INT, $options)) !== FALSE) {
+    echo "O inteiro C '$int_c' é considerado válido (entre 0 e 3).";
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+O inteiro A '1' é considerado válido (entre 0 e 3).
+O inteiro C '1' é considerado válido (entre 0 e 3).
+]]>
+    </screen>
+   </example>
+  </para>
+ </section>
+
+ <section xml:id="filter.examples.sanitization">
+  <title>Sanitização</title>
+  <para>
+   <example>
+    <title>Sanitização e validação de endereços de e-mail</title>
+    <programlisting role="php" xml:id="filter.examples.sanitization.email">
+<![CDATA[
+<?php
+$a = 'joe@example.org';
+$b = 'bogus - at - example dot org';
+$c = '(bogus@example.org)';
+
+$sanitized_a = filter_var($a, FILTER_SANITIZE_EMAIL);
+if (filter_var($sanitized_a, FILTER_VALIDATE_EMAIL)) {
+    echo "Este endereço de e-mail (a) sanitizado é considerado válido.\n";
+}
+
+$sanitized_b = filter_var($b, FILTER_SANITIZE_EMAIL);
+if (filter_var($sanitized_b, FILTER_VALIDATE_EMAIL)) {
+    echo "Este endereço de e-mail sanitizado é considerado válido.";
+} else {
+    echo "Este endereço de e-mail (b) sanitizado é considerado inválido.\n";
+}
+
+$sanitized_c = filter_var($c, FILTER_SANITIZE_EMAIL);
+if (filter_var($sanitized_c, FILTER_VALIDATE_EMAIL)) {
+    echo "Este endereço de e-mail (c) sanitizado é considerado válido.\n";
+    echo "Antes: $c\n";
+    echo "Depois:  $sanitized_c\n";
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Este endereço de e-mail (a) sanitizado é considerado válido.
+Este endereço de e-mail (b) sanitizado é considerado inválido.
+Este endereço de e-mail (c) sanitizado é considerado válido.
+Antes: (bogus@example.org)
+Depois: bogus@example.org
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Configurando um filtro padrão</title>
+    <programlisting role="php" xml:id="filter.examples.sanitization.default_filter">
+<![CDATA[
+filter.default = full_special_chars
+filter.default_flags = 0
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </section>
+
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
