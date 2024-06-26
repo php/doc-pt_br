@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 4e0bf229045ff87d5f84469280bf0a6b195bfb8b Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+
+<book xml:id="mongodb.security" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Segurança</title>
+
+ <article xml:id="mongodb.security.request_injection">
+  <title>Request Injection Attacks</title>
+  <para>
+   Se você estiver passando parâmetros <literal>$_GET</literal> (ou <literal>$_POST</literal>)
+   para suas consultas, certifique-se de que eles sejam convertidos em strings primeiro.
+   Os usuários podem inserir matrizes associativas em solicitações GET e POST, que podem se tornar
+   consultas indesejadas.
+  </para>
+
+  <para>
+   Um exemplo bastante inócuo: suponha que você esteja procurando informações de um usuário
+   com a solicitação <emphasis>http://www.example.com?username=bob</emphasis>.
+   Sua aplicação cria a consulta
+   <literal>$q = new \MongoDB\Driver\Query( [ 'username' => $_GET['username'] ])</literal>.
+  </para>
+
+  <para>
+   Alguém poderia subverter isso obtendo
+   <emphasis>http://www.example.com?username[$ne]=foo</emphasis>, que o PHP
+   transformará magicamente em um array associativo, transformando sua consulta em
+   <literal>$q = new \MongoDB\Driver\Query( [ 'username' => [ '$ne' => 'foo' ] ] )</literal>,
+   que retornará todos os usuários não nomeados "foo" (todos os seus usuários, provavelmente).
+  </para>
+
+  <para>
+   Este é um ataque bastante fácil de se defender: certifique-se de que os parâmetros $_GET e $_POST
+   sejam do tipo que você espera antes de enviá-los ao banco de dados.
+   O PHP tem a função <function>filter_var</function> para ajudar nisso.
+  </para>
+
+  <para>
+   Observe que esse tipo de ataque pode ser usado com qualquer interação de banco de dados que
+   localize um documento, incluindo atualizações, inclusões, exclusões e comandos
+   findAndModify.
+  </para>
+
+  <para>
+   Consulte <link xlink:href="&url.mongodb.dochub.security;">a documentação principal</link>
+   para obter mais informações sobre problemas semelhantes à injeção de SQL com o MongoDB.
+  </para>
+ </article>
+
+ <article xml:id="mongodb.security.script_injection">
+  <title>Ataques de injeção de script</title>
+  <para>
+   Se você estiver usando JavaScript, certifique-se de que quaisquer variáveis que cruzem o limite
+   PHP para JavaScript sejam passadas no campo <literal>scope</literal> do
+   <classname>MongoDB\BSON\Javascript</classname>, e não interpoladas em
+   string JavaScript. Isso pode surgir ao usar cláusulas <literal>$where</literal>
+   em consultas, mapReduce e comandos de grupo, e em qualquer outro momento em que você
+   passar JavaScript para o banco de dados.
+  </para>
+  <para>
+   Por exemplo, suponha que temos algum JavaScript para cumprimentar um usuário nos logs do banco
+   de dados. Nós poderíamos fazer:
+  </para>
+  <programlisting role="php">
+<![CDATA[
+<?php
+$m = new MongoDB\Driver\Manager;
+
+// Não faça isso!!!
+$username = $_GET['field'];
+
+$cmd = new \MongoDB\Driver\Command( [
+    'eval' => "print('Olá, $username!');"
+] );
+
+$r = $m->executeCommand( 'dramio', $cmd );
+?>
+]]>
+  </programlisting>
+  <para>
+   No entanto, e se um usuário mal-intencionado passar algum JavaScript?
+  </para>
+  <programlisting role="php">
+<![CDATA[
+<?php
+$m = new MongoDB\Driver\Manager;
+
+// Não faça isso!!!
+$username = $_GET['field'];
+// $username é definido como "'); db.users.drop(); print('"
+
+$cmd = new \MongoDB\Driver\Command( [
+    'eval' => "print('Olá, $username!');"
+] );
+
+$r = $m->executeCommand( 'dramio', $cmd );
+?>
+]]>
+  </programlisting>
+  <para>
+   Agora o MongoDB executa a string JavaScript
+   <literal>"print('Olá, '); db.users.drop(); print('!');"</literal>.
+   Este ataque é fácil de evitar: use <literal>args</literal> para passar
+   variáveis de PHP para JavaScript:
+
+  </para>
+  <programlisting role="php">
+<![CDATA[
+<?php
+$m = new MongoDB\Driver\Manager;
+
+$_GET['field'] = 'derick';
+$args = [ $_GET['field'] ];
+
+$cmd = new \MongoDB\Driver\Command( [
+    'eval' => "function greet(username) { print('Olá, ' + username + '!'); }",
+    'args' => $args,
+] );
+
+$r = $m->executeCommand( 'dramio', $cmd );
+?>
+]]>
+  </programlisting>
+  <para>
+   Isto adiciona um argumento ao escopo JavaScript, que é usado como argumento
+   para a função <literal>greet</literal>. Agora, se
+   alguém tentar enviar código malicioso, o MongoDB imprimirá inofensivamente
+   <literal>Olá, '); db.dropDatabase(); print('!</literal>.
+  </para>
+
+  <para>
+   O uso de argumentos ajuda a evitar que entradas maliciosas sejam executadas pelo
+   banco de dados. Porém, você deve garantir que seu código não vire
+   e execute a entrada de qualquer maneira! Em primeiro lugar, é melhor evitar executar
+   <emphasis>qualquer</emphasis> JavaScript no servidor.
+  </para>
+
+  <para>
+   É altamente recomendável evitar a <link
+   xlink:href="&url.mongodb.docs;reference/operator/query/where/#considerations">cláusula
+   $where</link> nas consultas, pois ela afeta significativamente o desempenho. Sempre
+   que possível, use operadores de consulta normais ou o <link
+   xlink:href="&url.mongodb.docs;core/aggregation-pipeline">Estrutura de
+   agregação</link>.
+  </para>
+
+  <para>
+   Como alternativa ao <link
+   xlink:href="&url.mongodb.dochub.mapreduce;">MapReduce</link>, que usa
+   JavaScript, considere usar o <link
+   xlink:href="&url.mongodb.docs;core/aggregation-pipeline">Estrutura de
+   agregação</link>. Ao contrário do Map/Reduce, ele usa uma linguagem idiomática para
+   construir consultas, sem ter que escrever e usar a abordagem JavaScript mais lenta
+   que o Map/Reduce requer.
+  </para>
+
+  <para>
+   O <link
+   xlink:href="&url.mongodb.docs;reference/command/eval/">comando eval</link>
+   foi descontinuado desde o MongoDB 3.0 e também deve ser evitado.
+  </para>
+ </article>
+</book>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
+
