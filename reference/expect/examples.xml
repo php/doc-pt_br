@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+
+<chapter xml:id="expect.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ &reftitle.examples;
+ <section xml:id="expect.examples-usage">
+  <title>Exemplos de uso de Expect</title>
+  <example>
+   <title>Exemplo de uso de Expect</title>
+   <para>
+    Este exemplo se conecta ao host remoto via SSH e imprime o tempo de atividade
+    remoto.
+   </para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+ini_set("expect.loguser", "Off");
+
+$stream = fopen("expect://ssh root@remotehost uptime", "r");
+
+$cases = array (
+    array (0 => "password:", 1 => PASSWORD)
+);
+
+switch (expect_expectl ($stream, $cases)) {
+    case PASSWORD:
+        fwrite ($stream, "password\n");
+        break;
+
+    default:
+        die ("Ocorreu um erro ao conectar-se ao host remoto!\n");
+}
+
+while ($line = fgets($stream)) {
+      print $line;
+}
+fclose ($stream);
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <para>
+   O exemplo a seguir se conecta ao host remoto, determina se o sistema operacional
+   instalado é de 32 ou 64 bits e, em seguida, executa a atualização para um pacote específico.
+  </para>
+  <example>
+   <title>Outro Exemplo de Uso de Expect</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+ini_set("expect.timeout", -1);
+ini_set("expect.loguser", "Off");
+
+$stream = expect_popen("ssh root@remotehost");
+
+while (true) {
+    switch (expect_expectl ($stream, array (
+            array ("password:", PASSWORD), // SSH está pedindo uma senha
+            array ("yes/no)?", YESNO), // SSH está perguntando se deve armazenar a entrada do host
+            array ("~$ ", SHELL, EXP_EXACT), // Conseguimos o shell!
+    ))) {
+        case PASSWORD:
+            fwrite ($stream, "secret\n");
+            break;
+
+        case YESNO:
+            fwrite ($stream, "yes\n");
+            break;
+
+        case SHELL:
+            fwrite ($stream, "uname -a\n");
+            while (true) {
+                    switch (expect_expectl ($stream, array (
+                            array ("~$ ", SHELL, EXP_EXACT), // Conseguimos o shell!
+                            array ("^Linux.*$", UNAME, EXP_REGEXP), // uname -a output
+                    ), $match)) {
+                        case UNAME:
+                            $uname .= $match[0];
+                            break;
+
+                        case SHELL:
+                            // Executa a atualização:
+                            if (strstr ($uname, "x86_64")) {
+                                    fwrite ($stream, "rpm -Uhv http://mirrorsite/somepath/some_64bit.rpm\n");
+                            } else {
+                                    fwrite ($stream, "rpm -Uhv http://mirrorsite/somepath/some_32bit.rpm\n");
+                            }
+                            fwrite ($stream, "exit\n");
+                            break 2;
+
+                        case EXP_TIMEOUT:
+                        case EXP_EOF:
+                            break 2;
+
+                        default:
+                            die ("Ocorreu um erro!\n");
+                    }
+            }
+            break 2;
+
+        case EXP_TIMEOUT:
+        case EXP_EOF:
+            break 2;
+
+        default:
+            die ("Ocorreu um erro!\n");
+    }
+}
+
+fclose ($stream);
+?>
+]]>
+   </programlisting>
+  </example>
+ </section>
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
+
