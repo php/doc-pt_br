@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: d4d5216e7a965ca194f6b1c9dee84cecab2674e5 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+
+<chapter xml:id="dba.setup" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ &reftitle.setup;
+
+ <!-- {{{ Requirements -->
+ <section xml:id="dba.requirements">
+  &reftitle.required;
+  <para>
+   O comportamento de vários aspectos depende da implementação do banco
+   de dados subjacente. Funções como <function>dba_optimize</function>
+   e <function>dba_sync</function> farão o que prometem para um
+   banco de dados e não farão nada para outros. Você deve baixar e instalar
+   manipuladores de dba suportados.
+   <table>
+    <title>Lista de manipuladores DBA</title>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>Manipulador</entry>
+       <entry>Notas</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry><literal>dbm</literal></entry>
+       <entry>
+        Dbm é o tipo mais antigo (original) de bancos de dados estilo
+        Berkeley DB. Você deve evitá-lo, se possível. Não oferecemos suporte
+        às funções de compatibilidade incorporadas ao DB2 e ao gdbm, porque
+        elas são compatíveis apenas no nível do código-fonte, mas não podem
+        lidar com o formato dbm original.
+       </entry>
+      </row>
+
+      <row>
+       <entry><literal>ndbm</literal></entry>
+       <entry>
+        Ndbm é um tipo mais novo e mais flexível que dbm. Ele ainda possui
+        a maioria dos limites arbitrários do dbm (portanto, está
+        obsoleto).
+       </entry>
+      </row>
+
+      <row>
+       <entry><literal>gdbm</literal></entry>
+       <entry>
+        Gdbm é o <link xlink:href="&url.gdbm;">gerenciador de banco
+        de dados GNU</link>.
+       </entry>
+      </row>
+
+      <row>
+       <entry><literal>db2</literal></entry>
+       <entry>
+        DB2 é para <link xlink:href="&url.sleepycat;">Oracle Berkeley
+        DB 2</link>. Ele é descrito como "um kit de ferramentas programáticas que
+        fornece suporte de banco de dados integrado de alto desempenho
+        para aplicativos autônomos e cliente/servidor".
+       </entry>
+      </row>
+
+      <row>
+       <entry><literal>db3</literal></entry>
+       <entry>
+        DB3 é para <link xlink:href="&url.sleepycat;">Oracle Berkeley DB
+        3</link>.
+       </entry>
+      </row>
+
+      <row>
+       <entry><literal>db4</literal></entry>
+       <entry>
+        DB4 é para <link xlink:href="&url.sleepycat;">Oracle Berkeley DB
+        4 ou 5</link>. Esta opção pode
+        ser usada com BDB 5 a partir do PHP 5.3.3.
+       </entry>
+      </row>
+
+      <row>
+       <entry><literal>cdb</literal></entry>
+       <entry>
+        CDB é “um pacote rápido, confiável e leve para criar e
+        ler bancos de dados constantes”. É do autor do qmail e
+        pode ser encontrado em <link xlink:href="&url.cdb;">&url.cdb;</link>. Como é
+        constante, oferecemos suporte apenas a operações de leitura.
+        Oferecemos suporte à gravação (não à atualização) por meio da biblioteca interna cdb.
+       </entry>
+      </row>
+
+      <row>
+       <entry><literal>cdb_make</literal></entry>
+       <entry>
+        Oferecemos suporte à criação (não à atualização) de arquivos cdb
+        quando a biblioteca cdb incluída é usada.
+       </entry>
+      </row>
+
+      <row>
+       <entry><literal>flatfile</literal></entry>
+       <entry>
+        Isto está disponível apenas para compatibilidade com a extensão obsoleta
+        <literal>dbm</literal> e deve ser evitado.
+        No entanto, você pode usar isso onde os arquivos foram criados neste formato. Isso
+        acontece quando o configure não consegue encontrar nenhuma biblioteca externa.
+       </entry>
+      </row>
+
+      <row>
+       <entry><literal>inifile</literal></entry>
+       <entry>
+        Está disponível para poder modificar arquivos php.ini
+        a partir de scripts PHP. Ao trabalhar com arquivos ini, você pode passar arrays
+        no formato array(0=>group,1=>value_name) ou strings no formato
+        "[group]value_name" onde group é opcional. Como as funções
+        <function>dba_firstkey</function> e <function>dba_nextkey</function>
+        retornam representações de string da chave, existe a função
+        <function>dba_key_split</function> que permite
+        converter as chaves de string em chaves de array sem perder &false;.
+       </entry>
+      </row>
+
+      <row>
+       <entry><literal>qdbm</literal></entry>
+       <entry>
+        A biblioteca qdbm pode ser baixada em
+        <link xlink:href="&url.qdbm;"/>.
+       </entry>
+      </row>
+
+      <row>
+       <entry><literal>tcadb</literal></entry>
+       <entry>
+        A biblioteca Tokyo Cabinet pode ser
+        baixada em <link xlink:href="&url.tcadb;"/>.
+       </entry>
+      </row>
+
+      <row>
+       <entry><literal>lmdb</literal></entry>
+       <entry>
+        Isso está disponível desde o PHP 7.2.0. A biblioteca de banco de dados mapeado em memória do Lightning
+        pode ser baixada em <link xlink:href="&url.lmdb;"/>.
+       </entry>
+      </row>
+
+     </tbody>
+    </tgroup>
+   </table>
+  </para>
+  <para>
+   Ao invocar as funções <function>dba_open</function> ou
+   <function>dba_popen</function>, um dos nomes
+   do manipulador deve ser fornecido como argumento. A lista
+   de manipuladores realmente disponíveis é exibida invocando
+   <function>phpinfo</function> ou <function>dba_handlers</function>.
+  </para>
+ </section>
+ <!-- }}} -->
+
+ <!-- {{{ Installation -->
+ &reference.dba.configure;
+ <!-- }}} -->
+
+ <!-- {{{ Configuration -->
+ <section xml:id="dba.configuration">
+  &reftitle.runtime;
+  &extension.runtime;
+  <para>
+   <table>
+    <title>DBA &ConfigureOptions;</title>
+    <tgroup cols="4">
+     <thead>
+      <row>
+       <entry>&Name;</entry>
+       <entry>&Default;</entry>
+       <entry>&Changeable;</entry>
+       <entry>&Changelog;</entry>
+      </row>
+     </thead>
+     <tbody xml:id="dba.configuration.list">
+      <row>
+       <entry>
+        <link linkend="ini.dba.default_handler">dba.default_handler</link>
+       </entry>
+       <entry>DBA_DEFAULT</entry>
+       <entry><constant>INI_ALL</constant></entry>
+       <entry><!-- leave empty, this will be filled by an automatic script --></entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </table>
+  </para>
+
+  &ini.descriptions.title;
+
+  <para>
+   <variablelist>
+    <varlistentry xml:id="ini.dba.default_handler">
+     <term>
+      <parameter>dba.default_handler</parameter>
+      <type>string</type>
+     </term>
+     <listitem>
+      <para>
+       O nome do manipulador padrão
+      </para>
+     </listitem>
+    </varlistentry>
+
+   </variablelist>
+  </para>
+ </section>
+ <!-- }}} -->
+
+ <!-- {{{ Resources -->
+ <section xml:id="dba.resources">
+  &reftitle.resources;
+  <para>
+   As funções <function>dba_open</function> e
+   <function>dba_popen</function> retornam um identificador para o arquivo de
+   banco de dados especificado para acesso, que é usado por todas as outras chamadas de função dba.
+  </para>
+ </section>
+ <!-- }}} -->
+
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
+
