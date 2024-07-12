@@ -3,84 +3,84 @@
 <chapter xml:id="ev.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  &reftitle.examples;
  <example>
-  <title>Simple timers</title>
+  <title>Temporizadores simples</title>
   <programlisting role="php">
 <![CDATA[
 <?php
-// Create and start timer firing after 2 seconds
+// Cria e inicia o disparo do cronômetro após 2 segundos
 $w1 = new EvTimer(2, 0, function () {
-    echo "2 seconds elapsed\n";
+    echo "2 segundos se passaram\n";
 });
 
-// Create and launch timer firing after 2 seconds repeating each second
-// until we manually stop it
+// Cria e inicia o disparo do temporizador após 2 segundos, repetindo cada segundo
+// até pararmos manualmente
 $w2 = new EvTimer(2, 1, function ($w) {
-    echo "is called every second, is launched after 2 seconds\n";
-    echo "iteration = ", Ev::iteration(), PHP_EOL;
+    echo "é chamado a cada segundo, é iniciado após 2 segundos\n";
+    echo "iteração = ", Ev::iteration(), PHP_EOL;
 
-    // Stop the watcher after 5 iterations
+    // Para o observador após 5 iterações
     Ev::iteration() == 5 and $w->stop();
-    // Stop the watcher if further calls cause more than 10 iterations
+    // Para o observador se outras chamadas causarem mais de 10 iterações
     Ev::iteration() >= 10 and $w->stop();
 });
 
-// Create stopped timer. It will be inactive until we start it ourselves
+// Cria um cronômetro parado. Ele ficará inativo até que nós mesmos o iniciemos
 $w_stopped = EvTimer::createStopped(10, 5, function($w) {
-    echo "Callback of a timer created as stopped\n";
+    echo "Retorno de chamada de um timer criado como parado\n";
 
-    // Stop the watcher after 2 iterations
+    // Pare o observador após 2 iterações
     Ev::iteration() >= 2 and $w->stop();
 });
 
-// Loop until Ev::stop() is called or all of watchers stop
+// Faça um loop até que Ev::stop() seja chamado ou todos os observadores parem
 Ev::run();
 
-// Start and look if it works
+// Comece e veja se funciona
 $w_stopped->start();
-echo "Run single iteration\n";
+echo "Execute uma única iteração\n";
 Ev::run(Ev::RUN_ONCE);
 
-echo "Restart the second watcher and try to handle the same events, but don't block\n";
+echo "Reinicie o segundo observador e tente lidar com os mesmos eventos, mas não bloqueie\n";
 $w2->again();
 Ev::run(Ev::RUN_NOWAIT);
 
 $w = new EvTimer(10, 0, function() {});
-echo "Running a blocking loop\n";
+echo "Executando um loop de bloqueio\n";
 Ev::run();
-echo "END\n";
+echo "FIM\n";
 ?>
 ]]>
   </programlisting>
   &example.outputs.similar;
   <screen>
 <![CDATA[
-2 seconds elapsed
-is called every second, is launched after 2 seconds
-iteration = 1
-is called every second, is launched after 2 seconds
-iteration = 2
-is called every second, is launched after 2 seconds
-iteration = 3
-is called every second, is launched after 2 seconds
-iteration = 4
-is called every second, is launched after 2 seconds
-iteration = 5
-Run single iteration
-Callback of a timer created as stopped
-Restart the second watcher and try to handle the same events, but don't block
-Running a blocking loop
-is called every second, is launched after 2 seconds
-iteration = 8
-is called every second, is launched after 2 seconds
-iteration = 9
-is called every second, is launched after 2 seconds
-iteration = 10
-END
+2 segundos se passaram
+é chamado a cada segundo, é iniciado após 2 segundos
+iteração = 1
+é chamado a cada segundo, é iniciado após 2 segundos
+iteração = 2
+é chamado a cada segundo, é iniciado após 2 segundos
+iteração = 3
+é chamado a cada segundo, é iniciado após 2 segundos
+iteração = 4
+é chamado a cada segundo, é iniciado após 2 segundos
+iteração = 5
+Execute uma única iteração
+Retorno de chamada de um timer criado como parado
+Reinicie o segundo observador e tente lidar com os mesmos eventos, mas não bloqueie
+Executando um loop de bloqueio
+é chamado a cada segundo, é iniciado após 2 segundos
+iteração = 8
+é chamado a cada segundo, é iniciado após 2 segundos
+iteração = 9
+é chamado a cada segundo, é iniciado após 2 segundos
+iteração = 10
+FIM
 ]]>
   </screen>
  </example>
  <example>
-  <title>Periodic timer. Tick each 10.5 seconds</title>
+  <title>Temporizador periódico. Marcação a cada 10,5 segundos</title>
   <programlisting role="php">
 <![CDATA[
 <?php
@@ -94,11 +94,11 @@ Ev::run();
   </programlisting>
  </example>
  <example>
-  <title>Periodic timer. Use reschedule callback</title>
+  <title>Temporizador periódico. Usar retorno de chamada de reagendamento</title>
   <programlisting role="php">
 <![CDATA[
 <?php
-// Tick each 10.5 seconds
+// Marcação a cada 10,5 segundos
 
 function reschedule_cb ($watcher, $now) {
     return $now + (10.5. - fmod($now, 10.5));
@@ -115,11 +115,11 @@ Ev::run();
   </programlisting>
  </example>
  <example>
-  <title>Periodic timer. Tick every 10.5 seconds starting at now</title>
+  <title>Temporizador periódico. Marcação a cada 10,5 segundos a partir de agora</title>
   <programlisting role="php">
 <![CDATA[
 <?php
-// Tick every 10.5 seconds starting at now
+// Marcação a cada 10,5 segundos a partir de agora
 $w = new EvPeriodic(fmod(Ev::now(), 10.5), 10.5, NULL, function ($w, $revents) {
     echo time(), PHP_EOL;
 });
@@ -130,13 +130,13 @@ Ev::run();
   </programlisting>
  </example>
  <example>
-  <title>Wait until STDIN is readable</title>
+  <title>Espera até que STDIN esteja legível</title>
   <programlisting role="php">
 <![CDATA[
 <?php
-// Wait until STDIN is readable
+// Espera até que STDIN esteja legível
 $w = new EvIo(STDIN, Ev::READ, function ($watcher, $revents) {
-    echo "STDIN is readable\n";
+    echo "STDIN está legível\n";
 });
 
 Ev::run(Ev::RUN_ONCE);
@@ -145,47 +145,47 @@ Ev::run(Ev::RUN_ONCE);
   </programlisting>
  </example>
  <example>
-  <title>Use some async I/O to access a socket</title>
+  <title>Usa alguma E/S assíncrona para acessar um socket</title>
   <programlisting role="php">
 <![CDATA[
 <?php
-/* Use some async I/O to access a socket */
+/* Usa alguma E/S assíncrona para acessar um socket */
 
-// `sockets' extension still logs warnings
-// for EINPROGRESS, EAGAIN/EWOULDBLOCK etc.
+// A extensão `sockets' ainda registra avisos
+// para EINPROGRESS, EAGAIN/EWOULDBLOCK etc.
 error_reporting(E_ERROR);
 
 $e_nonblocking = array (/*EAGAIN or EWOULDBLOCK*/11, /*EINPROGRESS*/115);
 
-// Get the port for the WWW service
+// Obtém a porta do serviço WWW
 $service_port = getservbyname('www', 'tcp');
 
-// Get the IP address for the target host
+// Obtém o endereço IP do host alvo
 $address = gethostbyname('google.co.uk');
 
-// Create a TCP/IP socket
+// Cria um socket TCP/IP
 $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 if ($socket === FALSE) {
-    echo "socket_create() failed: reason: "
+    echo "socket_create() falhow: rasão: "
         .socket_strerror(socket_last_error()) . "\n";
 }
 
-// Set O_NONBLOCK flag
+// Define a opção O_NONBLOCK
 socket_set_nonblock($socket);
 
-// Abort on timeout
+// Aborta no tempo limite
 $timeout_watcher = new EvTimer(10.0, 0., function () use ($socket) {
     socket_close($socket);
     Ev::stop(Ev::BREAK_ALL);
 });
 
-// Make HEAD request when the socket is writable
+// Faz a solicitação HEAD quando o socket é gravável
 $write_watcher = new EvIo($socket, Ev::WRITE, function ($w)
     use ($socket, $timeout_watcher, $e_nonblocking)
 {
-    // Stop timeout watcher
+    // Para o observador de tempo limite
     $timeout_watcher->stop();
-    // Stop write watcher
+    // Para de escrever o observador
     $w->stop();
 
     $in = "HEAD / HTTP/1.1\r\n";
@@ -193,25 +193,25 @@ $write_watcher = new EvIo($socket, Ev::WRITE, function ($w)
     $in .= "Connection: Close\r\n\r\n";
 
     if (!socket_write($socket, $in, strlen($in))) {
-        trigger_error("Failed writing $in to socket", E_USER_ERROR);
+        trigger_error("Falha ao escrever $in no socket", E_USER_ERROR);
     }
 
     $read_watcher = new EvIo($socket, Ev::READ, function ($w, $re)
         use ($socket, $e_nonblocking)
     {
-        // Socket is readable. recv() 20 bytes using non-blocking mode
+        // O socket é legível. recv() 20 bytes usando modo sem bloqueio
         $ret = socket_recv($socket, $out, 20, MSG_DONTWAIT);
 
         if ($ret) {
             echo $out;
         } elseif ($ret === 0) {
-            // All read
+            // Tudo lido
             $w->stop();
             socket_close($socket);
             return;
         }
 
-        // Caught EINPROGRESS, EAGAIN, or EWOULDBLOCK
+        // Captura EINPROGRESS, EAGAIN, ou EWOULDBLOCK
         if (in_array(socket_last_error(), $e_nonblocking)) {
             return;
         }
@@ -249,18 +249,18 @@ Connection: close
   </screen>
  </example>
  <example>
-  <title>Embedding one loop into another</title>
+  <title>Incorporando um loop em outro</title>
   <programlisting role="php">
 <![CDATA[
 <?php
 /*
-* Try to get an embeddable event loop and embed it into the default event loop.
-* If it is impossible, use the default
-* loop. The default loop is stored in $loop_hi, while the embeddable loop is
-* stored in $loop_lo(which is $loop_hi in the case no embeddable loop can be
-* used).
+* Tenta obter um loop de eventos incorporável e incorporá-lo ao loop de eventos padrão.
+* Se for impossível, usa o loop padrão
+* O loop padrão é armazenado em $loop_hi, enquanto o loop incorporável é
+* armazenado em $loop_lo(que é $loop_hi no caso de nenhum loop incorporável poder ser
+* usado).
 *
-* Sample translated to PHP
+* Amostra traduzida para PHP
 * http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#Examples_CONTENT-9
 */
 $loop_hi = EvLoop::defaultLoop();
@@ -268,8 +268,8 @@ $loop_lo = NULL;
 $embed   = NULL;
 
 /*
-* See if there is a chance of getting one that works
-* (flags' value of 0 means autodetection)
+* Veja se há chance de conseguir um que funcione
+* (o valor 0 dos sinalizadores significa autodetecção)
 */
 $loop_lo = Ev::embeddableBackends() & Ev::recommendedBackends()
     ? new EvLoop(Ev::embeddableBackends() & Ev::recommendedBackends())
@@ -285,17 +285,17 @@ if ($loop_lo) {
   </programlisting>
  </example>
  <example>
-  <title>Embedding loop created with kqueue backend into the default loop</title>
+  <title>Incorporando loop criado com back-end kqueue no loop padrão</title>
   <programlisting role="php">
 <![CDATA[
 <?php
 /*
-* Check if kqueue is available but not recommended and create a kqueue backend
-* for use with sockets (which usually work with any kqueue implementation).
-* Store the kqueue/socket-only event loop in loop_socket. (One might optionally
-* use EVFLAG_NOENV, too)
+* Verifica se o kqueue está disponível, mas não é recomendado, e cria um backend kqueue
+* para uso com sockets (que geralmente funcionam com qualquer implementação do kqueue).
+* Armazena o loop de eventos kqueue/socket somente em loop_socket. (Pode-se opcionalmente
+* usar EVFLAG_NOENV também)
 *
-* Example borrowed from
+* Exemplo emprestado de
 * http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#Examples_CONTENT-9
 */
 $loop        = EvLoop::defaultLoop();
@@ -312,18 +312,18 @@ if (!$socket_loop) {
     $socket_loop = $loop;
 }
 
-// Now use $socket_loop for all sockets, and $loop for anything else
+// Agora use $socket_loop para todos os sockets e $loop para qualquer outro
 ?>
 ]]>
   </programlisting>
  </example>
  <example>
-  <title>Handle SIGTERM signal</title>
+  <title>Lidar com sinal SIGTERM</title>
   <programlisting role="php">
 <![CDATA[
 <?php
 $w = new EvSignal(SIGTERM, function ($watcher) {
-    echo "SIGTERM received\n";
+    echo "SIGTERM recebido\n";
     $watcher->stop();
 });
 
@@ -333,22 +333,22 @@ Ev::run();
   </programlisting>
  </example>
  <example>
-  <title>Monitor changes of /var/log/messages</title>
+  <title>Monitora alterações de /var/log/messages</title>
   <programlisting role="php">
 <![CDATA[
 <?php
-// Use 10 second update interval.
+// Usa intervalo de atualização de 10 segundos.
 $w = new EvStat("/var/log/messages", 8, function ($w) {
-    echo "/var/log/messages changed\n";
+    echo "/var/log/messages mudou\n";
 
     $attr = $w->attr();
 
     if ($attr['nlink']) {
-        printf("Current size: %ld\n", $attr['size']);
-        printf("Current atime: %ld\n", $attr['atime']);
-        printf("Current mtime: %ld\n", $attr['mtime']);
+        printf("Tamanho atual: %ld\n", $attr['size']);
+        printf("atime atual: %ld\n", $attr['atime']);
+        printf("mtime atual: %ld\n", $attr['mtime']);
     } else {
-        fprintf(STDERR, "`messages` file is not there!");
+        fprintf(STDERR, "O arquivo `messages` não existe!");
         $w->stop();
     }
 });
@@ -359,7 +359,7 @@ Ev::run();
   </programlisting>
  </example>
  <example>
-  <title>Monotor changes of /var/log/messages. Avoid missing updates by means of one second delay</title>
+  <title>Monitora as alterações de /var/log/messages. Evita perder atualizações com um atraso de um segundo</title>
   <programlisting role="php">
 <![CDATA[
 <?php
@@ -368,12 +368,12 @@ $timer = EvTimer::createStopped(0., 1.02, function ($w) {
 
     $stat = $w->data;
 
-    // 1 second after the most recent change of the file
-    printf("Current size: %ld\n", $stat->attr()['size']);
+    // 1 segundo após a alteração mais recente do arquivo
+    printf("Tamanho atual: %ld\n", $stat->attr()['size']);
 });
 
 $stat = new EvStat("/var/log/messages", 0., function () use ($timer) {
-    // Reset timer watcher
+    // Redefine o observador do cronômetro
     $timer->again();
 });
 
@@ -385,7 +385,7 @@ Ev::run();
   </programlisting>
  </example>
  <example>
-  <title>Process status changes</title>
+  <title>Mudanças de status de processo</title>
   <programlisting role="php">
 <![CDATA[
 <?php
@@ -397,15 +397,15 @@ if ($pid == -1) {
     $w = new EvChild($pid, FALSE, function ($w, $revents) {
         $w->stop();
 
-        printf("Process %d exited with status %d\n", $w->rpid, $w->rstatus);
+        printf("Processo %d encerrado com status %d\n", $w->rpid, $w->rstatus);
     });
 
     Ev::run();
 
-    // Protect against Zombies
+    // Proteção contra zumbis
     pcntl_wait($status);
 } else {
-    //Forked child
+    //filho bifurcado
     exit(2);
 }
 ?>

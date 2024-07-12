@@ -1,128 +1,127 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- EN-Revision: bbfa9738785f054752e6cb565cd0a58e71015bc6 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
 <chapter  xml:id="ev.periodic-modes" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
- <title>Periodic watcher operation modes</title>
+ <title>Modos de operação do observador periódico</title>
  <para>
-  <classname>EvPeriodic</classname>
-  watcher works in different modes depending on the
+  O observador <classname>EvPeriodic</classname>
+  funciona em diferentes modos dependendo dos
+  parâmetros
   <parameter>offset</parameter>
   ,
   <parameter>interval</parameter>
-  and
-  <parameter>reschedule_cb</parameter>
-  parameters.
+  e
+  <parameter>reschedule_cb</parameter>.
  </para>
  <orderedlist>
   <listitem>
    <para>
-    <emphasis>Absolute timer</emphasis>
-    . In this mode
+    <emphasis>Temporizador absoluto</emphasis>.
+    Neste modo
     <parameter>interval</parameter>
     =
     <literal>0</literal>
     ,
     <parameter>reschedule_cb</parameter>
-    = &null;. This time simply fires at the wallclock time
+    = &null;. Este tempo simplesmente dispara no horário do relógio
     <parameter>offset</parameter>
-    and doesn't repeat. It will not adjust when a time jump occurs, that is,
-    if it is to be run at
-    <emphasis>January
-   1st 2014</emphasis>
-    then it will run when the system time reaches or surpasses this time.
+    e não se repete. Ele não será ajustado quando ocorrer um salto no tempo, ou seja,
+    se for executado em
+    <emphasis>1º de janeiro
+    de 2014</emphasis>
+    então será executado quando a hora do sistema atingir ou ultrapassar esse horário.
    </para>
   </listitem>
   <listitem>
    <para>
-    <emphasis>Repeating interval timer</emphasis>
-    . In this mode
+    <emphasis>Temporizador de intervalo de repetição</emphasis>.
+    Neste modo
     <parameter>interval</parameter>
     &gt;
     <literal>0</literal>
     ,
     <parameter>reschedule_cb</parameter>
-    = &null;; the watcher will always be scheduled to timeout at the next
+    = &null;; o inspetor sempre será programado para atingir o tempo limite no próximo
     <parameter>offset</parameter>
     +
     <constant>N</constant>
     *
     <parameter>interval</parameter>
-    time(for some integer
+    tempo (para algum número inteiro
     <constant>N</constant>
-    ) and then repeat, regardless of any time jumps.
+    ) e repita, independentemente de quaisquer saltos de tempo.
    </para>
    <para>
-    This can be used to create timers that do not drift with respect to system
-    time:
+    Isso pode ser usado para criar temporizadores que não variam em relação à hora do
+    sistema:
     <programlisting role="php">
 <![CDATA[
 <?php
 $hourly = EvPeriodic(0, 3600, NULL, function () {
-  echo "once per hour\n";
+  echo "uma vez por hora\n";
 });
 ?>
 ]]>
     </programlisting>
-    That doesn't mean there will always be
+    Isso não significa que sempre haverá
     <literal>3600</literal>
-    seconds in between triggers, but only that the callback will be called
-    when the system time shows a full hour(
+    segundos entre os acionadores, mas apenas que o retorno de chamada será chamado
+    quando a hora do sistema mostrar uma hora completa (
     <emphasis>UTC</emphasis>
     ).
    </para>
    <para>
     <classname>EvPeriodic</classname>
-    will try to run the callback in this mode at the next possible time where
+    tentará executar o retorno de chamada neste modo no próximo horário possível, onde
     <varname>time</varname>
     =
     <parameter>offset</parameter>
     (
     <literal>mod</literal>
     <parameter>interval</parameter>
-    ), regardless of any time jumps.
+    ), independentemente de quaisquer saltos de tempo.
    </para>
   </listitem>
   <listitem>
    <para>
-    <emphasis>Manual reschedule mode</emphasis>
-    . In this mode
+    <emphasis>Modo de reprogramação manual</emphasis>.
+    Neste modo,
     <parameter>reschedule_cb</parameter>
-    is a
-    <type>callable</type>
+    é um <type>callable</type>
     .
    </para>
    <para>
     <parameter>interval</parameter>
-    and
+    e
     <parameter>offset</parameter>
-    are both being ignored. Instead, each time the periodic watcher gets
-    scheduled, the reschedule callback (
-    <parameter>reschedule_cb</parameter>
-    ) will be called with the watcher as first, and the current time as second
-    argument.
+    estão sendo ignorados. Em vez disso, cada vez que o inspetor periódico for
+    agendado, o retorno de chamada de reprogramação (
+     <parameter>reschedule_cb</parameter>
+     ) será chamado com o inspetor como primeiro e a hora atual como segundo
+     argumento.
    </para>
    <para>
-    This callback
-    <emphasis>must not</emphasis>
-    stop or destroy this or any other periodic watchers, ever, and
-    <emphasis>must not</emphasis>
-    call any event loop functions or methods. To stop it return
+    Este retorno de chamada
+    <emphasis>não deve</emphasis>
+    parar ou destruir este ou qualquer outro observador periódico, e
+    <emphasis>não deve</emphasis>
+    chamar quaisquer funções ou métodos de loop de eventos. Para pará-lo, retorne
     <literal>1e30</literal>
-    and stop it afterwards. An
-    <classname>EvPrepare</classname>
-    watcher may be used for this task.
+    e pare depois. Um
+    observador <classname>EvPrepare</classname>
+    pode ser usado para esta tarefa.
    </para>
    <para>
-    It must return the next time to trigger, based on the passed time value
-    (that is, the lowest time value larger than or equal to the second
-    argument). It will usually be called just before the callback will be
-    triggered, but might be called at other times, too.
+    Ele deve retornar o próximo tempo de disparo, com base no valor de tempo passado
+    (ou seja, o menor valor de tempo maior ou igual ao segundo
+    argumento). Geralmente será chamado logo antes do retorno de chamada ser
+    acionado, mas também poderá ser chamado em outros momentos.
    </para>
    <example>
-    <title>Using reschedule callback</title>
+    <title>Usando retorno de chamada de reagendamento</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-// Tick each 10.5 seconds
+// Marcação a cada 10,5 segundos
 
 function reschedule_cb ($watcher, $now) {
    return $now + (10.5. - fmod($now, 10.5));
