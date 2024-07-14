@@ -1,7 +1,7 @@
 
-(cd doc-base; git pull --rebase --autostash)
-(cd en;       git pull --rebase --autostash)
-(cd pt_BR;    git pull --rebase --autostash)
+(cd doc-base; git pull --rebase)
+(cd en;       git pull --rebase)
+(cd pt_BR;    git pull --rebase)
 
 php doc-base/configure.php -q --with-lang=pt_BR --enable-xml-details --disable-xpointer-reporting
 
