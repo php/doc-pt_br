@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: e6376e04ed2526138e5b71e16168cf6bb269fa8a Maintainer: ae Status: ready --><!-- CREDITS: felipe,ae,fabioluciano -->
+<!-- EN-Revision: ced371fcb7a105f06a6a75672fbcd448271a3e3f Maintainer: ae Status: ready --><!-- CREDITS: felipe,ae,fabioluciano -->
 <reference xml:id="class.errorexception" role="exception" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
  <title>ErrorException</title>
  <titleabbrev>ErrorException</titleabbrev>
@@ -81,31 +81,34 @@
      <programlisting role="php">
  <![CDATA[
 <?php
-function exception_error_handler(int $errno, string $errstr, string $errfile = null, int $errline) {
+set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline) {
     if (!(error_reporting() & $errno)) {
-        // This error code is not included in error_reporting
+        // Este código de erro não é incluso em error_reporting.
+        return;
+    }
+    if ($errno === E_DEPRECATED || $errno === E_USER_DEPRECATED) {
+        // Não lance um Exception para avisos de obsolescência porque avisos
+        // inesperados podem quebrar a aplicação.
         return;
     }
     throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
-}
-set_error_handler(exception_error_handler(...));
-// Antes do PHP 8.1.0 e a introdução de classe chamável, a chamada deveria ser assim:
-// set_error_handler(__NAMESPACE__ . "\\exception_error_handler");
+});
 
-/* Trigger exception */
-strpos();
+// Desserializar dados errados emite um aviso que será convertido em um
+// ErrorException pelo manipulador.
+unserialize('broken data');
 ?>
 ]]>
      </programlisting>
      &example.outputs.similar;
      <screen>
 <![CDATA[
-Fatal error: Uncaught exception 'ErrorException' with message 'strpos() expects at least 2 parameters, 0 given' in /home/bjori/tmp/ex.php:12
+Fatal error: Uncaught ErrorException: unserialize(): Error at offset 0 of 11 bytes in test.php:16
 Stack trace:
-#0 [internal function]: exception_error_handler(2, 'strpos() expect...', '/home/bjori/php...', 12, Array)
-#1 /home/bjori/php/cleandocs/test.php(12): strpos()
+#0 [internal function]: {closure}(2, 'unserialize(): ...', 'test.php', 16)
+#1 test.php(16): unserialize('broken data')
 #2 {main}
-  thrown in /home/bjori/tmp/ex.php on line 12
+  thrown in test.php on line 16
 ]]>
      </screen>
     </example><!-- }}} -->
