@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 4d17b7b4947e7819ff5036715dd706be87ae4def Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<reference xml:id="class.evtimer" role="class" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
+ <title>A classe EvTimer</title>
+ <titleabbrev>EvTimer</titleabbrev>
+ <partintro>
+<!-- {{{ EvTimer intro -->
+  <section xml:id="evtimer.intro">
+   &reftitle.intro;
+   <para>
+    Os observadores <classname>EvTimer</classname>
+    são temporizadores relativos simples que geram um evento após um determinado
+    tempo e, opcionalmente, repetem-se em intervalos regulares depois disso.
+   </para>
+   <para>
+    Os cronômetros são baseados em tempo real, ou seja, se alguém registrar um evento que
+    expire após uma hora e redefinir o relógio do sistema para
+    <emphasis>janeiro do ano passado</emphasis>,
+    o tempo limite ainda expirará após (aproximadamente) uma hora . "Aproximadamente" porque
+    detectar saltos no tempo é difícil e algumas imprecisões são inevitáveis.
+   </para>
+   <para>
+    É garantido que o retorno de chamada seja invocado somente após o tempo limite ter passado
+    (não em, portanto, em sistemas com relógios de resolução muito baixa, isso pode
+    introduzir um pequeno atraso). Se vários temporizadores ficarem prontos durante a mesma
+    iteração do loop, então aqueles com valores de tempo limite anteriores serão invocados
+    antes daqueles de mesma prioridade com valores de tempo limite posteriores (mas isso
+    não é mais verdade quando um retorno de chamada chama
+    <methodname>EvLoop:: execute</methodname>
+    recursivamente).
+   </para>
+   <para>
+    O próprio cronômetro fará o melhor esforço para evitar desvios, ou seja, se um
+    cronômetro estiver configurado para disparar a cada
+    <literal>10</literal>
+    segundos, ele normalmente disparará exatamente em intervalos de
+    <literal>10</literal>
+    segundos. Se, no entanto, o script não conseguir acompanhar o cronômetro
+    porque leva mais do que esses
+    <literal>10</literal>
+    segundos para fazer isso, o cronômetro não será acionado mais de uma vez por iteração do loop
+    de eventos.
+   </para>
+  </section>
+<!-- }}} -->
+  <section xml:id="evtimer.synopsis">
+   &reftitle.classsynopsis;
+
+<!-- {{{ Synopsis -->
+   <classsynopsis>
+    <ooclass>
+     <classname>EvTimer</classname>
+    </ooclass>
+<!-- {{{ Class synopsis -->
+    <classsynopsisinfo>
+     <ooclass>
+      <classname>EvTimer</classname>
+     </ooclass>
+     <ooclass>
+      <modifier>extends</modifier>
+      <classname>EvWatcher</classname>
+     </ooclass>
+    </classsynopsisinfo>
+<!-- }}} -->
+    <classsynopsisinfo role="comment">&Properties;</classsynopsisinfo>
+    <fieldsynopsis>
+     <modifier>public</modifier>
+     <varname linkend="evtimer.props.repeat">repeat</varname>
+    </fieldsynopsis>
+    <fieldsynopsis>
+     <modifier>public</modifier>
+     <varname linkend="evtimer.props.remaining">remaining</varname>
+    </fieldsynopsis>
+    <classsynopsisinfo role="comment">&InheritedProperties;</classsynopsisinfo>
+    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('evwatcher.synopsis')/descendant::db:fieldsynopsis)" />
+    <classsynopsisinfo role="comment">&Methods;</classsynopsisinfo>
+    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.evtimer')/db:refentry/db:refsect1[@role='description']/descendant::db:constructorsynopsis[not(@role='procedural')])"/>
+    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.evtimer')/db:refentry/db:refsect1[@role='description']/descendant::db:methodsynopsis[not(@role='procedural')])"/>
+    <classsynopsisinfo role="comment">&InheritedMethods;</classsynopsisinfo>
+    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.evwatcher')/db:refentry/db:refsect1[@role='description']/descendant::db:methodsynopsis[1])" />
+   </classsynopsis>
+<!-- }}} -->
+  </section>
+<!-- {{{ EvTimer properties -->
+  <section xml:id="evtimer.props">
+   &reftitle.properties;
+   <variablelist>
+    <varlistentry xml:id="evtimer.props.repeat">
+     <term>
+      <varname>repeat</varname>
+     </term>
+     <listitem>
+      <para>
+       Se a repetição for
+       <literal>0.0</literal>,
+       ela será interrompida automaticamente quando o tempo limite for atingido. Se
+       for positivo, o temporizador será automaticamente configurado para
+       disparar novamente a cada repetição, segundos depois, até ser interrompido manualmente.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry xml:id="evtimer.props.remaining">
+     <term>
+      <varname>remaining</varname>
+     </term>
+     <listitem>
+      <para>
+       Retorna o tempo restante até que um cronômetro seja acionado. Se o temporizador estiver ativo,
+       esse tempo será relativo ao tempo atual do loop de eventos, caso contrário,
+       será o valor de tempo limite atualmente configurado.
+      </para>
+      <para>
+       Isto é, depois de instanciar um
+       <classname>EvTimer</classname>
+       com um
+       valor <parameter>after</parameter>
+       de
+       <literal>5.0</literal>
+       e
+       um valor <parameter>repeat</parameter>
+       de
+       <literal>7.0</literal>
+       ,
+       <varname>remaining</varname>
+       retorna
+       <literal>5.0</literal>.
+       Quando o cronômetro for iniciado e um segundo passar,
+       <varname>remaining</varname>
+       retornará
+       <literal>4.0</literal>.
+       Quando o cronômetro expirar e for reiniciado, ele retornará aproximadamente
+       <literal>7.0</literal>
+       (provavelmente um pouco menos, pois a invocação de retorno de chamada também leva algum tempo) e assim
+       por diante.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </section>
+<!-- }}} -->
+ </partintro>
+
+ &reference.ev.entities.evtimer;
+
+</reference>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
