@@ -5,24 +5,24 @@
  &reftitle.examples;
  <para>
  <example>
- <title>Cancelling a request</title>
+ <title>Cancelando uma solicitação</title>
  <programlisting role="php">
  <![CDATA[
  <?php
- /* Is called when eio_nop() finished */
+ /* É chamado quando eio_nop() termina */
  function my_nop_cb($data, $result) {
   echo "my_nop ", $data, "\n";
  }
 
-// This eio_nop() call will be cancelled
+// Esta chamada eio_nop() será cancelada
 $req = eio_nop(EIO_PRI_DEFAULT, "my_nop_cb", "1");
 var_dump($req);
 eio_cancel($req);
 
-// This time eio_nop() will be processed
+// Desta vez eio_nop() será processado
 eio_nop(EIO_PRI_DEFAULT, "my_nop_cb", "2");
 
-// Process requests
+// Processa solicitações
 eio_event_loop();
 ?>
 ]]>
@@ -39,14 +39,14 @@ my_nop 2
 
  <para>
  <example>
- <title>Calling <function>eio_chmod</function></title>
+ <title>Chamando <function>eio_chmod</function></title>
  <programlisting role="php">
  <![CDATA[
 <?php
 $temp_filename = dirname(__FILE__) ."/eio-temp-file.tmp";
 touch($temp_filename);
 
-/* Is called when eio_chmod() finished */
+/* É chamado quando eio_chmod() termina */
 function my_chmod_callback($data, $result) {
     global $temp_filename;
 
@@ -73,11 +73,11 @@ eio_chmod_ok
 
  <para>
  <example>
- <title>Making a custom request</title>
+ <title>Fazendo uma solicitação personalizada</title>
  <programlisting role="php">
  <![CDATA[
 <?php
-/* Callback for the custom callback */
+/* Retorno de chamada para o retorno de chamada personalizado */
 function my_custom_callback($data, $result) {
     var_dump($data);
     var_dump(count($result));
@@ -85,7 +85,7 @@ function my_custom_callback($data, $result) {
     var_dump($result['result']);
 }
 
-/* The custom request */
+/* A solicitação personalizada */
 function my_custom($data) {
     var_dump($data);
 
@@ -120,12 +120,12 @@ int(1001)
 
  <para>
  <example>
- <title>Grouping requests</title>
+ <title>Agrupando solicitações</title>
  <programlisting role="php">
  <![CDATA[
 <?php
 /*
- * Create a group request to open, read and close a file
+ * Cria uma solicitação de grupo para abrir, ler e fechar um arquivo
  */
 
 $temp_filename = dirname(__FILE__) ."/eio-file.tmp";
@@ -133,14 +133,14 @@ $fp = fopen($temp_filename, "w");
 fwrite($fp, "some data");
 fclose($fp);
 
-/* Is called when the group requests are done */
+/* É chamado quando as solicitações do grupo são concluídas */
 function my_grp_done($data, $result) {
  global $temp_filename;
  var_dump($result == 0);
  @unlink($temp_filename);
 }
 
-/* Is called when eio_open() done */
+/* É chamado quando eio_open() termina */
 function my_grp_file_opened_callback($data, $result) {
  global $my_file_fd, $grp;
 
@@ -148,25 +148,25 @@ function my_grp_file_opened_callback($data, $result) {
 
  var_dump($result > 0);
 
- // Create eio_read() request and add it to the group
+ // Cria a solicitação eio_read() e adiciona-a ao grupo
  $req = eio_read($my_file_fd, 4, 0, EIO_PRI_DEFAULT, "my_grp_file_read_callback");
  eio_grp_add($grp, $req);
 }
 
-/* Is called when eio_read() done */
+/* É chamado quando eio_read() termina */
 function my_grp_file_read_callback($data, $result) {
  global $my_file_fd, $grp;
 
  var_dump($result);
 
- // Create eio_close() request and add it to the group
+ // Cria a solicitação eio_close() e adiciona ela ao grupo
  $req = eio_close($my_file_fd);
  eio_grp_add($grp, $req);
 }
 
 $grp = eio_grp("my_grp_done", "my_grp_data");
 
-// Create eio_open() request and add it to the group
+// Cria a solicitação eio_open() e adiciona-a ao grupo
 $req = eio_open($temp_filename, EIO_O_RDWR | EIO_O_APPEND , NULL,
   EIO_PRI_DEFAULT, "my_grp_file_opened_callback", NULL);
 eio_grp_add($grp, $req);
@@ -190,15 +190,15 @@ bool(true)
 
 <para>
   <example>
-   <title>Using eio with libevent extension</title>
+   <title>Usando eio com extensão libevent</title>
    <programlisting role="php"><![CDATA[
 <?php
 function my_eio_poll($fd, $events, $arg) {
-    /* Some libevent regulation might go here .. */
+    /* Algum regulamento do libevent pode estar aqui.. */
     if (eio_nreqs()) {
         eio_poll();
     }
-    /* .. and here */
+    /* .. e aqui */
 }
 
 function my_nop_cb($d, $r) {
@@ -213,22 +213,22 @@ var_dump($fd);
 
 eio_nop(EIO_PRI_DEFAULT, "my_nop_cb", "nop data");
 eio_mkdir("/tmp/abc-eio-temp", 0750, EIO_PRI_DEFAULT, "my_nop_cb", "nop data");
-/* some other eio_* calls here ... */
+/* algumas outras chamadas eio_* aqui... */
 
 
-// set event flags
+// define opções de evento
 event_set($event, $fd, EV_READ /*| EV_PERSIST*/, "my_eio_poll", array($event, $base));
 
-// set event base
+// define a base de eventos
 event_base_set($event, $base);
 
-// enable event
+// habilita evento
 event_add($event);
 
-// start event loop
+// inicia loop de eventos
 event_base_loop($base);
 
-/* The same will be available via buffered libevent interface */
+/* O mesmo estará disponível através da interface libevent em buffer */
 ?>
 ]]></programlisting>
 
@@ -247,16 +247,16 @@ string(10) "mkdir data"
 
 <para>
   <example>
-   <title>Using eio with event extension</title>
+   <title>Usando eio com extensão event</title>
    <programlisting role="php"><![CDATA[
 <?php
 $base = new EventBase();
 
-// Retrieve eio polling stream.
-// Note, this variable should be alive as long as the event loop is running.
+// Recupera o fluxo de pesquisa eio.
+// Observe que esta variável deve permanecer ativa enquanto o loop de eventos estiver em execução.
 $eio_stream = eio_get_event_stream();
 
-// Bind eio polling stream to the event loop.
+// Vincula o stream de polling eio ao loop de eventos.
 $poll_event = new Event($base, $eio_stream, Event::READ, function () {
   if (eio_nreqs()) {
     eio_poll();
@@ -264,18 +264,18 @@ $poll_event = new Event($base, $eio_stream, Event::READ, function () {
 });
 $poll_event->add();
 
-// Add eio jobs
+// Adiciona trabalhos eio
 eio_nop(EIO_PRI_DEFAULT, function () {
   echo "eio_nop\n";
 });
 
-// Add events
+// Adiciona eventos
 $timer = Event::timer($base, function () {
-  echo "2 seconds elapsed\n";
+  echo "2 segundos se passaram\n";
 });
 $timer->add(2);
 
-// Dispatch events.
+// Despacha eventos.
 $base->dispatch();
 ?>
 ]]></programlisting>
@@ -284,7 +284,7 @@ $base->dispatch();
 <screen>
  <![CDATA[
 eio_nop
-2 seconds elapsed
+2 segundos se passaram
  ]]>
  </screen>
 </example>

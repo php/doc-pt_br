@@ -9,9 +9,9 @@
  <preface xml:id="intro.eio">
   &reftitle.intro;
   <para>
-   This extension provides asyncronous POSIX I/O by means of <link
-   xlink:href="&url.eio.libeio;">libeio</link> C
-   library written by Marc Lehmann.
+   Esta extensão fornece E/S POSIX assíncrona por meio da biblioteca C <link
+   xlink:href="&url.eio.libeio;">libeio</link>
+   escrita por Marc Lehmann.
   </para>
 
   &note.no-windows.extension;
@@ -20,9 +20,9 @@
 
   <warning>
   <simpara>
-  It is important to be aware that each request is executed in a thread, and the
-  order of execution of continuously queued requests basically is
-  unpredictable. For instance, the following piece of code is incorrect.
+   É importante estar ciente de que cada solicitação é executada em um thread e a
+   ordem de execução das solicitações enfileiradas continuamente é basicamente
+   imprevisível. Por exemplo, o trecho de código a seguir está incorreto.
   </simpara>
   </warning>
 
@@ -30,97 +30,97 @@
   <title>Incorrect requests</title>
   <programlisting role="php"><![CDATA[
 <?php
-// Request to create symlink of $filename to $link
+// Solicitação para criar link simbólico de $filename para $link
 eio_symlink($filename, $link);
 
-// Request to move $filename to $new_filename
+// Solicitação para mover $filename para $new_filename
 eio_rename($filename, $new_filename);
 
-// Process requests
+// Processa solicitações
 eio_event_loop();
 ?>
 ]]>
    </programlisting>
    </example>
 
-   In the example above <function>eio_rename</function> request may finish
-   before <function>eio_symlink</function>. To fix it you might call <function>eio_rename</function>
-   in the callback of <function>eio_symlink</function>:
+   No exemplo acima a solicitação <function>eio_rename</function> pode terminar
+   antes de <function>eio_symlink</function>. Para corrigir isso você pode chamar <function>eio_rename</function>
+   no callback de <function>eio_symlink</function>:
   <example>
-   <title>Calling request from a request callback</title>
+   <title>Chamando solicitação de um retorno de chamada de solicitação</title>
    <programlisting role="php"><![CDATA[
 <?php
 function my_symlink_done($filename, $result) {
- // Request to move $filename to $new_filename
+ // Solicitação para mover $filename para $new_filename
  eio_rename($filename, "/path/to/new-name");
 
- // Process requests
+ // Processa solicitações
  eio_event_loop();
 }
 
-// Request to create symlink of $filename to $link
+// Solicitação para criar link simbólico de $filename para $link
 eio_symlink($filename, $link, EIO_PRI_DEFAULT, "my_symlink_done", $filename);
 
-// Process requests
+// Processa solicitações
 eio_event_loop();
 ?>
    ]]>
    </programlisting>
   </example>
 
-  Alternatively, you might want to create a request group:
+  Alternativamente, você pode querer criar um grupo de solicitações:
 
   <example>
-   <title>Calling request from a request callback</title>
+   <title>Chamando solicitação de um retorno de chamada de solicitação</title>
    <programlisting role="php"><![CDATA[
 <?php
-/* Is called when the group requests are done */
+/* É chamado quando as solicitações do grupo são concluídas */
 function my_grp_done($data, $result) {
  // ...
 }
 
 function my_symlink_done($filename, $result) {
- // Create eio_rename request and add it to the group
+ // Cria a solicitação eio_rename e adiciona-a ao grupo
  $req = eio_rename($filename, "/path/to/new-name");
  eio_grp_add($grp, $req);
- // You might want to add more requests...
+ // Você pode querer adicionar mais solicitações...
 }
 
-// Create a request group
+// Cria um grupo de solicitações
 $grp = eio_grp("my_grp_done", "my_grp_data");
 
-// Create eio_symlink request and add it to the group
-// Pass $filename to the callback
+// Cria a solicitação eio_symlink e adiciona-a ao grupo
+// Passa $filename para o retorno de chamada
 $req = eio_symlink($filename, $link,
   EIO_PRI_DEFAULT, "my_symlink_done", $filename);
 eio_grp_add($grp, $req);
 
-// Process requests
+// Processa solicitações
 eio_event_loop();
 ?>
 ]]></programlisting>
   </example>
 
-  Group is a special kind of request that could accumulate a set of regular
-  <emphasis>eio</emphasis> requests. This could be used to create a complex
-  request that opens, reads and closes a file.
+  Grupo é um tipo especial de solicitação que pode acumular um conjunto de solicitações
+  <emphasis>eio</emphasis> regulares. Isso poderia ser usado para criar uma solicitação complexa
+  que abre, lê e fecha um arquivo.
   </para>
   <para>
-  Since version 0.3.0 alpha, a variable used in communications with libeio
-  internally, could be retrieved with
-  <function>eio_get_event_stream</function>. The variable could be used
-  to bind to an event loop supported by some other extension. You might
-  organize a simple event loop where eio and libevent work together:
+   Desde a versão 0.3.0 alpha, uma variável usada internamente nas comunicações com o l
+   ibeio, poderia ser recuperada com
+   <function>eio_get_event_stream</function>. A variável poderia ser usada p
+   ara vincular a um loop de eventos suportado por alguma outra extensão. Você pode
+   organizar um loop de eventos simples onde eio e libevent trabalhem juntos:
   <example>
-   <title>Using eio with libevent</title>
+   <title>Usando eio com libevent</title>
    <programlisting role="php"><![CDATA[
 <?php
 function my_eio_poll($fd, $events, $arg) {
-    /* Some libevent regulation might go here .. */
+    /* Algum regulamento do libevent pode estar aqui.. */
     if (eio_nreqs()) {
         eio_poll();
     }
-    /* .. and here */
+    /* .. e aqui */
 }
 
 function my_res_cb($d, $r) {
@@ -130,27 +130,27 @@ function my_res_cb($d, $r) {
 $base = event_base_new();
 $event = event_new();
 
-// This stream is used to bind with libevent
+// Este stream é usado para vincular com libevent
 $fd = eio_get_event_stream();
 
 eio_nop(EIO_PRI_DEFAULT, "my_res_cb", "nop data");
 eio_mkdir("/tmp/abc-eio-temp", 0750, EIO_PRI_DEFAULT, "my_res_cb", "mkdir data");
-/* some other eio_* calls here ... */
+/* algumas outras chamadas eio_* aqui... */
 
 
-// set event flags
+// define opções de evento
 event_set($event, $fd, EV_READ /*| EV_PERSIST*/, "my_eio_poll", array($event, $base));
 
-// set event base
+// define a base de eventos
 event_base_set($event, $base);
 
-// enable event
+// habilita evento
 event_add($event);
 
-// start event loop
+// inicia loop de eventos
 event_base_loop($base);
 
-/* The same will be available via buffered libevent interface */
+/* O mesmo estará disponível através da interface libevent em buffer */
 ?>
 ]]></programlisting>
   </example>
