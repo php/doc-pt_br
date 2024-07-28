@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 2d1981cc3003cd94f5fb88e0473eed2c5b26efde Maintainer: ae Status: ready --><!-- CREDITS: rfoliveira,ae -->
+<!-- EN-Revision: 61d5b83d9145d58515ad4c93c6125a339fb5eeda Maintainer: ae Status: ready --><!-- CREDITS: rfoliveira,ae,leonardolara -->
  <chapter xml:id="features.http-auth" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Autenticação HTTP com PHP</title>
 
   <simpara>
    Pode-se utilizar a função
    <function>header</function> para enviar uma mensagem de <literal>"Authentication Required"</literal>
-   para o browser cliente, causando o aparecimento de uma janela para a entrada de Nome de Usuário/Senha.
+   para o navegador cliente, causando o aparecimento de uma janela para a entrada de Nome de Usuário/Senha.
    Uma vez que o usuário preencha um nome de usuário e uma senha,
    a URL contendo o script PHP será chamada mais uma vez com as
    <link linkend="reserved.variables">variáveis predefinidas</link>
    <varname>PHP_AUTH_USER</varname>, <varname>PHP_AUTH_PW</varname>,
    e <varname>AUTH_TYPE</varname> para determinar o nome de usuário, senha e
    tipo da autenticação, respectivamente. Estas variáveis predefinidas são encontradas
-   nos arrays <varname>$_SERVER</varname>. <emphasis>Somente</emphasis> os métodos de autenticação "Basic" e "Digest"
-   (a partir do PHP 5.1.0) são suportados. Consulte a função
-   <function>header</function> para mais informações.
+   no array <varname>$_SERVER</varname>. <emphasis>Somente</emphasis>
+   o métodos de autenticação "Basic" é suportado. Consulte a função
+   <function>header</function> para mais informação.
   </simpara>
 
   <para>
@@ -36,73 +36,6 @@ if (!isset($_SERVER['PHP_AUTH_USER'])) {
 } else {
     echo "<p>Olá, {$_SERVER['PHP_AUTH_USER']}.</p>";
     echo "<p>Você digitou {$_SERVER['PHP_AUTH_PW']} como sua senha.</p>";
-}
-?>
-]]>
-    </programlisting>
-   </example>
-  </para>
-
-  <para>
-   <example>
-    <title>Exemplo de autenticação HTTP "Digest"</title>
-    <para>
-     Este exemplo demonstra como implementar um script simples de autenticação HTTP "Digest".
-     Para mais informações, leia o <link
-      xlink:href="&url.rfc;2617">RFC 2617</link>.
-    </para>
-    <programlisting role="php">
-<![CDATA[
-<?php
-$realm = 'Área restrita';
-
-//usuário => senha
-$users = array('admin' => 'mypass', 'guest' => 'guest');
-
-
-if (empty($_SERVER['PHP_AUTH_DIGEST'])) {
-    header('HTTP/1.1 401 Unauthorized');
-    header('WWW-Authenticate: Digest realm="'.$realm.
-           '",qop="auth",nonce="'.uniqid().'",opaque="'.md5($realm).'"');
-
-    die('Texto enviado caso o usuário clique no botão Cancelar');
-}
-
-
-// analisar a variável PHP_AUTH_DIGEST
-if (!($data = http_digest_parse($_SERVER['PHP_AUTH_DIGEST'])) ||
-    !isset($users[$data['username']]))
-    die('Credenciais inválidas!');
-
-
-// gerar a resposta válida
-$A1 = md5($data['username'] . ':' . $realm . ':' . $users[$data['username']]);
-$A2 = md5($_SERVER['REQUEST_METHOD'].':'.$data['uri']);
-$valid_response = md5($A1.':'.$data['nonce'].':'.$data['nc'].':'.$data['cnonce'].':'.$data['qop'].':'.$A2);
-
-if ($data['response'] != $valid_response)
-    die('Credenciais inválidas!');
-
-// ok, nome de usuário e senha válidos
-echo 'Você está logado como: ' . $data['username'];
-
-
-// função para decompor o http auth header
-function http_digest_parse($txt)
-{
-    // proteção contra dados incompletos
-    $needed_parts = array('nonce'=>1, 'nc'=>1, 'cnonce'=>1, 'qop'=>1, 'username'=>1, 'uri'=>1, 'response'=>1);
-    $data = array();
-    $keys = implode('|', array_keys($needed_parts));
-
-    preg_match_all('@(' . $keys . ')=(?:([\'"])([^\2]+?)\2|([^\s,]+))@', $txt, $matches, PREG_SET_ORDER);
-
-    foreach ($matches as $m) {
-        $data[$m[1]] = $m[3] ? $m[3] : $m[4];
-        unset($needed_parts[$m[1]]);
-    }
-
-    return $needed_parts ? false : $data;
 }
 ?>
 ]]>
@@ -131,7 +64,7 @@ function http_digest_parse($txt)
   </para>
 
   <para>
-   Cuidado com browsers Internet Explorer bugados por aí. Eles
+   Cuidado com navegadores Internet Explorer bugados por aí. Eles
    parecem muito minuciosos sobre a ordem dos cabeçalhos. Enviar
    o cabeçalho <emphasis>WWW-Authenticate</emphasis> antes do
    cabeçalho <literal>HTTP/1.0 401</literal> parece resolver isso
@@ -153,7 +86,7 @@ function http_digest_parse($txt)
   </simpara>
   <simpara>
    Tanto o Netscape Navigator quanto o Internet Explorer apagarão o cache de
-   autenticação da janela local do browser para o realm após receber uma
+   autenticação da janela local do navegador para o realm após receber uma
    resposta 401 do servidor. Isso pode efetivamente "deslogar" um usuário,
    forçando o mesmo a re-entrar seu nome de usuário e senha. Algumas pessoas
    usam isso para delimitar o tempo de um login, ou prover um botão de "log-out".
