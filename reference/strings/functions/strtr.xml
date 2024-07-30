@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 2a7c919451f9a536431ba2117f8f90ae814c1c5f Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xml:id="function.strtr" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>strtr</refname>
+  <refpurpose>Traduz caracteres ou substitui substrings</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>string</type><methodname>strtr</methodname>
+   <methodparam><type>string</type><parameter>string</parameter></methodparam>
+   <methodparam><type>string</type><parameter>from</parameter></methodparam>
+   <methodparam><type>string</type><parameter>to</parameter></methodparam>
+  </methodsynopsis>
+  <simpara>Assinatura alternativa (não suportada com argumentos nomeados):</simpara>
+  <methodsynopsis>
+   <type>string</type><methodname>strtr</methodname>
+   <methodparam><type>string</type><parameter>string</parameter></methodparam>
+   <methodparam><type>array</type><parameter>replace_pairs</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Se for chamada com três argumentos, esta função retorna uma cópia de
+   <parameter>string</parameter> onde todas as ocorrências de cada caractere
+   (de um byte) em <parameter>from</parameter> tenham sido traduzidas para o
+   caractere correspondente em <parameter>to</parameter>, isto é, cada
+   ocorrência de <literal>$from[$n]</literal> tenha sido substituída por
+   <literal>$to[$n]</literal>, onde <literal>$n</literal> é um deslocamento
+   válido em ambos os argumentos.
+  </para>
+  <para>
+   Se <parameter>from</parameter> e <parameter>to</parameter> tiverem
+   comprimentos diferentes, os caracteres adicionais no argumento mais longo
+   são ignorados. O comprimento de <parameter>string</parameter> será o mesmo do
+   valor de retorno.
+  </para>
+  <para>
+   Se for chamada com dois argumentos, o segundo deve ser um <type>array</type> na
+   forma <literal>array('from' =&gt; 'to', ...)</literal>. O valor de retorno é
+   uma <type>string</type> onde todas as ocorrências das chaves do array tenham sido
+   substituídas pelos valores correspondentes. As chaves mais longas são substituídas primeiro.
+   Assim que ums substring é substituída, seu novo valor não será pesquisado
+   novamente.
+  </para>
+  <para>
+   Neste caso, as chaves e os valores podem ter qualquer comprimento, desde que
+   não haja chave vazia; adicionalmente, o comprimento do valor de retorno pode ser
+   diferente do comprimento de <parameter>string</parameter>.
+   Entretanto, esta função será mais eficiente quando todas as chaves têm o
+   mesmo tamanho.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>string</parameter></term>
+     <listitem>
+      <para>
+       A <type>string</type> a ser traduzida.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>from</parameter></term>
+     <listitem>
+      <para>
+       A <type>string</type> que deverá ser traduzida para <parameter>to</parameter>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>to</parameter></term>
+     <listitem>
+      <para>
+       A <type>string</type> que substituirá <parameter>from</parameter>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>replace_pairs</parameter></term>
+     <listitem>
+      <para>
+       O parâmetro <parameter>replace_pairs</parameter> pode ser usado no lugar de
+       <parameter>to</parameter> e <parameter>from</parameter>, como um
+       <type>array</type> na forma <literal>array('from' =&gt; 'to', ...)</literal>.
+      </para>
+      <para>
+       Se <parameter>replace_pairs</parameter> contiver uma chave que seja uma
+       <type>string</type> vazia (<literal>""</literal>), o elemento será ignorado;
+       a partir do PHP 8.0.0, um alerta <constant>E_WARNING</constant> é emitido neste caso.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna a <type>string</type> traduzida.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>strtr</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// Nesta forma, strtr() faz uma tradução byte a byte.
+// Portanto, aqui é assumida uma codificação de um byte:
+$addr = strtr($addr, "äåö", "aao");
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   O exemplo a seguir mostra o comportamento de <function>strtr</function> quando
+   chamada com apenas dois argumentos. Observe a preferência das substituições
+   (<literal>"h"</literal> não é capturado pois existem correspondências mais longas)
+   e como o texto já substituído não é pesquisado novamente.
+  </para>
+  <example>
+   <title>Exemplo de <function>strtr</function> com dois argumentos</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$trans = array("h" => "-", "hello" => "hi", "hi" => "hello");
+echo strtr("hi all, I said hello", $trans);
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+hello all, I said hi
+]]>
+    </screen>
+  </example>
+  <para>
+   Os dois modos de comportamento são substancialmente diferentes. Com três argumentos,
+   <function>strtr</function> irá substituir bytes; com dois, ela pode substituir
+   substrings mais longas.
+  </para>
+  <example>
+   <title>Comparação de comportamentos de <function>strtr</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+echo strtr("baab", "ab", "01"),"\n";
+
+$trans = array("ab" => "01");
+echo strtr("baab", $trans);
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+1001
+ba01
+]]>
+    </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>str_replace</function></member>
+    <member><function>preg_replace</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
