@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 3739933b8c796d45aad74410caebb2734dc00aa7 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+
+<chapter xml:id="imagick.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ &reftitle.examples;
+ <section xml:id="imagick.examples-1">
+  <title>Uso básico</title>
+  <para>
+   Imagick faz com que a manipulação de imagem no PHP seja extremamente fácil através de uma
+   interface orientada a objetos. Aqui está um exemplo rápido de como criar uma miniatura:
+   <example>
+    <title>Criando uma miniatura em Imagick</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+header('Content-type: image/jpeg');
+
+$image = new Imagick('image.jpg');
+
+// Se 0 for informado em um parâmetro de largura ou altura,
+// a razão de aspecto é mantida
+$image->thumbnailImage(100, 0);
+
+echo $image;
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+
+  <para>
+   Usando SPL e outros recursos OO suportados no Imagick, pode ser simples
+   redimensionar todos os arquivos em um diretório (útil para redimensionar em lote grandes
+   imagens de câmeras digitais para serem visualizadas na web). Aqui usamos redimensionamento, pois podemos
+   querer reter certos metadados:
+   <example>
+    <title>Criando uma miniatura de todos os arquivos JPG em um diretório</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$images = new Imagick(glob('images/*.JPG'));
+
+foreach($images as $image) {
+
+    // Informar 0 vai forçar a miniatura a manter a razão de aspecto
+    $image->thumbnailImage(1024,0);
+
+}
+
+$images->writeImages();
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   Este é um exemplo de criação do reflexo de uma imagem.
+   O reflexo é criado invertendo a imagem e sobrepondo um gradiente nela.
+   Em seguida, a imagem original e o reflexo são sobrepostos em uma tela.
+   <example>
+    <title>Criando o reflexo de uma imagem</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+/* Lê a imagem */
+$im = new Imagick("teste.png");
+
+/* Faz a miniatura da imagem */
+$im->thumbnailImage(200, null);
+
+/* Cria uma borda para a imagem */
+$im->borderImage(new ImagickPixel("white"), 5, 5);
+
+/* Clona e inverte a imagem */
+$reflection = $im->clone();
+$reflection->flipImage();
+
+/* Cria um gradiente. Ele será sobreposto no reflexo */
+$gradient = new Imagick();
+
+/* O gradiente precisa ser grande o suficiente para a imagem e para as bordas */
+$gradient->newPseudoImage($reflection->getImageWidth() + 10, $reflection->getImageHeight() + 10, "gradient:transparent-black");
+
+/* Compõe o gradiente no reflexo */
+$reflection->compositeImage($gradient, imagick::COMPOSITE_OVER, 0, 0);
+
+/* Adiciona um pouco de opacidade. Requer ImageMagick 6.2.9 ou superior */
+$reflection->setImageOpacity( 0.3 );
+
+/* Cria uma tela vazia */
+$canvas = new Imagick();
+
+/* A tela precisa ser grande o suficiente para conter as duas imagens */
+$width = $im->getImageWidth() + 40;
+$height = ($im->getImageHeight() * 2) + 30;
+$canvas->newImage($width, $height, new ImagickPixel("black"));
+$canvas->setImageFormat("png");
+
+/* Compõe a imagem original e o reflexo na tela */
+$canvas->compositeImage($im, imagick::COMPOSITE_OVER, 20, 10);
+$canvas->compositeImage($reflection, imagick::COMPOSITE_OVER, 20, $im->getImageHeight() + 10);
+
+/* Mostra a imagem */
+header("Content-Type: image/png");
+echo $canvas;
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <mediaobject>
+     <alt>Saída do exemplo : Criando o reflexo de uma imagem</alt>
+     <imageobject>
+      <imagedata fileref="en/reference/imagick/figures/hello_world_reflection.png"/>
+     </imageobject>
+    </mediaobject>
+   </example>
+  </para>
+  <para>
+   Este exemplo ilustra como usar padrões de preenchimento no desenho.
+   <example>
+    <title>Preenchendo texto com gradiente</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+/* Cria um novo objeto Imagick */
+$im = new Imagick();
+
+/* Cria uma nova imagem que será usada como padrão de preenchimento */
+$im->newPseudoImage(50, 50, "gradient:red-black");
+
+/* Cria objeto ImagickDraw */
+$draw = new ImagickDraw();
+
+/* Inicia um padrão chamado "gradiente" */
+$draw->pushPattern('gradiente', 0, 0, 50, 50);
+
+/* Compõe o gradiente no padrão */
+$draw->composite(Imagick::COMPOSITE_OVER, 0, 0, 50, 50, $im);
+
+/* Fecha o padrão */
+$draw->popPattern();
+
+/* Usa o padrão chamado "gradiente" como preenchimento */
+$draw->setFillPatternURL('#gradiente');
+
+/* Define o tamanho da fonte para 52 */
+$draw->setFontSize(52);
+
+/* Escreve um texto */
+$draw->annotation(20, 50, "Hello World!");
+
+/* Cria um novo objeto de tela e uma imagem branca */
+$canvas = new Imagick();
+$canvas->newImage(350, 70, "white");
+
+/* Desenha o ImagickDraw na tela */
+$canvas->drawImage($draw);
+
+/* borda preta de 1 pixel em torno da imagem */
+$canvas->borderImage('black', 1, 1);
+
+/* Define o formato para PNG */
+$canvas->setImageFormat('png');
+
+/* Mostra a imagem */
+header("Content-Type: image/png");
+echo $canvas;
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <mediaobject>
+     <alt>Saída do exemplo : Preenchendo texto com gradiente</alt>
+     <imageobject>
+      <imagedata fileref="en/reference/imagick/figures/hello_world.png"/>
+     </imageobject>
+    </mediaobject>
+   </example>
+  </para>
+  <para>
+   Trabalhando com GIFs animados
+   <example>
+    <title>Lê a imagem GIF e redimensiona todos os quadros</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+/* Cria um novo objeto Imagick e lê o arquivo GIF */
+$im = new Imagick("exemplo.gif");
+
+/* Redimensiona todos os quadros */
+foreach ($im as $frame) {
+    /* quadros de 50x50 */
+    $frame->thumbnailImage(50, 50);
+
+    /* Define a tela virtual para o tamanho correto */
+    $frame->setImagePage(50, 50, 0, 0);
+}
+
+/* Observe que a função writeImages é usada no lugar de writeImage */
+$im->writeImages("example_small.gif", true);
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   Trabalhando com a primitiva de elipse e fontes customizadas
+   <example>
+    <title>Criando a logomarca do PHP</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+/* Define largura e altura na proporção da logomarca genuína do PHP */
+$width = 400;
+$height = 210;
+
+/* Cria um objeto Imagick com tela transparente */
+$img = new Imagick();
+$img->newImage($width, $height, new ImagickPixel('transparent'));
+
+/* Nova instância de ImagickDraw para desenhar a elipse */
+$draw = new ImagickDraw();
+/* Define cor de preenchimento roxa para a elipse */
+$draw->setFillColor('#777bb4');
+/* Define as dimensões da elipse */
+$draw->ellipse($width / 2, $height / 2, $width / 2, $height / 2, 0, 360);
+/* Desenha a elipse na tela */
+$img->drawImage($draw);
+
+/* Redefine a cor de preenchimento de roxa para preta para o texto (nota: reutilizando o objeto ImagickDraw) */
+$draw->setFillColor('black');
+/* Define a borda para a cor branca */
+$draw->setStrokeColor('white');
+/* Define a espessura da borda */
+$draw->setStrokeWidth(2);
+/* Define o espaçamento da fonte (valor negativo significa que as letras ficam mais próximas uma da outra) */
+$draw->setTextKerning(-8);
+/* Define a fonte e o tamanho usados na logomarca do PHP */
+$draw->setFont('Handel Gothic.ttf');
+$draw->setFontSize(150);
+/* Centra o texto horizontalmente e verticalmente */
+$draw->setGravity(Imagick::GRAVITY_CENTER);
+
+/* Adiciona o texto central "php" com deslocamento Y de -10 na tela (dentro da elipse) */
+$img->annotateImage($draw, 0, -10, 0, 'php');
+$img->setImageFormat('png');
+
+/* Define o cabeçalho adequado para PNG e mostra a imagem */
+header('Content-Type: image/png');
+echo $img;
+?>
+
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <mediaobject>
+     <alt>Saída do exemplo : Criando a logomarca do PHP com Imagick</alt>
+     <imageobject>
+      <imagedata fileref="en/reference/imagick/figures/php_logo.png"/>
+     </imageobject>
+    </mediaobject>
+   </example>
+  </para>
+ </section>
+</chapter>
+
+
