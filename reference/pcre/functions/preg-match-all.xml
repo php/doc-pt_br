@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 6712ff65342f3c87d03f90fa420782d37b9be58c Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xml:id="function.preg-match-all" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>preg_match_all</refname>
+  <refpurpose>Realiza uma correspondência global de expressão regular</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>int</type><type>false</type></type><methodname>preg_match_all</methodname>
+   <methodparam><type>string</type><parameter>pattern</parameter></methodparam>
+   <methodparam><type>string</type><parameter>subject</parameter></methodparam>
+   <methodparam choice="opt"><type>array</type><parameter role="reference">matches</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>flags</parameter><initializer>0</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>offset</parameter><initializer>0</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Pesquisa <parameter>subject</parameter> por todas as correspondências à expressão
+   regular informada em <parameter>pattern</parameter> e insere-as em
+   <parameter>matches</parameter> na ordem especificada por
+   <parameter>flags</parameter>.
+  </para>
+  <para>
+   Depois que a primeira correspondência é encontrada, as pesquisas subsequentes continuam
+   a partir do final da última correspondência.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>pattern</parameter></term>
+     <listitem>
+      <para>
+       A expressão regular a ser procurada, como uma string.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>subject</parameter></term>
+     <listitem>
+      <para>
+       A string de entrada.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>matches</parameter></term>
+     <listitem>
+      <para>
+       Array de todas as correspondências em um array multi-dimensional ordenado de acordo com
+       <parameter>flags</parameter>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>flags</parameter></term>
+     <listitem>
+      <para>
+       Pode ser uma combinação das seguintes constantes (observe que não faz
+       sentido usar <constant>PREG_PATTERN_ORDER</constant> junto com
+       <constant>PREG_SET_ORDER</constant>):
+       <variablelist>
+        <varlistentry>
+         <term><constant>PREG_PATTERN_ORDER</constant></term>
+         <listitem>
+          <para>
+           Ordena os resultados de forma que <varname>$matches[0]</varname> será um array das correspondências
+           completas à expressão, <varname>$matches[1]</varname> será um array de strings correspondidas pela
+           primeira sub-expressão entre parênteses, e assim por diante.
+          </para>
+          <para>
+           <informalexample>
+            <programlisting role="php">
+<![CDATA[
+<?php
+preg_match_all("|<[^>]+>(.*)</[^>]+>|U",
+    "<b>exemplo: </b><div align=left>isto é um teste</div>",
+    $out, PREG_PATTERN_ORDER);
+echo $out[0][0] . ", " . $out[0][1] . "\n";
+echo $out[1][0] . ", " . $out[1][1] . "\n";
+?>
+]]>
+            </programlisting>
+            &example.outputs;
+            <screen role="html">
+<![CDATA[
+<b>exemplo: </b>, <div align=left>isto é um teste</div>
+exemplo: , isto é um teste
+]]>
+            </screen>
+            <para>
+             Portanto, <varname>$out[0]</varname> contém um array de strings que corresponderam a toda a expressão,
+             e <varname>$out[1]</varname> contém um array de strings envolvidas por etiquetas HTML.
+            </para>
+           </informalexample>
+          </para>
+          <para>
+           Se a expressão contiver sub-expressões nomeadas, <varname>$matches</varname>
+           conterá, adicionalmente, entradas para chaves com o nome da sub-expressão.
+          </para>
+          <para>
+           Se a expressão contiver sub-expressões nomeadas duplicadas, somente a mais à
+           direita será armazenada em <varname>$matches[NOME]</varname>.
+           <informalexample>
+            <programlisting role="php">
+<![CDATA[
+<?php
+preg_match_all(
+    '/(?J)(?<match>foo)|(?<match>bar)/',
+    'foo bar',
+    $matches,
+    PREG_PATTERN_ORDER
+);
+print_r($matches['match']);
+?>
+]]>
+            </programlisting>
+            &example.outputs;
+            <screen>
+<![CDATA[
+Array
+(
+    [0] =>
+    [1] => bar
+)
+]]>
+            </screen>
+           </informalexample>
+          </para>
+         </listitem>
+        </varlistentry>
+        <varlistentry>
+         <term><constant>PREG_SET_ORDER</constant></term>
+         <listitem>
+          <para>
+           Ordena os resultados de forma que <varname>$matches[0]</varname> será um array do primeiro conjunto
+           de correspondências, <varname>$matches[1]</varname> será um array do segundo conjunto,
+           e assim por diante.
+           <informalexample>
+            <programlisting role="php">
+<![CDATA[
+<?php
+preg_match_all("|<[^>]+>(.*)</[^>]+>|U",
+    "<b>exemplo: </b><div align=\"left\">isto é um teste</div>",
+    $out, PREG_SET_ORDER);
+echo $out[0][0] . ", " . $out[0][1] . "\n";
+echo $out[1][0] . ", " . $out[1][1] . "\n";
+?>
+]]>
+            </programlisting>
+            &example.outputs;
+            <screen role="html">
+<![CDATA[
+<b>exemplo:: </b>, exemplo::
+<div align="left">isto é um teste</div>, isto é um teste
+]]>
+            </screen>
+           </informalexample>
+          </para>
+         </listitem>
+        </varlistentry>
+        <varlistentry>
+         <term><constant>PREG_OFFSET_CAPTURE</constant></term>
+         <listitem>
+          <para>
+           Se esta constante for passada, para cada correspondência o deslocamento (em bytes)
+           da string também será retornado. Observe que isto modifica o valor de
+           <parameter>matches</parameter> para um array de arrays onde cada elemento é
+           um array que consiste na string correspondida no elemento <literal>0</literal>
+           e seu deslocamento na string <parameter>subject</parameter> no elemento
+           <literal>1</literal>.
+           <informalexample>
+            <programlisting role="php">
+<![CDATA[
+<?php
+preg_match_all('/(foo)(bar)(baz)/', 'foobarbaz', $matches, PREG_OFFSET_CAPTURE);
+print_r($matches);
+?>
+]]>
+            </programlisting>
+            &example.outputs;
+            <screen>
+<![CDATA[
+Array
+(
+    [0] => Array
+        (
+            [0] => Array
+                (
+                    [0] => foobarbaz
+                    [1] => 0
+                )
+
+        )
+
+    [1] => Array
+        (
+            [0] => Array
+                (
+                    [0] => foo
+                    [1] => 0
+                )
+
+        )
+
+    [2] => Array
+        (
+            [0] => Array
+                (
+                    [0] => bar
+                    [1] => 3
+                )
+
+        )
+
+    [3] => Array
+        (
+            [0] => Array
+                (
+                    [0] => baz
+                    [1] => 6
+                )
+
+        )
+
+)
+]]>
+            </screen>
+           </informalexample>
+          </para>
+         </listitem>
+        </varlistentry>
+        <varlistentry>
+         <term><constant>PREG_UNMATCHED_AS_NULL</constant></term>
+         <listitem>
+          <para>
+           Se esta constante for passada, sub-expressões não correspondidas são reportadas como &null;;
+           caso contrário elas são reportadas como <type>string</type>s vazias.
+          </para>
+         </listitem>
+        </varlistentry>
+       </variablelist>
+      </para>
+      <para>
+       Se nenhuma opção de ordenamento for informada, <constant>PREG_PATTERN_ORDER</constant> será
+       usada.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>offset</parameter></term>
+     <listitem>
+      <para>
+       Normalmente, a pesquisa começa no início da string de entrada.
+       O parâmetro opcional <parameter>offset</parameter> pode ser usado para
+       especificar o deslocamento alternativo (em bytes) a partir do qual a pesquisa será iniciada.
+      </para>
+      <note>
+       <para>
+        Usar <parameter>offset</parameter> não é equivalente a passar
+        <code>substr($subject, $offset)</code> para
+        <function>preg_match_all</function> no lugar da string de entrada,
+        porque <parameter>pattern</parameter> pode conter afirmações como
+        <emphasis>^</emphasis>, <emphasis>$</emphasis> ou
+        <emphasis>(?&lt;=x)</emphasis> que depende da string inteira. Consulte <function>preg_match</function>
+        para exemplos.
+       </para>
+      </note>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna o número de correspondências completas à expressão (que pode ser zero),&return.falseforfailure;.
+  </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  &pcre.pattern.warning;
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>7.2.0</entry>
+       <entry>
+        A constante <constant>PREG_UNMATCHED_AS_NULL</constant> agora é suportada para o parâmetro
+        <parameter>$flags</parameter>.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Obtendo todos os números de telefine de algum texto.</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+preg_match_all("/\(?  (\d{3})?  \)?  (?(1)  [\-\s] ) \d{3}-\d{4}/x",
+                "Ligue para 555-1212 ou 1-800-555-1212", $phones);
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Encontrando etiquetas HTML (ganancioso)</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// A expressão \\2 é um exemplo de referência retroativa. Isto informa ao PCRE que
+// ele deve corresponder ao segundo conjunto de parênteses na expressão regular
+// em si, que seria ([\w]+) neste caso. A barra invertida extra em \\2 é
+// necessária porque a string está em aspas duplas.
+$html = "<b>texto negrito</b><a href=howdy.html>clique aqui</a>";
+
+preg_match_all("/(<([\w]+)[^>]*>)(.*?)(<\/\\2>)/", $html, $matches, PREG_SET_ORDER);
+
+foreach ($matches as $val) {
+    echo "correspondeu: " . $val[0] . "\n";
+    echo "parte 1: " . $val[1] . "\n";
+    echo "parte 2: " . $val[2] . "\n";
+    echo "parte 3: " . $val[3] . "\n";
+    echo "parte 4: " . $val[4] . "\n\n";
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen role="html">
+<![CDATA[
+correspondeu: <b>texto negrito</b>
+parte 1: <b>
+parte 2: b
+parte 3: texto negrito
+parte 4: </b>
+
+correspondeu: <a href=howdy.html>clique aqui</a>
+parte 1: <a href=howdy.html>
+parte 2: a
+parte 3: clique aqui
+parte 4: </a>
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Usando sub-expressões nomeadas</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$str = <<<FOO
+a: 1
+b: 2
+c: 3
+FOO;
+
+preg_match_all('/(?P<name>\w+): (?P<digit>\d+)/', $str, $matches);
+
+/* Alternativa */
+// preg_match_all('/(?<name>\w+): (?<digit>\d+)/', $str, $matches);
+
+print_r($matches);
+
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen role="html">
+<![CDATA[
+Array
+(
+    [0] => Array
+        (
+            [0] => a: 1
+            [1] => b: 2
+            [2] => c: 3
+        )
+
+    [name] => Array
+        (
+            [0] => a
+            [1] => b
+            [2] => c
+        )
+
+    [1] => Array
+        (
+            [0] => a
+            [1] => b
+            [2] => c
+        )
+
+    [digit] => Array
+        (
+            [0] => 1
+            [1] => 2
+            [2] => 3
+        )
+
+    [2] => Array
+        (
+            [0] => 1
+            [1] => 2
+            [2] => 3
+        )
+
+)
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><link linkend="pcre.pattern">Expressões regulares PCRE</link></member>
+    <member><function>preg_quote</function></member>
+    <member><function>preg_match</function></member>
+    <member><function>preg_replace</function></member>
+    <member><function>preg_split</function></member>
+    <member><function>preg_last_error</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
