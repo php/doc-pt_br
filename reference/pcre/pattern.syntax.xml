@@ -1,0 +1,2395 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 77fe733a1ba9c961424adcb7c9af00c1f5443a77 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- splitted from ./en/functions/pcre.xml, last change in rev 1.2 -->
+<chapter xml:id="reference.pcre.pattern.syntax" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Sintaxe de Expressões</title>
+ <titleabbrev>Sintaxe das expressões regulares PCRE</titleabbrev>
+
+ <section xml:id="regexp.introduction">
+  <title>Introdução</title>
+  <para>
+   A sintaxe e a semântica das expressões regulares
+   suportadas pelo PCRE estão descritas abaixo. Expressões regulares também
+   estão descritas na documentação Perl e em vários
+   outros livros, alguns dos quais possuem exemplos abundantes. "Dominando
+   Expressões Regulares" de Jeffrey Friedl, publicado pela
+   O'Reilly e Editora Alta Books (ISBN 978-85-7608-394-8), cobre-as com riqueza de detalhe.
+   A descrição aqui serve como documentação de referência.
+  </para>
+  <para>
+   Uma expressão regular é um padrão que corresponde a uma
+   string de entrada da esquerda para a direita. Na maior parte das vezes, um caractere representa
+   a si mesmo em uma expressão e casa com o caractere
+   correspondente na string de entrada. Como um exemplo trivial, a expressão
+   <literal>The quick brown fox</literal>
+   casa com uma parte de uma string de entrada que é idêntica a
+   si mesma.
+  </para>
+ </section>
+ <section xml:id="regexp.reference.delimiters">
+  <title>Delimitadores</title>
+  <para>
+   Ao usar as funções PCRE, é necessário que a expressão esteja entre
+   <emphasis>delimitadores</emphasis>. Um delimitador pode ser qualquer caractere
+   não alfanumérico que não seja uma barra invertida e que não corresponda a um espaço em branco.
+   Espaços em branco antes de um delimitador válido são silenciosamente ignorados.
+  </para>
+  <para>
+   Delimitadores comumente usados são barras (<literal>/</literal>), cerquilhas
+   (<literal>#</literal>) e til (<literal>~</literal>). Os exemplos
+   a seguir são padrões com delimitadores válidos.
+   <informalexample>
+    <programlisting>
+<![CDATA[
+/foo bar/
+#^[^0-9]$#
++php+
+%[a-zA-Z0-9_-]%
+]]>
+    </programlisting>
+   </informalexample>
+  </para>
+  <para>
+   Também é possível usar delimitadores
+   no estilo parênteses, onde os delimitadores inicial e final são
+   os caracteres de abertura e fechamento, respectivamente. <literal>()</literal>,
+   <literal>{}</literal>, <literal>[]</literal> e <literal>&lt;&gt;</literal>
+   são todos pares válidos de delimitadores nesse estilo.
+   <informalexample>
+    <programlisting>
+<![CDATA[
+(esta [é] uma (expressão))
+{esta [é] uma (expressão)}
+[esta [é] uma (expressão)]
+<esta [é] uma (expressão)>
+]]>
+    </programlisting>
+   </informalexample>
+   Delimitadores no estilo parênteses não precisam ser escapados quando são usados como
+   metacaracteres dentro da expressão, mas como acontece com outros delimitadores, eles precisam
+   ser escapados quando são usados como caracteres literais.
+  </para>
+  <para>
+   Se o delimitador precisa ser correspondido dentro da expressão, ele precisa ser
+   escapado usando uma barra invertida. Se o delimitador aparece com muita frequência dentro da
+   expressão, é uma boa ideia escolher um delimitador diferente para melhorar
+   a legibilidade.
+   <informalexample>
+    <programlisting>
+<![CDATA[
+/http:\/\//
+#http://#
+]]>
+    </programlisting>
+   </informalexample>
+   A função <function>preg_quote</function> pode ser usada para escapar uma string
+   a ser injetada em uma expressão e seu segundo parâmetro opcional pode ser usado
+   para especificar o delimitador a ser escapado.
+  </para>
+  <para>
+   Pode-se adicionar <link linkend="reference.pcre.pattern.modifiers">modificadores
+   de expressão</link> após o delimitador final. Este é um exemplo
+   de correspondência insensível a maiúsculas/minúsculas usando o modificador "i":
+   <informalexample>
+    <programlisting>
+<![CDATA[
+#[a-z]#i
+]]>
+    </programlisting>
+   </informalexample>
+  </para>
+ </section>
+ <section xml:id="regexp.reference.meta">
+  <title>Metacaracteres</title>
+  <para>
+   O poder das expressões regulares vem da
+   habilidade de incluir alternativas e repetições na
+   expressão. Elas são codificadas na expressão pelo uso de
+   <emphasis>metacaracteres</emphasis>, que não representam a si mesmos mas ao invés disso
+   são interpretados de um modo especial.
+  </para>
+  <para>
+   Existem dois conjuntos diferentes de metacaracteres: aqueles que
+   são reconhecidos em qualquer lugar na expressão exceto quando estão dentro de
+   colchetes, e aqueles que são reconhecidos dentro de colchetes.
+   Fora de colchetes, os metacaracteres são:
+
+   <table>
+     <title>Metacaracteres fora de colchetes</title>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>Metacaractere</entry><entry>Descrição</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>\</entry><entry>caractere de escape geral com vários usos</entry>
+      </row>
+      <row>
+       <entry>^</entry><entry>declara início da string (ou da linha, em modo multi-linhas)</entry>
+      </row>
+      <row>
+       <entry>$</entry><entry>declara o final da string ou posição antes de um caractere de nova linha (ou
+        final da linha, em modo multi-linhas)</entry>
+      </row>
+      <row>
+       <entry>.</entry><entry>corresponde a qualquer caractere exceto nova linha (por padrão)</entry>
+      </row>
+      <row>
+       <entry>[</entry><entry>inicia definição de classe de caractere</entry>
+      </row>
+      <row>
+       <entry>]</entry><entry>termina definição de classe de caractere</entry>
+      </row>
+      <row>
+       <entry>|</entry><entry>início de ramo alternativo</entry>
+      </row>
+      <row>
+       <entry>(</entry><entry>início de sub-expressão</entry>
+      </row>
+      <row>
+       <entry>)</entry><entry>fim de sub-expressão</entry>
+      </row>
+      <row>
+       <entry>?</entry><entry>estende o significado de (, também significa quantificador 0 ou 1, e também torna preguiçosos
+        os quantificadores gananciosos (consulte <link linkend="regexp.reference.repetition">repetição</link>)</entry>
+      </row>
+      <row>
+       <entry>*</entry><entry>quantificador de 0 ou mais</entry>
+      </row>
+      <row>
+       <entry>+</entry><entry>quantificador de 1 ou mais</entry>
+      </row>
+      <row>
+       <entry>{</entry><entry>inicia quantificador de mínimo/máximo</entry>
+      </row>
+      <row>
+       <entry>}</entry><entry>termina quantificador de mínimo/máximo</entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </table>
+
+   A parte de uma expressão dentro de colchetes é chamada de
+   <link linkend="regexp.reference.character-classes">classe de caractere</link>. Em uma classe de caractere os únicos
+   metacaracteres são:
+
+   <table>
+     <title>Metacaracteres dentro de colchetes (<emphasis>classes de caracteres</emphasis>)</title>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>Metacaractere</entry><entry>Descrição</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>\</entry><entry>caractere de escape geral</entry>
+      </row>
+      <row>
+       <entry>^</entry><entry>nega a classe, mas apenas se for o primeiro caractere</entry>
+      </row>
+      <row>
+       <entry>-</entry><entry>indica a faixa de caracteres</entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </table>
+
+   As seções a seguir descrevem o uso de cada um dos
+   metacaracteres.
+  </para>
+ </section>
+
+ <section xml:id="regexp.reference.escape">
+  <title>Sequências de escape</title>
+  <para>
+   A barra invertida tem vários usos. Primeiramente, se ela for
+   seguida por um caractere não alfanumérico, ela remove qualquer
+   significado especial que este caractere possa ter. Este uso da
+   barra invertida como um caractere de escape se aplica tanto dentro
+   quanto fora de classes de caracteres.
+  </para>
+  <para>
+   Por exemplo, se a intenção é casar com um caractere "*", deve-se escrever
+   "\*" na expressão. Isto é aplicável mesmo que o
+   próximo caractere pudesse ser interpretado como um
+   metacaractere, por isso é sempre seguro preceder um caractere não alfanumérico
+   com "\" para especificar que ele irá representar a si mesmo. Em
+   particular, se a intenção for casar com uma barra invertida, deve-se escrever "\\".
+  </para>
+  <note>
+   <para>
+    <link
+    linkend="language.types.string.syntax">strings</link> do PHP com aspas simples e aspas duplas têm significado
+    especial para a barra invertida. Assim, se \ precisa corresponder a uma expressão
+    regular \\, então "\\\\" ou '\\\\' precisam ser usadas no código PHP.
+   </para>
+  </note>
+  <para>
+   Se uma expressão for compilada com a opção
+   <link linkend="reference.pcre.pattern.modifiers">PCRE_EXTENDED</link>,
+   espaços em branco na expressão (que não estejam em uma classe de caracteres) e
+   caracteres entre um "#" fora de uma classe de caracteres e o próximo caractere de
+   nova linha são ignorados. Uma barra invertida de escape pode ser usada para incluir um
+   espaço ou um caractere "#" como parte da expressão.
+  </para>
+  <para>
+   Um segundo uso da barra invertida fornece um meio de codificar
+   caracteres não imprimíveis de uma maneira visível. Não há
+   restrição para presença de caracteres não imprimíveis,
+   exceto pelo zero binário que termina uma expressão,
+   mas quando uma expressão está sendo preparada durante a edição de texto, normalmente
+   é mais fácil usar uma das sequências de escape a seguir do que
+   usar o caractere binário que ela representa:
+  </para>
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><emphasis>\a</emphasis></term>
+     <listitem>
+      <simpara>sinal sonoro, isto é, o caracater BEL (hexa 07)</simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\cx</emphasis></term>
+     <listitem>
+      <simpara>"Crtl-x", onde x é qualquer caractere</simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\e</emphasis></term>
+     <listitem>
+      <simpara>escape (hexa 1B)</simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\f</emphasis></term>
+     <listitem>
+      <simpara>alimentação de formulário (hexa 0C)</simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\n</emphasis></term>
+     <listitem>
+      <simpara>nova linha (hexa 0A)</simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\p{xx}</emphasis></term>
+     <listitem>
+      <simpara>
+       um caractere com a propriedade xx, veja
+       <link linkend="regexp.reference.unicode">propriedades Unicode</link>
+       para mais informação
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\P{xx}</emphasis></term>
+     <listitem>
+      <simpara>
+       um caractere sem a propriedade xx, veja
+       <link linkend="regexp.reference.unicode">propriedades Unicode</link>
+       para mais informação
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\r</emphasis></term>
+     <listitem>
+      <simpara>retorno de carro (hexa 0D)</simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\R</emphasis></term>
+     <listitem>
+      <simpara>quebra de linha: corresponde a \n, \r e \r\n</simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\t</emphasis></term>
+     <listitem>
+      <simpara>tabulação (hexa 09)</simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\xhh</emphasis></term>
+     <listitem>
+      <simpara>
+       caractere com o código hexadecimal hh
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\ddd</emphasis></term>
+     <listitem>
+      <simpara>caractere com o código octal ddd, ou referência retroativa</simpara>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+  <para>
+   O efeito preciso de "<literal>\cx</literal>" é o seguinte:
+   se "<literal>x</literal>" for uma letra minúscula, ela é convertida
+   para maiúscula. Depois, o bit 6 do caractere (hexa 40) é invertido.
+   Portanto, "<literal>\cz</literal>" se torna hexa 1A, mas
+   "<literal>\c{</literal>" se torna hexa 3B, enquanto que "<literal>\c;</literal>"
+   se torna hexa 7B.
+  </para>
+  <para>
+   Depois de "<literal>\x</literal>", até dois dígitos hexadecimais são
+   lidos (letras podem ser minúsculas ou maiúsculas).
+   No <emphasis>modo UTF-8</emphasis>, "<literal>\x{...}</literal>" é
+   permitido, onde o conteúdo entre chaves é uma string de dígitos
+   hexadecimais. É interpretado como um caractere UTF-8 cujo número de código é
+   o número hexadecimal informado. A sequência de escape hexadecimal original,
+   <literal>\xhh</literal>, corresponde a um caractere UTF-8 de dois bytes se o valor
+   for maior que 127.
+  </para>
+  <para>
+   Depois de "<literal>\0</literal>" até dois dígitos octais adicionais são lidos.
+   Em ambos os casos, se eles forem menos que dois, apenas os presentes
+   são usados. Assim, a sequência "<literal>\0\x\07</literal>"
+   especifica dois zeros binários seguidos por um caractere BEL. Certifique-se de
+   fornecer dois dígitos depois do zero inicial se o caractere
+   seguinte for, por acaso, um dígito octal.
+  </para>
+  <para>
+   A interpretação de uma barra invertida seguida por um dígito que não seja 0
+   é complicada. Fora de uma classe de caracteres, o PCRE lê este dígito
+   e os seguintes como um número decimal. Se o número
+   for menor que 10, ou se houve pelo menos esta quantidade
+   de grupos em parênteses na expressão, a
+   sequência inteira é interpretada como uma <emphasis>referência retroativa</emphasis>. Uma descrição
+   de como isto funciona é fornecida mais abaixo, logo após a discussão
+   sobre sub-expressões entre parênteses.
+  </para>
+  <para>
+   Dentro de uma classe de caracteres, ou se o número decimal for
+   maior que 9 e não houve essa quantidade de sub-expressões
+   de captura, o PCRE lê novamente até três dígitos octais depois da
+   barra invertida, e gera um único byte a partir dos
+   8 bits menos significativos do valor. Quaisquer dígitos subsequentes
+   representam a si mesmos. Por exemplo:
+  </para>
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><emphasis>\040</emphasis></term>
+     <listitem><simpara>é uma outra forma de escrever um espaço em branco (decimal 32)</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\40</emphasis></term>
+     <listitem>
+      <simpara>
+       é a mesma coisa, desde que haja menos que 40
+       sub-expressões de captura
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\7</emphasis></term>
+     <listitem><simpara>é sempre uma referência retroativa</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\11</emphasis></term>
+     <listitem>
+      <simpara>
+       pode ser uma referência retroativa, ou outra forma de
+       escrever uma tabulação (decimal 9)
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\011</emphasis></term>
+     <listitem><simpara>é sempre uma tabulação (decimal 9)</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\0113</emphasis></term>
+     <listitem><simpara>é uma tabulação seguida pelo caractere "3"</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\113</emphasis></term>
+     <listitem>
+      <simpara>
+       é o caractere com o código octal 113 (decimal 75), já que
+       não pode haver mais que 99 referências retroativas
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\377</emphasis></term>
+     <listitem><simpara>é um byte que consiste inteiramente de bits com o valor 1 (decimal 255)</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\81</emphasis></term>
+     <listitem>
+      <simpara>
+       pode ser uma referência retroativa, ou um zero binário
+       seguido pelos caracteres "8" e "1"
+      </simpara>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+  <para>
+   Observe que valores octais de 100 ou maiores não podem ser
+   introduzidos com um zero na frente, porque não mais que três
+   dígitos octais são lidos no total.
+  </para>
+  <para>
+   Todas as sequências que definem um valor de byte único podem ser
+   usadas tanto dentro quanto fora de classes de caracteres. Além disso,
+   dentro de uma classe de caracteres, a sequência "<literal>\b</literal>"
+   é interpretada como o caractere "backspace" (hexa 08). Fora de uma classe de
+   caracteres ela tem um significado diferente (veja abaixo).
+  </para>
+  <para>
+   O terceiro uso da barra invertida é para especificar tipos
+   genéricos de caracteres:
+  </para>
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><emphasis>\d</emphasis></term>
+     <listitem><simpara>qualquer dígito decimal</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\D</emphasis></term>
+     <listitem><simpara>qualquer caractere que não seja um dígito decimal</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\h</emphasis></term>
+     <listitem><simpara>qualquer caractere de espaço em branco horizontal</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\H</emphasis></term>
+     <listitem><simpara>qualquer caractere que não seja um espaço em branco horizontal</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\s</emphasis></term>
+     <listitem><simpara>qualquer caractere que represente um espaço em branco</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\S</emphasis></term>
+     <listitem><simpara>qualquer caractere que não represente um espaço em branco</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\v</emphasis></term>
+     <listitem><simpara>qualquer caractere de espaço em branco vertical</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\V</emphasis></term>
+     <listitem><simpara>qualquer caractere que não seja um espaço em branco vertical</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\w</emphasis></term>
+     <listitem><simpara>qualquer caractere de uma "palavra"</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\W</emphasis></term>
+     <listitem><simpara>qualquer caractere que não seja de uma "palavra"</simpara></listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+  <para>
+   Cada par de sequência de escape particiona o conjunto completo de
+   caracteres em dois conjuntos desconexos. Cada caractere informado
+   corresponde a um, e apenas um, de cada par.
+  </para>
+  <para>
+   Os caracteres que representam um espaço em branco horizontal são tabulação horizontal (9), nova linha (10), alimentação de formulário (12), retorno de carro (13),
+   e espaço (32). No entanto, em casos de correspondências específicas de localidade,
+   caracteres com pontos de código na faixa de 128 a 255 podem também ser considerados
+   como caracteres de espaço em branco, por exemplo, NBSP (A0).
+  </para>
+  <para>
+   Uma caractere de uma "palavra" é qualquer letra ou dígito ou o caractere
+   de sublinhado "_", isto é, qualquer caractere que possa fazer parte de uma
+   "<emphasis>palavra</emphasis>" em Perl. A definição de letras e dígitos é
+   controlada pelas tabelas de caracteres do PCRE, e pode varia se correspondências específicas
+   de localidade estiverem ocorrendo. Por exemplo, na localidade "pt-BR" (português do Brasil), alguns
+   códigos de caracteres maiores que 127 são usados para letras acentuadas,
+   e estes são correspondidos por <literal>\w</literal>.
+  </para>
+  <para>
+   Estas sequências de tipo de caracteres podem aparecer tanto dentro como
+   fora de classes de caracteres. Cada uma corresponde a um caracteres do
+   tipo apropriado. Se o ponto de correspondência atual estiver no
+   final da string de entrada, todos eles irão falhar, já que não
+   haverá caractere para correspondência.
+  </para>
+  <para>
+   O quarto uso da barra invertida é para certas afirmações
+   simples. Uma afirmação especifica uma condição que deve ser encontrada
+   em um ponto particular de uma correspondência, sem consumir nenhum
+   caractere da string de entrada. O uso de sub-expressões
+   para afirmações mais complicadas é descrito abaixo. As
+   afirmaçõs que usam barra invertida são:
+  </para>
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><emphasis>\b</emphasis></term>
+     <listitem><simpara>borda de palavra</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\B</emphasis></term>
+     <listitem><simpara>não é borda de palavra</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\A</emphasis></term>
+     <listitem><simpara>início da string de entrada (independente do modo multi-linhas)</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\Z</emphasis></term>
+     <listitem>
+      <simpara>
+       final da string de entrada ou caractere de nova linha no final (independente do
+       modo multi-linhas)
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\z</emphasis></term>
+     <listitem><simpara>final da string de entrada (independente do modo multi-linhas)</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\G</emphasis></term>
+     <listitem><simpara>primeira posição de correspondência na string de entrada</simpara></listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+  <para>
+   Estas afirmações podem não aparecer em classes de caracteres (mas
+   observe que "<literal>\b</literal>" tem um significado diferente, que é o caractere
+   de "backspace" dentro de uma classe de caracteres).
+  </para>
+  <para>
+   Uma borda de palavra é uma posição na string de entrada onde
+   nem o caractere atual nem o caractere anterior
+   correspondem a <literal>\w</literal> ou <literal>\W</literal> ao mesmo tempo (isto é, um deles corresponde a
+   <literal>\w</literal> e o outro corresponde a
+   <literal>\W</literal>), ou o início ou final da string se o primeiro
+   ou último caractere corresponder a <literal>\w</literal>, respectivamente.
+  </para>
+  <para>
+   As afirmações <literal>\A</literal>, <literal>\Z</literal> e
+   <literal>\z</literal> diferem dos tradicionais
+   circunflexo "^" e cifrão "$" (descritos em <link linkend="regexp.reference.anchors">âncoras</link> )
+   porque elas somente são correspondidas exatamente no início e no final da string de entrada,
+   não importa que opções estão definidas. Elas não são afetada pelas opções
+   <link linkend="reference.pcre.pattern.modifiers">PCRE_MULTILINE</link> ou
+   <link linkend="reference.pcre.pattern.modifiers">PCRE_DOLLAR_ENDONLY</link>.
+   A diferença entre <literal>\Z</literal> e
+   <literal>\z</literal> é que <literal>\Z</literal> corresponde antes de um caractere de
+   nova linha que é o último caractere da string e também no final da
+   string, enquanto que <literal>\z</literal> corresponde apenas no final.
+  </para>
+  <para>
+   A afirmação <literal>\G</literal> é verdadeira somente quando a posição
+   de correspondência atual é no ponto inicial da corresponência, como especificado pelo
+   argumento <parameter>offset</parameter> da função
+   <function>preg_match</function>. Ela difere de <literal>\A</literal>
+   quando o valor de <parameter>offset</parameter> é não-zero.
+  </para>
+
+  <para>
+   <literal>\Q</literal> e <literal>\E</literal> podem ser usadas para ignorar
+   metacaracteres na expressão. Por exemplo:
+   <literal>\w+\Q.$.\E$</literal> irão corresponder a um ou mais caracteres de palavras,
+   seguidos pelos literais <literal>.$.</literal> e ancorados no final da
+   string. Observe que isto não muda o comportamento dos
+   delimitadores; por exemplo, a expressão <literal>#\Q#\E#$</literal>
+   não é válida, porque o segundo <literal>#</literal> marca o final
+   da expressão, e o <literal>\E#</literal> é interpretado como modificador
+   inválido.
+  </para>
+
+  <para>
+   <literal>\K</literal> pode ser usado para redefinir o início da correspondência.
+   Por exemplo, a expressão <literal>foo\Kbar</literal> corresponde a
+   "foobar", mas reporta que correspondeu a "bar". O uso de
+   <literal>\K</literal> não interfere com a configuração de substrings
+   capturadas. Por exemplo, quando a expressão <literal>(foo)\Kbar</literal>
+   corresponde a "foobar", a primeira substring ainda será definida como "foo".
+  </para>
+
+ </section>
+
+ <section xml:id="regexp.reference.unicode">
+  <title>Propriedades de caracteres Unicode</title>
+  <para>
+   Desde a versão 5.1.0, três
+   sequências de escape adicionais para corresponder a tipo de caracteres genéricos estão disponíveis
+   quando o <emphasis>modo UTF-8</emphasis> é selecionado. Elas são:
+  </para>
+  <variablelist>
+   <varlistentry>
+    <term><emphasis>\p{xx}</emphasis></term>
+    <listitem><simpara>um caractere com a propriedade xx</simpara></listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><emphasis>\P{xx}</emphasis></term>
+    <listitem><simpara>um caractere sem a propriedade xx</simpara></listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><emphasis>\X</emphasis></term>
+    <listitem><simpara>uma sequência Unicode estendida</simpara></listitem>
+   </varlistentry>
+  </variablelist>
+  <para>
+   Os nomes de propriedade representados por <literal>xx</literal> acima são limitados
+   às propriedades de categoria geral do Unicode. Cada caractere tem exatamente uma
+   propriedade deste tipo, especificada por uma abreviação de duas letras. Para compatibilidade com
+   o Perl, uma negação pode ser especificada incluindo um circunflexo "^" entre a
+   chave de abertura e o nome da propriedade. Por exemplo, <literal>\p{^Lu}</literal>
+   é o mesmo que <literal>\P{Lu}</literal>.
+  </para>
+  <para>
+   Se somente uma letra for especificada com <literal>\p</literal> ou
+   <literal>\P</literal>, serão incluídas todas as propriedades que iniciam com
+   essa letra. Neste caso, na ausência de negação, as chaves na
+   sequência de escape são opcionais; estes dois exemplos têm o mesmo efeito:
+  </para>
+  <informalexample>
+   <programlisting>
+<![CDATA[
+\p{L}
+\pL
+]]>
+   </programlisting>
+  </informalexample>
+  <table>
+   <title>Códigos de propriedade suportados</title>
+   <tgroup cols="3">
+    <thead>
+     <row>
+      <entry>Propriedade</entry>
+      <entry>Correspondências</entry>
+      <entry>Observações</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry><literal>C</literal></entry>
+      <entry>Outro</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Cc</literal></entry>
+      <entry>Controle</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Cf</literal></entry>
+      <entry>Formato</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Cn</literal></entry>
+      <entry>Não atribuído</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Co</literal></entry>
+      <entry>Uso privado</entry>
+      <entry></entry>
+     </row>
+     <row rowsep="1">
+      <entry><literal>Cs</literal></entry>
+      <entry>Substituto</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>L</literal></entry>
+      <entry>Letra</entry>
+      <entry>
+       Inclui as seguintes propriedades: <literal>Ll</literal>,
+       <literal>Lm</literal>, <literal>Lo</literal>, <literal>Lt</literal> e
+       <literal>Lu</literal>.
+      </entry>
+     </row>
+     <row>
+      <entry><literal>Ll</literal></entry>
+      <entry>Letra minúscula</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Lm</literal></entry>
+      <entry>Letra modificadora</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Lo</literal></entry>
+      <entry>Outra letra</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Lt</literal></entry>
+      <entry>Letra de título</entry>
+      <entry></entry>
+     </row>
+     <row rowsep="1">
+      <entry><literal>Lu</literal></entry>
+      <entry>Letra maiúscula</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>M</literal></entry>
+      <entry>Marca</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Mc</literal></entry>
+      <entry>Marca especial</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Me</literal></entry>
+      <entry>Marca de envolvimento</entry>
+      <entry></entry>
+     </row>
+     <row rowsep="1">
+      <entry><literal>Mn</literal></entry>
+      <entry>Marca de largura zero</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>N</literal></entry>
+      <entry>Número</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Nd</literal></entry>
+      <entry>Número decimal</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Nl</literal></entry>
+      <entry>Letra numérica</entry>
+      <entry></entry>
+     </row>
+     <row rowsep="1">
+      <entry><literal>No</literal></entry>
+      <entry>Outro número</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>P</literal></entry>
+      <entry>Pontuação</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Pc</literal></entry>
+      <entry>Pontuação de conexão</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Pd</literal></entry>
+      <entry>Pontuação de traço</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Pe</literal></entry>
+      <entry>Pontuação de fechamento</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Pf</literal></entry>
+      <entry>Pontuação final</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Pi</literal></entry>
+      <entry>Pontuação inicial</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Po</literal></entry>
+      <entry>Outra pontuação</entry>
+      <entry></entry>
+     </row>
+     <row rowsep="1">
+      <entry><literal>Ps</literal></entry>
+      <entry>Pontuação aberta</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>S</literal></entry>
+      <entry>Símbolo</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Sc</literal></entry>
+      <entry>Símbolo de moeda</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Sk</literal></entry>
+      <entry>Símbolo modificador</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Sm</literal></entry>
+      <entry>Símbolo matemático</entry>
+      <entry></entry>
+     </row>
+     <row rowsep="1">
+      <entry><literal>So</literal></entry>
+      <entry>Outro símbolo</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Z</literal></entry>
+      <entry>Separador</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Zl</literal></entry>
+      <entry>Separador de linha</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Zp</literal></entry>
+      <entry>Separador de parágrafo</entry>
+      <entry></entry>
+     </row>
+     <row>
+      <entry><literal>Zs</literal></entry>
+      <entry>Separador de espaço</entry>
+      <entry></entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </table>
+  <para>
+   Propriedades estendidas tais como <literal>InMusicalSymbols</literal> (símbolos musicais) não são
+   suportadas pelo PCRE.
+  </para>
+  <para>
+   Especificar correspondência insensível a maiúsculas/minúsculas não afeta estas sequências de escape.
+   Por exemplo, <literal>\p{Lu}</literal> sempre irá corresponder somente a letras maiúsculas.
+  </para>
+  <para>
+   Conjuntos de caracteres Unicode são definidos como pertencentes a certos tipos de escrita (ou tipo de alfabeto). Um
+   caractere de um destes conjuntos pode ser correspondido usando um nome de tipo de escrita. Por
+   exemplo:
+  </para>
+  <itemizedlist>
+   <listitem>
+    <simpara><literal>\p{Greek}</literal></simpara>
+   </listitem>
+   <listitem>
+    <simpara><literal>\P{Han}</literal></simpara>
+   </listitem>
+  </itemizedlist>
+  <para>
+   Aqueles que não são parte de um tipo de escrita identificado são agrupados como
+   <literal>Common</literal> (comuns). A lista atual de tipos de escrita é:
+  </para>
+  <table>
+   <title>Tipos de escrita suportados (nomes em inglês)</title>
+   <tgroup cols="5">
+    <tbody>
+     <row>
+      <entry><literal>Arabic</literal></entry>
+      <entry><literal>Armenian</literal></entry>
+      <entry><literal>Avestan</literal></entry>
+      <entry><literal>Balinese</literal></entry>
+      <entry><literal>Bamum</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Batak</literal></entry>
+      <entry><literal>Bengali</literal></entry>
+      <entry><literal>Bopomofo</literal></entry>
+      <entry><literal>Brahmi</literal></entry>
+      <entry><literal>Braille</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Buginese</literal></entry>
+      <entry><literal>Buhid</literal></entry>
+      <entry><literal>Canadian_Aboriginal</literal></entry>
+      <entry><literal>Carian</literal></entry>
+      <entry><literal>Chakma</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Cham</literal></entry>
+      <entry><literal>Cherokee</literal></entry>
+      <entry><literal>Common</literal></entry>
+      <entry><literal>Coptic</literal></entry>
+      <entry><literal>Cuneiform</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Cypriot</literal></entry>
+      <entry><literal>Cyrillic</literal></entry>
+      <entry><literal>Deseret</literal></entry>
+      <entry><literal>Devanagari</literal></entry>
+      <entry><literal>Egyptian_Hieroglyphs</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Ethiopic</literal></entry>
+      <entry><literal>Georgian</literal></entry>
+      <entry><literal>Glagolitic</literal></entry>
+      <entry><literal>Gothic</literal></entry>
+      <entry><literal>Greek</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Gujarati</literal></entry>
+      <entry><literal>Gurmukhi</literal></entry>
+      <entry><literal>Han</literal></entry>
+      <entry><literal>Hangul</literal></entry>
+      <entry><literal>Hanunoo</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Hebrew</literal></entry>
+      <entry><literal>Hiragana</literal></entry>
+      <entry><literal>Imperial_Aramaic</literal></entry>
+      <entry><literal>Inherited</literal></entry>
+      <entry><literal>Inscriptional_Pahlavi</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Inscriptional_Parthian</literal></entry>
+      <entry><literal>Javanese</literal></entry>
+      <entry><literal>Kaithi</literal></entry>
+      <entry><literal>Kannada</literal></entry>
+      <entry><literal>Katakana</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Kayah_Li</literal></entry>
+      <entry><literal>Kharoshthi</literal></entry>
+      <entry><literal>Khmer</literal></entry>
+      <entry><literal>Lao</literal></entry>
+      <entry><literal>Latin</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Lepcha</literal></entry>
+      <entry><literal>Limbu</literal></entry>
+      <entry><literal>Linear_B</literal></entry>
+      <entry><literal>Lisu</literal></entry>
+      <entry><literal>Lycian</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Lydian</literal></entry>
+      <entry><literal>Malayalam</literal></entry>
+      <entry><literal>Mandaic</literal></entry>
+      <entry><literal>Meetei_Mayek</literal></entry>
+      <entry><literal>Meroitic_Cursive</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Meroitic_Hieroglyphs</literal></entry>
+      <entry><literal>Miao</literal></entry>
+      <entry><literal>Mongolian</literal></entry>
+      <entry><literal>Myanmar</literal></entry>
+      <entry><literal>New_Tai_Lue</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Nko</literal></entry>
+      <entry><literal>Ogham</literal></entry>
+      <entry><literal>Old_Italic</literal></entry>
+      <entry><literal>Old_Persian</literal></entry>
+      <entry><literal>Old_South_Arabian</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Old_Turkic</literal></entry>
+      <entry><literal>Ol_Chiki</literal></entry>
+      <entry><literal>Oriya</literal></entry>
+      <entry><literal>Osmanya</literal></entry>
+      <entry><literal>Phags_Pa</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Phoenician</literal></entry>
+      <entry><literal>Rejang</literal></entry>
+      <entry><literal>Runic</literal></entry>
+      <entry><literal>Samaritan</literal></entry>
+      <entry><literal>Saurashtra</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Sharada</literal></entry>
+      <entry><literal>Shavian</literal></entry>
+      <entry><literal>Sinhala</literal></entry>
+      <entry><literal>Sora_Sompeng</literal></entry>
+      <entry><literal>Sundanese</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Syloti_Nagri</literal></entry>
+      <entry><literal>Syriac</literal></entry>
+      <entry><literal>Tagalog</literal></entry>
+      <entry><literal>Tagbanwa</literal></entry>
+      <entry><literal>Tai_Le</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Tai_Tham</literal></entry>
+      <entry><literal>Tai_Viet</literal></entry>
+      <entry><literal>Takri</literal></entry>
+      <entry><literal>Tamil</literal></entry>
+      <entry><literal>Telugu</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Thaana</literal></entry>
+      <entry><literal>Thai</literal></entry>
+      <entry><literal>Tibetan</literal></entry>
+      <entry><literal>Tifinagh</literal></entry>
+      <entry><literal>Ugaritic</literal></entry>
+     </row>
+     <row>
+      <entry><literal>Vai</literal></entry>
+      <entry><literal>Yi</literal></entry>
+      <entry />
+      <entry />
+      <entry />
+      <entry />
+     </row>
+    </tbody>
+   </tgroup>
+  </table>
+  <para>
+   O escape <literal>\X</literal> corresponde a um agrupamento de grafema estendido
+   Unicode. Um agrupamento de grafema estendido consiste em um ou mais caracteres Unicode que
+   se combinam para formar um único glifo. Na verade, isso pode ser considerado como o
+   equivalente Unicode de <literal>.</literal>, já que irá corresponder a um
+   caractere composto, independente de quantos caracteres individuais são
+   realmente usados para gerá-lo.
+  </para>
+  <para>
+   Em versões do PCRE mais antigas que 8.32 (que corresponde às versões do PHP
+   antes da 5.4.14 que usavam a biblioteca PCRE interna), <literal>\X</literal>
+   é equivalente a <literal>(?>\PM\pM*)</literal>. Isto é, corresponde a
+   um caractere sem a propriedade de "marca", seguida por zero ou mais caracteres
+   com a propriedadede "marca", e trata a sequência como um grupo atômico (veja
+   abaixo). Caracteres com a propriedade de "marca" são tipicamente acentuações que
+   afetam o caractere precedente.
+  </para>
+  <para>
+   A correspondência de caracteres por propriedade Unicode não é rápida porque o PCRE precisa
+   pesquisar uma estrutura que contenha dados para mais que quinze mil
+   caracteres. É por isso que as sequências de escape tradicionais como
+   <literal>\d</literal> e <literal>\w</literal> não usam as propriedades Unicode
+   no PCRE.
+  </para>
+ </section>
+
+ <section xml:id="regexp.reference.anchors">
+  <title>Âncoras</title>
+  <para>
+   Fora de uma classe de caracteres, no modo padrão de correspondência, o
+   caractere de circunflexo (<literal>^</literal>) é uma afirmação que
+   é verdadeira somente se o ponto de correspondência atual estiver no início da
+   string de entrada. Dentro de uma classe de caracteres, o circunflexo (<literal>^</literal>)
+   tem um significado completamente diferente (veja abaixo).
+  </para>
+  <para>
+   O circunflexo (<literal>^</literal>) não precisa ser o primeiro caractere
+   da expressão se um número de alternativas estiver envolvido, mas
+   deve ser a primeira coisa em cada alternativa em que aparece
+   se a expressão acabar correspondendo a esse ramo. Se todas as alternativas
+   possíveis iniciarem com um circunflexo (<literal>^</literal>), isto é,
+   se a expressão for restringida a corresponder apenas ao início da string,
+   é dito que essa é uma expressão "ancorada". Também há outras
+   construções que podem fazer com que uma expressão seja ancorada.
+  </para>
+  <para>
+   Um caractere de cifrão (<literal>$</literal>) é uma afirmação que é
+   verdadeira somente se o ponto atual de correspondência estiver no final da string
+   de entrada, ou imediatamente antes de um caractere de nova linha que é o último
+   caractere na string (por padrão). Cifrão (<literal>$</literal>)
+   não precisa ser o último caractere da expressão se um número de
+   alternativas estiver envolvido, mas deve ser o último item em qualquer
+   ramo em que ele aparecer. O cifrão não tem nenhum significado especial em uma
+   classe de caracteres.
+  </para>
+  <para>
+   O significado do cifrão pode ser alterado de forma que ele corresponda apenas
+   ao final da string, configurando-se a opção
+   <link linkend="reference.pcre.pattern.modifiers">PCRE_DOLLAR_ENDONLY</link>
+   no momento da compilação ou da correspondência. Isto não afeta a afirmação \Z.
+  </para>
+  <para>
+   Os significados dos caracteres circunflexo e cifrão são
+   alterados se a opção
+   <link linkend="reference.pcre.pattern.modifiers">PCRE_MULTILINE</link>
+   estiver definida. Quando esse é o caso, eles irão corresponder imediatamente após e
+   imediatamente antes de um caractere "\n" interno, respectivamente, além de
+   corresponder ao início e ao final da string de entrada. Por exemplo, a
+   expressão /^abc$/ corresponde à string de entrada "def\nabc" em modo multi-linhas,
+   mas não em modo de linha única. Consequentemente, expressões que são ancoradas em modo
+   de linha única porque todos os ramos iniciam com "^" não são ancoradas em
+   modo multi-linhas. A opção
+   <link linkend="reference.pcre.pattern.modifiers">PCRE_DOLLAR_ENDONLY</link>
+   é ignorada se
+   <link linkend="reference.pcre.pattern.modifiers">PCRE_MULTILINE</link> estiver
+   definida.
+  </para>
+  <para>
+   Observe que as sequências \A, \Z, e \z podem ser usadas para corresponder ao
+   início e ao final da string em ambos os modos e, se todos
+   os ramos de uma expressão iniciarem com \A, ela estará sempre ancorada,
+   independente se <link linkend="reference.pcre.pattern.modifiers">PCRE_MULTILINE</link>
+   estiver definida ou não.
+  </para>
+ </section>
+
+ <section xml:id="regexp.reference.dot">
+  <title>Ponto</title>
+  <para>
+   Fora de uma classe de caracteres, um ponto na expressão corresponde a
+   qualquer caractere na string, incluindo os não
+   imprimíveis, mas não o caractere de nova linha (por padrão). Se a
+   opção <link linkend="reference.pcre.pattern.modifiers">PCRE_DOTALL</link>
+   estiver definida, os pontos corresponderão aos caracteres de nova linha. A
+   manipulação do ponto é completamente independente da manipulação do
+   circunflexo e do cifrão, sendo que a única relação entre eles é que
+   ambos envolvem caracteres de nova linha. O ponto não tem nenhum significado especial
+   em uma classe de caracteres.
+  </para>
+  <para>
+   <emphasis>\C</emphasis> pode ser usada para corresponder a um único byte. Faz sentido
+   no <emphasis>modo UTF-8</emphasis> onde o ponto final corresponde ao
+   caractere inteiro que pode consistir de múltiplos bytes.
+  </para>
+ </section>
+
+ <section xml:id="regexp.reference.character-classes">
+  <title>Classes de caracteres</title>
+  <para>
+   Uma abertura de colchete introduz uma classe de caracteres,
+   terminada por um fechamento de colchete. Um colchete de
+   fechamento em si não é especial. Se um colchete de
+   fechamento for requerido como membro da classe, ele deve ser
+   o primeiro caractere na classe (após um circunflexo
+   inicial, se presente) ou escapado com uma barra invertida.
+  </para>
+  <para>
+   Uma classe de caracteres corresponde a um único caractere na string;
+   o caractere precisa estar no conjunto de caracteres definido pela
+   classe, a menos que o primeiro caractere na classe seja um
+   circunflexo, que nesse caso o caractere na string não pode estar no
+   conjunto definido pela classe. Se um circunflexo for
+   requerido como membro da classe, é preciso garantir que ele não seja o
+   primeiro caractere, ou que seja escapado com uma barra invertida.
+  </para>
+  <para>
+   Por exemplo, a classe de caracteres [aeiou] corresponde a qualquer vogal minúscula
+   sem acento, enquanto que [^aeiou] corresponde a qualquer caractere que não seja uma
+   vogal minúscula sem acento. Observe que um circunflexo é apenas uma
+   notação conveniente para especificar os caracteres que estão na
+   classe enumerando aqueles que não estão. Não é uma
+   afirmação: ela ainda consome um caractere da string
+   de entrada, e falha se o ponteiro atual estiver no final
+   da string.
+  </para>
+  <para>
+   Quando uma correspodência insensível a maiúsculas/minúsculas é definida, qualquer letra
+   em uma classe representa tanto a forma maiúscula quanto a
+   minúscula, então, por exemplo, uma classe [aeiou] insensível à forma corresponde tanto a "A"
+   quanto a "a", e uma classe [^aeiou] insensível à forma não corresponde a
+   "A", enquanto que um versão sensível à forma corresponderia.
+  </para>
+  <para>
+   Um caractere de nova linha nunca é tratado de modo especial em
+   classes de caractere, independente da configuração da opção <link
+   linkend="reference.pcre.pattern.modifiers">PCRE_DOTALL</link>
+   ou da opção <link linkend="reference.pcre.pattern.modifiers">PCRE_MULTILINE</link>.
+   Uma classe como [^a] sempre corresponderá a uma nova linha.
+  </para>
+  <para>
+   O caractere hífen (sinal de subtração) pode ser usado para especificar uma faixa
+   de caracteres em uma classe. Por exemplo, [d-m]
+   corresponde a qualquer letra entre d e m, inclusive. Se um hífen
+   literal for requerido na classe, ele precisa ser escapado com uma
+   barra invertida ou aparecer em uma posição onde não possa ser
+   confundido com um indicador de faixa, tipicamente como o primeiro ou último
+   caractere na classe.
+  </para>
+  <para>
+   Não é possível ter o caractere literal "]" como o
+   caractere final de uma faixa. Uma expressão como [W-]46] é
+   interpretada como uma classe de dois caracteres ("W" e "-")
+   seguida pela string literal "46]", portanto corresponderia a "W46]" ou
+   "-46]". Entretanto, se o "]" for escapado com uma barra invertida ele
+   será interpretado como o final da faixa. Assim, [W-\]46] é
+   interpretado como uma classe única contendo uma faixa única seguida por
+   dois caracteres separados. A representação octal ou hexadecimal
+   de "]" também pode ser usada para finalizar uma faixa.
+  </para>
+  <para>
+   As faixas operam na sequência da tabela ASCII. Elas também podem ser
+   usadas para caracteres especificados numericamente, por exemplo
+   [\000-\037]. Se uma faixa que inclui letras for usada quando uma
+   correspondência insensível a maiúsculas/minúsculas estiver definida, ela corresponderá às
+   letras em ambas as formas. Por exemplo, [W-c] é equivalente a
+   [][\^_`wxyzabc], correspondida de maneira insensível à forma, e se tabelas
+   de caracteres para a localidade "pt-BR" estiverem em uso, [\xc0-\xc3] correspondem
+   à letra A com acentos tanto em maiúsuculas quanto em minúsculas.
+  </para>
+  <para>
+   Os tipos de caractere \d, \D, \s, \S, \w e \W também podem
+   aparecer em uma classe de caracteres e adicionar à classe os caractares
+   aos quais eles correspondem. Por exemplo, [\dABCDEF] corresponde a qualquer
+   dígito hexadecimal. Um circunflexo pode convenientemente ser usado
+   com os tipos de caracteres maiúsculos para especificar um conjunto
+   mais restrito de caracteres que a correspondência ao tipo de minúsculas.
+   Por exemplo, a classe [^\W_] corresponde a qualquer letra ou dígito,
+   mas não ao sublinhado "_".
+  </para>
+  <para>
+   Todos os caracteres não alfanuméricos que não sejam \, -, ^ (no
+   início) e o terminador ] não são especiais em classes
+   de caracteres, mas não faz mal agum se forem escapados. O terminador
+   de expressão é sempre especial e precisa ser escapado quando usado
+   dentro de uma expressão.
+  </para>
+  <para>
+   O Perl suporta a notação POSIX para classes de caracteres. Ela usa nomes
+   envolvidos por <literal>[:</literal> e <literal>:]</literal> dentro
+   de colchetes. O PCRE também
+   suporta esta notação. Por exemplo, <literal>[01[:alpha:]%]</literal>
+   corresponde a "0", "1", qualquer caractere alfabético ou "%". Os nomes de classe
+   suportados são:
+   <table>
+    <title>Classes de caracteres</title>
+    <tgroup cols="2">
+     <tbody>
+      <row><entry><literal>alnum</literal></entry><entry>letras e dígitos</entry></row>
+      <row><entry><literal>alpha</literal></entry><entry>letras</entry></row>
+      <row><entry><literal>ascii</literal></entry><entry>caracteres com códigos 0 - 127</entry></row>
+      <row><entry><literal>blank</literal></entry><entry>espaço ou tabulação somente</entry></row>
+      <row><entry><literal>cntrl</literal></entry><entry>caracteres de controle</entry></row>
+      <row><entry><literal>digit</literal></entry><entry>dígitos decimais (o mesmo que \d)</entry></row>
+      <row><entry><literal>graph</literal></entry><entry>caracteres imprimíveis, excluindo o espaço</entry></row>
+      <row><entry><literal>lower</literal></entry><entry>letras minúsculas</entry></row>
+      <row><entry><literal>print</literal></entry><entry>caracteres imprimíveis, incluindo o espaço</entry></row>
+      <row><entry><literal>punct</literal></entry><entry>caracteres imprimíveis, excluindo letras e dígitos</entry></row>
+      <row><entry><literal>space</literal></entry><entry>espaço (não é idêntico a \s)</entry></row>
+      <row><entry><literal>upper</literal></entry><entry>letras maiúsculas</entry></row>
+      <row><entry><literal>word</literal></entry><entry>caracteres de "palavra" (o mesmo que \w)</entry></row>
+      <row><entry><literal>xdigit</literal></entry><entry>dígitos hexadecimais</entry></row>
+     </tbody>
+    </tgroup>
+   </table>
+   Os caracteres da classe <literal>space</literal> são: tabulação horizontal (9), nova linha (10), tabulação vertical (11), alimentação de formulário (12), retorno de carro (13),
+   e espaço (32). Observe que esta lista inclui o caractere de tabulação vertical (código
+   11). Isso faz com que "space" seja diferente de <literal>\s</literal>, que não inclui a tabulação vertical (para
+   compatibilidade com o Perl).
+  </para>
+  <para>
+   O nome <literal>word</literal> é uma extensão do Perl, e <literal>blank</literal> é uma extensão GNU
+   do Perl 5.8. Uma outra extensão do Perl é a negação, que é indicada
+   por um caractere <literal>^</literal> após o caractere de dois-pontos. Por exemplo,
+   <literal>[12[:^digit:]]</literal> corresponde a "1", "2" ou qualquer não-dígito.
+  </para>
+  <para>
+   No modo UTF-8, caracteres com valores maiores que 127 não correspondem a nenhuma
+   das classes de caracteres POSIX.
+   A partir da libpcre 8.10 algumas classes de caracteres são modificadas para usar
+   proprieadades de caracteres Unicode, e nesse caso a restrição mencionada não
+   se aplica. Refira-se ao <link xlink:href="&url.pcre.man;">manual PCRE(3)</link>
+   para detalhes.
+  </para>
+  <para>
+   Propriedades de caracteres Unicode podem aparecer dentro de uma classe de caracteres. Elas não
+   podem ser parte de uma faixa. O caractere hífen após uma classe de caractere
+   Unicode irá corresponder literalmente. Tentar finalizar uma faixa com uma propriedade
+   de caractere Unicode resultará em um alerta.
+  </para>
+ </section>
+
+ <section xml:id="regexp.reference.alternation">
+  <title>Alternância</title>
+  <para>
+   Caracteres de barra vertical "|" são usados para separar expressões
+   alternativas. Por exemplo, a expressão
+   <literal>gilbert|sullivan</literal>
+   correspondem tanto a "gilbert" quanto a "sullivan". Qualquer número de alternativas
+   pode ser usado, e uma alternativa vazia é permitida
+   (correspondendo a uma string vazia). O processo de correspondência testa
+   uma alternativa de cada vez, da esquerda para a direita, e a primeira
+   bem-sucedida é usada. Se as alternativas estiverem dentro de
+   uma sub-expressão (definida abaixo), "bem-sucedida" significa correspondência ao
+   restante da expressão principal assim como à alternativa dentro da
+   sub-expressão.
+  </para>
+ </section>
+
+ <section xml:id="regexp.reference.internal-options">
+  <title>Configuração de opções dentro da expressão</title>
+  <para>
+   As configurações de <link linkend="reference.pcre.pattern.modifiers">PCRE_CASELESS</link>,
+   <link linkend="reference.pcre.pattern.modifiers">PCRE_MULTILINE</link>,
+   <link linkend="reference.pcre.pattern.modifiers">PCRE_DOTALL</link>,
+   <link linkend="reference.pcre.pattern.modifiers">PCRE_UNGREEDY</link>,
+   <link linkend="reference.pcre.pattern.modifiers">PCRE_EXTRA</link>,
+   <link linkend="reference.pcre.pattern.modifiers">PCRE_EXTENDED</link>
+   e PCRE_DUPNAMES podem ser alteradas de dentro da expressão através de
+   uma sequência de letras de opção do Perl envolvidas entre "(?" e
+   ")". As letras de opções são:
+
+   <table>
+    <title>Letras de opções internas</title>
+    <tgroup cols="2">
+     <tbody>
+      <row>
+       <entry><literal>i</literal></entry>
+       <entry>para <link linkend="reference.pcre.pattern.modifiers">PCRE_CASELESS</link></entry>
+      </row>
+      <row>
+       <entry><literal>m</literal></entry>
+       <entry>para <link linkend="reference.pcre.pattern.modifiers">PCRE_MULTILINE</link></entry>
+      </row>
+      <row>
+       <entry><literal>s</literal></entry>
+       <entry>para <link linkend="reference.pcre.pattern.modifiers">PCRE_DOTALL</link></entry>
+      </row>
+      <row>
+       <entry><literal>x</literal></entry>
+       <entry>para <link linkend="reference.pcre.pattern.modifiers">PCRE_EXTENDED</link></entry>
+      </row>
+      <row>
+       <entry><literal>U</literal></entry>
+       <entry>para <link linkend="reference.pcre.pattern.modifiers">PCRE_UNGREEDY</link></entry>
+      </row>
+      <row>
+       <entry><literal>X</literal></entry>
+       <entry>para <link linkend="reference.pcre.pattern.modifiers">PCRE_EXTRA</link>
+        (não mais suportada a partir do PHP 7.3.0)</entry>
+      </row>
+      <row>
+       <entry><literal>J</literal></entry>
+       <entry>para <link linkend="reference.pcre.pattern.modifiers">PCRE_INFO_JCHANGED</link></entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </table>
+  </para>
+  <para>
+   Por exemplo, (?im) define uma correspondência insensível a maiúsculas/minúsculas, com multi-linhas. Também
+   é possível remover estas opções precendendo a letra
+   com um hífen, e combinar definição com remoção como em
+   (?im-sx), que define <link
+   linkend="reference.pcre.pattern.modifiers">PCRE_CASELESS</link> e
+   <link linkend="reference.pcre.pattern.modifiers">PCRE_MULTILINE</link>
+   enquanto remove <link
+   linkend="reference.pcre.pattern.modifiers">PCRE_DOTALL</link> e
+   <link linkend="reference.pcre.pattern.modifiers">PCRE_EXTENDED</link>.
+   Se uma letra aparecer tanto antes quanto depois do
+   hífen, a opção é removida.
+  </para>
+  <para>
+   Quando uma mudança de opção ocorre no nível mais alto (isto é, não ocorre dentro
+   de parênteses de sub-expressão), a mudança se aplica ao restante da
+   expressão que se segue. Assim, <literal>/ab(?i)c/</literal> corresponde apenas a "abc"
+   e "abC".
+  </para>
+  <para>
+   Se uma mudança de opção ocorre dentro de uma sub-expressão, o efeito
+   é diferente. Isto é uma mudança de comportamento no Perl 5.005.
+   Uma mudança de opção dentro de uma sub-expressão afeta somente aquela parte
+   da sub-expressão que a segue, assim
+
+   <literal>(a(?i)b)c</literal>
+
+   corresponde a "abc" e "aBc" e nenhuma outra string (assumindo que <link
+   linkend="reference.pcre.pattern.modifiers">PCRE_CASELESS</link> não seja
+   usada). Por este meio, opções podem ser usadas para ter configurações diferentes em
+   partes diferentes da sub-expressão. Qualquer mudança feita em uma alternativa
+   é carregada nos ramos subsequentes dentro da mesma sub-expressão. Por
+   exemplo,
+
+   <literal>(a(?i)b|c)</literal>
+
+   corresponde a "ab", "aB", "c" e "C", embora quando corresponde a
+   "C", o primeiro ramo é abandonado antes da definição da opção.
+   Isto porque os efeitos de configurações de opções acontecem em
+   tempo de compilação. Haveria comportamento muito estranho caso não fosse desta maneira.
+  </para>
+  <para>
+   As opções específicas do PCRE <link
+   linkend="reference.pcre.pattern.modifiers">PCRE_UNGREEDY</link> e
+   <link linkend="reference.pcre.pattern.modifiers">PCRE_EXTRA</link> podem
+   ser alteradas da mesma forma que as compatíveis com o Perl,
+   usando os caracteres U e X respectivamente. A opção (?X)
+   é especial pelo fato de que deve sempre ocorrer na expressão
+   antes de qualquer recurso adicional que ela ativa,
+   mesmo quando está no nível mais alto. É melhor quando colocada no início.
+  </para>
+ </section>
+
+ <section xml:id="regexp.reference.subpatterns">
+  <title>Sub-expressões</title>
+  <para>
+   Sub-expressões são delimitadas por parênteses
+   e podem ser aninhadas. Marcar parte de uma expressão como uma sub-expressão
+   tem dois objetivos:
+  </para>
+  <orderedlist>
+   <listitem>
+    <para>
+     Localizar um conjunto de alternativas. Por exemplo, a expressão
+     <literal>cat(aract|erpillar|)</literal> corresponde a uma das três palavras: "cat",
+     "cataract" ou "caterpillar". Sem os parênteses, corresponderia a
+     "cataract", "erpillar" ou a uma string vazia.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     Definir a sub-expressão como um grupo de captura (como definido acima).
+     Quando toda a expressão tem correspondência, a parte da string de entrada
+     que correspondeu à sub-expressão é passada de volta à função chamadora através
+     do argumento <emphasis>ovector</emphasis> da função <function>pcre_exec</function>.
+     Parênteses de abertura são contados da esquerda para a direita (iniciando de 1) para
+     obter os números dos grupos de captura.
+    </para>
+   </listitem>
+  </orderedlist>
+  <para>
+   Por exemplo, se a string "the red king" é correspondida pela
+   expressão
+
+   <literal>the ((red|white) (king|queen))</literal>
+
+   os grupos de captura são "red king", "red" e "king",
+   e são numerados com 1, 2 e 3.
+  </para>
+  <para>
+   O fato dos parênteses terem duas funções nem
+   sempre ajuda. Frequentemente é necessária uma sub-expressão de
+   agrupamento sem a necessidade de captura. Se um parêntese
+   de abertura for seguido por "?:", a sub-expressão não
+   faz nenhuma captura, e não é contado ao computar o
+   número de sub-expressões de captura subsequentes. Por exemplo,
+   se a string "the white queen" é correspondida pela
+   expressão
+
+   <literal>the ((?:red|white) (king|queen))</literal>
+
+   as substrings capturadas são "white queen" e "queen", e
+   são numeradas com 1 e 2. O número máximo de subtrings capturadas
+   é 65535. Porém, pode não ser possível compilar expressões deste tamanho,
+   dependendo das opções de configuração da biblioteca libpcre.
+  </para>
+  <para>
+   Como um atalho conveniente, se qualquer configuração de opção for
+   necessária no início de uma sub-expressão sem captura, as
+   letras de opções podem aparecer entre o "?" e o ":". Assim,
+   as duas expressões
+  </para>
+
+  <informalexample>
+   <programlisting>
+<![CDATA[
+(?i:saturday|sunday)
+(?:(?i)saturday|sunday)
+]]>
+   </programlisting>
+  </informalexample>
+
+  <para>
+   correspondem exatamente ao mesmo conjunto de strings. Como os ramos
+   alternativos são testados da esquerda para a direita, e as opções não são
+   redefinidas até que se alcance o final da sub-expressão, uma configuração
+   de opção em um ramo não afeta ramos subsequentes, portanto
+   as expressões acima correspondem a "SUNDAY" e também a "Saturday".
+  </para>
+
+  <para>
+   É possível nomear uma sub-expressão usando a sintaxe
+   <literal>(?P&lt;nome&gt;expressão)</literal>. Esta sub-expressão será então
+   indexada no array de correspondências pela sua posição numérica normal e
+   também pelo nome. Há duas sintaxes alternativas:
+   <literal>(?&lt;nome&gt;expressão)</literal> e <literal>(?'nome'expressão)</literal>.
+  </para>
+
+  <para>
+   Algumas vezes é necessário ter correspondências múltiplas, mas não ter
+   sub-grupos alternados em uma expressão regular. Normalmente, cada um destes receberia
+   seu próprio número de referência embora apenas um seria
+   possivelmente correspondido. Para contornar isto, a sintaxe <literal>(?|</literal> permite
+   ter números duplicados. Considere o caso abaixo, onde a expressão regular corresponde à
+   string <literal>Sunday</literal>:
+  </para>
+
+  <informalexample>
+   <programlisting>
+<![CDATA[(?:(Sat)ur|(Sun))day]]>
+   </programlisting>
+  </informalexample>
+
+  <para>
+   Aqui, <literal>Sun</literal> é armazenado na referência 2, enquanto que
+   a referência 1 está vazia. Corresponder <literal>Saturday</literal> gera
+   a referência 1 para <literal>Sat</literal> enquanto que a referência 2
+   não existirá. Modificar a expressão usando <literal>(?|</literal> corrige
+   este problema:
+  </para>
+
+  <informalexample>
+   <programlisting>
+<![CDATA[(?|(Sat)ur|(Sun))day]]>
+   </programlisting>
+  </informalexample>
+
+  <para>
+   Usando esta expressão, tanto <literal>Sun</literal> quanto <literal>Sat</literal>
+   seriam armazenadas na referência 1.
+  </para>
+ </section>
+
+ <section xml:id="regexp.reference.repetition">
+  <title>Repetição</title>
+  <para>
+   Repetição é especificada por quantificadores, que podem acompanhar qualquer
+   dos itens abaixo:
+
+   <itemizedlist>
+    <listitem><simpara>um único caractere, possivelmente escapado</simpara></listitem>
+    <listitem><simpara>o metacaractere "."</simpara></listitem>
+    <listitem><simpara>uma classe de caracteres</simpara></listitem>
+    <listitem><simpara>uma referência retroativa (veja a próxima seção)</simpara></listitem>
+    <listitem><simpara>uma sub-expressão entre parênteses (a menos que seja uma afirmação -
+     veja abaixo)</simpara></listitem>
+   </itemizedlist>
+  </para>
+  <para>
+   O quantificador de repetição geral especifica um número
+   mínimo e um máximo de correspondências permitidas, informando os dois
+   números dentro de chaves e separados por uma vírgula.
+   Os números precisam ser menores que 65536, e o primeiro precisa ser
+   menor ou igual ao segundo. Por exemplo:
+
+   <literal>z{2,4}</literal>
+
+   corresponde a "zz", "zzz" ou "zzzz". Um fechamento de chave em si
+   não é um caractere especial, Se o segundo número for omitido,
+   mas a vírgula estiver presente, não há limite superior; se o
+   segundo número e a vírgula são ambos omitidos, o quantificador
+   especifica um número exato de correspondências requeridas. Assim,
+
+   <literal>[aeiou]{3,}</literal>
+
+   corresponde a pelo menos 3 vogais sem acento sucessivas, mas também podem corresponder a
+   muito mais, enquanto que
+
+   <literal>\d{8}</literal>
+
+   corresponde a exatamente 8 dígitos. Uma chave de abertura que
+   aparece em uma posição onde um quantificador não é permitido, ou
+   que não corresponda à sintaxe de um quantificador, é considerada
+   como um caractere literal, Por exemplo, {,6} não é um quantificador,
+   mas uma string literal de quatro caracteres.
+  </para>
+  <para>
+   O quantificador {0} é permitido, fazendo com que a expressão se
+   comporte como se o item anterior e o quantificador não estivessem
+   presentes.
+  </para>
+  <para>
+   Para conveniência (e compatibilidade histórica), os três
+   quantificadores mais comuns têm abreviaturas de apenas um caractere:
+
+   <table>
+    <title>Quantificadores de um caractere</title>
+    <tgroup cols="2">
+     <tbody>
+      <row>
+       <entry><literal>*</literal></entry>
+       <entry>equivalente a <literal>{0,}</literal></entry>
+      </row>
+      <row>
+       <entry><literal>+</literal></entry>
+       <entry>equivalente a <literal>{1,}</literal></entry>
+      </row>
+      <row>
+       <entry><literal>?</literal></entry>
+       <entry>equivalente a <literal>{0,1}</literal></entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </table>
+  </para>
+  <para>
+   É possível construir laços de repetição infinitos acompanhando uma
+   sub-expressão que pode corresponder a nenhum caractere com um quantificador
+   que não tem limite superior, por exemplo:
+
+   <literal>(a?)*</literal>
+  </para>
+  <para>
+   Versões mais antigas do Perl e do PCRE costumavam emitir um erro em
+   tempo de compilação para tais expressões. No entanto, por haver
+   casos onde isto pode ser útil, essas expressões agora são
+   aceitas, mas se alguma repetição na sub-expressão de
+   fato corresponder a nenhum caractere, o laço é quebrado à força.
+  </para>
+  <para>
+   Por padrão, os quantificadores são "gananciosos", isto é, eles irão
+   corresponder ao máximo de caracteres possível (até o limite do número
+   máximo permitido), sem fazer com que o resto da expressão
+   falhe. O exemplo clássico de onde isso dá problema é a
+   tentativa de correspondência de comentários nos programas em linguagem C. Eles aparecem entre
+   as sequências /* e */ e dentro da sequência, caracteres individuais
+   * e / podem aparecer. Uma tentativa de corresponder a comentários C
+   aplicando a expressão
+
+   <literal>/\*.*\*/</literal>
+
+   à string
+
+   <literal>/* primeiro comentário */ não comentário /* segundo comentário */</literal>
+
+   falha, porque ela corresponde à string completa devido à
+   ganância do item ".*".
+  </para>
+  <para>
+   Porém, se um quantificador for seguido por um ponto de interrogação,
+   ele se torna preguiçoso, e agora irá corresponder ao mínimo número
+   de vezes possível, e portanto a expressão
+
+   <literal>/\*.*?\*/</literal>
+
+   faz o certo com os comentários C. O significado dos
+   vários quantificadores não é alterado, apenas o número
+   preferido de correspondências. Não confunda este uso do
+   ponto de interrogação com o seu uso como um quantificador em si.
+   Como ele tem dois usos, pode algumas vezes aparecer duplicado, como
+   em
+
+   <literal>\d??\d</literal>
+
+   que corresponde a um dígito por preferência, mas pode corresponder a dois se
+   esta for a única maneira que o resto da expressão terá correspondência.
+  </para>
+  <para>
+   Se a opção <link linkend="reference.pcre.pattern.modifiers">PCRE_UNGREEDY</link>
+   estiver definida (uma opção que não está
+   disponível no Perl), os quantificadores não serão gananciosos por
+   padrão, mas os individuais podem se tornar gananciosos inserindo-se um
+   ponto de interrogação na sequência deles. Em outras palavras, o ponto de interrogação inverte
+   o comportamento padrão.
+  </para>
+  <para>
+   Quantificadores seguidos por <literal>+</literal> são "possessivos". Eles consomem
+   o máximo de caracteres possível e não retornam para corresponder ao restante da
+   expressão. Assim, <literal>.*abc</literal> corresponde a "aabc" mas
+   <literal>.*+abc</literal> não, porque <literal>.*+</literal> consome a
+   string inteira. Quantificadores possessivos podem ser usados para acelerar o processamento.
+  </para>
+  <para>
+   Quando uma sub-expressão entre parênteses é quantificada com uma contagem
+   mínima de repetições maior que um ou com um máximo limitado,
+   mais espaço de armazenamento é necessário para a expressão compilada, em
+   proporção ao tamanho do mínimo ou do máximo.
+  </para>
+  <para>
+   Se uma expressão começa com .* ou .{0,} e a opção <link
+   linkend="reference.pcre.pattern.modifiers">PCRE_DOTALL</link>
+   (equivalente ao /s do Perl) está definida, assim permitindo que o "."
+   corresponda a caracteres de nova linha, a expressão estará implicitamente ancorada,
+   porque qualquer coisa que estiver na sequência será testada em cada posição
+   de caractere na string de entrada. Portanto, não faz sentido
+   tentar novamente a correspondência geral em qualquer posição após a primeira.
+   O PCRE trata tal expressão como se ela estivesse precedida por \A.
+   Em casos onde é sabido que a string de entrada não contém
+   caracteres de nova linha, vale a pena configurar <link
+   linkend="reference.pcre.pattern.modifiers">PCRE_DOTALL</link> quando a
+   expressão inicia com .* para
+   obter esta otimização, ou
+   alternativamente usar ^ para indicar a ancoragem explicitamente.
+  </para>
+  <para>
+   Quando uma sub-expressão de captura é repetida, o valor capturado
+   é a substring que correspondeu à iteração final. Por exemplo, depois que
+
+   <literal>(tweedle[dume]{3}\s*)+</literal>
+
+   tenha correspondido a "tweedledum tweedledee" o valor da substring
+   capturada é "tweedledee". Porém se houver
+   sub-expressões de captura aninhadas, os valores de captura
+   correspondentes podem ter sido definidos em iterações prévias. Por exemplo,
+   depois que
+
+   <literal>/(a|(b))+/</literal>
+
+   corresponder a "aba" o valor da segunda substring capturada é
+   "b".
+  </para>
+ </section>
+
+ <section xml:id="regexp.reference.back-references">
+  <title>Referências retroativas</title>
+  <para>
+   Fora de uma classe de caracteres, uma barra invertida seguida por um dígito
+   maior que 0 (e possivelmente dígitos adicionais) é uma referência
+   retroativa a um grupo de captura realizada anteriormente (isto é, à sua
+   esquerda) na expressão, desde que tenha havido previamente essa quantidade
+   de captura entre parênteses.
+  </para>
+  <para>
+   Porém, se um número decimal seguindo a barra invertida for
+   menor que 10, ele sempre será interpretado como uma referência retroativa e
+   causará um erro somente se não tiver havido essa quantidade de
+   grupos de captura em toda a expressão. Em outras palavras, os
+   parênteses que são referenciados não precisam estar à esquerda da
+   referência para números menores que 10.
+   Uma "referência retroativa à frente" pode fazer sentido quando uma repetição
+   está envolvida e a sub-expressão à direita tenha participado
+   de uma iteração anterior. Consulte a seção sobre
+   <link linkend="regexp.reference.escape">sequências de escape</link> para detalhes adicionais da manipulação
+   de dígitos que seguem uma barra invertida.
+  </para>
+  <para>
+   Uma referência retroativa corresponde a qualquer coisa que verdadeiramente correspondeu à sub-expressão
+   de captura na string de entrada atual, e não
+   a qualquer coisa que corresponda à sub-expressão em si. Portanto, a expressão
+
+   <literal>(sens|respons)e and \1ibility</literal>
+
+   corresponde a "sense and sensibility" e "response and responsibility",
+   mas não a "sense and responsibility". Se a correspondência for sensível a
+   maiúsculas/minúsculas no momento da referência retroativa, a forma
+   das letras será relevante. Por exemplo,
+
+   <literal>((?i)rah)\s+\1</literal>
+
+   corresponde a "rah rah" e "RAH RAH", mas não a "RAH rah", embora
+   a sub-expressão de captura original seja correspondida
+   de forma insensível a maiúsculas/minúsculas.
+  </para>
+  <para>
+   Pode haver mais que uma referência retroativa à mesma sub-expressão.
+   Se uma sub-expressão não tiver sido usada em uma correspondência
+   em particular, qualquer referência retroativa a ela sempre
+   falhará. Por exemplo, a expressão
+
+   <literal>(a|(bc))\2</literal>
+
+   sempre falhará se ele iniciar correspondendo a "a" ao invés de "bc".
+   Como podem haver até 99 referências retroativas, todos os dígitos
+   seguindo a barra invertida são consideradas como parte de um potencial número
+   de identificador de referência retroativa. Se a expressão continua com um caractere de
+   dígito, algum delimitador precisa ser usado para terminar a
+   referência retroativa. Se a opção <link
+   linkend="reference.pcre.pattern.modifiers">PCRE_EXTENDED</link>
+   estiver definida, o delimitador pode ser um espaço em branco. Caso contrário um comentário vazio pode ser usado.
+  </para>
+  <para>
+   Uma referência retroativa que ocorre dentro dos parênteses aos quais ela
+   se refere falha quando a sub-expressão é usada pela primeira vez, portanto, por
+   exemplo, (a\1) nunca será correspondida. No entanto, tais referências podem
+   ser úteis dentro de sub-expressões repetidas. Por exemplo, a expressão
+
+   <literal>(a|b\1)+</literal>
+
+   corresponde a qualquer número de "a"s e também a "aba", "ababba" etc. A
+   cada iteração da sub-expressão, a referência retroativa corresponde
+   à string de caracteres relativa à iteração anterior.
+   Para que isso funcione, a expressão precisa ser tal
+   que a primeira iteração não precise corresponder à referência
+   retroativa. Isto pode ser feito usando alternância, como no
+   exemplo acima, ou por um quantificador com um mínimo de zero.
+  </para>
+  <para>
+   A sequência de escape <literal>\g</literal> pode ser
+   usada para referências absolutas e relativas de sub-expressões.
+   Esta sequência de escape precisa ser seguida por um número sem sinal ou
+   negativo, opcionalmente envolvido por chaves. As sequências <literal>\1</literal>,
+   <literal>\g1</literal> e <literal>\g{1}</literal> são sinônimos
+   entre si. O uso desta expressão com um número sem sinal pode
+   ajudar a remover a ambiguidade inerente ao usar dígitos após uma
+   barra invertida. A sequência ajuda a distinguir referências de caracteres
+   octais e também torna mais fácil ter uma referência seguida
+   por um número literal, ex.: <literal>\g{2}1</literal>.
+  </para>
+  <para>
+   O uso da sequência <literal>\g</literal> com um número negativo
+   significa uma referência relativa. Por exemplo, <literal>(foo)(bar)\g{-1}</literal>
+   corresponderia à sequência "foobarbar" e <literal>(foo)(bar)\g{-2}</literal>
+   corresponderia a "foobarfoo". Isto pode ser útil em expressões longas como uma alternativa
+   para manter rastreamento do número de sub-expressões para referenciar
+   uma sub-expressão anterior específica.
+  </para>
+  <para>
+   Referências às sub-expressões nomeadas podem ser obtidas com
+   <literal>(?P=nome)</literal>,
+   <literal>\k&lt;nome&gt;</literal>, <literal>\k'nome'</literal>,
+   <literal>\k{nome}</literal>, <literal>\g{nome}</literal>,
+   <literal>\g&lt;nome&gt;</literal> ou <literal>\g'nome'</literal>.
+  </para>
+ </section>
+
+ <section xml:id="regexp.reference.assertions">
+  <title>Afirmações</title>
+  <para>
+   Uma afirmação é um teste nos caracteres posteriores ou
+   anteriores ao ponto atual de correspondência que efetivamente não
+   consome nenhum caractere. As afirmações simples codificadas como \b,
+   \B, \A, \Z, \z, ^ e $ estão descritas na seção sobre <link linkend="regexp.reference.escape">sequências de escape</link>. Afirmações mais
+   complexas são codificadas como sub-expressões. Existem dois
+   tipos: aquelas que <emphasis>olham para frente</emphasis> da posição atual na
+   string de entrada e aquelas que <emphasis>olham para trás</emphasis> dela.
+  </para>
+  <para>
+   Uma sub-expressão de afirmação é correspondida da maneira usual, exceto
+   que ela não faz com que a posição atual de correspondência seja
+   alterada. Afirmações que olham <emphasis>para frente</emphasis> iniciam com (?= para afirmações
+   positivas e com (?! para afirmações negativas. Por exemplo,
+
+   <literal>\w+(?=;)</literal>
+
+   corresponde a uma palavra seguida por ponto-e-vírgula, mas não inclui
+   o ponto-e-vírgula na correspondência, e
+
+   <literal>foo(?!bar)</literal>
+
+   corresponde a qualquer ocorrência de "foo" que não seja seguida por
+   "bar". Observe que a expressão aparentemente similar
+
+   <literal>(?!foo)bar</literal>
+
+   não encontra uma ocorrência de "bar" que seja precedida por
+   algo além de "foo"; ela encontra qualquer ocorrência de "bar"
+   de todo modo, porque a afirmação (?!foo) é sempre verdadeira
+   quando os três próximos caracteres são "bar". Uma afirmação que
+   olha para trás é necessária para conseguir este efeito.
+  </para>
+  <para>
+   Afirmações que olham <emphasis>para trás</emphasis> iniciam com (?&lt;= para afirmações positivas
+   e (?&lt;! para afirmações negativas. Por exemplo,
+
+   <literal>(?&lt;!foo)bar</literal>
+
+   encontra uma ocorrência de "bar" que não seja precedida por
+   "foo". O conteúdo de uma afirmação que olha para trás é restrito
+   de modo que todas as strings às quais ela corresponde precisam ter um comprimento
+   fixo. No entanto, se houver várias alternativas elas não
+   precisam ter todas o mesmo comprimento fixo. Assim,
+
+   <literal>(?&lt;=bullock|donkey)</literal>
+
+   é permitido, mas
+
+   <literal>(?&lt;!dogs?|cats?)</literal>
+
+   causa um erro no momento da compilação. Ramos que correspondem a strings
+   de comprimento diferente são permitidas somente no nível mais alto de
+   uma afirmação que olha para trás. Isto é uma extensão quando comparado com
+   o Perl 5.005, que requer que todos os ramos correspondam ao mesmo
+   comprimento de string. Uma afirmação como
+
+   <literal>(?&lt;=ab(c|de))</literal>
+
+   não é permitida, porque seu ramo único no nível mais alto pode
+   corresponder a dois comprimentos diferentes, mas é aceitável se for re-escrita
+   para usar dois ramos no nível mais alto:
+
+   <literal>(?&lt;=abc|abde)</literal>
+
+   A implementação de afirmações que olham para trás é, para cada
+   alternativa, mover temporariamente a posição atual para trás
+   pela largura fixa e então tentar a correspodência. Se houver
+   caracteres insuficientes antes da posição atual, a
+   correspondência falhará. Afirmações que olham para trás em conjunção com
+   sub-expressões de ocorrência única podem ser particularmente úteis para ter correspondência
+   nos finais de strings; um exemplo é mostrado no final
+   da seção sobre sub-expressões de ocorrência única.
+  </para>
+  <para>
+   Várias afirmações (de qualquer tipo) podem ocorrer sucessivamente.
+   Por exemplo,
+
+   <literal>(?&lt;=\d{3})(?&lt;!999)foo</literal>
+
+   corresponde a "foo" precedida por três dígitos que não são "999".
+   Note que cada afirmação é aplicada independentemente
+   no mesmo ponto da string de entrada. Primeiro é
+   verificado se os três caracteres anteriores são todos dígitos
+   e depois é verificado se os mesmos três caracteres não são
+   "999". Esta expressão não corresponde a "foo" precedida por seis
+   caracteres, os primeiros três dos quais são dígitos e os últimos três
+   deles não são "999". Por exemplo, ela não corresponde a
+   "123abcfoo". Uma expressão para fazer isso é
+
+   <literal>(?&lt;=\d{3}...)(?&lt;!999)foo</literal>
+  </para>
+  <para>
+   Agora a primeira afirmação olha para os seis caracteres
+   precedentes, verificando se os primeiros três são dígitos e
+   depois a segunda afirmação verifica se os três caracteres
+   precedentes não são "999".
+  </para>
+  <para>
+   Afirmações podem ser aninhadas em qualquer combinação. Por exemplo,
+
+   <literal>(?&lt;=(?&lt;!foo)bar)baz</literal>
+
+   corresponde a uma ocorrência de "baz" que é precedida por "bar"
+   que por sua vez não é precedida por "foo", enquanto que
+
+   <literal>(?&lt;=\d{3}...(?&lt;!999))foo</literal>
+
+   é outra expressão que corresponde a "foo" precedida por três
+   dígitos e quaisquer três caracteres que não sejam "999".
+  </para>
+  <para>
+   Sub-expressões de afirmação não são sub-expressões de captura, e podem
+   não ser repetidas, porque não faz sentido afirmar a
+   mesmo coisa várias vezes. Se qualquer tipo de afirmação coniver
+   sub-expressões de captura dentro dela, estas são contadas para os
+   propósitos de numeração dos grupos de captura em toda
+   a expressão. Porém, a captura de substring acontece somente
+   para afirmações positivas, porque não faz sentido para
+   afirmações negativas.
+  </para>
+  <para>
+   Afirmações contam até o máximo de 200 sub-expressões
+   entre parênteses.
+  </para>
+ </section>
+
+ <section xml:id="regexp.reference.onlyonce">
+  <title>Sub-expressões de ocorrência única</title>
+  <para>
+   Tanto com a maximização quanto com a minimização da repetição, a falha no
+   que se segue normalmente faz com que o item repetido seja
+   reavaliado para ver se um número diferente de repetições permite que o
+   resto da expressão corresponda. Às vezes é útil
+   evitar isso, seja para mudar a natureza da correspondência ou
+   para fazer com que ela falhe antes do que aconteceria de outra forma, quando o
+   autor da expressão sabe que não há sentido em
+   continuar.
+  </para>
+  <para>
+   Considere, por exemplo, a expressão \d+foo quando aplicada à
+   linha
+
+   <literal>123456bar</literal>
+  </para>
+  <para>
+   Depois de corresponder a todos os 6 dígitos e depois falhar em corresponder a "foo",
+   a ação normal do algoritmo de correspondência é tentar novamente com somente 5
+   dígitos correspondendo ao item \d+, e depois com 4, e assim por diante,
+   até falhar na última vez. Sub-expressões de ocorrência única fornecem o
+   meio de especificar que uma vez que a parte da expressão tenha sido
+   correspondida, ela não deve ser reavaliada desta forma, portanto o
+   algoritmo desistiria imediatamente ao falhar na correspondência a "foo"
+   na primeira vez. A notação é um outro tipo de parêntese
+   especial, iniciando com (?&gt; como neste exemplo:
+
+   <literal>(?&gt;\d+)bar</literal>
+  </para>
+  <para>
+   Este tipo de parênteses "trava" a parte da expressão
+   que eles contém uma vez que tenha sido correspondida, e uma falha mais para a frente na
+   expressão é impedida de rastreá-la retroativamente.
+   O restreamento retroativo depois deles para itens anteriores, entretanto, funciona normalmente.
+  </para>
+  <para>
+   Uma descrição alternativa é que uma sub-expressão deste tipo
+   corresponde à string de caracteres que uma expressão idêntica
+   avulsa corresponderia, se ancorada no ponto atual
+   da string de entrada.
+  </para>
+  <para>
+   Sub-expressões de ocorrência única não são sub-expressões de captura. Casos
+   simples como o exemplo acima podem sem pensados como uma repetição de
+   maximização que precisa consumir tudo o que ela puder. Portanto,
+   enquanto ambos \d+ e \d+? são preparados para ajustar o número de
+   dígitos que eles correspondem para fazer com o que o resto da expressão
+   tenha correspondência, (?&gt;\d+) pode somente corresponder a uma sequência inteira de dígitos.
+  </para>
+  <para>
+   Obviamente, esta contrução pode conter sub-expressões arbitrariamente
+   complexas, e ela pode ser aninhada.
+  </para>
+  <para>
+   Sub-expressões de ocorrência única podem ser usadas em conjunção com
+   afirmações que olham para trás para especificar correspondência eficiente no final
+   da string. Considere a expressão simples
+
+   <literal>abcd$</literal>
+
+   quando aplicada a uma string longa que não corresponde. Como
+   a correspondência procede da esquerda para a direita, o PCRE irá procurar
+   cada "a" na string e depois ver se o que vem a seguir corresponde ao
+   resto da expressão. Se a expressão for especificada como
+
+   <literal>^.*abcd$</literal>,
+
+   o .* inicial corresponderá à string inteira primeito, mas
+   quando isso falhar (porque não existe um "a" a seguir), ela
+   faz um rastreamento retroativo para corresponder a todos os caracteres exceto ao último, e depois todos exceto
+   os últimos dois, e assim por diante. Uma vez mais a pesuisa
+   por "a" cobre a string inteira, da direita para a esquerda, portanto
+   não melhorou em nada. Porém, se a expressão for escrita como
+
+   <literal>^(?>.*)(?&lt;=abcd)</literal>,
+
+   não poderá haver rastreamento retroativo para o item ".*". ele pode
+   corresponder somente à string inteira. A afirmação subsequente
+   faz um teste simples nos últimos quatro caracteres. Se
+   ela falhar, a correspondência falha imediatamente. Para strings longas,
+   este métodos faz uma diferença significativa no tempo de processamento.
+  </para>
+  <para>
+   Quando uma expressão contém uma repetição ilimitada dentro de uma sub-expressão
+   que pode ser repetida um número ilimitado de
+   vezes, o uso de uma sub-expressão de ocorrência única é a única maneira de
+   evitar que algumas correspondências com falha demorem muito tempo.
+   A expressão
+
+   <literal>(\D+|&lt;\d+>)*[!?]</literal>
+
+   corresponde a um número ilimitado de sub-expressões que consistem
+   de não-dígitos, ou de dígitos envolvidos por &lt;>, seguidos por
+   ! ou ?. Quando ela é correspondida, é executada rapidamente. Porém, se
+   for aplicada a
+
+   <literal>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</literal>,
+
+   ela leva um longo tempo antes de reportar falha. Isso ocorre
+   porque a string pode ser dividida entre as duas repetições de
+   várias maneiras e todas precisam ser tentadas. (O exemplo
+   usou [!?] em vez de um único caractere no final,
+   porque tanto o PCRE quanto o Perl têm uma otimização que permite
+   falha rápida quando um único caractere é usado. Eles
+   lembram o último caractere único necessário para uma
+   correspondência, e falhar antecipadamente se não estiver presente na string.)
+   Se a expressão for alterada para
+
+   <literal>((?>\D+)|&lt;\d+>)*[!?]</literal>,
+
+   sequências de não-dígitos não podem ser quebradas, e a falha acontece rapidamente.
+  </para>
+ </section>
+
+ <section xml:id="regexp.reference.conditional">
+  <title>Sub-expressões condicionais</title>
+  <para>
+   É possível fazer com que o processo de correspondência obedeça condicionalmente
+   a uma sub-expressão ou escolha entre duas sub-expressões
+   alternativas, dependendo do resultado de uma afirmação, ou
+   se uma sub-expressão de captura anterior correspondeu ou não. As
+   duas formas possíveis de sub-expressão condicional são
+  </para>
+
+  <informalexample>
+   <programlisting>
+<![CDATA[
+(?(condição)expressão-sim)
+(?(condição)expressão-sim|expressão-não)
+]]>
+   </programlisting>
+  </informalexample>
+  <para>
+   Se a condição for satisfeita, a expressão-sim é usada; caso contrário
+   a expressão-não (se presente) é usada. Se houver
+   mais que duas alternativas na sub-expressão, ocorrerá um erro
+   no momento da compilação.
+  </para>
+  <para>
+   Existem dois tipos de condição. Se o texto entre parênteses
+   consistir em uma sequência de dígitos, então a
+   condição será satisfeita se a sub-expressão de captura desse
+   número tiver correspondido anteriormente. Considere a seguinte expressão,
+   que contém espaços em branco não significativos para torná-la
+   mais legível (assumindo que a opção <link
+   linkend="reference.pcre.pattern.modifiers">PCRE_EXTENDED</link>
+   está definida) e para dividi-la em três partes para facilidade de discussão:
+  </para>
+  <informalexample>
+   <programlisting>
+<![CDATA[
+( \( )? [^()]+ (?(1) \) )
+]]>
+   </programlisting>
+  </informalexample>
+  <para>
+   A primeira parte corresponde a um parêntese de abertura opcional e,
+   se esse caractere estiver presente, define-o como a primeira substring
+   capturada. A segunda parte corresponde a um ou mais caracteres
+   que não são parênteses. A terceira parte é uma sub-expressão
+   condicional que testa se o primeiro conjunto de parênteses
+   corresponde ou não. Se sim, ou seja, se a string começou
+   com um parêntese de abertura, a condição é verdadeira, e então
+   a expressão-sim é executada e um parêntese de fechamento é
+   necessário. Caso contrário, como a expressão-não não está presente, A
+   sub-expressão não corresponde a nada. Em outras palavras, essa expressão
+   corresponde a uma sequência de não-parênteses, opcionalmente entre
+   parênteses.
+  </para>
+  <para>
+   Se a condição for a string <literal>(R)</literal>, ela será satisfeita se
+   uma chamada recursiva à expressão ou sub-expressão tiver sido feita. No “nível
+   superior”, a condição é falsa.
+  </para>
+  <para>
+   Se a condição não for uma sequência de dígitos ou (R), deverá ser uma
+   afirmação. Esta pode ser uma afirmação positiva ou negativa que olha para frente
+   ou que olha para trás. Considere esta expressão, novamente contendo
+   espaços em branco não significativos e com as duas alternativas na
+   segunda linha:
+  </para>
+
+  <informalexample>
+   <programlisting>
+<![CDATA[
+(?(?=[^a-z]*[a-z])
+\d{2}-[a-z]{3}-\d{2} | \d{2}-\d{2}-\d{2} )
+]]>
+   </programlisting>
+  </informalexample>
+  <para>
+   A condição é uma afirmação que olha para frente positiva que corresponde a
+   uma sequência opcional de não-letras seguidas por uma letra. Em
+   outras palavras, testa a presença de pelo menos uma
+   letra na string. Se for encontrada uma letra, a string é
+   comparada com a primeira alternativa; caso contrário, será
+   comparada com o segunda. Esta expressão corresponde a strings em
+   uma das duas formas dd-aaa-dd ou dd-dd-dd, onde aaa são
+   letras e dd são dígitos.
+  </para>
+ </section>
+
+ <section xml:id="regexp.reference.comments">
+  <title>Comentários</title>
+  <para>
+   A sequência (?# marca o início de um comentário que
+   continua até o próximo parêntese de fechamento. Parênteses
+   aninhados não são permitidos. Os caracteres que compõem um
+   comentário não desempenham nenhum papel na correspondência de expressões.
+  </para>
+  <para>
+   Se a opção <link linkend="reference.pcre.pattern.modifiers">PCRE_EXTENDED</link>
+   estiver definida, um caractere # sem escape fora de uma classe de caracteres
+   introduz um comentário que continua até o próximo caractere de nova linha
+   na expressão.
+  </para>
+  <para>
+   <example>
+    <title>Uso de comentários em expressões PCRE</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$subject = 'test';
+
+/* (?# pode ser usado para adicionar comentários sem habilitar PCRE_EXTENDED */
+$match = preg_match('/te(?# isto é um comentário)st/', $subject);
+var_dump($match);
+
+/* Espaço em branco e # são tratados como parte da expressão a menos que PCRE_EXTENDED esteja habilitada */
+$match = preg_match('/te   #~~~~
+st/', $subject);
+var_dump($match);
+
+/* Quando PCRE_EXTENDED está habilitada, todos os espaços em branco e qualquer coisa que
+   esteja na sequência de um # sem escape na mesma linha são ignorados */
+$match = preg_match('/te    #~~~~
+st/x', $subject);
+var_dump($match);
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+int(1)
+int(0)
+int(1)
+]]>
+    </screen>
+   </example>
+  </para>
+ </section>
+
+ <section xml:id="regexp.reference.recursive">
+  <title>Expressões recursivas</title>
+  <para>
+   Considere o problema de corresponder a uma string entre parênteses,
+   permitindo parênteses aninhados ilimitados. Sem o uso
+   de recursão, o melhor que pode ser feito é usar uma expressão
+   que corresponda a uma profundidade fixa de aninhamento. Não é
+   possível lidar com uma profundidade de aninhamento arbitrária. O Perl 5.6
+   forneceu um recurso experimental que permite a recursividade
+   de expressões regulares (entre outras coisas). O item
+   especial (?R) é fornecido para o caso específico de recursão.
+   Esta expressão PCRE resolve o problema dos parênteses (suponha
+   que a opção <link linkend="reference.pcre.pattern.modifiers">PCRE_EXTENDED</link>
+   esteja definida para que o espaço em branco seja
+   ignorado):
+
+   <literal>\( ( (?>[^()]+) | (?R) )* \)</literal>
+  </para>
+  <para>
+   Primeiro, ela corresponde a um parêntese de abertura. Em seguida, ela corresponde a qualquer
+   número de substrings que podem ser uma sequência de
+   não-parênteses ou uma correspondência recursiva da própria expressão
+   (ou seja, uma substring colocada de forma correta entre parênteses). Finalmente há
+   um parêntese de fechamento.
+  </para>
+  <para>
+   Esta expressão de exemplo em particular contém repetições ilimitadas
+   aninhadas e, portanto, o uso de uma sub-expressão de ocorrência única para correspondência
+   a strings de não-parênteses é importante ao aplicar
+   a expressão em strings que não correspondem. Por exemplo, quando
+   é aplicada a
+
+   <literal>(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa()</literal>
+
+   ela gera uma "não correspondência" rapidamente. Entretanto, se uma expressão de ocorrência única
+   nao for usada, a correspondência é executada por um longo tempo
+   porque existem muitas formas diferentes das repetições + e *
+   dividirem a string, e todas têm que ser testadas
+   antes que a falha possa ser reportada.
+  </para>
+  <para>
+   Os valores definidos para quaisquer sub-expressões de captura são aqueles do
+   nível mais externo da recursão no qual o valor da
+   sub-expressão é definido. Se a expressão acima for comparada com
+
+   <literal>(ab(cd)ef)</literal>,
+
+   o valor para os parênteses de captura será "ef", que é
+   o último valor considerado no nível mais alto. Se parênteses
+   extras forem acrescentados, resultando em
+
+   <literal>\( ( ( (?>[^()]+) | (?R) )* ) \)</literal>,
+   a string que eles irão capturar
+   será "ab(cd)ef", o conteúdo dos parênteses do nível mais alto. Se
+   houver mais de 15 parênteses de captura em uma expressão,
+   o PCRE precisa obter memória extra para armazenar dados durante uma
+   recursão, o que ele faz usando pcre_malloc, liberando-a
+   posteriormente via pcre_free. Se nenhuma memória puder ser obtida, ele
+   salva os dados apenas dos primeiros 15 parênteses de captura, pois
+   não há como gerar um erro de falta de memória dentro de uma
+   recursão.
+  </para>
+
+  <para>
+   <literal>(?1)</literal>, <literal>(?2)</literal>, e assim por diante,
+   também podem ser usados para sub-expressões recursivas. também é possível usar sub-expressões
+   nomeadas: <literal>(?P&gt;nome)</literal> ou
+   <literal>(?&amp;nome)</literal>.
+  </para>
+  <para>
+   Se a sintaxe para uma referência de sub-expressão recursiva (seja por número ou
+   por nome) for usada fora dos parênteses aos quais se refere, ela funcionará
+   como uma sub-rotina em uma linguagem de programação. Um exemplo anterior
+   apontou que a expressão
+   <literal>(sens|respons)e and \1ibility</literal>
+   corresponde a "sense and sensibility" e "response and responsibility", mas
+   não a "sense and responsibility". Se, em vez disso, a expressão
+   <literal>(sens|respons)e and (?1)ibility</literal>
+   for usada, ela corresponderá a "sense and responsibility", bem como às outras
+   duas strings. Tais referências devem, contudo, seguir a sub-expressão a
+   que se referem.
+  </para>
+
+  <para>
+   O comprimento máximo de uma string de entrada é o maior número positivo
+   que uma variável inteira pode conter. No entanto, o PCRE usa recursão para
+   lidar com sub-expressões e repetições indefinidas. Isso significa que o
+   espaço de pilha disponível pode limitar o tamanho de uma string de entrada que pode ser
+   processada por determinadas expressões.
+  </para>
+
+ </section>
+
+ <section xml:id="regexp.reference.performance">
+  <title>Desempenho</title>
+  <para>
+   Certos itens que podem aparecer nas expressões são mais eficientes
+   que outros. É mais eficiente usar uma classe de caracteres
+   como [aeiou] do que um conjunto de alternativas como (a|e|i|o|u).
+   Em geral, a construção mais simples que proporciona o
+   comportamento requerido é normalmente a mais eficiente. O livro
+   de Jeffrey Friedl contém muita discussão sobre como otimizar
+   expressões regulares para um desempenho eficiente.
+  </para>
+  <para>
+   Quando uma expressão começa com .* e a opção <link
+   linkend="reference.pcre.pattern.modifiers">PCRE_DOTALL</link> está
+   definida, a expressão é implicitamente ancorada pelo PCRE, pois ela
+   pode corresponder apenas ao início de um string de entrada. Porém, se
+   <link linkend="reference.pcre.pattern.modifiers">PCRE_DOTALL</link>
+   não estiver definida, o PCRE não poderá fazer esta otimização,
+   pois o metacaractere . não corresponderá a uma nova linha
+   e, se a string de entrada contiver novas linhas, a expressão poderá
+   corresponder a partir do caractere imediatamente após um deles,
+   em vez de desde o início. Por exemplo, a expressão
+
+   <literal>(.*) second</literal>
+
+   corresponde à string "first\nand second" (onde \n representa
+   um caractere de nova linha) com a primeira substring capturada igual a
+   "and". Para fazer isso, o PCRE precisa tentar a correspondência novamente
+   iniciando após cada caractere de nova linha na string.
+  </para>
+  <para>
+   Se uma expressão como essa estiver sendo usada com uma string de entrada que
+   não contêm novas linhas, o melhor desempenho será obtido
+   definindo <link linkend="reference.pcre.pattern.modifiers">PCRE_DOTALL</link>
+   ou iniciando a expressão com ^.* para
+   indicar ancoragem explícita. Isso evita que o PCRE tenha que
+   varrer a string em busca de uma nova linha para reiniciar.
+  </para>
+  <para>
+   Cuidado com expressões que contêm repetições indefinidas aninhadas.
+   Elas podem levar muito tempo para serem executadas quando aplicados a uma string
+   que não corresponde. Considere o fragmento de expressão
+
+   <literal>(a+)*</literal>
+  </para>
+  <para>
+   Isso pode corresponder a "aaaa" de 33 maneiras diferentes, e esse número
+   aumenta muito rapidamente à medida que a string fica mais longa. (A repetição
+   * pode corresponder a 0, 1, 2, 3 ou 4 vezes e, para cada um
+   desses casos diferentes de 0, as repetições + podem corresponder a diferentes
+   números de vezes.) Quando o restante da expressão é tal
+   que toda a correspondência irá falhar, o PCRE tem que, em princípio,
+   tentar todas as variações possíveis, e isso pode levar
+   muito tempo.
+  </para>
+  <para>
+   Uma otimização captura alguns dos casos mais simples
+   como
+
+   <literal>(a+)*b</literal>,
+
+   onde um carectere literal aparece na sequência. Antes de embarcar no
+   procedimento padrão de correspondência, o PCRE verifica se existe um "b"
+   mais à frente na string de entrada, e se não houver, ele falha
+   a correspondência imediatamente. Porém, quando não há um caractere literal
+   na sequência, esta otimização não pode ser usada. Pode-se ver a
+   deferença comparando o comportamento de
+
+   <literal>(a+)*\d</literal>
+
+   com a expressão mais acima. A anterior falha quase
+   instantaneamente quando aplicada a uma linha inteira de caracteres "a",
+   enquanto que a última leva um tempo apreciável com strings
+   mais longas que aproximadamente 20 caracteres.
+  </para>
+ </section>
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
