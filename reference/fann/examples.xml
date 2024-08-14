@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: c2aeb63e3d8b50f83d5adeffea4209db45705c76 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+
+<chapter xml:id="fann.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ &reftitle.examples;
+ <section xml:id="fann.examples-1">
+  <title>Treinamento XOR</title>
+  <para>
+   Este exemplo mostra como treinar dados para a função XOR
+   <example>
+    <title>arquivo xor.data</title>
+    <programlisting role="txt">
+<![CDATA[
+4 2 1
+-1 -1
+-1
+-1 1
+1
+1 -1
+1
+1 1
+-1
+]]>
+    </programlisting>
+   </example>
+   <example>
+    <title>Treinamento simples</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$num_input = 2;
+$num_output = 1;
+$num_layers = 3;
+$num_neurons_hidden = 3;
+$desired_error = 0.001;
+$max_epochs = 500000;
+$epochs_between_reports = 1000;
+
+$ann = fann_create_standard($num_layers, $num_input, $num_neurons_hidden, $num_output);
+
+if ($ann) {
+    fann_set_activation_function_hidden($ann, FANN_SIGMOID_SYMMETRIC);
+    fann_set_activation_function_output($ann, FANN_SIGMOID_SYMMETRIC);
+
+    $filename = dirname(__FILE__) . "/xor.data";
+    if (fann_train_on_file($ann, $filename, $max_epochs, $epochs_between_reports, $desired_error))
+        fann_save($ann, dirname(__FILE__) . "/xor_float.net");
+
+    fann_destroy($ann);
+}
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   Este exemplo mostra como ler e executar dados para a função XOR
+   <example>
+    <title>Teste simples</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$train_file = (dirname(__FILE__) . "/xor_float.net");
+if (!is_file($train_file))
+    die("O arquivo xor_float.net não foi criado! Por favor execute simple_train.php para gerá-lo.");
+
+$ann = fann_create_from_file($train_file);
+if (!$ann)
+    die("RNA não pôde ser criada.");
+
+$input = array(-1, 1);
+$calc_out = fann_run($ann, $input);
+printf("texte xor (%f,%f) -> %f\n", $input[0], $input[1], $calc_out[0]);
+fann_destroy($ann);
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </section>
+</chapter>
+
+
