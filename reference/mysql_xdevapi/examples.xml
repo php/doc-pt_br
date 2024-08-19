@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 9e6c3416c5c285f807a734e4663c399612777d7e Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+
+<chapter xml:id="mysql-xdevapi.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ &reftitle.examples;
+ <para>
+  O ponto de entrada central para a X DevAPI é a função <function>mysql_xdevapi\getSession</function>,
+  que recebe uma URI para um servidor MySQL 8.0 e retorna um
+  objeto <classname>mysql_xdevap\Session</classname>.
+ </para>
+ <example>
+  <title>Conectando a um Servidor MySQL</title>
+  <programlisting role="php">
+<![CDATA[
+<?php
+try {
+    $session = mysql_xdevapi\getSession("mysqlx://usuario:senha@servidor");
+} catch(Exception $e) {
+    die("Não foi possível estabelecer conexão: " . $e->getMessage());
+}
+
+// ... use $session
+?>
+]]>
+  </programlisting>
+ </example>
+ <para>
+  A sessão fornece acesso completo à API. Para uma nova instalação do Servidor MySQL,
+  o primeiro passo é criar um esquema com uma coleção
+  para armazenar dados:
+ </para>
+ <example>
+  <title>Criando um Esquema e uma Coleção no Servidor MySQL</title>
+  <programlisting role="php">
+<![CDATA[
+<?php
+$schema = $session->createSchema("teste");
+$collection = $schema->createCollection("exemplo");
+?>
+]]>
+  </programlisting>
+ </example>
+ <para>
+  Ao armazenar dados, normalmente <function>json_encode</function> é usada para codificar
+  os dados em JSON, que assim podem ser armazenados em uma coleção.
+ </para>
+ <para>
+  O exemplo a seguir armazana dados na coleção criada anteriormente,
+  e depois recupera partes dela novamente.
+ </para>
+ <example>
+  <title>Armazenando e Recuperando Dados</title>
+  <programlisting role="php">
+<![CDATA[
+<?php
+$marco = [
+  "nome" => "Marco",
+  "idade"  => 19,
+  "emprego"  => "Programador"
+];
+$mike = [
+  "nome" => "Mike",
+  "idade"  => 39,
+  "emprego"  => "Gerente"
+];
+
+$schema = $session->getSchema("teste");
+$collection = $schema->getCollection("exemplo");
+
+$collection->add($marco, $mike)->execute();
+
+var_dump($collection->find("nome = 'Mike'")->execute()->fetchOne());
+?>
+]]>
+  </programlisting>
+  &example.outputs.similar;
+  <screen>
+   <![CDATA[
+array(4) {
+  ["_id"]=>
+  string(28) "00005ad66aaf0000000000000003"
+  ["idade"]=>
+  int(39)
+  ["emprego"]=>
+  string(7) "Gerente"
+  ["nome"]=>
+  string(4) "Mike"
+}
+]]>
+  </screen>
+ </example>
+ <para>
+  O exemplo demonstra que o Servidor MySQL adiciona um campo extra de nome
+  <code>_id</code>, que serve como chave primária para o documento.
+ </para>
+ <para>
+  O exemplo também demonstra que os dados recuperados são ordenados alfabeticamente,
+  Esta ordem específica vem do armazenamento binário eficiente dentro do servidor MySQL, mas
+  isso nem sempre é confiável. Refira-se à documentação do tipo de dados JSON do MySQL para detalhes.
+ </para>
+ <para>
+  Opcionalmente, use os iteradores do PHP para buscar múltiplos documentos:
+ </para>
+ <example>
+  <title>Buscando e Iterando sobre Múltiplos Documentos</title>
+  <programlisting role="php">
+<![CDATA[
+<?php
+$result = $collection->find()->execute();
+foreach ($result as $doc) {
+  echo "{$doc["nome"]} é um {$doc["emprego"]}.\n";
+}
+?>
+]]>
+  </programlisting>
+  &example.outputs.similar;
+  <screen>
+   <![CDATA[
+Marco é um Programador.
+Mike é um Gerente.
+]]>
+  </screen>
+ </example>
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
