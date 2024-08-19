@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: f1e951b988e8aafe49b33bdf2f7812740c66c2d2 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+
+<refentry xml:id="mysql-xdevapi-collection.add" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>Collection::add</refname>
+  <refpurpose>Adiciona um documento na coleção</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <modifier>public</modifier> <type>mysql_xdevapi\CollectionAdd</type><methodname>mysql_xdevapi\Collection::add</methodname>
+   <methodparam><type>mixed</type><parameter>document</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Dispara a inserção do(s) documento(s) informado(s) na coleção,
+   múltiplas variantes deste método são suportadas. As opções incluem:
+  </para>
+  <orderedlist>
+   <listitem>
+     <para>
+      Adiciona um único documento como uma string JSON.
+     </para>
+   </listitem>
+   <listitem>
+     <para>
+      Adiciona um único documento como um array no formato:
+      <literal>[ 'field' => 'value', 'field2' => 'value2' ... ]</literal>
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+      Uma combinação de ambos, múltiplos documentos podem ser adicionados na mesma operação.
+    </para>
+   </listitem>
+  </orderedlist>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <variablelist>
+   <varlistentry>
+    <term><parameter>document</parameter></term>
+    <listitem>
+     <para>
+      Um ou múltiplos documentos, pode ser um JSON ou um array de campos com
+      seus valores associados. Não pode ser um array vazio.
+     </para>
+     <para>
+      O servidor MySQL gera automaticamente um valor único de <literal>_id</literal> para
+      cada documento (recomendado), embora também possa ser adicionado manualmente. Este valor precisa ser
+      único, caso contrário a operação de adição falhará.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Um objeto CollectionAdd. Use execute() para retornar um Result que possa ser usado para consultar o número
+   de itens afetados, o número de alertas gerados pela operação, ou para buscar uma lista de
+   IDs gerados para os documentos inseridos.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <function>mysql_xdevapi\Collection::add</function></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$session = mysql_xdevapi\getSession("mysqlx://user:password@localhost");
+$session->sql("DROP DATABASE IF EXISTS addressbook")->execute();
+$session->sql("CREATE DATABASE addressbook")->execute();
+
+$schema = $session->getSchema("addressbook");
+$create = $schema->createCollection("people");
+
+$collection = $schema->getCollection("people");
+
+// Adiciona dois documentos
+$collection->add('{"name": "Fred",  "age": 21, "job": "Construction"}')->execute();
+$collection->add('{"name": "Wilma", "age": 23, "job": "Teacher"}')->execute();
+
+// Adiciona dois documentos usando um único objeto JSON
+$result = $collection->add(
+  '{"name": "Bernie",
+    "jobs": [{"title":"Cat Herder","Salary":42000}, {"title":"Father","Salary":0}],
+    "hobbies": ["Sports","Making cupcakes"]}',
+  '{"name": "Jane",
+    "jobs": [{"title":"Scientist","Salary":18000}, {"title":"Mother","Salary":0}],
+    "hobbies": ["Walking","Making pies"]}')->execute();
+
+// Busca uma lista de IDs gerados pelo último add()
+$ids = $result->getGeneratedIds();
+print_r($ids);
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+Array
+(
+    [0] => 00005b6b53610000000000000056
+    [1] => 00005b6b53610000000000000057
+)
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    Um _id único é gerado pelo MySQL Server 8.0 ou superior, como demonstrado
+    no exemplo. O campo _id precisa ser definido manualmente se o
+    MySQL Server 5.7 estiver sendo usado.
+   </para>
+  </note>
+ </refsect1>
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
