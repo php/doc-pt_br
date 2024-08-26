@@ -1,19 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: fernandoc Status: ready -->
+<!-- EN-Revision: 5fabd07880ab15b0ad2cf7eb055c7c2b36d7120f Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.mysql-pconnect" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>mysql_pconnect</refname>
-  <refpurpose>Abre uma conexão persistente com um servidor MySQL</refpurpose>
+  <refpurpose>Abre uma conexão persistente a um servidor MySQL</refpurpose>
  </refnamediv>
+
+ <refsynopsisdiv>
+  <warning>
+   &mysql.alternative.note;
+   <simplelist role="alternatives">
+    <member><function>mysqli_connect</function> with <literal>p:</literal> host prefix</member>
+    <member><methodname>PDO::__construct</methodname> with <constant>PDO::ATTR_PERSISTENT</constant> as a driver option</member>
+   </simplelist>
+  </warning>
+ </refsynopsisdiv>
 
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>resource</type><methodname>mysql_pconnect</methodname>
-   <methodparam choice="opt"><type>string</type><parameter>server</parameter></methodparam>
-   <methodparam choice="opt"><type>string</type><parameter>username</parameter></methodparam>
-   <methodparam choice="opt"><type>string</type><parameter>password</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>client_flags</parameter></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>server</parameter><initializer>ini_get("mysql.default_host")</initializer></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>username</parameter><initializer>ini_get("mysql.default_user")</initializer></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>password</parameter><initializer>ini_get("mysql.default_password")</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>client_flags</parameter><initializer>0</initializer></methodparam>
   </methodsynopsis>
   <!-- Undocumented confusing syntax:
   <methodsynopsis>
@@ -31,22 +41,22 @@
   <!-- TODO: Integrate this information more nicely with features.persistent -->
   <para>
    <function>mysql_pconnect</function> funciona muito parecido com
-   <function>mysql_connect</function> com duas maiores diferenças.
+   <function>mysql_connect</function> com duas diferenças principais.
   </para>
   <para>
    Primeiro, ao conectar,a função irá primeiro tentar encontrar uma
-   conexão(persistente) que já esteja aberta com o mesmo servidor,
-   nome de usuário e senha. Se uma for encontrada, um identificador
-   para ela será retornado ao invés de abrir uma nova conexão.
+   conexão (persistente) que já esteja aberta com o mesmo servidor,
+   nome de usuário e senha. Se for encontrada, um identificador para ela
+   será retornado ao invés de ser aberta uma nova conexão.
   </para>
   <para>
-   Segundo, a conexão ao servidor SQL não será fechada quando a
-   execução do script terminar. Ao invés, a conexão permanecerá aberta para
-   uso futuro (<function>mysql_close</function> não irá
+   Segundo, a conexão ao servidor SQL não será fechada quando
+   a execução do script terminar. Ao invés disso, a conexão permanecerá
+   aberta para uso futuro (<function>mysql_close</function> não irá
    fechar conexões estabelecidas por <function>mysql_pconnect</function>).
   </para>
   <para>
-   Este tipo de conexão portanto é chamada 'persistente'.
+   Este tipo de conexão portanto é chamado de 'persistente'.
   </para>
  </refsect1>
 
@@ -58,14 +68,14 @@
      <term><parameter>server</parameter></term>
      <listitem>
       <para>
-       O servidor MySQL. Também pode incluir um numero de porta. exemplo
-       "hostname:port" ou um caminho para um socket local exemplo ":/path/to/socket" para
+       O servidor MySQL. Também pode incluir um numero de porta, por exemplo,
+       "servidor:porta" ou um caminho para um soquete local, por exemplo, ":/caminho/para/soquete" para
        o servidor local.
       </para>
       <para>
        Se a diretiva do PHP <link linkend="ini.mysql.default-host">
-       mysql.default_host</link> não estiver definida (padrão), então o valor padrão
-       é 'localhost:3306'
+       mysql.default_host</link> não estiver definida (padrão), o valor padrão
+       será 'localhost:3306'
       </para>
      </listitem>
     </varlistentry>
@@ -73,8 +83,8 @@
      <term><parameter>username</parameter></term>
      <listitem>
       <para>
-       O nome de usuário. O Valor padrão é o nome do usuário que é o
-       proprietário do processo do servidor.
+       O nome de usuário. O Valor padrão é o nome do usuário
+       proprietário do processo no servidor.
       </para>
      </listitem>
     </varlistentry>
@@ -92,7 +102,7 @@
       <para>
        O parâmetro <parameter>client_flags</parameter> pode ser uma combinação
        das seguintes constantes:
-       128 (habilita manuseador <literal>LOAD DATA LOCAL</literal>),
+       128 (habilita uso de <literal>LOAD DATA LOCAL</literal>),
        <constant>MYSQL_CLIENT_SSL</constant>,
        <constant>MYSQL_CLIENT_COMPRESS</constant>,
        <constant>MYSQL_CLIENT_IGNORE_SPACE</constant> ou
@@ -107,8 +117,8 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna um identificador de conexão persistente MySQL em caso de
-   sucesso, ou &false; em caso de falha.
+   Retorna um identificador de conexão persistente MySQL em caso de sucesso, ou &false; em
+   caso de falha.
   </para>
  </refsect1>
 
@@ -116,25 +126,19 @@
   &reftitle.notes;
   <note>
    <para>
-    Note que este tipo de conexão funciona somente se você estiver usando uma
-    versão do PHP como módulo. Veja a sessão
+    Note que este tipo de conexão funciona somente se a versão de módulo do PHP
+    estiver sendo usada. Consulte a seção sobre
     <link linkend="features.persistent-connections">Conexões
-    Persistentes com Banco de Dados</link> para maiores informações.
+    Persistentes com Banco de Dados</link> para mais informações.
    </para>
   </note>
   <warning>
    <para>
-    Usar conexões persistentes podem requerer alguns ajustes na suas configurações
-    do Apache e do MySQL para ter certeza que você não exceda o limite
-    de conexões permitidas pelo MySQL.
+    Usar conexões persistentes pode requerer alguns ajustes nas configurações
+    do Apache e do MySQL para assegurar que o número máximo de conexões permitidas
+    pelo MySQL não seja excedido.
    </para>
   </warning>
-  <note>
-   <para>
-    Você pode suprimir a mensagem de erro em caso de falha adicionando <link linkend="language.operators.errorcontrol">@</link>
-    ao nome da função.
-   </para>
-  </note>
  </refsect1>
 
  <refsect1 role="seealso">
