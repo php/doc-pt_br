@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: bd3486422338656009b890c04ff132f1c1a61176 Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.mysql-query" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>mysql_query</refname>
+  <refpurpose>Envia uma consulta MySQL</refpurpose>
+ </refnamediv>
+
+ <refsynopsisdiv>
+  <warning>
+   &mysql.alternative.note;
+   <simplelist role="alternatives">
+    <member><function>mysqli_query</function></member>
+    <member><methodname>PDO::query</methodname></member>
+   </simplelist>
+  </warning>
+ </refsynopsisdiv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>mixed</type><methodname>mysql_query</methodname>
+   <methodparam><type>string</type><parameter>query</parameter></methodparam>
+   <methodparam choice="opt"><type>resource</type><parameter>link_identifier</parameter><initializer>NULL</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   <function>mysql_query</function> envia uma única consulta (consultas múltiplas
+   não são suportadas) ao banco de dados
+   atualmenten ativo no servidor associado ao
+   <parameter>link_identifier</parameter> especificado.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>query</parameter></term>
+     <listitem>
+      <para>
+       A consulta SQL.
+      </para>
+      <para>
+       A consulta não deve terminar com um ponto e vírgula.
+       Os dados dentro da consulta devem ser <link
+       linkend="function.mysql-real-escape-string">adequadamente escapados</link>.
+      </para>
+     </listitem>
+    </varlistentry>
+    &mysql.linkid.description;
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Para comandos SELECT, SHOW, DESCRIBE, EXPLAIN e outras instruções que retornam resultados,
+   <function>mysql_query</function>
+   retorna um <type>resource</type> em caso de sucesso ou &false; em
+   caso de erro.
+  </para>
+  <para>
+   Para outros tipos de instruções SQL, UPDATE, DELETE, DROP, etc,
+   <function>mysql_query</function> retorna &true; em caso de sucesso
+   ou &false; em caso de erro.
+  </para>
+  <para>
+   O recurso de resultado retornado pode ser passado para
+   <function>mysql_fetch_array</function> e para outras
+   funções para lidar com tabelas de resultados e para acessar os dados retornados.
+  </para>
+  <para>
+   Use <function>mysql_num_rows</function> para obter quantas linhas foram retornadas
+   para uma instrução SELECT ou
+   <function>mysql_affected_rows</function> para obter quantas
+   linhas foram afetadas por uma instrução DELETE, INSERT, REPLACE
+   ou UPDATE.
+  </para>
+  <para>
+   <function>mysql_query</function> também falhará e retornará &false;
+   se o usuário não tiver permissões para acessar a(s) tabela(s) referenciada(s)
+   pela consulta.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Consulta Inválida</title>
+    <para>
+     A seguinte consulta é sintaticamente inválida, assim
+     <function>mysql_query</function> falha e retorna &false;.
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$result = mysql_query('SELECT * WHERE 1=1');
+if (!$result) {
+    die('Consulta inválida: ' . mysql_error());
+}
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Consulta Válida</title>
+    <para>
+     A seguinte consulta é válida, assim <function>mysql_query</function>
+     retorna um <type>resource</type>.
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// Isto poderia ser fornecido pelo usuário, por exemplo
+$firstname = 'fred';
+$lastname  = 'fox';
+
+// Formula a Consulta
+// Esta é a melhor forma de realizar uma consulta SQL
+// Para mais exemplo, consulte mysql_real_escape_string()
+$query = sprintf("SELECT firstname, lastname, address, age FROM friends
+    WHERE firstname='%s' AND lastname='%s'",
+    mysql_real_escape_string($firstname),
+    mysql_real_escape_string($lastname));
+
+// Realiza a Consulta
+$result = mysql_query($query);
+
+// Verifica o resultado
+// Isto mostra a consulta real enviada ao MySQL, e o erro. Útil para depuração.
+if (!$result) {
+    $message  = 'Consulta inválida: ' . mysql_error() . "\n";
+    $message .= 'Consulta completa: ' . $query;
+    die($message);
+}
+
+// Usa o resultado
+// Tentar mostrar $result não permitirá acesso à informação no recurso
+// Uma das funções de resultados da extensão mysql precisa ser usada
+// Consulte também mysql_result(), mysql_fetch_array(), mysql_fetch_row(), etc.
+while ($row = mysql_fetch_assoc($result)) {
+    echo $row['firstname'];
+    echo $row['lastname'];
+    echo $row['address'];
+    echo $row['age'];
+}
+
+// Libera os recursos associados com o conjunto de resultados
+// Isto é feito automaticamente no final do script
+mysql_free_result($result);
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>mysql_connect</function></member>
+    <member><function>mysql_error</function></member>
+    <member><function>mysql_real_escape_string</function></member>
+    <member><function>mysql_result</function></member>
+    <member><function>mysql_fetch_assoc</function></member>
+    <member><function>mysql_unbuffered_query</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
