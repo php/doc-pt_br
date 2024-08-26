@@ -1,21 +1,31 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: fernandoc Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 65e697ff671608989432a6e6bf8ae8128b2be2c7 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.mysql-fetch-field" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>mysql_fetch_field</refname>
-  <refpurpose>Obtém informações sobre uma coluna de um resultado e retorna como um objeto</refpurpose>
+  <refpurpose>Obtém informações de coluna de um resultado e retorna como um objeto</refpurpose>
  </refnamediv>
+
+ <refsynopsisdiv>
+  <warning>
+   &mysql.alternative.note;
+   <simplelist role="alternatives">
+    <member><function>mysqli_fetch_field</function></member>
+    <member><methodname>PDOStatement::getColumnMeta</methodname></member>
+   </simplelist>
+  </warning>
+ </refsynopsisdiv>
 
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>object</type><methodname>mysql_fetch_field</methodname>
    <methodparam><type>resource</type><parameter>result</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>field_offset</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>field_offset</parameter><initializer>0</initializer></methodparam>
   </methodsynopsis>
   <para>
-   Retorna um objeto contendo informações sobre o campo. Esta função pode ser usada
-   para obter informações sobre os campos de um resultado de uma consulta.
+   Retorna um objeto contendo informações sobre campo. Esta função pode ser usada
+   para obter informações sobre campos no resultado de consulta informado.
   </para>
  </refsect1>
 
@@ -29,8 +39,8 @@
      <listitem>
       <para>
        O índice numérico do campo. Se o índice não for especificado, o
-       próximo campo que não tenha sido obtido por esta função é retornado. 
-       O parâmetro <parameter>field_offset</parameter> começa em <literal>0</literal>.
+       próximo campo que ainda não tenha sido obtido por esta função é recuperado.
+       <parameter>field_offset</parameter> inicia em <literal>0</literal>.
       </para>
      </listitem>
     </varlistentry>
@@ -41,7 +51,7 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna um <type>object</type> contendo a informação sobre o campo. As propriedades
+   Retorna um <type>object</type> contendo informação sobre o campo. As propriedades
    do objeto são:
   </para>
   <para>
@@ -53,17 +63,12 @@
     </listitem>
     <listitem>
      <simpara>
-      table - a tabela a qual o objeto pertence
+      table - a tabela à qual o objeto pertence, que é o nome do apelido se um estiver definido
      </simpara>
     </listitem>
     <listitem>
      <simpara>
-      def - o valor padrão da coluna
-     </simpara>
-    </listitem>
-    <listitem>
-     <simpara>
-      max_length - o limite de tamanho da coluna
+      max_length - comprimento máximo da coluna
      </simpara>
     </listitem>
     <listitem>
@@ -73,27 +78,27 @@
     </listitem>
     <listitem>
      <simpara>
-      primary_key - 1 se a coluna é a chave primária
+      primary_key - 1 se a coluna for uma chave primária
      </simpara>
     </listitem>
     <listitem>
      <simpara>
-      unique_key - 1 se a coluna é a chave única
+      unique_key - 1 se a coluna for uma chave exclusiva
      </simpara>
     </listitem>
     <listitem>
      <simpara>
-      multiple_key - 1 se a coluna é uma chave não-única
+      multiple_key - 1 se a coluna for uma chave não-exclusiva
      </simpara>
     </listitem>
     <listitem>
      <simpara>
-      numeric - 1 se a coluna é numérica
+      numeric - 1 se a coluna for numérica
      </simpara>
     </listitem>
     <listitem>
      <simpara>
-      blob - 1 se a coluna é um BLOB
+      blob - 1 se a coluna for um BLOB
      </simpara>
     </listitem>
     <listitem>
@@ -103,12 +108,12 @@
     </listitem>
     <listitem>
      <simpara>
-      unsigned - 1 se a coluna é sem sinal
+      unsigned - 1 se a coluna for sem sinal
      </simpara>
     </listitem>
     <listitem>
      <simpara>
-      zerofill - 1 se a coluna é prenchida com zero
+      zerofill - 1 se a coluna for prenchida com zero
      </simpara>
     </listitem>
    </itemizedlist>
@@ -119,7 +124,7 @@
   &reftitle.examples;
   <para>
    <example>
-    <title>Exemplo <function>mysql_fetch_field</function></title>
+    <title>Exemplo de <function>mysql_fetch_field</function></title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -132,7 +137,7 @@ $result = mysql_query('select * from table');
 if (!$result) {
     die('A consulta falhou: ' . mysql_error());
 }
-/* obtém as informações da coluna */
+/* Obtém as informações da coluna */
 $i = 0;
 while ($i < mysql_num_fields($result)) {
     echo "Informação para a coluna $i:<br />\n";
@@ -150,7 +155,6 @@ numeric:      $meta->numeric
 primary_key:  $meta->primary_key
 table:        $meta->table
 type:         $meta->type
-default:      $meta->def
 unique_key:   $meta->unique_key
 unsigned:     $meta->unsigned
 zerofill:     $meta->zerofill
@@ -168,6 +172,13 @@ mysql_free_result($result);
  <refsect1 role="notes">
   &reftitle.notes;
   &database.field-case;
+  <note>
+   <para>
+    Se campos ou nomes de tabelas forem apelidados na consulta SQL, o nome do apelido
+    será retornado. O nome original pode ser recuperado, por exemplo, usando
+    <methodname>mysqli_result::fetch_field</methodname>.
+   </para>
+  </note>
  </refsect1>
 
  <refsect1 role="seealso">

@@ -1,21 +1,31 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: fernandoc Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 4754397753fd79f1c846868b66a2448babab1c54 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.mysql-fetch-array" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>mysql_fetch_array</refname>
-  <refpurpose>Obtém uma linha como uma matriz associativa, uma matriz numérica, ou ambas</refpurpose>
+  <refpurpose>Obtém uma linha de resultado como um array associativo, numérico, ou ambos</refpurpose>
  </refnamediv>
+
+ <refsynopsisdiv>
+  <warning>
+   &mysql.alternative.note;
+   <simplelist role="alternatives">
+    <member><function>mysqli_fetch_array</function></member>
+    <member><methodname>PDOStatement::fetch</methodname></member>
+   </simplelist>
+  </warning>
+ </refsynopsisdiv>
 
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>array</type><methodname>mysql_fetch_array</methodname>
    <methodparam><type>resource</type><parameter>result</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>result_type</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>result_type</parameter><initializer>MYSQL_BOTH</initializer></methodparam>
   </methodsynopsis>
   <para>
-   Retorna uma matriz que corresponde a linha obtida
-   e move o ponteiro interno dos dados adiante.
+   Retorna um array que corresponde à linha obtida
+   e move adiante o ponteiro interno dos dados.
   </para>
  </refsect1>
 
@@ -28,9 +38,9 @@
      <term><parameter>result_type</parameter></term>
      <listitem>
       <para>
-       O tipo de array que deve ser obtida. é uma constante e pode
-       ter os seguintes valores: <constant>MYSQL_ASSOC</constant>, 
-       <constant>MYSQL_NUM</constant>, e o valor padrão de  
+       O tipo de array que deve ser obtido. É uma constante e aceita
+       os seguintes valores: <constant>MYSQL_ASSOC</constant>,
+       <constant>MYSQL_NUM</constant> e
        <constant>MYSQL_BOTH</constant>.
       </para>
      </listitem>
@@ -38,25 +48,25 @@
    </variablelist>
   </para>
  </refsect1>
- 
+
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna um array que corresponde a linha obtida, ou &false;
-   se não houver mais linhas. O tipo da array retornada depende de
-   como <parameter>result_type</parameter> esta definido. Usando 
-   <constant>MYSQL_BOTH</constant> (padrão), você terá um array com ambos os
-   índices, numérico e associativo. Usando <constant>MYSQL_ASSOC</constant>, você
-   tem apenas os índices associativos (como <function>mysql_fetch_assoc</function> 
-   funciona), usando <constant>MYSQL_NUM</constant>, você tem apenas os índices numéricos 
+   Retorna um array que corresponde à linha obtida ou &false;
+   se não houver mais linhas. O tipo da array retornado depende de
+   como <parameter>result_type</parameter> estiver definido. Usando
+   <constant>MYSQL_BOTH</constant> (padrão), será obtido um array com ambos os
+   índices, numérico e associativo. Usando <constant>MYSQL_ASSOC</constant>, somente
+   índices associativos serão obtidos (da mesma forma que <function>mysql_fetch_assoc</function>
+   funciona), e usando <constant>MYSQL_NUM</constant>, somente os índices numéricos
    (como <function>mysql_fetch_row</function> funciona).
   </para>
   <para>
    Se duas ou mais colunas do resultado tiverem os mesmos nomes de campos,
-   a ultima coluna terá precedencia. Para acessar a(s) outra(s) coluna(s)
-   com o mesmo nome, você deverá usar o índice numérico da coluna ou fazer
-   um alias para a coluna. Para colunas com alias, você não pode acessar
-   os conteúdos com o nome original da coluna.
+   a última coluna terá precedência. Para acessar a(s) outra(s) coluna(s)
+   de mesmo nome, o índice numérico da coluna deve ser usado ou
+   um apelido para a coluna deve ser especificado. Para colunas com apelidos, o conteúdo
+   não poderá ser acessado com o nome original da coluna.
   </para>
  </refsect1>
 
@@ -64,7 +74,7 @@
   &reftitle.examples;
   <para>
    <example>
-    <title>Consulta com nomes de campos duplicados usando alias</title>
+    <title>Consulta com nomes de campos duplicados usando apelidos</title>
     <programlisting role="sql">
 <![CDATA[
 SELECT table1.field AS foo, table2.field AS bar FROM table1, table2
@@ -85,7 +95,7 @@ mysql_select_db("mydb");
 $result = mysql_query("SELECT id, name FROM mytable");
 
 while ($row = mysql_fetch_array($result, MYSQL_NUM)) {
-    printf("ID: %s  Name: %s", $row[0], $row[1]);  
+    printf("ID: %s  Nome: %s", $row[0], $row[1]);
 }
 
 mysql_free_result($result);
@@ -107,7 +117,7 @@ mysql_select_db("mydb");
 $result = mysql_query("SELECT id, name FROM mytable");
 
 while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
-    printf("ID: %s  Name: %s", $row["id"], $row["name"]);
+    printf("ID: %s  Nome: %s", $row["id"], $row["name"]);
 }
 
 mysql_free_result($result);
@@ -129,7 +139,7 @@ mysql_select_db("mydb");
 $result = mysql_query("SELECT id, name FROM mytable");
 
 while ($row = mysql_fetch_array($result, MYSQL_BOTH)) {
-    printf ("ID: %s  Name: %s", $row[0], $row["name"]);
+    printf ("ID: %s  Nome: %s", $row[0], $row["name"]);
 }
 
 mysql_free_result($result);
@@ -143,13 +153,13 @@ mysql_free_result($result);
  <refsect1 role="notes">
   &reftitle.notes;
   <note>
-   <title>Performance</title>
+   <title>Desempenho</title>
    <para>
-    Uma coisa importante para notar que usar 
-    <function>mysql_fetch_array</function> <emphasis>não 
-    é significativamente</emphasis> mais lento do que usar
-    <function>mysql_fetch_row</function>, enquanto provê
-    um valor agregado significante.
+    É importante observar que
+    <function>mysql_fetch_array</function> <emphasis>não
+    é significativamente</emphasis> mais lento do que
+    <function>mysql_fetch_row</function>, enquanto que a primeira
+    fornece um valor agregado significativo.
    </para>
   </note>
   &database.field-case;
