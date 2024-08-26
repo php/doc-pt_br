@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: a7f535a32ba19f7e8236b9d87f3d84552c5f9b64 Maintainer: lhsazevedo Status: ready --><!-- CREDITS: felipe,fabioluciano,lhsazevedo -->
+<!-- EN-Revision: d58ee8eaaa7f716c51f66f5f1058ab3c42376d98 Maintainer: lhsazevedo Status: ready --><!-- CREDITS: felipe,fabioluciano,lhsazevedo,leonardolara -->
 
 <refentry role="variable" xml:id="reserved.variables.globals" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
@@ -24,7 +24,9 @@
     <programlisting role="php">
 <![CDATA[
 <?php
-function teste() {
+
+function teste()
+{
     $foo = "variável local";
 
     echo '$foo no escopo global: ' . $GLOBALS["foo"] . "\n";
@@ -33,6 +35,7 @@ function teste() {
 
 $foo = "Conteúdo de exemplo";
 teste();
+
 ?>
 ]]>
     </programlisting>
@@ -51,18 +54,20 @@ $foo no escopo atual: variável local
     <example xml:id="variable.globals.entire_write_error">
      <title>Escrever em todo o <varname>$GLOBALS</varname> irá resultar em um erro.</title>
      <programlisting role="php">
- <![CDATA[
- <?php
- // Gera um erro em tempo de compilação:
- $GLOBALS = [];
- $GLOBALS += [];
- $GLOBALS =& $x;
- $x =& $GLOBALS;
- unset($GLOBALS);
- array_pop($GLOBALS);
- // ...e qualquer outra operação de escrita/leitura-escrita no $GLOBALS
- ?>
- ]]>
+<![CDATA[
+<?php
+
+// Gera um erro em tempo de compilação:
+$GLOBALS = [];
+$GLOBALS += [];
+$GLOBALS =& $x;
+$x =& $GLOBALS;
+unset($GLOBALS);
+array_pop($GLOBALS);
+// ...e qualquer outra operação de escrita/leitura em $GLOBALS
+
+?>
+]]>
      </programlisting>
     </example>
    </para>
@@ -81,24 +86,33 @@ $foo no escopo atual: variável local
   </note>
   <note>
    <para>
-     A partir do PHP 8.1.0, <varname>$GLOBALS</varname> agora é uma cópia somente leitura da tabela de símbolos globais. Isto é, variáveis globais não podem ser modificadas por meio de suas cópias. Anteriormente, o array <varname>$GLOBALS</varname> era excluído do comportamento usual por valor dos arrays PHP e variáveis globais podiam ser modificadas por meio de suas copias.
-     <informalexample>
+    A partir do PHP 8.1.0, <varname>$GLOBALS</varname> agora é uma cópia somente-leitura da
+    <link linkend="features.gc.refcounting-basics">tabela de símbolos</link> globais.
+    Isto é, variáveis globais não podem ser modificadas por meio de suas cópias.
+    Anteriormente, o array <varname>$GLOBALS</varname> era excluído do comportamento
+    usual "por valor" dos arrays PHP e variáveis globais podiam ser modificadas por meio de suas cópias.
+    <informalexample>
      <programlisting role="php">
 <![CDATA[
 <?php
+
 // Antes do PHP 8.1.0
 $a = 1;
-$globals = $GLOBALS; // Cópia ostensivamente por valor
+
+$globals = $GLOBALS; // Cópia ostensiva "por valor"
 $globals['a'] = 2;
 var_dump($a); // int(2)
-// A partir do PHP 8.1.0
-// isto não modifica mais $a. O comportamento anterior violava a semântica por valor.
+
+// A partir do PHP 8.1.0,
+// isto não mais modifica $a. O comportamento anterior violava a semântica "por valor".
 $globals = $GLOBALS;
 $globals['a'] = 1;
-// Para restaurar o comportamento anterior, itere sua cópia e atribua cada propriedade de volta ao $GLOBALS.
-foreach ($globals as $chave => $valor) {
-    $GLOBALS[$chave] = $valor;
+
+// Para restaurar o comportamento anterior, itera sua cópia e atribui cada propriedade de volta ao $GLOBALS.
+foreach ($globals as $key => $value) {
+    $GLOBALS[$key] = $value;
 }
+
 ?>
 ]]>
      </programlisting>
@@ -129,4 +143,3 @@ vim600: syn=xml fen fdm=syntax fdl=2 si
 vim: et tw=78 syn=sgml
 vi: ts=1 sw=1
 -->
-

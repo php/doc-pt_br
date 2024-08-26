@@ -1,45 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: c5d92fd7127e059d448d43ba339f19956f83b05a Maintainer: rafaelbernard Status: ready --><!-- CREDITS: rafaelbernard,narigone -->
+<!-- EN-Revision: 91570644fbbe4d23e79908e1a04c4c4d003fe587 Maintainer: rafaelbernard Status: ready --><!-- CREDITS: rafaelbernard,narigone,leonardolara -->
 <!-- splitted from ./index.xml, last change in rev 1.66 -->
   <chapter xml:id="security.filesystem" xmlns="http://docbook.org/ns/docbook">
    <title>Segurança do Sistema de Arquivos</title>
    <simpara>
     O <acronym>PHP</acronym> está sujeito à segurança encontrada na maioria dos sistemas de servidor
     com respeito à permissões de arquivos e diretórios. Isso permite que
-    você controle quais arquivos no sistema podem ser lidos e por quem. É preciso
+    seja controlado que arquivos no sistema podem ser lidos e por quem. É preciso
     ter cuidado com quaisquer arquivos que são lidos por todos para assegurar
-    que eles podem ser lidos por todos os usuários que tem acesso ao
+    que eles podem ser lidos por todos os usuários que têm acesso ao
     sistema de arquivos.
    </simpara>
    <simpara>
-    Já que o <acronym>PHP</acronym> foi moldado para permitir acesso em nível de usuário ao sistema
+    Já que o <acronym>PHP</acronym> foi projetado para permitir acesso em nível de usuário ao sistema
     de arquivos, é possível escrever um script <acronym>PHP</acronym> que permitirá
-    ler arquivos do sistema como o /etc/passwd, modificar suas conexões
+    ler arquivos do sistema como o <filename>/etc/passwd</filename>, modificar suas conexões
     de rede, enviar inúmeros trabalhos de impressão, etc. Isso tem
-    algumas implicações óbvias, já que você precisa ter certeza que os arquivos
-    que você lê e escreve são apropriados.
+    algumas implicações óbvias, já que é necessário garantir que os arquivos
+    lidos e gravados são apropriados.
    </simpara>
    <simpara>
     Considere o seguinte script, onde um usuário indica que quer
-    apagar um arquivo no seu diretório home. Isso presume uma situação
+    apagar um arquivo no seu diretório "home". Isso presume uma situação
     onde uma interface web <acronym>PHP</acronym> é usada regularmente para controle
     de arquivos, então o usuário do Apache tem permissão de apagar arquivos
-    nos diretórios home dos usuários.
+    nos diretórios "home" dos usuários.
    </simpara>
    <para>
     <example>
-     <title>Checagem fraca de variáveis resulta em....</title>
+     <title>Verificação fraca de variáveis resulta em....</title>
      <programlisting role="php">
 <![CDATA[
 <?php
-// remove a file from the user's home directory
+
+// Remove um arquivo do diretório "home" do usuário
 $username = $_POST['user_submitted_name'];
 $userfile = $_POST['user_submitted_filename'];
 $homedir  = "/home/$username";
 
 unlink("$homedir/$userfile");
 
-echo "The file has been deleted!";
+echo "O arquivo foi removido!";
+
 ?>
 ]]>
      </programlisting>
@@ -49,13 +51,15 @@ echo "The file has been deleted!";
    e apagá-lo, mesmo que eles não tenham permissão para fazê-lo.
    Nesse caso, é preciso ter alguma outra forma de autenticação.
    Considere o que poderia acontecer se as variáveis enviadas forem
-   "../etc/" and "passwd". O código então leria efetivamente:
+   <literal>"../etc/"</literal> e <literal>"passwd"</literal>.
+   O código então leria efetivamente:
     <example>
      <title>... um ataque ao sistema de arquivos</title>
      <programlisting role="php">
 <![CDATA[
 <?php
-// remove um arquivo de qualquer lugar no disco rígido
+
+// Remove um arquivo de qualquer lugar no disco rígido
 // que o usuário do PHP tenha acesso. Se o PHP tiver acesso de administrador (root):
 $username = $_POST['user_submitted_name']; // "../etc"
 $userfile = $_POST['user_submitted_filename']; // "passwd"
@@ -63,7 +67,8 @@ $homedir  = "/home/$username"; // "/home/../etc"
 
 unlink("$homedir/$userfile"); // "/home/../etc/passwd"
 
-echo "The file has been deleted!";
+echo "O arquivo foi removido!";
+
 ?>
 ]]>
      </programlisting>
@@ -88,7 +93,8 @@ echo "The file has been deleted!";
      <programlisting role="php">
 <![CDATA[
 <?php
-// remove um arquivo do disco rígido que o
+
+// Remove um arquivo do disco rígido que o
 // usuário do PHP tenha acesso.
 $username = $_SERVER['REMOTE_USER']; // usando um mecanismo de autenticação
 $userfile = basename($_POST['user_submitted_filename']);
@@ -97,10 +103,11 @@ $homedir  = "/home/$username";
 $filepath = "$homedir/$userfile";
 
 if (file_exists($filepath) && unlink($filepath)) {
-    $logstring = "Deleted $filepath\n";
+    $logstring = "Removido $filepath\n";
 } else {
-    $logstring = "Failed to delete $filepath\n";
+    $logstring = "Falhar ao remover $filepath\n";
 }
+
 $fp = fopen("/home/logging/filedelete.log", "a");
 fwrite($fp, $logstring);
 fclose($fp);
@@ -113,13 +120,14 @@ echo htmlentities($logstring, ENT_QUOTES);
     </example>
     No entanto, ele ainda possui falhas. Se seu sistema de autenticação
     permitir que os usuários criem seu próprios logins, e um usuário
-    escolher o login "../etc/", o sistema está novamente exposto. Por
-    essa razão, você pode preferir escrever uma checagem mais personalizada:
+    escolher o login <literal>"../etc/"</literal>, o sistema está novamente exposto. Por
+    essa razão, é preferível escrever uma verificação mais personalizada:
     <example>
-     <title>Checagem mais segura do nome do arquivo</title>
+     <title>Verificação mais segura do nome do arquivo</title>
      <programlisting role="php">
 <![CDATA[
 <?php
+
 $username     = $_SERVER['REMOTE_USER']; // usando um mecanismo de autenticação
 $userfile     = $_POST['user_submitted_filename'];
 $homedir      = "/home/$username";
@@ -127,10 +135,11 @@ $homedir      = "/home/$username";
 $filepath     = "$homedir/$userfile";
 
 if (!ctype_alnum($username) || !preg_match('/^(?:[a-z0-9_-]|\.(?!\.))+$/iD', $userfile)) {
-    die("Bad username/filename");
+    die("Usuário/arquivo inválido");
 }
 
-//etc...
+// etc.
+
 ?>
 ]]>
      </programlisting>
@@ -138,33 +147,38 @@ if (!ctype_alnum($username) || !preg_match('/^(?:[a-z0-9_-]|\.(?!\.))+$/iD', $us
    </para>
    <para>
     Dependendo do sistema operacional, existe uma variedade enorme de arquivos
-    com os quais se preocupar, incluindo dispositivos (/dev/
-    or COM1), arquivos de configuração (arquivos /etc/ e .ini),
-    áres de armazenamento conhecidas (/home/, My Documents), etc. Por essa
+    com os quais se preocupar, incluindo dispositivos (<filename>/dev/</filename>
+    ou <filename>COM1</filename>), arquivos de configuração (arquivos <filename>/etc/</filename>
+    e arquivos <literal>.ini</literal>), áreas de armazenamento de arquivo bem conhecidas (<filename>/home/</filename>,
+    <filename>My Documents</filename>), etc. Por essa
     razão, normalmente é mais fácil criar uma política onde se proibe
     tudo exceto aquilo que for explicitamente permitido.
    </para>
    <sect1 xml:id="security.filesystem.nullbytes">
-    <title>Problemas relacionados a bytes nulos (Null)</title>
+    <title>Problemas relacionados a bytes nulos (NUL)</title>
     <simpara>
      Como o <acronym>PHP</acronym> usa funções em C para operações relacionadas ao
-     sistema de arquivos, ele pode lidar com bytes nulos de maneira inexperada.
-     Como bytes nulos denotam fim de string em C, strings contendo eles
+     sistema de arquivos, ele pode lidar com bytes nulos de maneira inesperada.
+     Como bytes nulos denotam fim de string em C, strings que os contém
      não serão consideradas de forma inteira, mas apenas até que um byte nulo ocorra.
 
      O seguinte exemplo mostra um código vulnerável que demonstra esse problema:
     </simpara>
     <example>
-     <title>Script vulnerável à bytes nulos</title>
+     <title>Script vulnerável a bytes nulos</title>
      <programlisting role="php">
 <![CDATA[
 <?php
+
 $file = $_GET['file']; // "../../etc/passwd\0"
-if (file_exists('/home/wwwrun/'.$file.'.php')) {
-    // file_exists will return true as the file /home/wwwrun/../../etc/passwd exists
-    include '/home/wwwrun/'.$file.'.php';
-    // the file /etc/passwd will be included
+
+if (file_exists('/home/wwwrun/' . $file. '.php')) {
+    // file_exists retornará true porque o arquivo /home/wwwrun/../../etc/passwd existe
+    include '/home/wwwrun/' . $file . '.php';
+    // o arquivo /etc/passwd será incluído
+
 }
+
 ?>
 ]]>
      </programlisting>
@@ -178,18 +192,20 @@ if (file_exists('/home/wwwrun/'.$file.'.php')) {
      <programlisting role="php">
 <![CDATA[
 <?php
+
 $file = $_GET['file'];
 
-// Whitelisting possible values
+// Autorizando valores possíveis
 switch ($file) {
     case 'main':
     case 'foo':
     case 'bar':
-        include '/home/wwwrun/include/'.$file.'.php';
+        include '/home/wwwrun/include/' . $file . '.php';
         break;
     default:
         include '/home/wwwrun/include/main.php';
 }
+
 ?>
 ]]>
      </programlisting>
