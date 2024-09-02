@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 648875cf73af01acdb6afaa5ca38b0bf6631bf42 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+
+<refentry xml:id="function.cubrid-prepare" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>cubrid_prepare</refname>
+  <refpurpose>Prepara uma instrução SQL para execução</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>resource</type><methodname>cubrid_prepare</methodname>
+   <methodparam><type>resource</type><parameter>conn_identifier</parameter></methodparam>
+   <methodparam><type>string</type><parameter>prepare_stmt</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>option</parameter><initializer>0</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   A função <function>cubrid_prepare</function> é um tipo de API que representa instruções SQL
+   compiladas previamente para um determinado identificador de conexão. Esta instrução SQL pré-compilada será incluída
+   em <function>cubrid_prepare</function>.
+  </para>
+  <para>
+   Consequentemente, pode-se usar esta instrução de forma eficaz para executar várias vezes repetidamente ou para
+   processar dados massivos. Apenas uma única instrução pode ser usada e um parâmetro pode ser colocado como um ponto de interrogação (?)
+   na área apropriada da instrução SQL. Adicione um parâmetro ao vincular um valor na cláusula
+   VALUES da instrução INSERT ou na cláusula WHERE. Observe que é permitido vincular um valor a uma
+   marca (?) usando apenas a função <function>cubrid_bind</function>.
+  </para>
+ </refsect1>
+
+<refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>conn_identifier</parameter></term>
+     <listitem><para>Identificador da conexão.</para></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>prepare_stmt</parameter></term>
+     <listitem><para>Instrução de preparação.</para></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>option</parameter></term>
+     <listitem><para>Opção de retorno de OID: <constant>CUBRID_INCLUDE_OID</constant>.</para></listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Identificador da requisição em caso de sucesso,&return.falseforfailure;.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <function>cubrid_prepare</function></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$conn = cubrid_connect("localhost", 33000, "demodb");
+
+$sql = <<<EOD
+SELECT g.event_code, e.name
+FROM game g
+JOIN event e ON g.event_code=e.code
+WHERE host_year = ? AND event_code NOT IN (SELECT event_code FROM game WHERE host_year=?) GROUP BY event_code;
+EOD;
+
+$req = cubrid_prepare($conn, $sql);
+
+cubrid_bind($req, 1, 2004);
+cubrid_bind($req, 2, 2000);
+cubrid_execute($req);
+
+$row_num = cubrid_num_rows($req);
+printf("Existem %d eventos que ocorrem nas Olimpíadas de 2004 mas não ocorrem em 2000. Por exemplo:\n\n", $row_num);
+
+printf("%-15s %s\n", "Cód. do evento", "Nome do evento");
+printf("------------------------------\n");
+
+$row = cubrid_fetch_assoc($req);
+printf("%-15d %s\n", $row["event_code"], $row["name"]);
+$row = cubrid_fetch_assoc($req);
+printf("%-15d %s\n", $row["event_code"], $row["name"]);
+
+cubrid_disconnect($conn);
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+Existem 27 eventos que ocorrem nas Olimpíadas de 2004 mas não ocorrem em 2000. Por exemplo:
+
+Cód. do evento  Nome do evento
+------------------------------
+20063           +91kg
+20070           64kg
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>cubrid_execute</function></member>
+    <member><function>cubrid_bind</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
