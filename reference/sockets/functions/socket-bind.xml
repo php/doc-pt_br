@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 14dc7c47365f2b71f6c907a5ba5bccf42534d5a9 Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.socket-bind" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>socket_bind</refname>
+  <refpurpose>Vincula um nome a um socket</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>bool</type><methodname>socket_bind</methodname>
+   <methodparam><type>Socket</type><parameter>socket</parameter></methodparam>
+   <methodparam><type>string</type><parameter>address</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>port</parameter><initializer>0</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Vincula o nome informado em <parameter>address</parameter> ao socket
+   descrito por <parameter>socket</parameter>. Isto deve ser feito antes
+   que uma conexão seja estabelecida usando <function>socket_connect</function>
+   ou <function>socket_listen</function>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>socket</parameter></term>
+     <listitem>
+      <para>
+       Uma instância de <classname>Socket</classname> criada com <function>socket_create</function>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>address</parameter></term>
+     <listitem>
+      <para>
+       Se o socket for da família <constant>AF_INET</constant>, o parâmetro
+       <parameter>address</parameter> será um IP na notação de quatro inteiros separados por pontos
+       (ex.: <literal>127.0.0.1</literal>).
+      </para>
+      <para>
+       Se o socket for da família <constant>AF_UNIX</constant>, o parâmetro
+       <parameter>address</parameter> será o caminha para um
+       socket de domínio Unix (ex.: <filename>/tmp/my.sock</filename>).
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>port</parameter> (opcional)</term>
+     <listitem>
+      <para>
+       O parâmetro <parameter>port</parameter> é usado somente ao
+       vincular um socket <constant>AF_INET</constant>, e designa
+       a porta na qual as conexões serão recebidas.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.success;
+  </para>
+  <para>
+   O código de erro pode ser recuperado com <function>socket_last_error</function>.
+   Esse código pode ser passado para <function>socket_strerror</function> para obter uma
+   explicação textual do erro.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     &sockets.changelog.socket-param;
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Usando <function>socket_bind</function> para definir o endereço da origem</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// Cria um novo socket
+$sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+
+// Uma lista de exemplo de endereços IP de propriedade do computador
+$sourceips['kevin']    = '127.0.0.1';
+$sourceips['madcoder'] = '127.0.0.2';
+
+// Vincula o endereço de origem
+socket_bind($sock, $sourceips['madcoder']);
+
+// Conexão ao endereço de destino
+socket_connect($sock, '127.0.0.1', 80);
+
+// Escreve
+$request = 'GET / HTTP/1.1' . "\r\n" .
+           'Host: example.com' . "\r\n\r\n";
+socket_write($sock, $request);
+
+// Fecha
+socket_close($sock);
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    Esta função precisa ser usada no socket antes de
+    <function>socket_connect</function>.
+   </para>
+  </note>
+  <note>
+   <para>
+    Nota de compatibilidade Windows 9x/ME:
+    <function>socket_last_error</function> pode retornar um código de erro inválido
+    na tentativa de vincular o socket a um endereço incorreto que não pertence
+    à máquina.
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>socket_connect</function></member>
+    <member><function>socket_listen</function></member>
+    <member><function>socket_create</function></member>
+    <member><function>socket_last_error</function></member>
+    <member><function>socket_strerror</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
