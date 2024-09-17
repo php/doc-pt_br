@@ -1,18 +1,19 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: af4410a7e15898c3dbe83d6ea38246745ed9c6fb Maintainer: felipe Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- EN-Revision: af4410a7e15898c3dbe83d6ea38246745ed9c6fb Maintainer: leonardolara Status: ready -->
 <chapter xml:id="sockets.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  &reftitle.examples;
  <para>
   <example>
-   <title>Exemplo de socket: Simples servidor TCP/IP</title>
+   <title>Exemplo de soquete: Servidor TCP/IP simples</title>
    <para>
-    Este exemplo mostra uma simples troca de informações do servidor. Alterar
-    as variáveis <varname>address</varname> e <varname>port</varname>
-    para o conjunto da sua configuração e execução. Você deve então conectar
-    o servidor com uma linha de comando similiar a: <command>telnet 192.168.1.53
-    10000</command> (onde o endereço e a porta partem da sua configuração).
-    Algo que você digitar então irá sair no lado do servidor, e mostrar isso
-    para você. Para desconectar, digite 'quit'.
+    Este exemplo mostra um servidor simples de resposta. Altere as
+    variáveis ​​<varname>address</varname> e <varname>port</varname>
+    para adequar à configuração e execução em particular. Pode-se então conectar ao
+    servidor com um comando semelhante a: <command>telnet 192.168.1.53
+    10000</command> (onde o endereço e a porta correspondem à configuração
+    específica). Qualquer coisa que for digitada será exibida no lado do
+    servidor e ecoada de volta para o usuário. Para desconectar, digite 'quit'.
    </para>
    <programlisting role="php">
 <![CDATA[
@@ -20,41 +21,41 @@
 <?php
 error_reporting(E_ALL);
 
-/* Allow the script to hang around waiting for connections. */
+/* Permite que o script fique esperando por conexões. */
 set_time_limit(0);
 
-/* Turn on implicit output flushing so we see what we're getting
- * as it comes in. */
+/* Ativa a liberação de saída implícita para exibir o que está sendo obtido à medida
+ * que os dados chegam. */
 ob_implicit_flush();
 
 $address = '192.168.1.53';
 $port = 10000;
 
 if (($sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP)) === false) {
-    echo "socket_create() failed: reason: " . socket_strerror(socket_last_error()) . "\n";
+    echo "socket_create() falhou. Motivo: " . socket_strerror(socket_last_error()) . "\n";
 }
 
 if (socket_bind($sock, $address, $port) === false) {
-    echo "socket_bind() failed: reason: " . socket_strerror(socket_last_error($sock)) . "\n";
+    echo "socket_bind() falhou. Motivo: " . socket_strerror(socket_last_error($sock)) . "\n";
 }
 
 if (socket_listen($sock, 5) === false) {
-    echo "socket_listen() failed: reason: " . socket_strerror(socket_last_error($sock)) . "\n";
+    echo "socket_listen() falhou. Motivo: " . socket_strerror(socket_last_error($sock)) . "\n";
 }
 
 do {
     if (($msgsock = socket_accept($sock)) === false) {
-        echo "socket_accept() failed: reason: " . socket_strerror(socket_last_error($sock)) . "\n";
+        echo "socket_accept() falhou. Motivo: " . socket_strerror(socket_last_error($sock)) . "\n";
         break;
     }
-    /* Send instructions. */
-    $msg = "\nWelcome to the PHP Test Server. \n" .
-        "To quit, type 'quit'. To shut down the server type 'shutdown'.\n";
+    /* Envia instruções. */
+    $msg = "\nBem-vindo ao servidor de tests do PHP. \n" .
+        "Para sair, digite 'quit'. Para desligar o servidor, digite 'shutdown'.\n";
     socket_write($msgsock, $msg, strlen($msg));
 
     do {
         if (false === ($buf = socket_read($msgsock, 2048, PHP_NORMAL_READ))) {
-            echo "socket_read() failed: reason: " . socket_strerror(socket_last_error($msgsock)) . "\n";
+            echo "socket_read() falhou. Motivo: " . socket_strerror(socket_last_error($msgsock)) . "\n";
             break 2;
         }
         if (!$buf = trim($buf)) {
@@ -67,7 +68,7 @@ do {
             socket_close($msgsock);
             break 2;
         }
-        $talkback = "PHP: You said '$buf'.\n";
+        $talkback = "PHP: Você disse '$buf'.\n";
         socket_write($msgsock, $talkback, strlen($talkback));
         echo "$buf\n";
     } while (true);
@@ -82,10 +83,10 @@ socket_close($sock);
  </para>
  <para>
   <example>
-   <title>Exemplo de Socket: Simples cliente TCP/IP</title>
+   <title>Exemplo de Socket: Cliente TCP/IP simples</title>
    <para>
-    Este exemplo mostra um simples, one-shot cliente HTTP. Isso simplesmente
-    conecta à uma página, envia um cabeçalho de requisição, mostra a resposta,
+    Este exemplo mostra cliente simples, de tiro único. Ele simplemente
+    conecta à uma página, submete uma requisição HEAD, ecoa a resposta
     e sai.
    </para>
    <programlisting role="php">
@@ -93,26 +94,26 @@ socket_close($sock);
 <?php
 error_reporting(E_ALL);
 
-echo "<h2>TCP/IP Connection</h2>\n";
+echo "<h2>Conexão TCP/IP</h2>\n";
 
-/* Get the port for the WWW service. */
+/* Obtém a porta para o serviço WWW. */
 $service_port = getservbyname('www', 'tcp');
 
-/* Get the IP address for the target host. */
+/* Obtém o endereço IP para o servidor de destino. */
 $address = gethostbyname('www.example.com');
 
-/* Create a TCP/IP socket. */
+/* Cria um soquete TCP/IP. */
 $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 if ($socket === false) {
-    echo "socket_create() failed: reason: " . socket_strerror(socket_last_error()) . "\n";
+    echo "socket_create() falhou. Motivo: " . socket_strerror(socket_last_error()) . "\n";
 } else {
     echo "OK.\n";
 }
 
-echo "Attempting to connect to '$address' on port '$service_port'...";
+echo "Tentando conexão a '$address' na porta '$service_port'...";
 $result = socket_connect($socket, $address, $service_port);
 if ($result === false) {
-    echo "socket_connect() failed.\nReason: ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
+    echo "socket_connect() falhou.\nMotivo: ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
 } else {
     echo "OK.\n";
 }
@@ -122,16 +123,16 @@ $in .= "Host: www.example.com\r\n";
 $in .= "Connection: Close\r\n\r\n";
 $out = '';
 
-echo "Sending HTTP HEAD request...";
+echo "Enviando requisição HTTP HEAD...";
 socket_write($socket, $in, strlen($in));
 echo "OK.\n";
 
-echo "Reading response:\n\n";
+echo "Lendo resposta:\n\n";
 while ($out = socket_read($socket, 2048)) {
     echo $out;
 }
 
-echo "Closing socket...";
+echo "Fechando soquete...";
 socket_close($socket);
 echo "OK.\n\n";
 ?>
