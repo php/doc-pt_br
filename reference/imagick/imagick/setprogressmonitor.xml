@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 1534707f677267513659e57f530ed5f4cf08f924 Maintainer: leonardolara Status: ready -->
+
+<refentry xml:id="imagick.setprogressmonitor" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>Imagick::setProgressMonitor</refname>
+  <refpurpose>Define uma função de retorno a ser chamada durante o processamento</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <modifier>public</modifier> <type>bool</type><methodname>Imagick::setProgressMonitor</methodname>
+   <methodparam><type>callable</type><parameter>callback</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Define uma função de retorno a ser chamada durante o processamento da imagem Imagick.
+  </para>
+
+
+
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <variablelist>
+   <varlistentry>
+    <term><parameter>callback</parameter></term>
+    <listitem>
+     <para>
+      A função de progresso a ser chamada. Deve retornar true se o processamento da imagem continuar ou false se for cancelado. O parâmetro 'offset' indica o progresso e o parâmetro 'span' indica a quantidade total de trabalho necessário a ser feito.
+     </para>
+
+     <methodsynopsis xmlns="http://docbook.org/ns/docbook">
+      <type>bool</type>
+      <methodname>
+       <replaceable>callback</replaceable>
+      </methodname>
+      <methodparam>
+       <type>mixed</type><parameter>offset</parameter>
+      </methodparam>
+      <methodparam>
+       <type>mixed</type>
+       <parameter>span</parameter>
+      </methodparam>
+     </methodsynopsis>
+
+     <caution>
+      <para>
+       Os valores passados ​​para a função de retorno não são consistentes. Em particular, o parâmetro 'span' pode aumentar durante o processamento da imagem. Por causa disso, calcular a porcentagem concluída de uma operação de imagem não é trivial.
+      </para>
+     </caution>
+
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &imagick.return.success;
+  </para>
+ </refsect1>
+
+
+
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>Imagick::setProgressMonitor</function></title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+    $abortReason = null;
+
+    try {
+        $imagick = new \Imagick(realpath($this->control->getImagePath()));
+        $startTime = time();
+
+        $callback = function ($offset, $span)  use ($startTime, &$abortReason) {
+            if (((100 * $offset) / $span)  > 20) {
+                $abortReason = "Processamento alcançou 20%";
+                return false;
+            }
+
+            $nowTime = time();
+
+            if ($nowTime - $startTime > 5) {
+                $abortReason = "Processamento de imagem levou mais de 5 segundos";
+                return false;
+            }
+            if (($offset % 5) == 0) {
+                echo "Progresso: $offset / $span <br/>";
+            }
+            return true;
+        };
+
+        $imagick->setProgressMonitor($callback);
+
+        $imagick->waveImage(2, 15);
+
+        echo "Comprimento dos dados é: ".strlen($imagick->getImageBlob());
+    }
+    catch(\ImagickException $e) {
+        if ($abortReason != null) {
+            echo "Processamento de imagem foi abortado: ".$abortReason."<br/>";
+        }
+        else {
+            echo "ImagickException capturada: ".$e->getMessage()." Tipo da exceção é ".get_class($e);
+        }
+    }
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
