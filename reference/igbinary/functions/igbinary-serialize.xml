@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: a2565b4e1fb47d92047f356cd56b26ca502fec15 Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.igbinary-serialize" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>igbinary_serialize</refname>
+  <refpurpose>Gera uma representação binária compacta e armazenável de um valor</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>string</type><type>false</type></type><methodname>igbinary_serialize</methodname>
+   <methodparam><type>mixed</type><parameter>value</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Gera uma representação armazenável de um valor.
+  </para>
+  <para>
+   Isso é útil para armazenar ou passar valores PHP sem
+   perder seu tipo e estrutura.
+  </para>
+  <para>
+   Para transformar a string serializada em um valor PHP novamente,
+   a função <function>igbinary_unserialize</function> pode ser usada.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <variablelist>
+   <varlistentry>
+    <term><parameter>value</parameter></term>
+    <listitem>
+      <para>
+       O valor a ser serializado. <function>igbinary_serialize</function>
+       lida com todos os tipos, exceto o tipo <type>resource</type> e alguns <type>object</type>s (veja nota abaixo).
+       Mesmo &array;s que contenham referências a si mesmo podem ser processados ​​por <function>igbinary_serialize</function>.
+       As referências circulares dentro do &array; ou &object; que está sendo serializado também serão armazenadas.
+       Qualquer outra referência será perdida.
+      </para>
+      <para>
+       Ao serializar objetos, igbinary tentará chamar as funções membro
+       <link linkend="object.serialize">__serialize()</link> ou
+       <link linkend="object.sleep">__sleep()</link> antes da serialização.
+       Isso permite que o objeto faça qualquer limpeza de última hora, etc., antes
+       de ser serializado. Da mesma forma, quando o objeto é restaurado usando
+       <function>igbinary_unserialize</function>, a função membro <link linkend="object.unserialize">__unserialize()</link> ou
+       <link linkend="object.wakeup">__wakeup()</link> será chamada.
+      </para>
+      <note>
+       <para>
+        Membros privados de &object;s têm o nome da classe anexado ao nome do
+        membro; membros protegidos têm um <literal>'*'</literal> prefixando o nome do membro.
+        Esses valores prefixados possuem bytes nulos em ambos os lados.
+       </para>
+      </note>
+     </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna uma string contendo uma representação de fluxo de bytes de
+   <parameter>value</parameter> que pode ser armazenada em qualquer lugar.
+  </para>
+  <para>
+   Observe que esta é uma string binária que pode incluir qualquer valor de byte e precisa
+   ser armazenada e tratada como tal. Por exemplo,
+   a saída de <function>igbinary_serialize</function> geralmente deve ser armazenada em um campo <literal>BLOB</literal>
+   em um banco de dados, em vez de um campo <literal>CHAR</literal> ou <literal>TEXT</literal>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>igbinary_serialize</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$ser = igbinary_serialize(['test', 'test']);
+echo urlencode($ser), "\n";
+var_export(igbinary_unserialize($ser));
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+%00%00%00%02%14%02%06%00%11%04test%06%01%0E%00
+array (
+  0 => 'test',
+  1 => 'test',
+)
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    Observe que muitos objetos integrados no PHP não podem ser serializados. No entanto, aqueles com
+    essa habilidade implementam a interface <interfacename>Serializable</interfacename> ou os métodos
+    mágicos <link linkend="object.serialize">__serialize()</link>/<link linkend="object.unserialize">__unserialize()</link>
+    ou <link linkend="object.sleep">__sleep()</link>/<link linkend="object.wakeup">__wakeup()</link>. Se uma
+    classe interna não atender a nenhum desses requisitos, ela não poderá ser serializada
+    de forma confiável com nenhum serializador.
+   </para>
+   <para>
+    Existem algumas exceções históricas à regra acima, onde alguns objetos internos
+    poderiam ser serializados sem implementar a interface ou expor os métodos.
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>serialize</function></member>
+    <member><function>igbinary_unserialize</function></member>
+    <member><function>var_export</function></member>
+    <member><function>json_encode</function></member>
+    <member><link linkend="language.oop5.serialization">Serializando Objetos</link></member>
+    <member><link linkend="object.sleep">__sleep()</link></member>
+    <member><link linkend="object.wakeup">__wakeup()</link></member>
+    <member><link linkend="object.serialize">__serialize()</link></member>
+    <member><link linkend="object.unserialize">__unserialize()</link></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
