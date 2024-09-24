@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 4d17b7b4947e7819ff5036715dd706be87ae4def Maintainer: leonardolara Status: ready --><!-- Credits: leonardolara -->
+
+<reference xml:id="class.mongodb-driver-bulkwrite" role="class" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
+
+ <title>A classe MongoDB\Driver\BulkWrite</title>
+ <titleabbrev>MongoDB\Driver\BulkWrite</titleabbrev>
+
+ <partintro>
+
+<!-- {{{ MongoDB\Driver\BulkWrite intro -->
+  <section xml:id="mongodb-driver-bulkwrite.intro">
+   &reftitle.intro;
+   <para>
+    A classe <classname>MongoDB\Driver\BulkWrite</classname> coleta uma ou mais
+    operações de gravação que devem ser enviadas ao servidor. Depois de adicionar qualquer
+    número de operações de inserção, atualização e exclusão, a coleção pode ser
+    executada via
+    <methodname>MongoDB\Driver\Manager::executeBulkWrite</methodname>.
+   </para>
+   <para>
+    As operações de gravação podem ser ordenadas (padrão) ou não ordenadas. As operações
+    de gravação ordenadas são enviadas ao servidor, na ordem fornecida, para execução
+    serial. Se uma gravação falhar, todas as operações restantes serão abortadas.
+    As operações não ordenadas são enviadas ao servidor em uma ordem arbitrária,
+    onde podem ser executadas em paralelo. Quaisquer erros que ocorram são relatados
+    após todas as operações terem sido tentadas.
+   </para>
+  </section>
+<!-- }}} -->
+
+  <section xml:id="mongodb-driver-bulkwrite.synopsis">
+   &reftitle.classsynopsis;
+
+<!-- {{{ Synopsis -->
+   <classsynopsis>
+    <ooclass><classname>MongoDB\Driver\BulkWrite</classname></ooclass>
+
+<!-- {{{ Class synopsis -->
+    <classsynopsisinfo>
+     <modifier>final</modifier>
+     <ooclass>
+      <classname>MongoDB\Driver\BulkWrite</classname>
+     </ooclass>
+
+     <oointerface>
+      <interfacename>Countable</interfacename>
+     </oointerface>
+    </classsynopsisinfo>
+<!-- }}} -->
+
+    <classsynopsisinfo role="comment">&Methods;</classsynopsisinfo>
+    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.mongodb-driver-bulkwrite')/db:refentry/db:refsect1[@role='description']/descendant::db:methodsynopsis[not(@role='procedural')])" />
+   </classsynopsis>
+<!-- }}} -->
+
+  </section>
+
+  <section xml:id="mongodb-driver-bulkwrite.examples">
+   &reftitle.examples;
+
+   <example>
+    <title>As operações de gravação mistas são agrupadas por tipo</title>
+    <para>
+     Operações de gravação mistas (ou seja, inserções, atualizações e exclusões) serão
+     agrupados em comandos de gravação para serem enviados sequencialmente ao servidor.
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$bulk = new MongoDB\Driver\BulkWrite(['ordered' => true]);
+$bulk->insert(['_id' => 1, 'x' => 1]);
+$bulk->insert(['_id' => 2, 'x' => 2]);
+$bulk->update(['x' => 2], ['$set' => ['x' => 1]]);
+$bulk->insert(['_id' => 3, 'x' => 3]);
+$bulk->delete(['x' => 1]);
+
+?>
+]]>
+    </programlisting>
+    <para>
+     Resultará na execução de quatro comandos de gravação (ou seja, ida e volta). Como
+     as operações são ordenadas, a terceira inserção não pode ser enviada até que a
+     atualização anterior seja executada.
+    </para>
+   </example>
+   <example>
+    <title>Operações de gravação ordenadas causando um erro</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$bulk = new MongoDB\Driver\BulkWrite(['ordered' => true]);
+$bulk->delete([]);
+$bulk->insert(['_id' => 1]);
+$bulk->insert(['_id' => 2]);
+$bulk->insert(['_id' => 3, 'hello' => 'world']);
+$bulk->update(['_id' => 3], ['$set' => ['hello' => 'earth']]);
+$bulk->insert(['_id' => 4, 'hello' => 'pluto']);
+$bulk->update(['_id' => 4], ['$set' => ['hello' => 'moon']]);
+$bulk->insert(['_id' => 3]);
+$bulk->insert(['_id' => 4]);
+$bulk->insert(['_id' => 5]);
+
+$manager = new MongoDB\Driver\Manager('mongodb://localhost:27017');
+$writeConcern = new MongoDB\Driver\WriteConcern(MongoDB\Driver\WriteConcern::MAJORITY, 1000);
+
+try {
+    $result = $manager->executeBulkWrite('db.collection', $bulk, $writeConcern);
+} catch (MongoDB\Driver\Exception\BulkWriteException $e) {
+    $result = $e->getWriteResult();
+
+    // Verifica se a preocupação de gravação não pôde ser atendida
+    if ($writeConcernError = $result->getWriteConcernError()) {
+        printf("%s (%d): %s\n",
+            $writeConcernError->getMessage(),
+            $writeConcernError->getCode(),
+            var_export($writeConcernError->getInfo(), true)
+        );
+    }
+
+    // Verifica se alguma operação de gravação não foi concluída
+    foreach ($result->getWriteErrors() as $writeError) {
+        printf("Operação#%d: %s (%d)\n",
+            $writeError->getIndex(),
+            $writeError->getMessage(),
+            $writeError->getCode()
+        );
+    }
+} catch (MongoDB\Driver\Exception\Exception $e) {
+    printf("Outro erro: %s\n", $e->getMessage());
+    exit;
+}
+
+printf("Inseridos %d documentos\n", $result->getInsertedCount());
+printf("Atualizados %d documentos\n", $result->getModifiedCount());
+
+?>
+]]>
+    </programlisting>
+   </example>
+   &example.outputs;
+   <screen>
+<![CDATA[
+Operação#7: E11000 duplicate key error index: db.collection.$_id_ dup key: { : 3 } (11000)
+Inseridos 4 document(s)
+Atualizados 2 document(s)
+]]>
+   </screen>
+   <para>
+    Se a preocupação de gravação não pudesse ser atendida, o exemplo acima geraria
+    algo como:
+   </para>
+   <screen>
+<![CDATA[
+waiting for replication timed out (64): array (
+  'wtimeout' => true,
+)
+Operação#7: E11000 duplicate key error index: databaseName.collectionName.$_id_ dup key: { : 3 } (11000)
+Inseridos 4 document(s)
+Atualizados 2 document(s)
+]]>
+   </screen>
+   <para>
+    Se for executado o exemplo acima, mas permitindo gravações não ordenadas:
+   </para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$bulk = new MongoDB\Driver\BulkWrite(['ordered' => false]);
+/* ... */
+
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+Operação#7: E11000 duplicate key error index: db.collection.$_id_ dup key: { : 3 } (11000)
+Operação#8: E11000 duplicate key error index: db.collection.$_id_ dup key: { : 4 } (11000)
+Inseridos 5 documentos
+Atualizados 2 documentos
+]]>
+   </screen>
+  </section>
+
+  <section xml:id="mongodb-driver-bulkwrite.seealso">
+   &reftitle.seealso;
+   <simplelist>
+    <member><methodname>MongoDB\Driver\Manager::executeBulkWrite</methodname></member>
+    <member><classname>MongoDB\Driver\WriteResult</classname></member>
+    <member><classname>MongoDB\Driver\WriteConcern</classname></member>
+    <member><classname>MongoDB\Driver\WriteConcernError</classname></member>
+    <member><classname>MongoDB\Driver\WriteError</classname></member>
+   </simplelist>
+  </section>
+
+ </partintro>
+
+ &reference.mongodb.mongodb.driver.entities.bulkwrite;
+
+</reference>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
