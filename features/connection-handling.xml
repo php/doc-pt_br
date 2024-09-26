@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: dc0f955be2a10b707ae06f7da69f52fab24df3d1 Maintainer: rogeriopradoj Status: ready --><!-- CREDITS: narigone, pauloelr, rogeriopradoj, geekcom -->
+<!-- EN-Revision: dc0f955be2a10b707ae06f7da69f52fab24df3d1 Maintainer: leonardolara Status: ready --><!-- CREDITS: narigone, pauloelr, rogeriopradoj, geekcom -->
  <chapter xml:id="features.connection-handling" xmlns="http://docbook.org/ns/docbook">
   <title>Tratamento de Conexões</title>
 
@@ -8,66 +8,66 @@
    estados possíveis:
    <itemizedlist>
     <listitem><simpara>0 - NORMAL</simpara></listitem>
-    <listitem><simpara>1 - ABORTED</simpara></listitem>
-    <listitem><simpara>2 - TIMEOUT</simpara></listitem>
-    <listitem><simpara>3 - ABORTED and TIMEOUT</simpara></listitem>
+    <listitem><simpara>1 - ABORTADA</simpara></listitem>
+    <listitem><simpara>2 - EXPIRADA</simpara></listitem>
+    <listitem><simpara>3 - ABORTADA e EXPIRADA</simpara></listitem>
    </itemizedlist>
   </para>
 
   <simpara>
    Quando um script PHP está sendo executado normalmente, o estado NORMAL está ativo.
-   Se o cliente remoto desconecta, o estado ABORTED (abortado) é
-   ligado. Uma desconexão do cliente remoto é normalmente causada pelo
-   usuário apertando o botão STOP. Se o tempo limite imposto pelo PHP (veja
-   <function>set_time_limit</function>) é alcançado, o estado TIMEOUT (tempo acabado)
-   é ligado.</simpara>
+   Se o cliente remoto desconecta, o estado ABORTADO é
+   ativado. Uma desconexão do cliente remoto é normalmente causada pelo
+   usuário pressionando o botão de parada. Se o tempo limite imposto pelo PHP (veja
+   <function>set_time_limit</function>) é alcançado, o estado EXPIRADO
+   é ativado.</simpara>
 
   <simpara>
-   Você pode decidir se quer ou não que a desconexão do cliente cause
-   interrupção em seu script. As vezes é útil sempre fazer o seu
-   script rodar até completar mesmo se não houver nenhum navegador remoto recebendo
-   a saída. O comportamento padrão, no entanto, é de seu script ser
-   interrompido quando o cliente remoto se desconecta. Esse comportamento pode ser
-   configurado através da diretiva ignore_user_abort &php.ini; assim como pela
+   É possível decidir se a desconexão do cliente cause ou não uma
+   interrupção no script. As vezes é útil deixar o script em execução
+   até que seja concluído mesmo se não houver nenhum navegador remoto recebendo
+   a saída. O comportamento padrão, no entanto, é a interrupção
+   do script quando o cliente remoto se desconecta. Esse comportamento pode ser
+   configurado através da diretiva ignore_user_abort do &php.ini;, assim como pela
    diretiva correspondente <literal>php_value ignore_user_abort</literal> no
    &httpd.conf; do Apache ou
-   com a função <function>ignore_user_abort</function>. Se você não disser
-   para o PHP ignorar o abort do usuário e ele abortar, seu script
-   será encerrado. A única exceção é se você tiver registrado uma função
-   de finalização usando <function>register_shutdown_function</function>. Com uma
-   função de finalização, quando um usuário remoto clica no botão STOP, a
-   próxima vez que seu script tentar gerar alguma saída, o PHP detectará que
+   com a função <function>ignore_user_abort</function>. Se o PHP não for instruído
+   a ignorar o aborto por parte do usuário e ele abortar, o script
+   será encerrado. A única exceção é se uma função de finalização tiver sido
+   registrada usando <function>register_shutdown_function</function>. Com uma
+   função de finalização, quando um usuário remoto clica no botão de parada, a
+   próxima vez que o script tentar gerar alguma saída, o PHP detectará que
    a conexão foi cancelada e a função de finalização é chamada.
-   Essa função de finalização também será chamada no fim do seu script
-   mesmo terminando normalmente, então para fazer algo diferente caso o cliente
-   desconecte, você pode usar a função <function>connection_aborted</function>.
+   Essa função de finalização também será chamada no fim do script
+   mesmo que ele termine normalmente, então para fazer algo diferente caso o cliente
+   desconecte, a função <function>connection_aborted</function> pode ser usada.
    Essa função retorna &true; se a conexão foi
    abortada.</simpara>
 
   <simpara>
-   Seu script também pode ser finalizado pelo timer interno.
-   O tempo limite padrão é de 30 segundos. Podendo ser mudado usando a
-   diretiva <option>max_execution_time</option> &php.ini; ou a diretiva correspondente
+   O script também pode ser finalizado pelo temporizador interno.
+   O tempo limite padrão é de 30 segundos. Pode ser alterado usando a
+   diretiva <option>max_execution_time</option> do &php.ini; ou a diretiva correspondente
    no &httpd.conf; do Apache <literal>php_value max_execution_time</literal>
    assim como com a função
-   <function>set_time_limit</function>. Quando o timer
-   chega ao limite o script será abortado e assim como o caso acima
+   <function>set_time_limit</function>. Quando o temporizador
+   chega ao limite, o script será abortado e assim como o caso acima
    de desconexão pelo cliente, se uma função de finalização foi registrada, ela será
-   chamada. Dentro da função de finalização você pode checar se a
-   causa da finalização foi estouro do tempo limite chamando a
+   chamada. Dentro da função de finalização, pode ser verificado se a
+   causa da finalização foi tempo limite excedido chamando-se a
    função <function>connection_status</function>. Essa função retornará
-   2 se a causa foi exceder o tempo limite.
+   2 se a causa foi tempo limite excedido.
   </simpara>
 
   <simpara>
-   Uma coisa a ser notada é que ambos os estados ABORTED e TIMEOUT
-   podem estar ligados ao mesmo tempo. Isso é possível se você disser
-   ao PHP para ignorar o abort do usuário causou. PHP continuará a perceber o fato que
+   Importante notar que ambos os estados ABORTADO e EXPIRADO
+   podem estar ativos ao mesmo tempo. Isso é possível se o PHP
+   for instruído a ignorar o aborto causado pelo usuário. O PHP continuará a perceber que
    o usuário pode ter quebrado a conexão, mas o script continuará
-   executando. Se então ele alcançar o tempo limite, ele será abortado e
+   sendo executado. Se tempo limite for alcançado, ele será abortado e
    sua função de finalização, se existente, será chamada. Nesse ponto,
-   você terá que <function>connection_status</function>
-   retorna 3.
+   a função <function>connection_status</function>
+   retornará 3.
   </simpara>
  </chapter>
 
