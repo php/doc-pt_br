@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 80693438668530525ea2a78defbfc9bb218c3b1c Maintainer: leonardolara Status: ready --><!-- Credits: leonardolara -->
+
+<refentry xml:id="mongodb-driver-manager.executecommand" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>MongoDB\Driver\Manager::executeCommand</refname>
+  <refpurpose>Executa um comando de banco de dados</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <modifier>final</modifier> <modifier>public</modifier> <type>MongoDB\Driver\Cursor</type><methodname>MongoDB\Driver\Manager::executeCommand</methodname>
+   <methodparam><type>string</type><parameter>db</parameter></methodparam>
+   <methodparam><type>MongoDB\Driver\Command</type><parameter>command</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>array</type><type>MongoDB\Driver\ReadPreference</type><type>null</type></type><parameter>options</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Seleciona um servidor de acordo com a opção <literal>"readPreference"</literal>
+   e executa o comando nesse servidor.
+  </para>
+  <para>
+   Este método não aplica nenhuma lógica especial ao comando. Os
+   valores padrão para as opções <literal>"readPreference"</literal>,
+   <literal>"readConcern"</literal> e <literal>"writeConcern"</literal>
+   serão inferidos de uma transação ativa (indicada pelo opção
+   <literal>"session"</literal>). Se não houver nenhuma transação ativa, uma
+   preferência de leitura primária será usada para seleção do servidor.
+  </para>
+  <para>
+   Os valores padrão <emphasis>não</emphasis> serão inferidos do
+   <link linkend="mongodb-driver-manager.construct-uri">URI de conexão</link>.
+   Os usuários são, portanto, incentivados a usar métodos de comando específicos de leitura
+   e/ou gravação, se possível.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <variablelist>
+   &mongodb.parameter.db;
+   &mongodb.parameter.command;
+   <varlistentry>
+    <term><parameter>options</parameter></term>
+    <listitem>
+     <para>
+      <table>
+       <title>Opções</title>
+       <tgroup cols="3">
+        <thead>
+         <row>
+          <entry>Opção</entry>
+          <entry>Tipo</entry>
+          <entry>Descrição</entry>
+         </row>
+        </thead>
+        <tbody>
+         &mongodb.option.readConcern;
+         &mongodb.option.readPreference;
+         &mongodb.option.session;
+         &mongodb.option.writeConcern;
+        </tbody>
+       </tgroup>
+      </table>
+     </para>
+     &mongodb.option.transactionReadWriteConcern;
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  &mongodb.returns.cursor;
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <simplelist>
+   &mongodb.throws.session-readwriteconcern;
+   &mongodb.throws.session-unacknowledged;
+   &mongodb.throws.std;
+   <member>Lança <classname>MongoDB\Driver\Exception\RuntimeException</classname> em outros erros (por exemplo, comando inválido, emissão de um comando de gravação para um secundário).</member>
+  </simplelist>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>PECL mongodb 1.4.4</entry>
+       <entry>
+        <classname>MongoDB\Driver\Exception\InvalidArgumentException</classname>
+        será lançado se a opção <literal>"session"</literal> for usada em
+        combinação com uma preocupação de gravação não reconhecida.
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.4.0</entry>
+       <entry>
+        O terceiro parâmetro agora é um array <parameter>options</parameter>.
+        Para compatibilidade com versões anteriores, este parâmetro ainda aceitará
+        um objeto <classname>MongoDB\Driver\ReadPreference</classname>.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title><function>MongoDB\Driver\Manager::executeCommand</function> com um comando retornando um único documento de resultado</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$manager = new MongoDB\Driver\Manager('mongodb://localhost:27017');
+$command = new MongoDB\Driver\Command(['ping' => 1]);
+
+try {
+    $cursor = $manager->executeCommand('admin', $command);
+} catch(MongoDB\Driver\Exception $e) {
+    echo $e->getMessage(), "\n";
+    exit;
+}
+
+/* O comando ping retorna um único documento de resultado, portanto precisamos acessar
+ * o primeiro resultado no cursor. */
+$response = $cursor->toArray()[0];
+
+var_dump($response);
+
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+array(1) {
+  ["ok"]=>
+  float(1)
+}
+]]>
+   </screen>
+  </example>
+  <example>
+   <title><function>MongoDB\Driver\Manager::executeCommand</function> com um comando retornando um cursor</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$manager = new MongoDB\Driver\Manager("mongodb://localhost:27017");
+
+$bulk = new MongoDB\Driver\BulkWrite;
+$bulk->insert(['x' => 1, 'y' => 'foo']);
+$bulk->insert(['x' => 2, 'y' => 'bar']);
+$bulk->insert(['x' => 3, 'y' => 'bar']);
+$manager->executeBulkWrite('db.collection', $bulk);
+
+$command = new MongoDB\Driver\Command([
+    'aggregate' => 'collection',
+    'pipeline' => [
+        ['$group' => ['_id' => '$y', 'sum' => ['$sum' => '$x']]],
+    ],
+    'cursor' => new stdClass,
+]);
+$cursor = $manager->executeCommand('db', $command);
+
+/* O comando agregado pode opcionalmente retornar seus resultados em um cursor em vez de
+ * em um único documento de resultados. Nesse caso, podemos iterar diretamente no cursor
+ * para acessar esses resultados. */
+foreach ($cursor as $document) {
+    var_dump($document);
+}
+
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+object(stdClass)#6 (2) {
+  ["_id"]=>
+  string(3) "bar"
+  ["sum"]=>
+  int(10)
+}
+object(stdClass)#7 (2) {
+  ["_id"]=>
+  string(3) "foo"
+  ["sum"]=>
+  int(2)
+}
+]]>
+   </screen>
+  </example>
+
+  <example>
+   <title>Limitando o tempo de execução de um comando</title>
+   <para>
+    O tempo de execução de um comando pode ser limitado especificando um valor para
+    <literal>"maxTimeMS"</literal> no
+    documento <classname>MongoDB\Driver\Command</classname>. Observe que esse limite
+    de tempo é aplicado no lado do servidor e não leva em consideração a latência da
+    rede. Consulte
+    <link xlink:href="&url.mongodb.docs.maxtimems;">Encerrar Operações em Execução</link>
+    no manual do MongoDB para obter mais informações.
+   </para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$manager = new MongoDB\Driver\Manager('mongodb://localhost:27017');
+
+$command = new MongoDB\Driver\Command([
+    'count' => 'collection',
+    'query' => ['x' => ['$gt' => 1]],
+    'maxTimeMS' => 1000,
+]);
+
+$cursor = $manager->executeCommand('db', $command);
+
+var_dump($cursor->toArray()[0]);
+
+?>
+]]>
+   </programlisting>
+   <para>
+    Se o comando não for concluído após um segundo de tempo de execução no
+    servidor, um
+    <classname>MongoDB\Driver\Exception\ExecutionTimeoutException</classname>
+    será lançado.
+   </para>
+  </example>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <simpara>
+    Se um <parameter>readPreference</parameter> secundário for usado, é
+    responsabilidade do chamador garantir que o
+    <parameter>command</parameter> possa ser executado em um secundário. Nenhuma validação
+    é feita pelo driver.
+   </simpara>
+  </note>
+  <note>
+   <simpara>
+    Este método não usa como padrão a preferência de leitura do
+    <link linkend="mongodb-driver-manager.construct-uri">URI de conexão do
+    MongoDB</link>. As aplicações que precisam desse comportamento devem considerar o uso de
+    <function>MongoDB\Driver\Manager::executeReadCommand</function>.
+   </simpara>
+  </note>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><classname>MongoDB\Driver\Command</classname></member>
+   <member><classname>MongoDB\Driver\Cursor</classname></member>
+   <member><function>MongoDB\Driver\Manager::executeReadCommand</function></member>
+   <member><function>MongoDB\Driver\Manager::executeReadWriteCommand</function></member>
+   <member><function>MongoDB\Driver\Manager::executeWriteCommand</function></member>
+   <member><function>MongoDB\Driver\Server::executeCommand</function></member>
+  </simplelist>
+ </refsect1>
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

@@ -1,0 +1,1423 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 96c36c3585f816dfb760ed3780acc56e32f4b009 Maintainer: leonardolara Status: ready --><!-- Credits: leonardolara -->
+
+<refentry xml:id="mongodb-driver-manager.construct" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>MongoDB\Driver\Manager::__construct</refname>
+  <refpurpose>Cria um novo gerenciador MongoDB</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <modifier>final</modifier> <modifier>public</modifier> <methodname>MongoDB\Driver\Manager::__construct</methodname>
+   <methodparam choice="opt"><type class="union"><type>string</type><type>null</type></type><parameter>uri</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>array</type><type>null</type></type><parameter>uriOptions</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>array</type><type>null</type></type><parameter>driverOptions</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Constrói um novo objeto <classname>MongoDB\Driver\Manager</classname> com as opções especificadas.
+  </para>
+  <note>
+   <simpara>
+    De acordo com a <link xlink:href="&url.mongodb.sdam;#single-threaded-client-construction">Especificação de descoberta e monitoramento de servidor</link>,
+    esse construtor não executa E/S. As conexões serão inicializadas sob demanda,
+    quando a primeira operação for executada.
+   </simpara>
+  </note>
+  <note>
+   <simpara>
+    Ao especificar qualquer opção de URI SSL ou TLS por meio da string de conexão ou
+    do parâmetro <parameter>uriOptions</parameter>, a extensão habilitará
+    implicitamente o TLS para suas conexões. Para evitar isso, a opção
+    <literal>tls</literal> deve ser desabilitada explicitamente ou nenhuma opção de TLS deve ser especificada.
+   </simpara>
+  </note>
+  &mongodb.note.forking;
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <variablelist>
+   <varlistentry xml:id="mongodb-driver-manager.construct-uri">
+    <term><parameter>uri</parameter></term>
+    <listitem>
+     <para>
+      Uma URI de conexão <link xlink:href="&url.mongodb.docs;reference/connection-string/">mongodb://</link>:
+      <programlisting role="txt">
+<![CDATA[
+mongodb://[usuário:senha@]servidor1[:porta1][,servidor2[:porta2],...[,servidorN[:portaN]]][/[BD_autenticacao_padrão][?opções]]
+]]>
+      </programlisting>
+     </para>
+     <para>
+      O padrão é <literal>"mongodb://127.0.0.1:27017"</literal> se não especificado.
+     </para>
+     <para>
+      Para obter detalhes sobre as opções de URI suportadas, consulte
+      <link xlink:href="&url.mongodb.docs;reference/connection-string/#connections-connection-options">Opções de string de conexão</link>
+      no manual do MongoDB.
+      <link xlink:href="&url.mongodb.docs;reference/connection-string/#connection-pool-options">Opções de pool de conexões</link>
+      não são suportadas, pois a extensão não implementa pools de conexões.
+     </para>
+     <para>
+      O <parameter>uri</parameter> é um URL, portanto, quaisquer caracteres especiais
+      em seus componentes precisam ser codificados em URL de acordo com a
+      <link xlink:href="&url.rfc;3986">RFC 3986</link>. Isto é particularmente
+      relevante para o nome de usuário e a senha, que muitas vezes podem incluir caracteres
+      especiais como <literal>@</literal>, <literal>:</literal> ou
+      <literal>%</literal>. Ao conectar através de um soquete de domínio Unix, o caminho
+      do soquete pode conter caracteres especiais, como barras, e deve ser codificado.
+      A função <function>rawurlencode</function> pode ser usada para codificar
+      partes constituintes do URI.
+     </para>
+     <para>
+      O componente <literal>defaultAuthDb</literal> pode ser usado para especificar o
+      nome do banco de dados associado às credenciais do usuário; entretanto, a
+      opção de URI <literal>authSource</literal> terá prioridade se especificada.
+      Se nem <literal>defaultAuthDb</literal> nem
+      <literal>authSource</literal> forem especificados, o banco de dados <literal>admin</literal>
+      será usado por padrão. O componente <literal>defaultAuthDb</literal>
+      não tem efeito na ausência de credenciais do usuário.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry xml:id="mongodb-driver-manager.construct-urioptions">
+    <term><parameter>uriOptions</parameter></term>
+    <listitem>
+     <para>
+      <link xlink:href="&url.mongodb.docs;reference/connection-string/#connections-connection-options">Opções de string de conexão</link>
+      adicionais,
+      que substituirão quaisquer opções com o mesmo nome no
+      parâmetro <parameter>uri</parameter>.
+     </para>
+     <para>
+      <table>
+       <title>Opções de URI</title>
+       <tgroup cols="3">
+        <thead>
+         <row>
+          <entry>Opção</entry>
+          <entry>Tipo</entry>
+          <entry>Descrição</entry>
+         </row>
+        </thead>
+        <tbody>
+         <row>
+          <entry>appname</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           <para>
+            O MongoDB 3.4+ tem a capacidade de anotar conexões com metadados
+            fornecidos pelo cliente conectado. Esses metadados são incluídos nos
+            registros do servidor ao estabelecer uma conexão e também incluídos nos
+            registros de consultas lentas quando a perfilagem do banco de dados está habilitada.
+           </para>
+           <para>
+            Esta opção pode ser usada para especificar um nome de aplicação, que será
+            incluído nos metadados. O valor não pode exceder 128
+            caracteres.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>authMechanism</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           <para>
+            O mecanismo de autenticação que o MongoDB usará para autenticar
+            a conexão. Para obter detalhes adicionais e uma lista de valores
+            suportados, consulte
+            <link xlink:href="&url.mongodb.docs;reference/connection-string/#urioption.authMechanism">Opções de autenticação</link>
+            no manual do MongoDB.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>authMechanismProperties</entry>
+          <entry><type>array</type></entry>
+          <entry>
+           <para>
+            Propriedades do mecanismo de autenticação selecionado. Para obter
+            detalhes adicionais e uma lista de propriedades suportadas, consulte a
+            <link xlink:href="&url.mongodb.specs;/blob/master/source/auth/auth.rst#auth-related-options">Especificação de autenticação do driver</link>.
+           </para>
+           <note>
+            <simpara>
+             Quando não especificada na string URI, esta opção é expressa como
+             um array de pares chave/valor. As chaves e valores neste array
+             devem ser strings.
+            </simpara>
+           </note>
+          </entry>
+         </row>
+         <row>
+          <entry>authSource</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           <para>
+            O nome do banco de dados associado às credenciais do usuário. O padrão
+            é o componente de banco de dados do URI de conexão ou o banco de dados
+            <literal>admin</literal> se ambos não forem especificados.
+           </para>
+           <para>
+            Para mecanismos de autenticação que delegam o armazenamento de credenciais a
+            outros serviços (por exemplo, GSSAPI), deve ser
+            <literal>"$external"</literal>.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>canonicalizeHostname</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Se &true;, o driver resolverá o nome real do servidor para o
+            endereço IP antes de autenticar via SASL. Algumas camadas GSSAPI
+            subjacentes já fazem isso, mas a funcionalidade pode estar desativada em
+            suas configurações (por exemplo, <literal>krb.conf</literal>). O padrão é
+            &false;.
+           </para>
+           <para>
+            Esta opção é um sinônimo defasado para a propriedade
+            <literal>"CANONICALIZE_HOST_NAME"</literal> da opção
+            <literal>"authMechanismProperties"</literal> da URI.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>compressors</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           <para>
+            Uma lista priorizada e delimitada por vírgulas de compressores que o cliente
+            deseja usar. As mensagens só serão compactadas se o cliente e o servidor
+            compartilharem algum compressor em comum, e o compressor usado em cada
+            direção dependerá da configuração individual do servidor
+            ou driver. Consulte a
+            <link xlink:href="&url.mongodb.specs;/blob/master/source/compression/OP_COMPRESSED.rst#compressors">Especificação de compactação do driver</link>
+            para obter mais informações.
+           </para>
+          </entry>
+         </row>
+         <row xml:id="mongodb-driver-manager.construct-urioptions.connecttimeoutms">
+          <entry>connectTimeoutMS</entry>
+          <entry><type>int</type></entry>
+          <entry>
+           <para>
+            O tempo em milissegundos para tentar uma conexão antes de atingir o tempo limite.
+            O padrão é 10000 milissegundos.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>directConnection</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Esta opção pode ser usada para controlar o comportamento de descoberta
+            do conjunto de réplicas quando apenas um único servidor é fornecido na string de conexão. Por
+            padrão, fornecer um único membro na string de conexão
+            estabelecerá uma conexão direta ou descobrirá membros adicionais
+            dependendo se a opção de URI <literal>"replicaSet"</literal>
+            estiver omitida ou presente, respectivamente. Especifique &false; para forçar
+            a ocorrência da descoberta (se <literal>"replicaSet"</literal> for omitido)
+            ou especifique &true; para forçar uma conexão direta (se
+            <literal>"replicaSet"</literal> estiver presente).
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>gssapiServiceName</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           <para>
+            Define o nome do serviço Kerberos ao conectar-se a instâncias MongoDB
+            Kerberizadas. Este valor deve corresponder ao nome do serviço definido nas instâncias
+            do MongoDB (ou seja,
+            parâmetro do servidor <link xlink:href="&url.mongodb.docs;reference/parameters/#param.saslServiceName">saslServiceName</link>).
+            O padrão é <literal>"mongodb"</literal>.
+           </para>
+           <para>
+            Esta opção é um sinônimo defasado para a propriedade
+            <literal>"SERVICE_NAME"</literal> da opção
+            <literal>"authMechanismProperties"</literal> do URI.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>heartbeatFrequencyMS</entry>
+          <entry><type>int</type></entry>
+          <entry>
+           <para>
+            Especifica o intervalo em milissegundos entre as verificações do driver
+            da topologia MongoDB, contado do final da verificação anterior
+            até o início da próxima. O padrão é 60000
+            milissegundos.
+           </para>
+           <para>
+            Pela
+            <link xlink:href="&url.mongodb.sdam;#heartbeatfrequencyms">Especificação de descoberta e monitoramento de servidor</link>,
+            esse valor não pode ser inferior a 500 milissegundos.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>journal</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Corresponde ao parâmetro <parameter>journal</parameter> da preocupação
+            de gravação padrão. Se for igual a &true;, as gravações
+            exigirão o reconhecimento do MongoDB de que a operação foi
+            gravada no diário. Para obter detalhes, consulte
+            <classname>MongoDB\Driver\WriteConcern</classname>.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>loadBalanced</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Especifica se o driver está se conectando a um cluster MongoDB
+            por meio de um balanceador de carga. Se for igual a &true;, o driver só pode se conectar a um
+            único servidor (especificado pela string de conexão ou pela pesquisa
+            SRV), a opção de URI <literal>"directConnection"</literal>
+            não pode ser &true;, e a opção <literal>"replicaSet"</literal> do URI
+            deve ser omitida. O padrão é &false;.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>localThresholdMS</entry>
+          <entry><type>int</type></entry>
+          <entry>
+           <para>
+            O tamanho em milissegundos da janela de latência para selecionar entre
+            várias instâncias adequadas do MongoDB ao resolver uma preferência
+            de leitura. O padrão é 15 milissegundos.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>maxStalenessSeconds</entry>
+          <entry><type>int</type></entry>
+          <entry>
+           <para>
+            Corresponde ao <literal>"maxStalenessSeconds"</literal>
+            da preferência de leitura. Especifica, em segundos, o quão
+            inativo um secundário pode ficar antes que o cliente pare de usá-lo para operações
+            de leitura. Por padrão, não há inatividade máxima e os clientes
+            não considerarão o atraso do secundário ao escolher para onde direcionar uma
+            operação de leitura. Para obter detalhes,
+            consulte <classname>MongoDB\Driver\ReadPreference</classname>.
+           </para>
+           <para>
+            Se especificada, a inatividade máxima deve ser um número inteiro com sinal de 32 bits
+            maior ou igual a
+            <constant>MongoDB\Driver\ReadPreference::SMALLEST_MAX_STALENESS_SECONDS</constant>
+            (ou seja, 90 segundos).
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>password</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           A senha do usuário que está sendo autenticado. Esta opção é útil
+           se a senha contiver caracteres especiais, que de outra forma
+           precisariam ser codificados em URL para o URI de conexão.
+          </entry>
+         </row>
+         <row>
+          <entry>readConcernLevel</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           Corresponde ao parâmetro <parameter>level</parameter> da preocupação
+           de leitura. Especifica o nível de isolamento de leitura. Para obter detalhes, consulte
+           <classname>MongoDB\Driver\ReadConcern</classname>.
+          </entry>
+         </row>
+         <row>
+          <entry>readPreference</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           <para>
+            Corresponde ao parâmetro <parameter>mode</parameter> da preferência
+            de leitura. O padrão é <literal>"primary"</literal>. Para obter detalhes,
+            consulte <classname>MongoDB\Driver\ReadPreference</classname>.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>readPreferenceTags</entry>
+          <entry><type>array</type></entry>
+          <entry>
+           <para>
+            Corresponde ao parâmetro <parameter>tagSets</parameter> da preferência
+            de leitura. Os conjuntos de etiquetas permitem direcionar operações de leitura para membros
+            específicos de um conjunto de réplicas. Para obter detalhes,
+            consulte <classname>MongoDB\Driver\ReadPreference</classname>.
+           </para>
+           <note>
+            <simpara>
+             Quando não especificada na string URI, esta opção é expressa como
+             um array consistente com o formato esperado por
+             <function>MongoDB\Driver\ReadPreference::__construct</function>.
+            </simpara>
+           </note>
+          </entry>
+         </row>
+         <row>
+          <entry>replicaSet</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           <para>
+            Especifica o nome do conjunto de réplicas.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>retryReads</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Especifica se o driver deve ou não repetir automaticamente
+            determinadas operações de leitura que falham devido a erros transitórios de rede
+            ou eleições de conjunto de réplicas. Esta funcionalidade requer o MongoDB 3.6+.
+            O padrão é &true;.
+           </para>
+           <para>
+            Consulte a
+            <link xlink:href="&url.mongodb.specs;/blob/master/source/retryable-reads/retryable-reads.rst">Especificação de leituras repetíveis</link>
+            para mais informações.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>retryWrites</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Especifica se o driver deve ou não repetir automaticamente
+            determinadas operações de gravação que falham devido a erros transitórios de rede
+            ou eleições de conjunto de réplicas. Esta funcionalidade requer o MongoDB 3.6+.
+            O padrão é &true;.
+           </para>
+           <para>
+            Consutle
+            <link xlink:href="&url.mongodb.docs;core/retryable-writes/">Gravações Repetíveis</link>
+            no manual do MongoDB para obter mais informações.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>safe</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Se &true;, especifica <literal>1</literal> para o parâmetro
+            <parameter>w</parameter> da preocupação de gravação padrão. Se &false;,
+            <literal>0</literal> será especificado. Para obter detalhes,
+            consulte <classname>MongoDB\Driver\WriteConcern</classname>.
+           </para>
+           <para>
+            Esta opção está defasada e não deve ser usada.
+           </para>
+          </entry>
+         </row>
+         <row xml:id="mongodb-driver-manager.construct-urioptions.serverselectiontimeoutms">
+          <entry>serverSelectionTimeoutMS</entry>
+          <entry><type>int</type></entry>
+          <entry>
+           <para>
+            Especifica quanto tempo, em milissegundos, deve-se bloquear para seleção de servidor
+            antes de lançar uma exceção. O padrão é 30000 milissegundos.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>serverSelectionTryOnce</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Quando &true;, instrui o driver a verificar a implantação do MongoDB
+            exatamente uma vez após a falha na seleção do servidor e, em seguida, selecionar um
+            servidor ou gerar um erro. Quando &false;, o driver bloqueia e
+            procura um servidor até o valor
+            <literal>"serverSelectionTimeoutMS"</literal>. O padrão é
+            &true;.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>socketCheckIntervalMS</entry>
+          <entry><type>int</type></entry>
+          <entry>
+           <para>
+            Se um soquete não tiver sido usado recentemente, o driver precisará verificá-lo através
+            do comando <literal>hello</literal> antes de usá-lo para qualquer
+            operação. O padrão é 5000 milissegundos.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>socketTimeoutMS</entry>
+          <entry><type>int</type></entry>
+          <entry>
+           <para>
+            O tempo em milissegundos para tentar enviar ou receber em um soquete
+            antes de atingir o tempo limite. O padrão é 300000 milissegundos (ou seja,
+            cinco minutos).
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>srvMaxHosts</entry>
+          <entry><type>int</type></entry>
+          <entry>
+           <para>
+            O número máximo de resultados de SRV a serem selecionados aleatoriamente ao preencher
+            inicialmente a lista de valores iniciais ou, durante a sondagem de SRV, ao incluir novos servidores na
+            topologia. O padrão é <literal>0</literal> (ou seja, sem máximo).
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>srvServiceName</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           <para>
+            O nome do serviço a ser usado para consulta de SRV na descoberta inicial da
+            lista de valores iniciais de DNS e na sondagem de SRV. O padrão é <literal>"mongodb"</literal>.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>ssl</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Inicia a conexão com TLS/SSL se for igual a &true;. O padrão é
+            &false;.
+           </para>
+           <para>
+            Esta opção é um apelido defasado para a opção de URI
+            <literal>"tls"</literal>.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>tls</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Inicia a conexão com TLS/SSL se for igual a &true;. O padrão é
+            &false;.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>tlsAllowInvalidCertificates</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Especifica se o driver deve ou não apresentar erro quando o certificado
+            TLS do servidor for inválido. O padrão é &false;.
+           </para>
+           <warning>
+            <simpara>
+             Desabilitar a validação de certificado cria uma vulnerabilidade.
+            </simpara>
+           </warning>
+          </entry>
+         </row>
+         <row>
+          <entry>tlsAllowInvalidHostnames</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Especifica se o driver deve ou não apresentar erro quando há uma
+            incompatibilidade entre o nome do host do servidor e o nome do host especificado pelo
+            certificado TLS. O padrão é &false;.
+           </para>
+           <warning>
+            <simpara>
+             Desabilitar a validação de certificado cria uma vulnerabilidade. Permitir
+             nomes de servidores inválidos pode expor o driver a um
+             <link xlink:href="&url.mongodb.wiki.mitm;">ataque MITM</link>.
+            </simpara>
+           </warning>
+          </entry>
+         </row>
+         <row>
+          <entry>tlsCAFile</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           <para>
+            Caminho para arquivo com uma única autoridade de certificação ou um pacote de autoridades
+            de certificação a ser considerado confiável ao fazer uma conexão TLS.
+            O armazenamento de certificados do sistema será usado por padrão.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>tlsCertificateKeyFile</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           <para>
+            Caminho para o arquivo de certificado do cliente ou arquivo de chave privada do cliente;
+            caso ambos sejam necessários, os arquivos deverão ser
+            concatenados.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>tlsCertificateKeyFilePassword</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           <para>
+            Senha para descriptografar a chave privada do cliente (ou seja,
+            opção de URI <literal>"tlsCertificateKeyFile"</literal>) a ser usada
+            para conexões TLS.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>tlsDisableCertificateRevocationCheck</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Se &true;, o driver não tentará verificar o status de revogação
+            do certificado (por exemplo, OCSP, CRL). O padrão é &false;.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>tlsDisableOCSPEndpointCheck</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Se &true;, o driver não tentará contactar um ponto de extremidade de um
+            respondedor OCSP, se necessário (ou seja, uma resposta OCSP não é grampeada). O padrão
+            é &false;.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>tlsInsecure</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Relaxa as restrições de TLS tanto quanto possível. Especificar &true; para
+            esta opção tem o mesmo efeito que especificar &true; para as opções de URI
+            <literal>"tlsAllowInvalidCertificates"</literal> e
+            <literal>"tlsAllowInvalidHostnames"</literal>. O padrão
+            é &false;.
+           </para>
+           <warning>
+            <simpara>
+             Desabilitar a validação de certificado cria uma vulnerabilidade. Permitir
+             nomes de servidores inválidos pode expor o driver a um
+             <link xlink:href="&url.mongodb.wiki.mitm;">ataque MITM</link>.
+            </simpara>
+           </warning>
+          </entry>
+         </row>
+         <row>
+          <entry>username</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           O nome do usuário que está sendo autenticado. Esta opção é útil
+           se o nome de usuário contiver caracteres especiais, que de outra forma
+           precisariam ser codificados em URL para o URI de conexão.
+          </entry>
+         </row>
+         <row>
+          <entry>w</entry>
+          <entry><type class="union"><type>int</type><type>string</type></type></entry>
+          <entry>
+           <para>
+            Corresponde ao parâmetro <parameter>w</parameter> da preocupação de gravação
+            padrão. Para obter detalhes, consulte
+            <classname>MongoDB\Driver\WriteConcern</classname>.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>wTimeoutMS</entry>
+          <entry><type class="union"><type>int</type><type>string</type></type></entry>
+          <entry>
+           <para>
+            Corresponde ao parâmetro <parameter>wtimeout</parameter> da
+            preocupação de gravação padrão. Especifica um limite de tempo,
+            em milissegundos, para a preocupação de gravação. Para obter detalhes, consulte
+            <classname>MongoDB\Driver\WriteConcern</classname>.
+           </para>
+           <para>
+            Se especificado, <literal>wTimeoutMS</literal> deve ser um número inteiro de
+            32 bits sem sinal maior ou igual a zero.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>zlibCompressionLevel</entry>
+          <entry><type>int</type></entry>
+          <entry>
+           <para>
+            Especifica o nível de compactação a ser usado para o compressor zlib. Esta
+            opção não tem efeito se <literal>zlib</literal> não estiver incluído na
+            opção URI <literal>"compressors"</literal>. Consulte a
+            <link xlink:href="&url.mongodb.specs;/blob/master/source/compression/OP_COMPRESSED.rst#zlibcompressionlevel">Especificação de Compactação de Driver</link>
+            para obter mais informações.
+           </para>
+          </entry>
+         </row>
+        </tbody>
+       </tgroup>
+      </table>
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry xml:id="mongodb-driver-manager.construct-driveroptions">
+    <term><parameter>driverOptions</parameter></term>
+    <listitem>
+     <para>
+      <table>
+       <title>Opções do Driver</title>
+       <tgroup cols="3">
+        <thead>
+         <row>
+          <entry>Opção</entry>
+          <entry>Tipo</entry>
+          <entry>Descrição</entry>
+         </row>
+        </thead>
+        <tbody>
+         <row>
+          <entry>allow_invalid_hostname</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Desativa a validação do nome do host se &true;. O padrão é &false;.
+           </para>
+           <para>
+            Permitir nomes de servidores inválidos pode expor o driver a um
+            <link xlink:href="&url.mongodb.wiki.mitm;">ataque MITM</link>.
+           </para>
+           <para>
+            Esta opção é um sinônimo defasado para a opção de URI
+            <literal>"tlsAllowInvalidHostnames"</literal>.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>autoEncryption</entry>
+          <entry><type>array</type></entry>
+          <entry>
+           <para>
+            Fornece opções para ativar a criptografia automática em nível de campo
+            do lado do cliente.
+           </para>
+           <note>
+            <para>
+             A criptografia automática é um recurso exclusivo para empresas que se aplica
+             apenas a operações em uma coleção. A criptografia automática não é
+             suportada para operações em um banco de dados ou visualização, e as operações que
+             não são ignoradas resultarão em erro (consulte
+             <link xlink:href="https://github.com/mongodb/specifications/blob/master/source/client-side-encryption/client-side-encryption.rst#libmongocrypt-auto-encryption-allow-list">libmongocrypt: lista de permissões de criptografia automática</link>). Para ignorar a criptografia automática
+             para todas as operações, <literal>bypassAutoEncryption</literal> deve ser definido como
+             &true;.
+            </para>
+            <para>
+             A criptografia automática exige que o usuário autenticado tenha a
+             ação de privilégio
+             <link xlink:href="&url.mongodb.docs;reference/command/listCollections/#required-access">listCollections</link>.
+            </para>
+            <para>
+             A criptografia/descriptografia explícita e a descriptografia automática são um
+             recurso da versão "community". O driver ainda pode descriptografar automaticamente quando
+             <literal>bypassAutoEncryption</literal> for igual a &true;.
+            </para>
+           </note>
+           <para>
+            As seguintes opções são suportadas:
+
+            <table>
+             <title>Opções para criptografia automática</title>
+             <tgroup cols="3">
+              <thead>
+               <row>
+                <entry>Opção</entry>
+                <entry>Tipo</entry>
+                <entry>Descrição</entry>
+               </row>
+              </thead>
+              <tbody>
+               &mongodb.option.encryption.keyVaultClient;
+               &mongodb.option.encryption.keyVaultNamespace;
+               &mongodb.option.encryption.kmsProviders;
+               &mongodb.option.encryption.tlsOptions;
+               <row>
+                <entry>schemaMap</entry>
+                <entry><type class="union"><type>array</type><type>object</type></type></entry>
+                <entry>
+                 <para>
+                  Mapa de espaços de nomes de coleção para um esquema JSON local. Isso é
+                  usado para configurar a criptografia automática. Consulte
+                  <link xlink:href="&url.mongodb.docs;reference/security-client-side-automatic-json-schema/">Regras de criptografia automática</link>
+                  no manual do MongoDB para obter mais informações. É um erro
+                  especificar uma coleção em <literal>schemaMap</literal> e
+                  em <literal>encryptedFieldsMap</literal> ao mesmo tempo.
+                 </para>
+                 <note>
+                  <simpara>
+                   Fornecer um <literal>schemaMap</literal> oferece mais
+                   segurança do que confiar em esquemas JSON obtidos do
+                   servidor. Ele protege contra um servidor malicioso que anuncia um
+                   esquema JSON falso, que poderia induzir o cliente a enviar
+                   dados não criptografados que deveriam estar criptografados.
+                  </simpara>
+                 </note>
+                 <note>
+                  <simpara>
+                   Os esquemas fornecidos no <literal>schemaMap</literal> aplicam-se
+                   apenas à configuração da criptografia automática para criptografia do lado do
+                   cliente. Outras regras de validação no esquema JSON não
+                   serão aplicadas pelo driver e resultarão em erro.
+                  </simpara>
+                 </note>
+                </entry>
+               </row>
+               <row>
+                <entry>bypassAutoEncryption</entry>
+                <entry><type>bool</type></entry>
+                <entry>
+                 Se &true;, <literal>mongocryptd</literal> não será executado
+                 automaticamente. Isso é usado para desativar a criptografia automática.
+                 O padrão é &false;.
+                </entry>
+               </row>
+               <row>
+                <entry>bypassQueryAnalysis</entry>
+                <entry><type>bool</type></entry>
+                <entry>
+                 <para>
+                  Se &true;, a análise automática dos comandos enviados será
+                  desativada e o <literal>mongocryptd</literal> não será
+                  executado automaticamente. Isso permite o caso de uso de criptografia
+                  explícita para consultar campos indexados sem exigir a
+                  biblioteca <literal>crypt_shared</literal> licenciada pela empresa ou
+                  o processo <literal>mongocryptd</literal>. O padrão é &false;.
+                 </para>
+                </entry>
+               </row>
+               <row>
+                <entry>encryptedFieldsMap</entry>
+                <entry><type class="union"><type>array</type><type>object</type></type></entry>
+                <entry>
+                 <para>
+                  Mapa de espaçoes de nomes de coleção para um
+                  documento <literal>encryptedFields</literal>. Isso é usado para
+                  configurar a criptografia consultável. Consulte
+                  <link xlink:href="&url.mongodb.docs;core/queryable-encryption/fundamentals/encrypt-and-query/">Criptografia de campo e consultabilidade</link>
+                  no manual do MongoDB para obter mais informações. É um erro
+                  especificar uma coleção em
+                  <literal>encryptedFieldsMap</literal> e
+                  em <literal>schemaMap</literal> ao mesmo tempo.
+                 </para>
+                 <note>
+                  <simpara>
+                   Fornecer um <literal>encryptedFieldsMap</literal> fornece
+                   mais segurança do que confiar em um
+                   <literal>encryptedFields</literal> obtido do servidor.
+                   Ele protege contra um servidor malicioso que anuncia um
+                   <literal>encryptedFields</literal> falso.
+                  </simpara>
+                 </note>
+                </entry>
+               </row>
+               <row>
+                <entry>extraOptions</entry>
+                <entry><type>array</type></entry>
+                <entry>
+                 <para>
+                  As <literal>extraOptions</literal> estão relacionadas ao
+                  processo <literal>mongocryptd</literal>. As seguintes opções
+                  são suportadas:
+                 </para>
+                 <simplelist>
+                  <member><literal>mongocryptdURI</literal> (<type>string</type>): URI para conectar-se a um processo <literal>mongocryptd</literal> existente. O padrão é <literal>"mongodb://localhost:27020"</literal>.</member>
+                  <member><literal>mongocryptdBypassSpawn</literal> (<type>bool</type>): Se &true;, evita que o driver execute o <literal>mongocryptd</literal>. O padrão é &false;.</member>
+                  <member><literal>mongocryptdSpawnPath</literal> (<type>string</type>): Caminho absoluto para procurar o binário <literal>mongocryptd</literal>. O padrão é uma string vazia e consulta os caminhos do sistema.</member>
+                  <member><literal>mongocryptdSpawnArgs</literal> (<type>array</type>): Array de argumentos de string para passar para <literal>mongocryptd</literal> durante a execução. O padrão é <literal>["--idleShutdownTimeoutSecs=60"]</literal>.</member>
+                  <member><literal>cryptSharedLibPath</literal> (<type>string</type>): Caminho absoluto para a biblioteca compartilhada <literal>crypt_shared</literal>. O padrão é uma string vazia e consulta os caminhos do sistema.</member>
+                  <member><literal>cryptSharedLibRequired</literal> (<type>bool</type>): Se &true;, exige que o driver carregue <literal>crypt_shared</literal>. O padrão é &false;.</member>
+                 </simplelist>
+                 <para>
+                  Consulte a <link xlink:href="&url.mongodb.specs;/blob/master/source/client-side-encryption/client-side-encryption.rst#extraoptions">Especificação de criptografia do lado do cliente</link> para obter mais informações.
+                 </para>
+                </entry>
+               </row>
+              </tbody>
+             </tgroup>
+            </table>
+           </para>
+
+           <note>
+            <simpara>
+             A criptografia automática é um recurso exclusivamente da versçao "enterprise" que se aplica
+             apenas a operações em uma coleção. A criptografia automática não é
+             suportada para operações em um banco de dados ou visualização, e as operações que
+             não são ignoradas resultarão em erro. Para ignorar a criptografia
+             automática para todas as operações, defina <literal>bypassAutoEncryption=true</literal>
+             em <literal>autoEncryption</literal>. Para obter mais informações sobre
+             operações permitidas, consulte
+             <link xlink:href="&url.mongodb.specs;/blob/master/source/client-side-encryption/client-side-encryption.rst#libmongocrypt-auto-encryption-whitelist">Especificação de criptografia do lado do cliente</link>.
+            </simpara>
+           </note>
+          </entry>
+         </row>
+         <row>
+          <entry>ca_dir</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           <para>
+            Caminho para um diretório de certificado com hash correto. O armazenamento
+            de certificados do sistema será usado por padrão.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>ca_file</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           <para>
+            Caminho para arquivo com uma única autoridade de certificação
+            ou um pacote de autoridades de certificação a ser considerado confiável ao fazer uma conexão TLS.
+            O armazenamento de certificados do sistema será usado por padrão.
+           </para>
+           <para>
+            Esta opção é um sinônimo defasado para a opção de URI
+            <literal>"tlsCAFile"</literal>.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>context</entry>
+          <entry><type>resource</type></entry>
+          <entry>
+           <para>
+            As <link linkend="context.ssl">opções de contexto SSL</link> a serem usadas como
+            substitutas se uma opção de driver ou sua opção de URI equivalente, se houver,
+            não for especificada. Observe que a extensão não consulta o
+            contexto de fluxo padrão (ou seja,
+            <function>stream_context_get_default</function>). As seguintes
+            opções de contexto são suportadas:
+           </para>
+
+           <table>
+            <title>Opções de contexto SSL substitutas</title>
+            <tgroup cols="2">
+             <thead>
+              <row>
+               <entry>Opção de driver</entry>
+               <entry>Opção de contexto (substituta)</entry>
+              </row>
+             </thead>
+             <tbody>
+              <row>
+               <entry>ca_dir</entry>
+               <entry>capath</entry>
+              </row>
+              <row>
+               <entry>ca_file</entry>
+               <entry>cafile</entry>
+              </row>
+              <row>
+               <entry>pem_file</entry>
+               <entry>local_cert</entry>
+              </row>
+              <row>
+               <entry>pem_pwd</entry>
+               <entry>passphrase</entry>
+              </row>
+              <row>
+               <entry>weak_cert_validation</entry>
+               <entry>allow_self_signed</entry>
+              </row>
+             </tbody>
+            </tgroup>
+           </table>
+           <para>
+            Esta opção é suportada para compatibilidade com versões anteriores, mas deve
+            ser considerada obsoleta.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>crl_file</entry>
+          <entry><type>string</type></entry>
+          <entry>Caminho para um arquivo de lista de certificados revogados.</entry>
+         </row>
+         <row>
+          <entry>disableClientPersistence</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Se &true;, este gerenciador usará um novo cliente libmongoc, que
+            não será persistido ou compartilhado com outros objetos do gerenciador. Quando este
+            objeto de gerenciador for liberado, seu cliente será destruído e todas
+            as conexões serão fechadas. O padrão é &false;.
+           </para>
+           <note>
+            <simpara>
+             Geralmente, desabilitar a persistência do cliente não é recomendado.
+            </simpara>
+           </note>
+          </entry>
+         </row>
+         <row>
+          <entry>driver</entry>
+          <entry><type>array</type></entry>
+          <entry>
+           <para>
+            Permite que uma biblioteca de nível superior anexe seus próprios metadados ao
+            "handshake" com o servidor. Por padrão, a extensão envia seu próprio nome,
+            versão e plataforma (ou seja, versão PHP) nesta comunicação inicial. Strings
+            podem ser especificadas para as chaves <literal>"name"</literal>,
+            <literal>"version"</literal> e <literal>"platform"</literal>
+            deste array e serão anexadas ao respectivos campos no documento
+            de "handshake".
+           </para>
+           <note>
+            <simpara>
+             As informações de "handshake" são limitadas a 512 bytes. A extensão
+             truncará os dados do "handshake" para caber nesta sequência de 512 bytes. Bibliotecas
+             de nível superior são encorajadas a manter seus próprios metadados concisos.
+            </simpara>
+           </note>
+          </entry>
+         </row>
+         <row>
+          <entry>pem_file</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           <para>
+            Caminho para um certificado codificado em <acronym>PEM</acronym> a ser usado para autenticação do cliente.
+           </para>
+           <para>
+            Esta opção é um sinônimo defasado para a opção de URI
+            <literal>"tlsCertificateKeyFile"</literal>.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>pem_pwd</entry>
+          <entry><type>string</type></entry>
+          <entry>
+           <para>
+            Senha para o certificado codificado em <acronym>PEM</acronym> (se aplicável).
+           </para>
+           <para>
+            Esta opção é um sinônimo defasado para a opção de URI
+            <literal>"tlsCertificateKeyFilePassword"</literal>.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>serverApi</entry>
+          <entry><classname>MongoDB\Driver\ServerApi</classname></entry>
+          <entry>
+           <para>
+            Esta opção é usada para declarar uma versão da API do servidor para o gerenciador.
+            Se omitida, nenhuma versão da API será declarada.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>weak_cert_validation</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Desativa a validação do certificado se for igual a &true;. O padrão é &false;
+           </para>
+           <para>
+            Esta opção é um sinônimo defasado para a opção de URI
+            <literal>"tlsAllowInvalidCertificates"</literal>.
+           </para>
+          </entry>
+         </row>
+        </tbody>
+       </tgroup>
+      </table>
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <simplelist>
+   &mongodb.throws.argumentparsing;
+   <member>Lança uma exceção <classname>MongoDB\Driver\Exception\RuntimeException</classname> se o formato de <parameter>uri</parameter> for inválido</member>
+  </simplelist>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>PECL mongodb 1.16.0</entry>
+       <entry>
+        <para>
+         O provedor AWS KMS para criptografia do lado do cliente agora aceita uma
+         opção <literal>"sessionToken"</literal>, que pode ser usada para
+         autenticação com credenciais temporárias da AWS.
+        </para>
+        <para>
+         Aicionada a opção <literal>"tlsDisableOCSPEndpointCheck"</literal> para o
+         campo <literal>"tlsOptions"</literal> da
+         opção <literal>"autoEncryption"</literal> do driver.
+        </para>
+        <para>
+         Se um documento vazio for especificado para o provedor KMS <literal>"azure"</literal> ou
+         <literal>"gcp"</literal>, o driver tentará
+         configurar o provedor usando
+         <link xlink:href="&url.mongodb.specs;/blob/master/source/client-side-encryption/client-side-encryption.rst#automatic-credentials">Credenciais Automáticas</link>.
+        </para>
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.15.0</entry>
+       <entry>
+        <para>
+         Se um documento vazio for especificado para o provedor KMS <literal>"aws"</literal>,
+         o driver tentará configurar o provedor usando
+         <link xlink:href="&url.mongodb.specs;/blob/master/source/client-side-encryption/client-side-encryption.rst#automatic-credentials">Credenciais Automáticas</link>.
+        </para>
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.14.0</entry>
+       <entry>
+        <para>
+         Adicionadas as opções de criptografia automática <literal>"bypassQueryAnalysis"</literal>
+         e <literal>"encryptedFieldsMap"</literal>.
+         Opções adicionais pertencentes a <literal>crypt_shared</literal> agora
+         são suportadas na opção de criptografia automática
+         <literal>"extraOptions"</literal>.
+        </para>
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.13.0</entry>
+       <entry>
+        <para>
+         Adicionadas as opções de URI <literal>"srvMaxHosts"</literal> e
+         <literal>"srvServiceName"</literal>.
+        </para>
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.12.0</entry>
+       <entry>
+        <para>
+         KMIP agora é suportado como um provedor KMS para criptografia do lado do cliente e
+         pode ser configurado no campo <literal>"kmsProviders"</literal> da opção de driver
+         <literal>"autoEncryption"</literal>. Além disso, as opções de TLS
+         para provedores KMS agora podem ser configuradas no
+         campo <literal>"tlsOptions"</literal> da
+         opção do driver <literal>"autoEncryption"</literal>.
+        </para>
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.11.0</entry>
+       <entry>
+        <para>
+         Adicionada a opção de URI <literal>"loadBalanced"</literal>.
+        </para>
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.10.0</entry>
+       <entry>
+        <para>
+         Adicionada a opção de driver <literal>"disableClientPersistence"</literal>.
+        </para>
+        <para>
+         Azure e GCP agora são suportados como provedores KMS para criptografia
+         do lado do cliente e podem ser configurados no
+         campo <literal>"kmsProviders"</literal> da
+         opção de driver <literal>"autoEncryption"</literal>. Strings codificadas
+         em Base64 agora são aceitas como uma alternativa ao
+         <classname>MongoDB\BSON\Binary</classname> para opções dentro de
+         <literal>"kmsProviders"</literal>.
+        </para>
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.8.0</entry>
+       <entry>
+        <para>
+         Adicionadas as opções de URI <literal>"directConnection"</literal>,
+         <literal>"tlsDisableCertificateRevocationCheck"</literal> e
+         <literal>"tlsDisableOCSPEndpointCheck"</literal>.
+        </para>
+        <para>
+         Adicionada a opção de driver <literal>"driver"</literal>.
+        </para>
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.7.0</entry>
+       <entry>
+        <para>
+         Adicionada a opção de driver <literal>"autoEncryption"</literal>.
+        </para>
+        <para>
+         Especificar qualquer opção SSL ou TLS por meio do parâmetro <parameter>driverOptions</parameter>
+         agora ativará implicitamente o TLS, como é feito para as
+         opções de URI correspondentes.
+        </para>
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.6.0</entry>
+       <entry>
+        <para>
+         Adicionadas as opções de URI <literal>"retryReads"</literal>, <literal>"tls"</literal>,
+         <literal>"tlsAllowInvalidCertificates"</literal>,
+         <literal>"tlsAllowInvalidHostnames"</literal>,
+         <literal>"tlsCAFile"</literal>,
+         <literal>"tlsCertificateKeyFile"</literal>,
+         <literal>"tlsCertificateKeyFilePassword"</literal> e
+         <literal>"tlsInsecure"</literal>.
+        </para>
+        <para>
+         A opção de URI <literal>"retryWrites"</literal> tem como padrão &true;.
+        </para>
+        <para>
+         Especificar qualquer opção de URI SSL ou TLS por meio da string de conexão ou
+         do parâmetro <parameter>uriOptions</parameter> agora ativará implicitamente
+         o TLS, a menos que <literal>ssl</literal> ou <literal>tls</literal> seja &false;.
+         O TLS <emphasis>não</emphasis> está implicitamente habilitado para nenhuma opção no
+         parâmetro <parameter>driverOptions</parameter>, que permanece inalterado
+         em relação às versões anteriores.
+        </para>
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.5.0</entry>
+       <entry>
+        <para>
+         <literal>"wtimeoutMS"</literal> agora é sempre validado e aplicado à
+         preocupação de gravação. Anteriormente, a opção era ignorada se
+         <literal>"w"</literal> fosse &lt;= 1, pois o tempo limite só se aplica à
+         replicação.
+        </para>
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.4.0</entry>
+       <entry>
+        <para>
+         Adicionadas as opções de URI <literal>"compressors"</literal>,
+         <literal>"retryWrites"</literal> e
+         <literal>"zlibCompressionLevel"</literal>.
+        </para>
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.3.0</entry>
+       <entry>
+        <para>
+         O parâmetro <parameter>uriOptions</parameter> agora aceita as opções
+         <literal>"authMechanism"</literal> e
+         <literal>"authMechanismProperties"</literal>. Anteriormente, estas
+         opções eram suportadas somente no parâmetro <parameter>uri</parameter>.
+        </para>
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.2.0</entry>
+       <entry>
+        <para>
+         O padrão para o parâmetro <parameter>uri</parameter> passa a ser
+         <literal>"mongodb://127.0.0.1/"</literal>. A porta padrão permanece
+         <literal>27017</literal>.
+        </para>
+        <para>
+         Adicionada a opção de URI <literal>"appname"</literal>.
+        </para>
+        <para>
+         Adicionadas as opções de driver <literal>"allow_invalid_hostname"</literal>,
+         <literal>"ca_file"</literal>, <literal>"ca_dir"</literal>,
+         <literal>"clr_file"</literal>, <literal>"pem_file"</literal>,
+         <literal>"pem_pwd"</literal> e
+         <literal>"weak_cert_validation"</literal>.
+        </para>
+        <para>
+         A API de Fluxos do PHP não é mais usada para comunicação de soquete. A
+         opção de URI <literal>"connectTimeoutMS"</literal> agora tem como padrão 10
+         segundos em vez de
+         <link linkend="ini.default-socket-timeout">default_socket_timeout</link>
+         nas versões anteriores. Além disso, a extensão não suporta mais
+         todas as <link linkend="context.ssl">opções de contexto SSL</link> através da
+         opção de driver <literal>"context"</literal>.
+        </para>
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.1.0</entry>
+       <entry>
+        <para>
+         O parâmetro <parameter>uri</parameter> passa a ser opcional com o padrão de
+         <literal>"mongodb://localhost:27017/"</literal>.
+        </para>
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplos básicos de <function>MongoDB\Driver\Manager::__construct</function></title>
+   <para>Conexão a um nó independente do MongoDB:</para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$manager = new MongoDB\Driver\Manager("mongodb://example.com:27017");
+
+?>
+]]>
+   </programlisting>
+   <para>
+    Conectando-se ao nó independente do MongoDB por meio de um soquete de domínio Unix. O caminho
+    do soquete pode incluir caracteres especiais como barras e deve ser codificado
+    com <function>rawurlencode</function>.
+   </para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$manager = new MongoDB\Driver\Manager("mongodb://" . rawurlencode("/tmp/mongodb-27017.sock"));
+
+?>
+]]>
+   </programlisting>
+   <para>Conectando-se a um conjunto de réplicas:</para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$manager = new MongoDB\Driver\Manager("mongodb://rs1.example.com,rs2.example.com/?replicaSet=myReplicaSet");
+
+?>
+]]>
+   </programlisting>
+   <para>Conectando-se a um cluster fragmentado (ou seja, uma ou mais instâncias do mongos):</para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$manager = new MongoDB\Driver\Manager("mongodb://mongos1.example.com,mongos2.example.com/");
+
+?>
+]]>
+   </programlisting>
+   <para>Conectando-se ao MongoDB com credenciais de autenticação para um usuário e banco de dados específicos:</para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$manager = new MongoDB\Driver\Manager("mongodb://meuUsuario:minhaSenha@example.com/?authSource=nomeBancoDeDados");
+
+?>
+]]>
+   </programlisting>
+
+   <para>
+    Conectando-se ao MongoDB com credenciais de autenticação para um usuário e
+    banco de dados específicos, onde o nome de usuário ou senha inclui caracteres
+    especiais (por exemplo, <literal>@</literal>, <literal>:</literal>,
+    <literal>%</literal>). No exemplo a seguir, a string de senha
+    <literal>myp@ss:w%rd</literal> foi escapada manualmente; entretanto,
+    <function>rawurlencode</function> também pode ser usado para escapar componentes URI
+    que podem conter caracteres especiais.
+   </para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$manager = new MongoDB\Driver\Manager("mongodb://meuUsuario:myp%40ss%3Aw%25rd@example.com/?authSource=nomeBancoDeDados");
+
+?>
+]]>
+   </programlisting>
+
+   <para>Conectando-se ao MongoDB com autenticação X509:</para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$manager = new MongoDB\Driver\Manager(
+    "mongodb://example.com/?ssl=true&authMechanism=MONGODB-X509",
+    [],
+    [
+        "pem_file" => "/caminho/para/cliente.pem",
+    ]
+);
+?>
+]]>
+   </programlisting>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><link linkend="mongodb.connection-handling">Manipulação de conexão e persistência</link></member>
+   <member><link xlink:href="&url.mongodb.docs;reference/connection-string/">Formato de string de conexão MongoDB</link></member>
+  </simplelist>
+ </refsect1>
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

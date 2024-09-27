@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 80693438668530525ea2a78defbfc9bb218c3b1c Maintainer: leonardolara Status: ready --><!-- Credits: leonardolara -->
+
+<refentry xml:id="mongodb-driver-manager.executebulkwrite" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>MongoDB\Driver\Manager::executeBulkWrite</refname>
+  <refpurpose>Executa uma ou mais operações de escrita</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <modifier>final</modifier> <modifier>public</modifier> <type>MongoDB\Driver\WriteResult</type><methodname>MongoDB\Driver\Manager::executeBulkWrite</methodname>
+   <methodparam><type>string</type><parameter>namespace</parameter></methodparam>
+   <methodparam><type>MongoDB\Driver\BulkWrite</type><parameter>bulk</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>array</type><type>MongoDB\Driver\WriteConcern</type><type>null</type></type><parameter>options</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Executa uma ou mais operações de escrita no servidor primário.
+  </para>
+  <para>
+   Um <classname>MongoDB\Driver\BulkWrite</classname> pode ser construído com
+   uma ou mais operações de escrita de vários tipos (por exemplo, atualizações, exclusões e
+   inserções). O driver tentará enviar operações do mesmo tipo ao
+   servidor no menor número possível de solicitações para otimizar viagens de ida e volta.
+  </para>
+  <para>
+   O valor padrão para a opção <literal>"writeConcern"</literal> será
+   inferido de uma transação ativa (indicada pela
+   opção <literal>"session"</literal>), seguida pelo
+   <link linkend="mongodb-driver-manager.construct-uri">URI de conexão</link>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <variablelist>
+   &mongodb.parameter.namespace;
+   &mongodb.parameter.bulkwrite;
+   <varlistentry>
+    <term><parameter>options</parameter></term>
+    <listitem>
+     <para>
+      <table>
+       <title>Opções</title>
+       <tgroup cols="3">
+        <thead>
+         <row>
+          <entry>Opção</entry>
+          <entry>Tipo</entry>
+          <entry>Descrição</entry>
+         </row>
+        </thead>
+        <tbody>
+         &mongodb.option.session;
+         &mongodb.option.writeConcern;
+        </tbody>
+       </tgroup>
+      </table>
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  &mongodb.returns.writeresult;
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <simplelist>
+   <member>Lança <classname>MongoDB\Driver\Exception\InvalidArgumentException</classname> se <parameter>bulk</parameter> não contiver operações de escrita.</member>
+   <member>Lança <classname>MongoDB\Driver\Exception\InvalidArgumentException</classname> se <parameter>bulk</parameter> já tiver sido executado. Objetos <classname>MongoDB\Driver\BulkWrite</classname> não podem ser executados múltiplas vezes.</member>
+   &mongodb.throws.session-unacknowledged;
+   &mongodb.throws.std;
+   &mongodb.throws.bulkwriteexception;
+   <member>Lança <classname>MongoDB\Driver\Exception\RuntimeException</classname> no caso de outros erros.</member>
+  </simplelist>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>PECL mongodb 1.4.4</entry>
+       <entry>
+        <classname>MongoDB\Driver\Exception\InvalidArgumentException</classname>
+        será lançado se a opção <literal>"session"</literal> for usada em combinação
+        com uma preocupação de gravação não reconhecida.
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.4.0</entry>
+       <entry>
+        O terceiro parâmetro agora é um array <parameter>options</parameter>.
+        Para compatibilidade com versões anteriores, este parâmetro ainda aceitará um
+        objeto <classname>MongoDB\Driver\WriteConcern</classname>.
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.3.0</entry>
+       <entry>
+        <classname>MongoDB\Driver\Exception\InvalidArgumentException</classname>
+        agora é lançada se <parameter>bulk</parameter> não contiver nenhuma operação
+        de escrita. Anteriormente, uma
+        <classname>MongoDB\Driver\Exception\BulkWriteException</classname> era
+        lançada.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <function>MongoDB\Driver\Manager::executeBulkWrite</function></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$bulk = new MongoDB\Driver\BulkWrite();
+
+$bulk->insert(['_id' => 1, 'x' => 1]);
+$bulk->insert(['_id' => 2, 'x' => 2]);
+
+$bulk->update(['x' => 2], ['$set' => ['x' => 1]], ['multi' => false, 'upsert' => false]);
+$bulk->update(['x' => 3], ['$set' => ['x' => 3]], ['multi' => false, 'upsert' => true]);
+$bulk->update(['_id' => 3], ['$set' => ['x' => 3]], ['multi' => false, 'upsert' => true]);
+
+$bulk->insert(['_id' => 4, 'x' => 2]);
+
+$bulk->delete(['x' => 1], ['limit' => 1]);
+
+$manager = new MongoDB\Driver\Manager('mongodb://localhost:27017');
+$writeConcern = new MongoDB\Driver\WriteConcern(MongoDB\Driver\WriteConcern::MAJORITY, 100);
+$result = $manager->executeBulkWrite('db.collection', $bulk, $writeConcern);
+
+printf("Inserted %d document(s)\n", $result->getInsertedCount());
+printf("Matched  %d document(s)\n", $result->getMatchedCount());
+printf("Updated  %d document(s)\n", $result->getModifiedCount());
+printf("Upserted %d document(s)\n", $result->getUpsertedCount());
+printf("Deleted  %d document(s)\n", $result->getDeletedCount());
+
+foreach ($result->getUpsertedIds() as $index => $id) {
+    printf('upsertedId[%d]: ', $index);
+    var_dump($id);
+}
+
+/* Se o WriteConcern não puder ser atendido */
+if ($writeConcernError = $result->getWriteConcernError()) {
+    printf("%s (%d): %s\n", $writeConcernError->getMessage(), $writeConcernError->getCode(), var_export($writeConcernError->getInfo(), true));
+}
+
+/* Se uma escrita não pôde acontecer */
+foreach ($result->getWriteErrors() as $writeError) {
+    printf("Operation#%d: %s (%d)\n", $writeError->getIndex(), $writeError->getMessage(), $writeError->getCode());
+}
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+Inserted 3 document(s)
+Matched  1 document(s)
+Updated  1 document(s)
+Upserted 2 document(s)
+Deleted  1 document(s)
+upsertedId[3]: object(MongoDB\BSON\ObjectId)#5 (1) {
+  ["oid"]=>
+  string(24) "54d3adc3ce7a792f4d703756"
+}
+upsertedId[4]: int(3)
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><classname>MongoDB\Driver\BulkWrite</classname></member>
+   <member><classname>MongoDB\Driver\WriteResult</classname></member>
+   <member><classname>MongoDB\Driver\WriteConcern</classname></member>
+   <member><function>MongoDB\Driver\Server::executeBulkWrite</function></member>
+  </simplelist>
+ </refsect1>
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
