@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: e50e79746736dbdfbabe9bd3566793b3ddf38f58 Maintainer: ae Status: ready --><!-- CREDITS: ThamaraHessel,pauloelr,royopa,ae,geekcom,leonardolara -->
+<!-- EN-Revision: 725ceadea94af4f4db6c76b9665829f27068d2c5 Maintainer: ae Status: ready --><!-- CREDITS: ThamaraHessel,pauloelr,royopa,ae,geekcom,leonardolara -->
 <chapter xml:id="features.commandline" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>Usando PHP a partir da linha de comando</title>
  <titleabbrev>Uso da linha de Comando</titleabbrev>
@@ -534,23 +534,32 @@ string(15) "doesntmakesense"
        <entry>--syntax-check</entry>
        <entry>
         <para>
-         Fornece uma forma conveniente de realizar uma verificação da sintaxe
-         no código PHP informado. Em caso de sucesso, o texto
+         Verifica a sintaxe mas não executa o código PHP informado.
+         A entrada padrão será processada se nenhum arquivo for especificado,
+         caso contrário cada arquivo será verificado.
+         Em caso de sucesso, o texto
          <literal>No syntax errors detected in &lt;filename&gt;</literal> é
-         disparado para a saída padrão da linha de comando e o código de retorno é
-         <literal>0</literal>. Em caso de falha, o texto <literal>Errors parsing
-         &lt;filename&gt;</literal> assim como as mensagens adicionais de erros
-         são retornados para a saída padrão do terminal e o código retornado é
-         <literal>-1</literal>.
+         escrito na saída padrão.
+         Em caso de falha, o texto <literal>Errors parsing &lt;filename&gt;</literal>
+         é escrito na saída padrão junto com o erro do analisador interno.
+         Se alguma falha for encontrada nos arquivos especificados (ou na entrada padrão),
+         o código de retorno do shell será <literal>-1</literal>, caso contrário
+         o código de retorno será <literal>0</literal>.
         </para>
         <para>
-         Isso não irá encontrar error fatais (como funções não definidas). Use a
-         opção <option>-f</option> para também testar os erros fatais.
+         Esta opção encontrará error fatais (como funções indefinidas) que
+         requerem execução do código.
         </para>
         <note>
          <para>
-          Essa opção não funciona em conjunto com a opção <option>-r</option>.
-          <!---->
+          Antes do PHP 8.3.0, só era possível especificar um nome de arquivo para
+          ser verificado.
+         </para>
+        </note>
+        <note>
+         <para>
+          Essa opção não funciona em conjunto com a opção
+          <option>-r</option>.
          </para>
         </note>
        </entry>
@@ -560,7 +569,7 @@ string(15) "doesntmakesense"
        <entry>--modules</entry>
        <entry>
         <para><example>
-         <title>Retorna os módulos PHP e Zend embutidos e carregados</title>
+         <title>Retorna os módulos PHP e Zend integrados e carregados</title>
          <screen>
 <![CDATA[
 $ php -m
@@ -594,12 +603,12 @@ ctype
         </para>
         <note>
          <para>
-          Muito cuidado precisa ser tomado ao usar essa forma para que o PHP não colida
-          com a substituição de variáveis de linha de comando realizadas pelo seu
-          ambiente de linha de comando.
+          Deve-se ter cuidado ao usar esta forma do PHP para não
+          colidir com a substituição de variáveis de linha de comando realizadas pelo
+          shell.
          </para>
          <example>
-          <title>Recebendo um erro de sintaxe ao usar aspas duplas</title>
+          <title>Obtendo um erro de sintaxe ao usar aspas duplas</title>
           <screen>
 <![CDATA[
 $ php -r "$foo = get_defined_constants();"
@@ -613,8 +622,8 @@ Parse error: syntax error, unexpected '=' in Command line code on line 1
           O problema aqui é que o sh/bash realiza substituições de variáveis
           mesmo usando aspas duplas <literal>"</literal>. já que
           a variável <varname>$foo</varname> provavelmente não está definida,
-          ocorrerá uma substituição para nada, que resulta no seguinte código
-          passado para o PHP executar:
+          ela será avaliada como nada, o que faz com que o código passado ao
+          PHP para execução na verdade seja lido como:
          </para>
          <informalexample>
           <screen>
@@ -630,8 +639,8 @@ $ php -r " = get_defined_constants();"
           pelo sh/bash.
          </para>
          <example>
-          <title>Usar aspas simples previne a substituição de variáveis pelo
-          ambiente de linha de comando</title>
+          <title>Usando aspas simples para evitar a substituição de variáveis do
+          shell</title>
           <screen>
 <![CDATA[
 $ php -r '$foo = get_defined_constants(); var_dump($foo);'
@@ -651,17 +660,17 @@ array(370) {
          </example>
          <para>
           Se estiver usando um ambiente de linha de comando que não seja sh/bash,
-          outros problemas podem ser encontrados - caso necessário, um aviso de bug
-          pode ser aberto em <link xlink:href="&url.php.bugs;">&url.php.bugs;</link>.
+          outros problemas podem ser encontrados - caso necessário, um relato de problema pode ser aberto em
+          <link xlink:href="&url.php.bugs;">&url.php.bugs;</link>.
           Ainda assim é muito fácil encontrar problemas ao tentar usar variáveis
-          (de linha de comando ou PHP) em código de linha de comando, ou usando barra
-          invertida para escapar, por isso tenha muito cuidado quando fizer isso. Você foi avisado!
+          (do shell ou do PHP) em código de linha de comando, ou usando barra invertida para
+          escapar, por isso tenha muito cuidado quando fizer isso. Você foi avisado!
          </para>
         </note>
         <note>
          <para>
           <option>-r</option> está disponível no &cli.sapi;, mas não no
-          <emphasis>CGI</emphasis> <acronym>SAPI</acronym>.
+          <acronym>SAPI</acronym> <emphasis>CGI</emphasis>.
          </para>
         </note>
         <note>
@@ -680,7 +689,7 @@ array(370) {
        <entry>--process-begin</entry>
        <entry>
         <para>
-         O código PHP executado antes do processamento do stdin.
+         Código PHP a ser executado antes de processar a entrada padrão.
         </para>
        </entry>
       </row>
@@ -689,12 +698,12 @@ array(370) {
        <entry>--process-code</entry>
        <entry>
         <para>
-         Código PHP para ser executado a cada linha de entrada.
+         Código PHP a ser executado para cada linha de entrada.
         </para>
         <para>
          Existem duas variáveis especiais disponíveis nesse modo:
          <varname>$argn</varname> e <varname>$argi</varname>.
-         <varname>$argn</varname> conterá a linha que está sendo processada pelo PHP
+         <varname>$argn</varname> conterá a linha que o PHP estiver processando
          no momento, enquanto <varname>$argi</varname> irá conter o número
          da linha.
         </para>
@@ -705,7 +714,7 @@ array(370) {
        <entry>--process-file</entry>
        <entry>
         <para>
-         Arquivo PHP para ser executado a cada linha de entrada.
+         Arquivo PHP a ser executado para cada linha de entrada.
         </para>
        </entry>
       </row>
@@ -714,7 +723,7 @@ array(370) {
        <entry>--process-end</entry>
        <entry>
         <para>
-         Código PHP para ser executado após o processamento da entrada.
+         Código PHP a ser executado após processar a entrada.
         </para>
         <para><example>
          <title>Usando as opções <option>-B</option>, <option>-R</option> e
@@ -735,7 +744,7 @@ Total Lines: 37328
        <entry>--server</entry>
        <entry>
         <para>
-         Inicia o <link linkend="features.commandline.webserver">servidor embutido
+         Inicia o <link linkend="features.commandline.webserver">servidor interno
          do PHP</link>.
         </para>
        </entry>
@@ -745,7 +754,7 @@ Total Lines: 37328
        <entry>--docroot</entry>
        <entry>
         Específica a raiz do documento para o <link
-        linkend="features.commandline.webserver">servidor embutido do PHP</link>.
+        linkend="features.commandline.webserver">servidor interno do PHP</link>.
        </entry>
       </row>
       <row>
@@ -753,7 +762,7 @@ Total Lines: 37328
        <entry>--syntax-highlight and --syntax-highlighting</entry>
        <entry>
         <para>
-         Destaca a sintaxe de código (syntax-highlighting).
+         Exibe o código com destaque de sintaxe em cores.
         </para>
         <para>
          Essa opção usa os mecanismos internos para interpretar os arquivos e escrever
@@ -764,8 +773,8 @@ Total Lines: 37328
         </para>
         <note>
          <para>
-          Essa opção não funciona em conjunto com a opção <option>-r</option>.
-          <!---->
+          Essa opção não funciona em conjunto com a opção
+          <option>-r</option>.
          </para>
         </note>
        </entry>
@@ -775,8 +784,8 @@ Total Lines: 37328
        <entry>--version</entry>
        <entry>
         <para><example>
-         <title>Use <option>-v</option> para requisitar o nome <acronym>SAPI</acronym>
-         e a versão do PHP e Zend Engine</title>
+         <title>Usando <option>-v</option> para obter o nome do <acronym>SAPI</acronym>
+         e a versão do PHP e do Zend</title>
          <screen>
 <![CDATA[
 $ php -v
@@ -793,12 +802,12 @@ Zend Engine v2.3.0, Copyright (c) 1998-2009 Zend Technologies
        <entry>--strip</entry>
        <entry>
         <para>
-         Exibe o código com comentários e espaços em branco removidos.
+         Exibe o código com remoção de comentários e de espaços em branco.
         </para>
         <note>
          <para>
-          Essa opção não funciona em conjunto com a opção <option>-r</option>.
-          <!---->
+          Essa opção não funciona em conjunto com a opção
+          <option>-r</option>.
          </para>
         </note>
        </entry>
