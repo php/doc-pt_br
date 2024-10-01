@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: fea4357a0ced6a776a2db2ef0d4c09c39ad41ae1 Maintainer: marcosmarcolin Status: ready --><!-- CREDITS: marcosmarcolin -->
+<!-- EN-Revision: 5cc10e8d90a9d0cbb35779b60580e772e7d660a1 Maintainer: marcosmarcolin Status: ready --><!-- CREDITS: marcosmarcolin, leonardolara -->
 <refentry xml:id="function.array-replace" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>array_replace</refname>
@@ -13,18 +13,13 @@
    <methodparam rep="repeat"><type>array</type><parameter>replacements</parameter></methodparam>
   </methodsynopsis>
   <para>
-   <function>array_replace</function> substitui os valores de
-   <parameter>array</parameter> por valores com as mesmas keys em cada um dos seguintes
-   arrays. Se uma key do primeiro array existir no segundo array, seu valor
-   será substituído pelo valor do segundo array. Se a key existir no segundo array,
-   e não no primeiro, ela será criada no primeiro array.
-   Se uma key existir apenas na primeira matriz, ela será deixada como está.
-   Se vários arrays forem passados para substituição, eles serão processados em
-   ordem, os arrays posteriores sobrescrevendo os valores anteriores.
+   <function>array_replace</function> cria um novo array e atribui itens a
+   ele para cada chave em cada um dos arrays fornecidos. Se uma chave aparecer em múltiplos
+   arrays de entrada, o valor do array de entrada mais à direita será usado.
   </para>
   <para>
-   <function>array_replace</function> não é recursivo: substituirá
-   os valores no primeiro array por qualquer tipo que esteja no segundo array.
+   <function>array_replace</function> não processa os itens dos elementos recursivamente,
+   ela substitui o valor inteiro para cada chave quando faz uma substituição.
   </para>
  </refsect1>
  <refsect1 role="parameters">
@@ -63,28 +58,66 @@
    <example>
     <title><function>array_replace</function> exemplo</title>
     <programlisting role="php">
-     <![CDATA[
+<![CDATA[
 <?php
 $base = array("laranja", "banana", "maçã", "framboesa");
 $substituicoes = array(0 => "abacaxi", 4 => "cereja");
 $substituicoes2 = array(0 => "uva");
 
 $cesta = array_replace($base, $substituicoes, $substituicoes2);
-print_r($cesta);
+var_dump($cesta);
 ?>
 ]]>
     </programlisting>
     &example.outputs;
     <screen role="php">
-     <![CDATA[
-Array
-(
-    [0] => uva
-    [1] => banana
-    [2] => maçã
-    [3] => framboesa
-    [4] => cereja
-)
+<![CDATA[
+array(5) {
+  [0]=>
+  string(3) "uva"
+  [1]=>
+  string(6) "banana"
+  [2]=>
+  string(4) "maçã"
+  [3]=>
+  string(9) "framboesa"
+  [4]=>
+  string(6) "cereja"
+}
+]]>
+    </screen>
+   </example>
+   <example>
+    <title>Exemplo de como arrays aninhados são manipulados</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$base = [ 'cítricas' => [ 'laranja', 'limão' ], 'pomóideas' => [ 'maçã' ] ];
+$replacements = [ 'cítricas' => [ 'toranja' ] ];
+$replacements2 = [ 'cítricas' => [ 'kumquat', 'cidra' ], 'pomóideas' => [ 'nêspera' ] ];
+
+$cesta = array_replace($base, $substituicoes, $substituicoes2);
+var_dump($cesta);
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen role="php">
+<![CDATA[
+array(2) {
+  ["cítricas"]=>
+  array(2) {
+    [0]=>
+    string(7) "kumquat"
+    [1]=>
+    string(5) "cidra"
+  }
+  ["pomóideas"]=>
+  array(1) {
+    [0]=>
+    string(7) "nêspera"
+  }
+}
 ]]>
     </screen>
    </example>
