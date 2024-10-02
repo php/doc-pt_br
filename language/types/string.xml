@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: affa37e16f562d9297e83b2e21ec416aadc8b72d Maintainer: ae Status: ready --><!-- CREDITS: felipe,thiago,fabioluciano,rogeriopradoj,geekcom,guimrl,ae,marcosmarcolin,leonardolara -->
+<!-- EN-Revision: b012e0dd8360e47b814d9954a5ae0d6c57f5fc2d Maintainer: ae Status: ready --><!-- CREDITS: felipe,thiago,fabioluciano,rogeriopradoj,geekcom,guimrl,ae,marcosmarcolin,leonardolara -->
 <sect1 xml:id="language.types.string">
  <title>Strings</title>
 
@@ -199,7 +199,7 @@ echo 'Variáveis $também não $expandem';
    <para>
     O recurso mais importante de <type>string</type>s delimitadas por aspas duplas é o fato de que
     nomes de variáveis serão expandidos. Veja
-    <link linkend="language.types.string.parsing">interpretação de strings</link> para
+    <link linkend="language.types.string.parsing">interpolação de strings</link> para
     detalhes.
    </para>
   </sect3>
@@ -592,7 +592,7 @@ FOOBAR;
    <para>
     Nowdocs estão para aspas simples assim como os heredocs estão para aspas duplas em
     strings. Um nowdoc é especificado similarmente a um heredoc, mas <emphasis>
-    nenhuma interpretação é feita</emphasis> dentro de um nowdoc. A construção é ideal para
+    nenhuma interpolação é feita</emphasis> dentro de um nowdoc. A construção é ideal para
     colocar códigos PHP ou outros grandes blocos de texto sem a necessidade de
     usar escapes. Compartilha algumas características em comum com a construção SGML
     <literal>&lt;![CDATA[ ]]&gt;</literal>, assim é declarado um bloco de
@@ -684,37 +684,29 @@ EOT;
   </sect3>
 
   <sect3 xml:id="language.types.string.parsing">
-   <title>Interpretação de variáveis</title>
+   <title>Interpolação de strings</title>
 
    <simpara>
     Quando uma <type>string</type> é especificada dentro de aspas duplas ou heredoc,
-    as <link linkend="language.variables">variáveis</link> são interpretadas dentro delas.
+    as <link linkend="language.variables">variáveis</link> podem ser substituídas dentro dela.
    </simpara>
 
    <simpara>
     Há dois tipos de sintaxe: uma
-    <link linkend="language.types.string.parsing.simple">simples</link> e uma
-    <link linkend="language.types.string.parsing.complex">complexa</link>.
-    A sintaxe simples é a mais comum e conveniente. Provê uma maneira de
-    interpretar uma variável, o valor de um <type>array</type> ou uma propriedade de <type>object</type>
+    <link linkend="language.types.string.parsing.basic">básica</link> e uma
+    <link linkend="language.types.string.parsing.advanced">avançada</link>.
+    A sintaxe básica é a mais comum e conveniente. Provê uma maneira de
+    incorporar uma variável, o valor de um <type>array</type> ou uma propriedade de <type>object</type>
     em uma <type>string</type> com o mínimo de esforço.
    </simpara>
 
-   <simpara>
-    A sintaxe complexa pode ser reconhecida
-    pelas chaves envolvendo a expressão.
-   </simpara>
-
-   <sect4 xml:id="language.types.string.parsing.simple">
-    <title>Sintaxe simples</title>
-
+   <sect4 xml:id="language.types.string.parsing.basic">
+    <title>Sintaxe básica</title>
     <simpara>
-     Se um sinal de cifrão (<literal>$</literal>) for encontrado, o interpretador tentará
-     obter tantos identificadores quantos forem possíveis para formar um nome de variável válido.
-     Envolva o nome da variável com chaves para especificar explicitamente o fim do
-     nome.
+     Se um sinal de cifrão (<literal>$</literal>) for encontrado, os caracteres
+     que o seguem, e que podem ser usados em nome de variável, serão interpretados
+     como tal e substituídos.
     </simpara>
-
     <informalexample>
      <programlisting role="php">
 <![CDATA[
@@ -723,12 +715,6 @@ $suco = "maçã";
 
 echo "Ele bebeu um pouco de suco de $suco." . PHP_EOL;
 
-// Erro, porque "s" é um caractere válido para um nome de variável, procura $sucos em vez de $suco
-echo "Ele bebeu um suco feito de $sucos." . PHP_EOL;
-
-// Especificar explicitamente o nome da variável, delimitando com chaves.
-echo "Ele bebeu um pouco de suco feito de ${suco}s.";
-
 ?>
 ]]>
      </programlisting>
@@ -736,43 +722,131 @@ echo "Ele bebeu um pouco de suco feito de ${suco}s.";
      <screen>
 <![CDATA[
 Ele bebeu um pouco de suco de maçã.
-Ele bebeu um pouco de suco feito de .
-Ele bebeu um pouco de suco feito de maçãs.
 ]]>
      </screen>
     </informalexample>
 
     <simpara>
-     Similarmente, um índice de <type>array</type> ou uma propriedade de um <type>object</type>
-     podem ser interpretados. Com índices de arrays, o fechamento de colchetes
-     (<literal>]</literal>) marca o final do índice. A mesma regra aplica-se a
-     propriedade de objetos, assim como para variáveis simples.
+     Formalmente, a estrutura para a sintaxe básica de substituição de variável é
+     o seguinte:
     </simpara>
+    <informalexample>
+     <programlisting>
+<![CDATA[
+string-variável::
+     nome-de-variável   (posição-ou-propriedade)?
+   | ${   expressão   }
 
-    <example><title>Exemplo com sintaxe simples</title>
+posição-ou-propriedade::
+     posição-na-string
+   | propriedade-na-string
+
+posição-na-string::
+     [   nome   ]
+   | [   nome-de-variável   ]
+   | [   inteiro-literal   ]
+
+propriedade-na-string::
+     ->  nome
+
+nome-de-variável::
+     $   nome
+
+nome::
+     [a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*
+
+]]>
+     </programlisting>
+    </informalexample>
+
+    <warning>
+     <para>
+      A sintaxe <literal>${ expressão }</literal> tornou-se defasada a partir do
+      PHP 8.2.0, já que pode ser interpretada como
+      <link linkend="language.variables.variable">variáveis variáveis</link>:
+      <informalexample>
+       <programlisting role="php">
+<![CDATA[
+<?php
+const foo = 'bar';
+$foo = 'foo';
+$bar = 'bar';
+var_dump("${foo}");
+var_dump("${(foo)}");
+?>
+]]>
+       </programlisting>
+       &example.outputs.82;
+       <screen>
+<![CDATA[
+Deprecated: Using ${var} in strings is deprecated, use {$var} instead in file on line 6
+
+Deprecated: Using ${expr} (variable variables) in strings is deprecated, use {${expr}} instead in file on line 9
+string(3) "foo"
+string(3) "bar"
+]]>
+       </screen>
+       &example.outputs;
+       <screen>
+<![CDATA[
+string(3) "foo"
+string(3) "bar"
+]]>
+       </screen>
+      </informalexample>
+      A sintaxe <link linkend="language.types.string.parsing.advanced">avançada</link>
+      de interpolação de string deve ser usada em seu lugar.
+     </para>
+    </warning>
+
+    <note>
+     <simpara>
+      Se não for possível formar um nome válido, o símbolo de cifrão permanece
+      literalmente na string:
+     </simpara>
+     <informalexample>
+      <programlisting role="php">
+<![CDATA[
+<?php
+echo "Nenhuma interpolação $ aconteceu\n";
+echo "Nenhuma interpolação $\n aconteceu\n";
+echo "Nenhuma interpolação $2 aconteceu\n";
+?>
+]]>
+      </programlisting>
+      &example.outputs;
+      <screen>
+<![CDATA[
+Nenhuma interpolação $ aconteceu
+Nenhuma interpolação $
+ aconteceu
+Nenhuma interpolação $2 aconteceu
+]]>
+      </screen>
+     </informalexample>
+    </note>
+
+    <example>
+     <title>Interpolando o valor da primeira dimensão de um array ou propriedade</title>
      <programlisting role="php">
 <![CDATA[
 <?php
-$sucos = array("maçã", "laranja", "koolaid1" => "roxo");
+$sucos = array("maça", "laranja", "chave_string" => "roxo");
 
-echo "Ele bebeu um pouco de suco $sucos[0]".PHP_EOL;
-echo "Ele bebeu um pouco de suco $sucos[1].".PHP_EOL;
-echo "Ele bebeu um pouco de suco $sucos[koolaid1].".PHP_EOL;
+echo "Ele bebeu um pouco de suco de $sucos[0].";
+echo PHP_EOL;
+echo "Ele bebeu um pouco de suco de $sucos[1].";
+echo PHP_EOL;
+echo "Ele bebeu um pouco de suco de $sucos[chave_string].";
+echo PHP_EOL;
 
-class Pessoa {
-    public $john = "João Silva";
-    public $jane = "Jane Smith";
-    public $robert = "Robert Paulsen";
-
-    public $smith = "Smith";
+class A {
+    public $s = "string";
 }
 
-$pessoa = new people();
+$o = new A();
 
-echo "$pessoa->john bebeu um pouco de suco de $sucos[0].".PHP_EOL;
-echo "$pessoa->john então disse olá para $pessoa->jane.".PHP_EOL;
-echo "Esposa de $pessoa->john cumprimentou $pessoa->robert.".PHP_EOL;
-echo "$pessoa->robert cumprimentou os dois $pessoa->smiths."; // Não vai funcionar
+echo "Valor do objeto: $o->s.";
 ?>
 ]]>
      </programlisting>
@@ -781,14 +855,20 @@ echo "$pessoa->robert cumprimentou os dois $pessoa->smiths."; // Não vai funcio
 <![CDATA[
 Ele bebeu um pouco de suco de maçã.
 Ele bebeu um pouco de suco de laranja.
-Ele bebeu um pouco de suco roxo.
-John Smith bebeu um pouco de suco de maçã.
-John Smith então disse olá para Jane Smith.
-A esposa de John Smith cumprimentou Robert Paulsen.
-Robert Paulsen cumprimentou os dois .
+Ele bebeu um pouco de suco de roxo.
+Valor do objeto: string.
 ]]>
      </screen>
     </example>
+
+    <note>
+     <simpara>
+      A chave do array deve ser sem aspas, e por isso não é possível
+      referenciar uma constante como chave com a sintaxe básica. Use a sintaxe
+      <link linkend="language.types.string.parsing.advanced">avançada</link>
+      em seu lugar.
+     </simpara>
+    </note>
 
     <simpara>
      A partir do PHP 7.1.0 índices numéricos <emphasis>negativos</emphasis> são
@@ -816,21 +896,24 @@ Alterar o caractere no índice -3 para o dá strong.
     </example>
 
     <simpara>
-     Para qualquer coisa mais complexa, utilize a sintaxe complexa.
+     Para qualquer coisa mais complexa, a sintaxe
+     <link linkend="language.types.string.parsing.advanced">avançada</link>
+     deve ser usada.
     </simpara>
    </sect4>
 
-   <sect4 xml:id="language.types.string.parsing.complex">
-    <title>Sintaxe complexa (chaves)</title>
+   <sect4 xml:id="language.types.string.parsing.advanced">
+    <title>Sintaxe avançada (com chaves)</title>
 
     <simpara>
-     Isto não é chamado sintaxe complexa porque a sintaxe é complexa,
-     mas sim porque permite a utilização de expressões complexas.
+     A sintaxe avançada permite a interpolação de
+     <emphasis>variáveis</emphasis> com acessadores arbitrários.
     </simpara>
 
     <simpara>
-     Qualquer variável escalar, elemento de um array ou propriedade de um objeto com uma representação de uma
-     <type>string</type> pode ser incluída com essa sintaxe.
+     Qualquer variável escalar, elemento de array ou propriedade de objeto
+     (<modifier>static</modifier> ou não) com uma
+     representação de uma <type>string</type> pode ser incluída com essa sintaxe.
      A expressão é escrita da mesma forma como apareceria fora da
      <type>string</type> e então coloque-o entre <literal>{</literal> e
      <literal>}</literal>. Já que que <literal>{</literal> não pode escapado, esta
@@ -843,134 +926,70 @@ Alterar o caractere no índice -3 para o dá strong.
      <programlisting role="php">
 <![CDATA[
 <?php
-// Mostrar todos os erros
-error_reporting(E_ALL);
 
-$great = 'fantástico';
+const DATA_KEY = 'chave-const';
+$fantastico = 'fantástico';
+$arr = [
+    '1',
+    '2',
+    '3',
+    [41, 42, 43],
+    'chave' => 'Valor indexado',
+    'chave-const' => 'Chave com sinal de menos',
+    'foo' => ['foo1', 'foo2', 'foo3']
+];
 
 // Não vai funcionar, resultado: Isso é { fantástico}
-echo "Isso é { $great}";
+echo "Isso é { $fantastico}";
 
-// Funciona, resultado: Isso é fantastico
-echo "Isso é {$great}";
+// Funciona, resultado: Isso é fantástico
+echo "Isso é {$fantastico}";
+
+class Square {
+    public $width;
+
+    public function __construct(int $width) { $this->width = $width; }
+}
+
+$square = new Square(5);
 
 // Funciona
 echo "Este quadrado tem {$square->width}00 centímetros de largura.";
 
 
 // Funciona, as chaves entre aspas funcionam apenas usando a sintaxe de chaves
-echo "Isso funciona: {$arr['key']}";
+echo "Isso funciona: {$arr['chave']}";
 
 
 // Funciona
 echo "Isso funciona: {$arr[4][3]}";
 
-// Isso está errado pelo mesmo motivo que $foo[bar] está errado fora de uma string.
-// PHP primeiro procura por uma constante chamada foo, e emite um erro se não encontrada.
-// Se a constante for encontrada, seu valor (e não 'foo' em si) seria usada
-// para o índice do array.
-echo "Isso está errado: {$arr[foo][3]}";
+echo "Isso funciona: {$arr[DATA_KEY]}";
 
-// Funciona. Ao usar matrizes multidimensionais, sempre use chaves em torno das matrizes
+// Ao usar arrays multidimensionais, sempre use chaves em torno dos arrays
 // quando dentro de strings
 echo "Funciona: {$arr['foo'][3]}";
 
-// Funciona.
-echo "Isto funciona: " . $arr['foo'][3];
+echo "Funciona: {$obj->values[3]->name}";
 
-echo "Isto também funciona: {$obj->values[3]->name}";
+echo "Funciona: {$obj->$staticProp}";
 
-echo "Este é o valor da variável chamada $name: {${$name}}";
-
-echo "Este é o valor da var nomeada pelo valor de retorno de getName(): {${getName()}}";
-
-echo "Este é o valor da var nomeada pelo valor de retorno de \$object->getName(): {${$object->getName()}}";
-
-// Não funcionará, saídas: Este é o valor de retorno de getName(): {getName()}
-echo "TEste é o valor de retorno de getName(): {getName()}";
-
-// Não funciona, imprime: C:\folder\{fantastic}.txt
-echo "C:\folder\{$great}.txt"
-// Funciona, imprime: C:\folder\fantastic.txt
-echo "C:\\folder\\{$great}.txt"
+// Não funciona, imprime: C:\folder\{fantástico}.txt
+echo "C:\folder\{$fantastico}.txt"
+// Funciona, imprime: C:\folder\fantástico.txt
+echo "C:\\folder\\{$fantastico}.txt"
 ?>
 ]]>
-<!-- maybe it's better to leave this out??
-// this works, but i disencourage its use, since this is NOT
-// involving functions, rather than mere variables, arrays and objects.
-$beer = 'Heineken';
-echo "I'd like to have another {${ strrev('reeb') }}, hips";
- -->
      </programlisting>
     </informalexample>
-
-    <para>
-     Também é possível acessar propriedades de classes usando variáveis
-     que contêm strings utilizando esta sintaxe.
-    </para>
-
-   <informalexample>
-    <programlisting role="php">
-<![CDATA[
-<?php
-class foo {
-    var $bar = 'I am bar.';
-}
-
-$foo = new foo();
-$bar = 'bar';
-$baz = array('foo', 'bar', 'baz', 'quux');
-echo "{$foo->$bar}\n";
-echo "{$foo->{$baz[1]}}\n";
-?>
-]]>
-    </programlisting>
-   &example.outputs;
-   <screen>
-<![CDATA[
-I am bar.
-I am bar.
-]]>
-   </screen>
-   </informalexample>
 
     <note>
-     <para>
-      O valor acessado de funções, métodos, variáveis estáticas de classes e
-      constantes de classes, de dentro de
-      <literal>{$}</literal> serão interpretados como o nome
-      de uma variável no escopo em que a string está definida. Utilizar
-      somente chaves (<literal>{}</literal>) não funcionará
-      para acessar os valores de retorno de funções ou métodos nem os
-      valores de constantes da classe ou variáveis estáticas da classe.
-     </para>
+     <simpara>
+      Como esta sintaxe permite expressões arbitrárias, é possível usar
+      <link linkend="language.variables.variable">variáveis variáveis</link>
+      dentro da sintaxe avançada.
+     </simpara>
     </note>
-
-    <informalexample>
-     <programlisting role="php">
-<![CDATA[
-<?php
-// Mostra todos os erros.
-error_reporting(E_ALL);
-
-class beers {
-    const softdrink = 'rootbeer';
-    public static $ale = 'ipa';
-}
-
-$rootbeer = 'A & W';
-$ipa = 'Alexander Keith\'s';
-
-// Funciona, imprime: I'd like an A & W
-echo "I'd like an {${beers::softdrink}}\n";
-
-// Também funciona, imprime: I'd like an Alexander Keith's
-echo "I'd like an {${beers::$ale}}\n";
-?>
-]]>
-     </programlisting>
-    </informalexample>
-
    </sect4>
   </sect3>
 
