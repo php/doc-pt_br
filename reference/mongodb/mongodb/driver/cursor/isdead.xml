@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 1e327d12051bfc071aea2910c285dd9385565609 Maintainer: leonardolara Status: ready --><!-- Credits: leonardolara -->
+
+<refentry xml:id="mongodb-driver-cursor.isdead" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>MongoDB\Driver\Cursor::isDead</refname>
+  <refpurpose>Verifica se o cursor está esgotado ou pode ter resultados adicionais</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <modifier>final</modifier> <modifier>public</modifier> <type>bool</type><methodname>MongoDB\Driver\Cursor::isDead</methodname>
+   <void />
+  </methodsynopsis>
+  <para>
+   Verifica se definitivamente não há resultados adicionais disponíveis no
+   cursor. Este método é semelhante ao método
+   <link xlink:href="&url.mongodb.docs;reference/method/cursor.isExhausted/">cursor.isExhausted()</link>
+   no shell do MongoDB e é útil principalmente ao iterar
+   <link xlink:href="&url.mongodb.docs;core/tailable-cursors/">cursores adaptáveis</link>.
+  </para>
+  <para>
+   Um cursor não tem resultados adicionais e é considerado "morto" quando uma das seguintes
+   opções for verdadeira:
+   <simplelist>
+    <member>
+     O lote atual foi totalmente iterado <emphasis>e</emphasis> o
+     ID do cursor é zero (ou seja, um
+     <link xlink:href="&url.mongodb.docs;reference/command/getMore/">getMore</link>
+     não pode ser emitido).
+    </member>
+    <member>Foi encontrado um erro ao iterar o cursor.</member>
+    <member>O cursor atingiu o limite configurado.</member>
+   </simplelist>
+  </para>
+  <para>
+   Por padrão, nem sempre é possível determinar se um cursor possui
+   resultados adicionais. Os casos em que um cursor <emphasis>pode</emphasis> ter
+   mais dados disponíveis são os seguintes:
+   <simplelist>
+    <member>
+     Existem documentos adicionais no lote atual, que são armazenados em buffer no
+     lado do cliente. A iteração irá buscar um documento do buffer local.
+    </member>
+    <member>
+     Não há documentos adicionais no lote atual (ou seja, buffer local),
+     mas o ID do cursor é diferente de zero. A iteração solicitará mais documentos do
+     servidor por meio de uma operação
+     <link xlink:href="&url.mongodb.docs;reference/command/getMore/">getMore</link>,
+     que pode ou não retornar resultados adicionais e/ou indicar
+     que o cursor foi fechado no servidor retornando zero para seu ID.
+    </member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  &no.function.parameters;
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna &true; se definitivamente não houver resultados adicionais disponíveis no
+   cursor e &false; caso contrário.
+  </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <simplelist>
+   &mongodb.throws.argumentparsing;
+  </simplelist>
+ </refsect1>
+
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <function>MongoDB\Driver\Cursor::isDead</function></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$manager = new MongoDB\Driver\Manager("mongodb://localhost:27017");
+$query = new MongoDB\Driver\Query([]);
+
+$bulk = new MongoDB\Driver\BulkWrite;
+$bulk->insert(['x' => 1]);
+$bulk->insert(['x' => 2]);
+$bulk->insert(['x' => 3]);
+$manager->executeBulkWrite('db.collection', $bulk);
+
+$cursor = $manager->executeQuery('db.collection', $query);
+
+$iterator = new IteratorIterator($cursor);
+
+$iterator->rewind();
+var_dump($cursor->isDead());
+
+$iterator->next();
+var_dump($cursor->isDead());
+
+$iterator->next();
+var_dump($cursor->isDead());
+
+$iterator->next();
+var_dump($cursor->isDead());
+
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+bool(false)
+bool(false)
+bool(false)
+bool(true)
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><link xlink:href="&url.mongodb.docs;core/tailable-cursors/">Cursores Adaptáveis</link> no manual do MongoDB</member>
+   <member><link xlink:href="&url.mongodb.docs;reference/method/cursor.isExhausted/">cursor.isExhausted()</link> no manual do MongoDB</member>
+  </simplelist>
+ </refsect1>
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
