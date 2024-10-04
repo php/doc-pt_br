@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: c64016065c9b97fa1cbbef48a9ed105232b423a8 Maintainer: leonardolara Status: ready --><!-- Credits: leonardolara -->
+
+<refentry xml:id="mongodb-driver-readpreference.construct" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>MongoDB\Driver\ReadPreference::__construct</refname>
+  <refpurpose>Cria uma nova preferência de leitura</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <modifier>final</modifier> <modifier>public</modifier> <methodname>MongoDB\Driver\ReadPreference::__construct</methodname>
+   <methodparam><type class="union"><type>string</type><type>int</type></type><parameter>mode</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>array</type><type>null</type></type><parameter>tagSets</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>array</type><type>null</type></type><parameter>options</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Constrói um novo <classname>MongoDB\Driver\ReadPreference</classname>, que
+   é um objeto de valor imutável.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <variablelist>
+   <varlistentry>
+    <term><parameter>mode</parameter></term>
+    <listitem>
+     <para>
+      <table>
+       <title>Modo de preferência de leitura</title>
+       <tgroup cols="2">
+        <thead>
+         <row>
+          <entry>Valor</entry>
+          <entry>Descrição</entry>
+         </row>
+        </thead>
+        <tbody>
+         <row>
+          <entry><literal>"primary"</literal></entry>
+          <entry>
+           <para>
+            Todas as operações são lidas do conjunto de réplicas primário atual. Esta é
+            a preferência de leitura padrão do MongoDB.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry><literal>"primaryPreferred"</literal></entry>
+          <entry>
+           <para>
+            Na maioria das situações, as operações são lidas a partir dos membros primários, mas se não
+            estiver disponível, as operações são lidas a partir dos membros secundários.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry><literal>"secondary"</literal></entry>
+          <entry>
+           <para>
+            Todas as operações são lidas nos membros secundários do conjunto de réplicas.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry><literal>"secondaryPreferred"</literal></entry>
+          <entry>
+           <para>
+            Na maioria das situações, as operações são lidas a partir de membros secundários, mas se nenhum
+            membro secundário estiver disponível, as operações são lidas a partir do primário.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry><literal>"nearest"</literal></entry>
+          <entry>
+           <para>
+            Operações lidas do membro do conjunto de réplicas com a menor
+            latência de rede, independentemente do tipo do membro.
+           </para>
+          </entry>
+         </row>
+        </tbody>
+       </tgroup>
+      </table>
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><parameter>tagSets</parameter></term>
+    <listitem>
+     <para>
+      Os conjuntos de tags permitem direcionar operações de leitura para membros específicos de um
+      conjunto de réplicas. Este parâmetro deve ser um array de arrays associativos, cada
+      um contendo zero ou mais pares chave/valor. Ao selecionar um servidor para
+      uma operação de leitura, o driver tenta selecionar um nó que tenha todas as tags em um
+      conjunto (ou seja, o array associativo de pares chave/valor). Se a seleção falhar,
+      o driver tentará conjuntos subsequentes. Um conjunto de tags vazio
+      (<literal>array()</literal>) corresponderá a qualquer nó e pode ser usado como
+      substituto.
+     </para>
+     <para>
+      Tags não são compatíveis com o modo <literal>"primary"</literal> e,
+      em geral, só se aplicam ao selecionar um membro secundário de um conjunto para uma
+      operação de leitura. No entanto, o modo <literal>"nearest"</literal>, quando
+      combinado com um conjunto de tags, seleciona o membro correspondente com a menor
+      latência de rede. Este membro pode ser um primário ou um secundário.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><parameter>options</parameter></term>
+    <listitem>
+     <para>
+      <table>
+       <title>Opções</title>
+       <tgroup cols="3">
+        <thead>
+         <row>
+          <entry>Opção</entry>
+          <entry>Tipo</entry>
+          <entry>Descrição</entry>
+         </row>
+        </thead>
+        <tbody>
+         <row>
+          <entry>hedge</entry>
+          <entry><type class="union"><type>object</type><type>array</type></type></entry>
+          <entry>
+           <para>Especifica se devem ser usadas <link xlink:href="&url.mongodb.docs;core/sharded-cluster-query-router/#mongos-hedged-reads">leituras protegidas</link>, que são suportadas pelo MongoDB 4.4+ para consultas fragmentadas.</para>
+           <para>
+            As leituras protegidas do servidor estão disponíveis para todas as preferências de leitura não primárias
+            e são habilitadas por padrão ao usar o modo <literal>"nearest"</literal>.
+            Esta opção permite ativar explicitamente leituras protegidas pelo servidor para
+            preferências de leitura não primárias, especificando
+            <literal>['enabled' => true]</literal> ou desabilitando explicitamente
+            leituras protegidas pelo servidor para a preferência de leitura <literal>"nearest"</literal>
+            especificando <literal>['enabled' => false]</literal>.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>maxStalenessSeconds</entry>
+          <entry><type>int</type></entry>
+          <entry>
+           <para>
+            Especifica um atraso máximo de replicação, ou "inatividade", para leituras de
+            secundários. Quando a inatividade estimada de um secundário excede
+            esse valor, o driver deixa de usá-lo para operações de leitura.
+           </para>
+           <para>
+            Se especificada, a inatividade máxima deve ser um número inteiro de 32 bits com sinal,
+            maior ou igual a
+            <constant>MongoDB\Driver\ReadPreference::SMALLEST_MAX_STALENESS_SECONDS</constant>.
+           </para>
+           <para>
+            O padrão é
+            <constant>MongoDB\Driver\ReadPreference::NO_MAX_STALENESS</constant>,
+            o que significa que o driver não considerará o atraso de um secundário
+            ao escolher para onde direcionar uma operação de leitura.
+           </para>
+           <para>
+            Esta opção não é compatível com o modo <literal>"primary"</literal>.
+            A especificação de uma inatividade máxima também exige que todas as instâncias
+            do MongoDB na implantação usem o MongoDB 3.4+. Uma exceção será
+            lançada no momento da execução se alguma instância do MongoDB na implantação
+            for de uma versão de servidor mais antiga.
+           </para>
+          </entry>
+         </row>
+        </tbody>
+       </tgroup>
+      </table>
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <simplelist>
+   &mongodb.throws.argumentparsing;
+   <member>Lança uma <classname>MongoDB\Driver\Exception\InvalidArgumentException</classname> se <parameter>mode</parameter> for inválido.</member>
+   <member>Lança uma <classname>MongoDB\Driver\Exception\InvalidArgumentException</classname> se <parameter>tagSets</parameter> for fornecido para uma preferência de leitura primária ou estiver malformado (ou seja, não é uma array de zero ou mais documentos).</member>
+   <member>Lança uma <classname>MongoDB\Driver\Exception\InvalidArgumentException</classname> se a opção <literal>"maxStalenessSeconds"</literal> for fornecida para uma preferência de leitura primária ou estiver fora do intervalo.</member>
+  </simplelist>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>PECL mongodb 1.20.0</entry>
+       <entry>
+        Passar um <type>int</type> no parâmetro <parameter>mode</parameter>
+        tornou-se <emphasis>DEFASADO</emphasis>.
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.8.0</entry>
+       <entry>
+        Adcionada a opção <literal>"hedge"</literal>.
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.3.0</entry>
+       <entry>
+        <para>
+         O parâmetro <parameter>mode</parameter> agora aceita um valor de string,
+         que é consistente com a opção URI <literal>"readPreference"</literal>
+         para <function>MongoDB\Driver\Manager::__construct</function>.
+        </para>
+       </entry>
+      </row>
+      <row>
+       <entry>PECL mongodb 1.2.0</entry>
+       <entry>
+        <para>
+         Adicionado um terceiro parâmetro <parameter>options</parameter>, que suporta
+         a opção <literal>"maxStalenessSeconds"</literal>.
+        </para>
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <function>MongoDB\Driver\ReadPreference::__construct</function></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+/* Prefere um nó secundário, mas volta para um nó primário. */
+var_dump(new MongoDB\Driver\ReadPreference(MongoDB\Driver\ReadPreference::SECONDARY_PREFERRED));
+
+/* Prefere um nó na central de dados de Nova Iorque com a latência mais baixa. */
+var_dump(new MongoDB\Driver\ReadPreference(MongoDB\Driver\ReadPreference::NEAREST, [['dc' => 'ny']]));
+
+/* Exige um nó secundário cujo atraso de replicação esteja dentro de dois minutos do primário */
+var_dump(new MongoDB\Driver\ReadPreference(MongoDB\Driver\ReadPreference::SECONDARY, null, ['maxStalenessSeconds' => 120]));
+
+/* Habilita explicitamente leituras protegidas pelo servidor */
+var_dump(new MongoDB\Driver\ReadPreference(MongoDB\Driver\ReadPreference::SECONDARY, null, ['hedge' => ['enabled' => true]]));
+
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+object(MongoDB\Driver\ReadPreference)#1 (1) {
+  ["mode"]=>
+  string(18) "secondaryPreferred"
+}
+object(MongoDB\Driver\ReadPreference)#1 (2) {
+  ["mode"]=>
+  string(7) "nearest"
+  ["tags"]=>
+  array(1) {
+    [0]=>
+    object(stdClass)#2 (1) {
+      ["dc"]=>
+      string(2) "ny"
+    }
+  }
+}
+object(MongoDB\Driver\ReadPreference)#1 (2) {
+  ["mode"]=>
+  string(9) "secondary"
+  ["maxStalenessSeconds"]=>
+  int(120)
+}
+object(MongoDB\Driver\ReadPreference)#1 (2) {
+  ["mode"]=>
+  string(9) "secondary"
+  ["hedge"]=>
+  object(stdClass)#1 (1) {
+    ["enabled"]=>
+    bool(true)
+  }
+}
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><link xlink:href="&url.mongodb.docs.readpreference;">Referência de Preferência de Leitura</link></member>
+  </simplelist>
+ </refsect1>
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
