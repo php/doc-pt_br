@@ -1,23 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: fernandoc Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 4d1c34c9b7a30cfc3a59641122c707a2812cfed7 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.ftp-get" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>ftp_get</refname>
-  <refpurpose>Copia um arquivo do servidor FTP</refpurpose>
+  <refpurpose>Recebe um arquivo do servidor FTP</refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>bool</type><methodname>ftp_get</methodname>
-   <methodparam><type>resource</type><parameter>ftp_stream</parameter></methodparam>
-   <methodparam><type>string</type><parameter>local_file</parameter></methodparam>
-   <methodparam><type>string</type><parameter>remote_file</parameter></methodparam>
-   <methodparam><type>int</type><parameter>mode</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>resumepos</parameter></methodparam>
+   <methodparam><type>FTP\Connection</type><parameter>ftp</parameter></methodparam>
+   <methodparam><type>string</type><parameter>local_filename</parameter></methodparam>
+   <methodparam><type>string</type><parameter>remote_filename</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>mode</parameter><initializer><constant>FTP_BINARY</constant></initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>offset</parameter><initializer>0</initializer></methodparam>
   </methodsynopsis>
   <para>
-   <function>ftp_get</function> obtém um arquivo remoto a partir de um servidor FTP,
-   e salva-o em um arquivo local. 
+   <function>ftp_get</function> recupera um arquivo remoto do servidor FTP
+   e grava-o em um arquivo local.
   </para>
  </refsect1>
  <refsect1 role="parameters">
@@ -25,26 +25,24 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>ftp_stream</parameter></term>
+     <term><parameter>ftp</parameter></term>
+     <listitem>
+       &ftp.parameter.ftp;
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>local_filename</parameter></term>
      <listitem>
       <para>
-       O identificador com a conexão FTP.
+       O caminho do arquivo local (será substituído se o arquivo já existir).
       </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>local_file</parameter></term>
+     <term><parameter>remote_filename</parameter></term>
      <listitem>
       <para>
-       O caminho para o arquivo local (será sobrescrito se já existir).
-      </para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><parameter>remote_file</parameter></term>
-     <listitem>
-      <para>
-       O caminho para o arquivo remoto.
+       O caminho do arquivo remoto.
       </para>
      </listitem>
     </varlistentry>
@@ -58,10 +56,10 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>resumepos</parameter></term>
+     <term><parameter>offset</parameter></term>
      <listitem>
       <para>
-       A posição no arquivo remoto a partir da qual continuar.
+       A posição no arquivo remoto para iniciar o recebimento.
       </para>
      </listitem>
     </varlistentry>
@@ -74,34 +72,59 @@
    &return.success;
   </para>
  </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     &ftp.changelog.ftp-param;
+     <row>
+      <entry>7.3.0</entry>
+      <entry>
+       O parâmetro <parameter>mode</parameter> agora é opcional. Antigamente
+       era obrigatório.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
    <example>
-    <title>Exemplo <function>ftp_get</function></title>
+    <title>Exemplo de <function>ftp_get</function></title>
     <programlisting role="php">
 <![CDATA[
 <?php
 
-// define some variables
+// define algumas variáveis
 $local_file = 'local.zip';
 $server_file = 'server.zip';
 
-// set up basic connection
-$conn_id = ftp_connect($ftp_server);
+// configura conexão básica
+$ftp = ftp_connect($ftp_server);
 
-// login with username and password
-$login_result = ftp_login($conn_id, $ftp_user_name, $ftp_user_pass);
+// registra com usuário e senha
+$login_result = ftp_login($ftp, $ftp_user_name, $ftp_user_pass);
 
-// try to download $server_file and save to $local_file
-if (ftp_get($conn_id, $local_file, $server_file, FTP_BINARY)) {
-    echo "Successfully written to $local_file\n";
+// tenta receber $server_file e gravar em $local_file
+if (ftp_get($ftp, $local_file, $server_file, FTP_BINARY)) {
+    echo "$local_file gravado com sucesso\n";
 } else {
-    echo "There was a problem\n";
+    echo "Houve um problema\n";
 }
 
-// close the connection
-ftp_close($conn_id);
+// fecha a conexão
+ftp_close($ftp);
 
 ?>
 ]]>
@@ -109,7 +132,6 @@ ftp_close($conn_id);
    </example>
   </para>
  </refsect1>
-
  <refsect1 role="seealso">
   &reftitle.seealso;
   <para>
@@ -122,7 +144,6 @@ ftp_close($conn_id);
   </para>
  </refsect1>
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

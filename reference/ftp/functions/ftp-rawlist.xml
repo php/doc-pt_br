@@ -1,21 +1,21 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: fernandoc Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 4d1c34c9b7a30cfc3a59641122c707a2812cfed7 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.ftp-rawlist" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>ftp_rawlist</refname>
-  <refpurpose>Retorna uma lista detalhada dos arquivos em um diretório</refpurpose>
+  <refpurpose>Retorna uma lista detalhada de arquivos no diretório fornecido</refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>array</type><methodname>ftp_rawlist</methodname>
-   <methodparam><type>resource</type><parameter>ftp_stream</parameter></methodparam>
+   <type class="union"><type>array</type><type>false</type></type><methodname>ftp_rawlist</methodname>
+   <methodparam><type>FTP\Connection</type><parameter>ftp</parameter></methodparam>
    <methodparam><type>string</type><parameter>directory</parameter></methodparam>
-   <methodparam choice="opt"><type>bool</type><parameter>recursive</parameter></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>recursive</parameter><initializer>&false;</initializer></methodparam>
   </methodsynopsis>
   <para>
-   <function>ftp_rawlist</function> executa o comando 
-   <command>LIST</command> do FTP, e retorna o resutado como um array.
+   <function>ftp_rawlist</function> executa o comando FTP
+   <command>LIST</command> e retorna o resultado como um array.
   </para>
  </refsect1>
  <refsect1 role="parameters">
@@ -23,18 +23,17 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>ftp_stream</parameter></term>
+     <term><parameter>ftp</parameter></term>
      <listitem>
-      <para>
-       O identificador da conexão FTP.
-      </para>
+       &ftp.parameter.ftp;
      </listitem>
     </varlistentry>
     <varlistentry>
      <term><parameter>directory</parameter></term>
      <listitem>
       <para>
-       O caminho para o diretório.
+       O caminho do diretório. Pode incluir argumentos para o comando
+       <command>LIST</command>.
       </para>
      </listitem>
     </varlistentry>
@@ -42,7 +41,7 @@
      <term><parameter>recursive</parameter></term>
      <listitem>
       <para>
-       Se for definido como &true;, o comando executado será <command>LIST -R</command>.
+       Se definido como &true;, o comando emitido será <command>LIST -R</command>.
       </para>
      </listitem>
     </varlistentry>
@@ -52,36 +51,55 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna um array aonde cada elemento corresponde a uma linha de texto.
+   Retorna um array onde cada elemento corresponde a uma linha de texto. Retorna
+   &false; quando o diretório informado em <parameter>directory</parameter> for inválido.
   </para>
   <para>
-   A saída não é interpretada de maneira nenhuma. O identificador do tipo do sistema retornado por
+   A saída não é analisada de forma alguma. O identificador do tipo de sistema retornado por
    <function>ftp_systype</function> pode ser usado para determinar como os resultados
    devem ser interpretados.
   </para>
  </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     &ftp.changelog.ftp-param;
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
    <example>
-    <title>Exemplo <function>ftp_rawlist</function></title>
+    <title>Exemplo de <function>ftp_rawlist</function></title>
     <programlisting role="php">
 <![CDATA[
 <?php
 
-// set up basic connection
-$conn_id = ftp_connect($ftp_server);
+// configura conexão básica
+$ftp = ftp_connect($ftp_server);
 
-// login with username and password
-$login_result = ftp_login($conn_id, $ftp_user_name, $ftp_user_pass);
+// registra com usuário e senha
+$login_result = ftp_login($ftp, $ftp_user_name, $ftp_user_pass);
 
-// get the file list for /
-$buff = ftp_rawlist($conn_id, '/');
+// obtém a lista de arquivos para /
+$buff = ftp_rawlist($ftp, '/');
 
-// close the connection
-ftp_close($conn_id);
+// fecha a conexão
+ftp_close($ftp);
 
-// output the buffer
+// exibe o buffer
 var_dump($buff);
 ?>
 ]]>
@@ -102,17 +120,16 @@ array(3) {
    </example>
   </para>
  </refsect1>
-
  <refsect1 role="seealso">
   &reftitle.seealso;
   <para>
    <simplelist>
     <member><function>ftp_nlist</function></member>
+    <member><function>ftp_mlsd</function></member>
    </simplelist>
   </para>
  </refsect1>
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

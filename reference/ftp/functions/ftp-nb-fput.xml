@@ -1,28 +1,28 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: fernandoc Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 4d1c34c9b7a30cfc3a59641122c707a2812cfed7 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.ftp-nb-fput" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>ftp_nb_fput</refname>
-  <refpurpose>Grava um arquivo a partir de um arquivo aberto no servidor FTP (sem bloquear)</refpurpose>
+  <refpurpose>Armazena um arquivo de um arquivo aberto no servidor FTP (sem bloqueio)</refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>int</type><methodname>ftp_nb_fput</methodname>
-   <methodparam><type>resource</type><parameter>ftp_stream</parameter></methodparam>
-   <methodparam><type>string</type><parameter>remote_file</parameter></methodparam>
-   <methodparam><type>resource</type><parameter>handle</parameter></methodparam>
-   <methodparam><type>int</type><parameter>mode</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>startpos</parameter></methodparam>
+   <methodparam><type>FTP\Connection</type><parameter>ftp</parameter></methodparam>
+   <methodparam><type>string</type><parameter>remote_filename</parameter></methodparam>
+   <methodparam><type>resource</type><parameter>stream</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>mode</parameter><initializer><constant>FTP_BINARY</constant></initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>offset</parameter><initializer>0</initializer></methodparam>
   </methodsynopsis>
   <para>
-   <function>ftp_nb_fput</function> envia os dados do ponteiro de arquivo para
-   o arquivo remoto no servidor FTP.
+   <function>ftp_nb_fput</function> carrega os dados de um ponteiro de
+   arquivo para um arquivo remoto no servidor FTP.
   </para>
   <para>
-   A diferença entra esta função e <function>ftp_fput</function> 
-   é que esta função envia o arquivo de forma assimcronoma, assim o seu programa pode
-   realizar outras operações enquanto o arquivo esta sendo carregado.
+   A diferença entre esta função e <function>ftp_fput</function>
+   é que esta função envia o arquivo de forma assíncrona, para que a aplicação possa
+   realizar outras operações enquanto o arquivo está sendo enviado.
   </para>
  </refsect1>
  <refsect1 role="parameters">
@@ -30,26 +30,24 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>ftp_stream</parameter></term>
+     <term><parameter>ftp</parameter></term>
+     <listitem>
+       &ftp.parameter.ftp;
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>remote_filename</parameter></term>
      <listitem>
       <para>
-       O identificador da conexão FTP.
+       O caminho do arquivo remoto.
       </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>remote_file</parameter></term>
+     <term><parameter>stream</parameter></term>
      <listitem>
       <para>
-       O caminho para o arquivo remoto.
-      </para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><parameter>handle</parameter></term>
-     <listitem>
-      <para>
-       Um ponteiro de arquivo aberto para o arquivo local. A leitura termina ao finbal do arquivo.
+       Um ponteiro de arquivo local aberto. A leitura encerra no final do arquivo.
       </para>
      </listitem>
     </varlistentry>
@@ -63,9 +61,9 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>startpos</parameter></term>
+     <term><parameter>offset</parameter></term>
      <listitem>
-      <para></para>
+      <para>A posição no arquivo remoto para iniciar o envio.</para>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -78,11 +76,36 @@
    ou <constant>FTP_MOREDATA</constant>.
   </para>
  </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     &ftp.changelog.ftp-param;
+     <row>
+      <entry>7.3.0</entry>
+      <entry>
+       O parâmetro <parameter>mode</parameter> agora é opcional. Antigamente
+       era obrigatório.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
    <example>
-    <title>Exemplo <function>ftp_nb_fput</function></title>
+    <title>Exemplo de <function>ftp_nb_fput</function></title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -91,22 +114,22 @@ $file = 'index.php';
 
 $fp = fopen($file, 'r');
 
-$conn_id = ftp_connect($ftp_server);
+$ftp = ftp_connect($ftp_server);
 
-$login_result = ftp_login($conn_id, $ftp_user_name, $ftp_user_pass);
+$login_result = ftp_login($ftp, $ftp_user_name, $ftp_user_pass);
 
-// Initate the upload
-$ret = ftp_nb_fput($conn_id, $file, $fp, FTP_BINARY);
+// Inicia o envio
+$ret = ftp_nb_fput($ftp, $file, $fp, FTP_BINARY);
 while ($ret == FTP_MOREDATA) {
 
-   // Do whatever you want
+   // Faz alguma coisa
    echo ".";
 
-   // Continue upload...
-   $ret = ftp_nb_continue($conn_id);
+   // Continua o envio...
+   $ret = ftp_nb_continue($ftp);
 }
 if ($ret != FTP_FINISHED) {
-   echo "There was an error uploading the file...";
+   echo "Houve um erro ao enviar o arquivo...";
    exit(1);
 }
 
@@ -129,7 +152,6 @@ fclose($fp);
   </para>
  </refsect1>
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml

@@ -1,23 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: n/a Maintainer: fernandoc Status: ready -->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 4d1c34c9b7a30cfc3a59641122c707a2812cfed7 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.ftp-fput" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>ftp_fput</refname>
-  <refpurpose>Envia um arquivo aberto para um servidor php</refpurpose>
+  <refpurpose>Envia um arquivo aberto para o servidor FTP</refpurpose>
  </refnamediv>
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <type>bool</type><methodname>ftp_fput</methodname>
-   <methodparam><type>resource</type><parameter>ftp_stream</parameter></methodparam>
-   <methodparam><type>string</type><parameter>remote_file</parameter></methodparam>
-   <methodparam><type>resource</type><parameter>handle</parameter></methodparam>
-   <methodparam><type>int</type><parameter>mode</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>startpos</parameter></methodparam>
+   <methodparam><type>FTP\Connection</type><parameter>ftp</parameter></methodparam>
+   <methodparam><type>string</type><parameter>remote_filename</parameter></methodparam>
+   <methodparam><type>resource</type><parameter>stream</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>mode</parameter><initializer><constant>FTP_BINARY</constant></initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>offset</parameter><initializer>0</initializer></methodparam>
   </methodsynopsis>
   <para>
-   <function>ftp_fput</function> envia os dados a partir do ponteiro de arquivo
-   para um arquivo remoto no servidor ftp.
+   <function>ftp_fput</function> envia os dados a partir de um ponteiro de arquivo
+   para um arquivo remoto no servidor FTP.
   </para>
  </refsect1>
  <refsect1 role="parameters">
@@ -25,26 +25,24 @@
   <para>
    <variablelist>
     <varlistentry>
-     <term><parameter>ftp_stream</parameter></term>
+     <term><parameter>ftp</parameter></term>
+     <listitem>
+       &ftp.parameter.ftp;
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>remote_filename</parameter></term>
      <listitem>
       <para>
-       O identificador da conexão FTP.
+       O caminho do arquivo remoto.
       </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>remote_file</parameter></term>
+     <term><parameter>stream</parameter></term>
      <listitem>
       <para>
-       O caminho para o arquivo remoto.
-      </para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><parameter>handle</parameter></term>
-     <listitem>
-      <para>
-       Um ponteiro de arquivo aberto para um arquivo local. A leitura para no final do arquivo.
+       Um ponteiro de arquivo local aberto. A leitura encerra no final do arquivo.
       </para>
      </listitem>
     </varlistentry>
@@ -58,9 +56,9 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><parameter>startpos</parameter></term>
+     <term><parameter>offset</parameter></term>
      <listitem>
-      <para></para>
+      <para>A posição no arquivo remoto para iniciar o envio.</para>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -72,6 +70,31 @@
    &return.success;
   </para>
  </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     &ftp.changelog.ftp-param;
+     <row>
+      <entry>7.3.0</entry>
+      <entry>
+       O parâmetro <parameter>mode</parameter> agora é opcional. Antigamente
+       era obrigatório.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
@@ -81,25 +104,25 @@
 <![CDATA[
 <?php
 
-// open some file for reading
+// abre um arquivo para leitura
 $file = 'somefile.txt';
 $fp = fopen($file, 'r');
 
-// set up basic connection
-$conn_id = ftp_connect($ftp_server);
+// configura conexão básica
+$ftp = ftp_connect($ftp_server);
 
-// login with username and password
-$login_result = ftp_login($conn_id, $ftp_user_name, $ftp_user_pass);
+// registra com usuário e senha
+$login_result = ftp_login($ftp, $ftp_user_name, $ftp_user_pass);
 
-// try to upload $file
-if (ftp_fput($conn_id, $file, $fp, FTP_ASCII)) {
-    echo "Successfully uploaded $file\n";
+// tenta enviar o arquivo
+if (ftp_fput($ftp, $file, $fp, FTP_ASCII)) {
+    echo "$file enviado com sucesso\n";
 } else {
-    echo "There was a problem while uploading $file\n";
+    echo "Houve um problema ao enviar $file\n";
 }
 
-// close the connection and the file handler
-ftp_close($conn_id);
+// fecha a conexão e o identificador do arquivo
+ftp_close($ftp);
 fclose($fp);
 
 ?>
@@ -108,7 +131,6 @@ fclose($fp);
    </example>
   </para>
  </refsect1>
-
  <refsect1 role="seealso">
   &reftitle.seealso;
   <para>
@@ -120,7 +142,6 @@ fclose($fp);
   </para>
  </refsect1>
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
