@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: a0ae28d3bc85f927c22649ebd9a590b921534b7d Maintainer: leonardolara Status: ready -->
+
+<chapter xml:id="simplexml.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ &reftitle.examples;
+ <section xml:id="simplexml.examples-basic">
+  <title>Uso Básico de SimpleXML</title>
+  <para>
+   Muitos exemplos nesta referência requerem uma string XML. Em vez de
+   repetir esta string em todos os exemplos, ela foi colocada em um arquivo que
+   incluímos em cada exemplo. Este arquivo incluído é mostrado na
+   seção de exemplo a seguir. Alternativamente, um documento XML
+   pode ser criado e lido com <function>simplexml_load_file</function>.
+  </para>
+  <para>
+   <example>
+    <title>Inclusão do arquivo exemplo.php com string XML</title>
+    <programlisting role="php" xml:id="simplexml.examples.movie">
+<![CDATA[
+<?php
+$xmlstr = <<<XML
+<?xml version='1.0' standalone='yes'?>
+<filmes>
+ <filme>
+  <titulo>PHP: Nos Bastidores do Interpretador</titulo>
+  <personagens>
+   <personagem>
+    <nome>Srta. Codificadora</nome>
+    <ator>Onlivia Actora</ator>
+   </personagem>
+   <personagem>
+    <nome>Sr. Codificador</nome>
+    <ator>El Act&#243;r</ator>
+   </personagem>
+  </personagens>
+  <resumo>
+   Então, essa linguagem. Se parece com uma linguagem de programação. Ou seria uma
+   liguagem de scripts? Tudo é revelado nesta emocionante paródia de terror
+   de um documentário.
+  </resumo>
+  <melhores-frases>
+   <frase>O PHP resolve todos os meus problemas!</frase>
+  </melhores-frases>
+  <classificacao tipo="gostei">7</classificacao>
+  <classificacao tipo="estrelas">5</classificacao>
+ </filme>
+</filmes>
+XML;
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   A simplicidade do SimpleXML aparece mais claramente quando se extrai
+   uma string ou número de um documento XML básico.
+   <example>
+    <title>Obtendo o <literal>&lt;resumo&gt;</literal></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+include 'exemplo.php';
+
+$filmes = new SimpleXMLElement($xmlstr);
+
+echo $filmes->filme[0]->resumo;
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+
+   Então, essa linguagem. Se parece com uma linguagem de programação. Ou seria uma
+   liguagem de scripts? Tudo é revelado nesta emocionante paródia de terror
+   de um documentário.
+
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   O acesso a elementos em um documento XML que contém caracteres não permitidos pela
+   convenção de nomenclatura do PHP (por exemplo, o hífen) pode ser realizado encapsulando o
+   nome do elemento entre chaves e apóstrofo.
+   <example>
+    <title>Obtendo <literal>&lt;frase&gt;</literal></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+include 'exemplo.php';
+
+$filmes = new SimpleXMLElement($xmlstr);
+
+echo $filmes->filme->{'melhores-frases'}->frase;
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+O PHP resolve todos os meus problemas!
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Acessando elementos não exclusivos em SimpleXML</title>
+    <simpara>
+     Quando existem múltiplas instâncias de um elemento como filhos de
+     um único elemento pai, aplicam-se técnicas normais de iteração.
+    </simpara>
+    <programlisting role="php">
+<![CDATA[
+<?php
+include 'exemplo.php';
+
+$filmes = new SimpleXMLElement($xmlstr);
+
+/* Para cada nó <personagem>, é mostrado um <nome> separado. */
+foreach ($filmes->filme->personagens->personagem as $personagem) {
+   echo $personagem->nome, ' representado(a) por ', $personagem->ator, PHP_EOL;
+}
+
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Srta. Codificadora representado(a) por Onlivia Actora
+Sr. Codificador representado(a) por El Actór
+]]>
+    </screen>
+   </example>
+  </para>
+  <note>
+   <para>
+    Propriedades (<literal>$filmes->filme</literal> no exemplo anterior) não são
+    arrays. Elas são objetos <link linkend="class.iterator">iteráveis</link> e
+    <link linkend="class.arrayaccess">acessíveis</link>.
+   </para>
+  </note>
+  <para>
+   <example>
+    <title>Usando atributos</title>
+    <simpara>
+     Até agora, foi coberto apenas o trabalho de leitura dos nomes dos elementos
+     e seus valores. SimpleXML também pode acessar atributos de elementos.
+     Os atributos de um elemento são acessados da mesma forma que os elementos
+     de um <type>array</type>.
+    </simpara>
+    <programlisting role="php">
+<![CDATA[
+<?php
+include 'exemplo.php';
+
+$filmes = new SimpleXMLElement($xmlstr);
+
+/* Acessando os nós <classificacao> do primeiro filme.
+ * Mostra o valor da classificação também. */
+foreach ($filmes->filme[0]->classificacao as $classificacao) {
+    switch((string) $classificacao['tipo']) { // Obtém atributos como índices de elementos
+    case 'gostei':
+        echo $classificacao, ' gostaram, ';
+        break;
+    case 'estrelas':
+        echo $classificacao, ' estrelas';
+        break;
+    }
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+7 gostaram, 5 estrelas
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Comparando Elementos e Atributos com Texto</title>
+    <simpara>
+     Para comparar um elemento ou atributo com uma string ou passá-lo para uma
+     função que requer uma string, ele deve ser convertido em uma string usando
+     <literal>(string)</literal>. Caso contrário, o PHP trata o elemento como um objeto.
+    </simpara>
+    <programlisting role="php">
+<![CDATA[
+<?php
+include 'exemplo.php';
+
+$filmes = new SimpleXMLElement($xmlstr);
+
+if ((string) $filmes->filme->titulo == 'PHP: Nos Bastidores do Interpretador') {
+    print 'Meu filme favorito. ';
+}
+
+echo htmlentities((string) $filmes->filme->titulo);
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Meu filme favorito. PHP: Nos Bastidores do Interpretador
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Comparando Dois Elementos</title>
+    <simpara>
+     Dois SimpleXMLElements são considerados diferentes mesmo que apontem para
+     o mesmo elemento.
+    </simpara>
+    <programlisting role="php">
+<![CDATA[
+<?php
+include 'exemplo.php';
+
+$filmes1 = new SimpleXMLElement($xmlstr);
+$filmes2 = new SimpleXMLElement($xmlstr);
+var_dump($filmes1 == $filmes2);
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+bool(false)
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Usando XPath</title>
+    <simpara>
+     SimpleXML inclui suporte interno a <acronym>XPath</acronym>.
+     Para encontrar todos os elementos <literal>&lt;personagem&gt;</literal>:
+    </simpara>
+    <programlisting role="php">
+<![CDATA[
+<?php
+include 'exemplo.php';
+
+$filmes = new SimpleXMLElement($xmlstr);
+
+foreach ($filmes->xpath('//personagem') as $personagem) {
+    echo $personagem->nome, ' representado(a) por ', $personagem->ator, PHP_EOL;
+}
+?>
+]]>
+    </programlisting>
+    <simpara>
+     '<literal>//</literal>' serve como um coringa. Para especificar caminhos
+     absolutos, basta omitir uma das barras.
+    </simpara>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Srta. Codificadora representado(a) por Onlivia Actora
+Sr. Codificador representado(a) por El Actór
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Definindo valores</title>
+    <simpara>
+     Os dados no SimpleXML não precisam ser constantes. O objeto permite
+     a manipulação de todos os seus elementos.
+    </simpara>
+    <programlisting role="php">
+<![CDATA[
+<?php
+include 'exemplo.php';
+$filmes = new SimpleXMLElement($xmlstr);
+
+$filmes->filme[0]->personagens->personagem[0]->nome = 'Senhorita Codificadora';
+
+echo $filmes->asXML();
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+<?xml version="1.0" standalone="yes"?>
+<filmes>
+ <filme>
+  <titulo>PHP: Nos Bastidores do Interpretador</titulo>
+  <personagens>
+   <personagem>
+    <nome>Senhorita Codificadora</nome>
+    <ator>Onlivia Actora</ator>
+   </personagem>
+   <personagem>
+    <nome>Sr. Codificador</nome>
+    <ator>El Act&#xF3;r</ator>
+   </personagem>
+  </personagens>
+  <resumo>
+   Então, essa linguagem. Se parece com uma linguagem de programação. Ou seria uma
+   liguagem de scripts? Tudo é revelado nesta emocionante paródia de terror
+   de um documentário.
+  </resumo>
+  <melhores-frases>
+   <frase>O PHP resolve todos os meus problemas!</frase>
+  </melhores-frases>
+  <classificacao tipo="gostei">7</classificacao>
+  <classificacao tipo="estrelas">5</classificacao>
+ </filme>
+</filmes>
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Adicionando elementos e atributos</title>
+    <simpara>
+     SimpleXML tem a capacidade de adicionar facilmente filhos
+     e atributos.
+    </simpara>
+    <programlisting role="php">
+<![CDATA[
+<?php
+include 'exemplo.php';
+$filmes = new SimpleXMLElement($xmlstr);
+
+$personagem = $filmes->filme[0]->personagens->addChild('personagem');
+$personagem->addChild('nome', 'Sr. Interpretador');
+$personagem->addChild('ator', 'Fulano de Tal');
+
+$classificacao = $filmes->filme[0]->addChild('classificacao', 'PG');
+$classificacao->addAttribute('tipo', 'mpaa');
+
+echo $filmes->asXML();
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+<?xml version="1.0" standalone="yes"?>
+<filmes>
+ <filme>
+  <titulo>PHP: Nos Bastidores do Interpretador</titulo>
+  <personagens>
+   <personagem>
+    <nome>Srta. Codificadora</nome>
+    <ator>Onlivia Actora</ator>
+   </personagem>
+   <personagem>
+    <nome>Sr. Codificador</nome>
+    <actor>El Act&#xF3;r</actor>
+   </personagem>
+  <personagem><nome>Sr. Interpretador</nome><ator>Fulano de Tal</ator></personagem></personagens>
+  <resumo>
+   Então, essa linguagem. Se parece com uma linguagem de programação. Ou seria uma
+   liguagem de scripts? Tudo é revelado nesta emocionante paródia de terror
+   de um documentário.
+  </resumo>
+  <melhores-frases>
+   <frase>O PHP resolve todos os meus problemas!</frase>
+  </melhores-frases>
+  <classificacao tipo="gostei">7</classificacao>
+  <classificacao tipo="estrelas">5</classificacao>
+ <classificacao tipo="mpaa">PG</classificacao></filme>
+</filmes>
+]]>
+    </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Interoperabilidade com o DOM</title>
+    <simpara>
+     PHP possui um mecanismo para converter nós XML entre os formatos
+     SimpleXML e DOM. Este exemplo mostra como um elemento DOM
+     pode ser alterado para SimpleXML.
+    </simpara>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$dom = new DOMDocument;
+$dom->loadXML('<livros><livro><titulo>Blá</titulo></livro></livros>');
+if (!$dom) {
+    echo 'Erro ao interpretar o documento.';
+    exit;
+}
+
+$livros = simplexml_import_dom($dom);
+
+echo $livros->livro[0]->titulo;
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Blá
+]]>
+    </screen>
+   </example>
+  </para>
+ </section>
+
+ <section xml:id="simplexml.examples-errors">
+  <title>Lidando com erros XML</title>
+  <para>
+   Lidar com erros de XML ao carregar documentos é uma tarefa muito simples.
+   Usando a funcionalidade <link linkend="book.libxml">libxml</link> é
+   possível suprimir todos os erros XML ao carregar o documento e então
+   iterar sobre os erros.
+  </para>
+  <para>
+   O objeto <classname>libXMLError</classname>, retornado por
+   <function>libxml_get_errors</function>, contém várias propriedades
+   incluindo a <link linkend="libxmlerror.props.message">mensagem</link>,
+   a <link linkend="libxmlerror.props.line">linha</link> e
+   a <link linkend="libxmlerror.props.column">coluna</link> (posição) do
+   erro.
+  </para>
+  <para>
+   <example>
+    <title>Carregando string XML quebrada</title>
+    <programlisting role="php" xml:id="simplexml.examples.error">
+<![CDATA[
+<?php
+libxml_use_internal_errors(true);
+$sxe = simplexml_load_string("<?xml version='1.0'><quebrada><xml></quebrada>");
+if ($sxe === false) {
+    echo "Falha ao carregar o XML\n";
+    foreach(libxml_get_errors() as $error) {
+        echo "\t", $error->message;
+    }
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Falha ao carregar o XML
+    Blank needed here
+    parsing XML declaration: '?>' expected
+    Opening and ending tag mismatch: xml line 1 and quebrada
+    Premature end of data in tag quebrada line 1
+]]>
+    </screen>
+   </example>
+  </para>
+  <section role="seealso"><!-- {{{ -->
+   &reftitle.seealso;
+   <para>
+    <simplelist>
+     <member><function>libxml_use_internal_errors</function></member>
+     <member><function>libxml_get_errors</function></member>
+     <member><xref linkend="class.libxmlerror" /></member>
+    </simplelist>
+   </para>
+  </section>
+ </section>
+
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
+
