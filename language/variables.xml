@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: a885fa2bce80474eb2632993905bb8b603650a3a Maintainer: ae Status: ready --><!-- CREDITS: ae,felipe,fabioluciano,adiel,gabrielsanva,leonardolara -->
+<!-- EN-Revision: b7dbf6357d4c2d68ffb52158076f692ed532b546 Maintainer: ae Status: ready --><!-- CREDITS: ae,felipe,fabioluciano,adiel,gabrielsanva,leonardolara -->
  <chapter xml:id="language.variables" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Variáveis</title>
 
@@ -12,8 +12,9 @@
    </simpara>
 
    <para>
-    Nomes de variável seguem as mesmas regras de outros rótulos no PHP. Um
-    nome de variável válido inicia-se com uma letra ou sublinhado, seguido
+    Um nome válido de variável inicia com uma letra
+    (<literal>A-Z</literal>, <literal>a-z</literal>, ou os bytes de 128 a 255)
+    ou sublinhado, seguido
     de qualquer número de letras, números ou sublinhados. Em uma
     expressão regular, poderia ser representado assim:
     <code>^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$</code>
@@ -21,8 +22,10 @@
 
    <note>
     <simpara>
-     Para o propósito aqui, uma letra é a-z, A-Z e os bytes
-     de 127 a 255 (<literal>0x80-0xff</literal>).
+     O PHP não suporta nomes de variáveis em Unicode, porém, algumas codificações
+     de caracteres (tal como UTF-8) codificam os caracteres de uma forma que todos os bytes
+     de um caractere multi-byte fiquem dentro da faixa permitida, fazendo com que
+     o nome da variável seja válido.
     </simpara>
    </note>
 
@@ -38,14 +41,9 @@
 
    &tip.userlandnaming;
 
-   <para>
-    Para informação sobre funções relacionadas a variáveis, veja a
-    <link linkend="ref.var">Referência de funções para variáveis</link>.
-   </para>
-
-   <para>
-    <informalexample>
-     <programlisting role="php">
+   <example>
+    <title>Nomes de variáveis válidos e inválidos</title>
+    <programlisting role="php">
 <![CDATA[
 <?php
 $var = 'Bob';
@@ -57,9 +55,35 @@ $_4site = 'not yet';    // válido; começa com um sublinhado
 $täyte = 'mansikka';    // válido; 'ä' é um caracter ASCII (extendido) 228
 ?>
 ]]>
-     </programlisting>
-    </informalexample>
-   </para>
+    </programlisting>
+   </example>
+
+   <simpara>
+    O PHP aceita uma sequência de quaisquer bytes como um nome de variável. Nomes
+    de variáveis que não seguem as regras de nomenclatura mencionadas acima só podem ser
+    acessadas dinamicamente no momento da execução. Consulte a seção sobre
+    <link linkend="language.variables.variable">variáveis variáveis</link>
+    para informação sobre como acessá-las.
+   </simpara>
+
+   <example>
+    <title>Acessando nomes obscuros de variáveis</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+${'invalid-name'} = 'bar';
+$name = 'invalid-name';
+echo ${'invalid-name'}, " ", $$name;
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+bar bar
+]]>
+    </screen>
+   </example>
 
    <para>
     Por padrão, as variáveis são sempre atribuídas por valor. Isto significa
@@ -101,7 +125,7 @@ echo $foo;                 // $foo é alterada também.
 
    <para>
     Uma observação importante a se fazer, é que somente variáveis
-    nomeadas podem ser atribuídas por referência.
+    podem ser atribuídas por referência.
     <informalexample>
      <programlisting role="php">
 <![CDATA[
@@ -115,7 +139,7 @@ function test()
    return 25;
 }
 
-$bar = &test();    // Inválido.
+$bar = &test();    // Inválido porque test() não retorna uma variável por referência.
 ?>
 ]]>
      </programlisting>
@@ -123,58 +147,63 @@ $bar = &test();    // Inválido.
    </para>
 
    <para>
-    Não é necessário inicializar variáveis no PHP, contudo é uma ótima
-    prática. Variáveis não inicializadas têm um valor padrão do seu tipo dependendo do contexto no qual são usadas
-    - padrão de booleanos é &false;, de inteiros e ponto-flutuantes é zero, strings (por exemplo, usadas em <function>echo</function>), são
-    definidas como vazias e arrays tornam-se um array vazio.
+    Não é necessário declarar variáveis no PHP, contudo é uma ótima
+    prática. Acessar uma variável indefinida resultará em um
+    <constant>E_WARNING</constant> (antes do PHP 8.0.0, <constant>E_NOTICE</constant>).
+    Uma variável indefinida tem um valor padrão de &null;.
+    O construtor de linguagem <function>isset</function>
+    pode ser usado para detectar se uma variável já foi inicializada.
    </para>
    <para>
     <example>
-     <title>Valores padrões de variáveis não inicializadas</title>
+     <title>Valor padrão de uma variável não inicializada</title>
      <programlisting role="php">
 <![CDATA[
 <?php
-// Variável não definida E não referenciada (sem contexto de uso); resulta em NULL
+// Variável não definida E não referenciada (sem contexto de uso);
 var_dump($unset_var);
-
-// Uso de booleano; exibe 'false' (Consulte operadores ternários para saber mais sobre esta sintaxe)
-echo $unset_bool ? "true\n" : "false\n";
-
-// Uso de string; exibe 'string(3) "abc"'
-$unset_str .= 'abc';
-var_dump($unset_str);
-
-// Uso de inteiro; exibe 'int(25)'
-$unset_int += 25; // 0 + 25 => 25
-var_dump($unset_int);
-
-// Uso de ponto-flutuante; exibe 'float(1.25)'
-$unset_float += 1.25;
-var_dump($unset_float);
-
-// Uso de array; exibe array(1) {  [3]=>  string(3) "def" }
-$unset_arr[3] = "def"; // array() + array(3 => "def") => array(3 => "def")
-var_dump($unset_arr);
-
-// Uso de objeto; cria novo objeto stdClass (veja http://www.php.net/manual/en/reserved.classes.php)
-// Exibe: object(stdClass)#1 (1) {  ["foo"]=>  string(3) "bar" }
-$unset_obj->foo = 'bar';
-var_dump($unset_obj);
 ?>
 ]]>
      </programlisting>
+     &example.outputs;
+     <screen>
+<![CDATA[
+Warning: Undefined variable $unset_var in ...
+NULL
+]]>
+     </screen>
     </example>
    </para>
-   <para>
-    Depender do valor padrão de uma variável não inicializada é problemático
-    no caso de incluir um arquivo em outro que usa o mesmo nome de
-    variável.
-    Erros de nível <constant>E_WARNING</constant> (e antes do PHP 8.0.0, <constant>E_NOTICE</constant>)
-    serão emitidos no caso de
-    variáveis não inicializadas, contudo não no caso de adicionar
-    elementos a um array não inicializado. A construção de linguagem <function>isset</function>
-    pode ser usada para detectar se uma variável já foi inicializada.
-   </para>
+
+   <simpara>
+    O PHP permite autovivificação de array (criação automática de novos arrays)
+    a partir de uma variável indefinida.
+    Anexar um elemento a uma variável indefinida criará um novo array e
+    não gerará um alerta.
+   </simpara>
+   <example>
+    <title>Autovivificação de um array a partir de uma variável indefinida</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$unset_array[] = 'value'; // Não gera um alerta.
+?>
+]]>
+    </programlisting>
+   </example>
+
+   <warning>
+    <simpara>
+     Depender do valor padrão de uma variável não inicializada é problemático
+     ao incluir um arquivo em outro que usa o mesmo
+     nome de variável.
+    </simpara>
+   </warning>
+
+   <simpara>
+    Para obter informações sobre funções relacionadas a variáveis, consulte a
+    <link linkend="ref.var">Referência de funções variáveis</link>.
+   </simpara>
   </sect1>
 
   <sect1 xml:id="language.variables.predefined">
