@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: b8758b0605e80c4e3610137b7502a6abeea5c69b Maintainer: leonardolara Status: ready -->
+
+<refentry xml:id="solrclient.adddocuments" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>SolrClient::addDocuments</refname>
+  <refpurpose>Adiciona uma coleção de instâncias SolrInputDocument ao índice</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <modifier>public</modifier> <type>void</type><methodname>SolrClient::addDocuments</methodname>
+   <methodparam><type>array</type><parameter>docs</parameter></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>overwrite</parameter><initializer>&true;</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>commitWithin</parameter><initializer>0</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Adiciona uma coleção de documentos ao índice.
+  </para>
+
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>docs</parameter></term>
+     <listitem>
+      <para>
+       Um array que contém a coleção de instâncias SolrInputDocument. Este array deve ser uma variável real.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>overwrite</parameter></term>
+     <listitem>
+      <para>
+       Informa se os documentos existentes devem ou não ser substituídos. Se &false;, haverá duplicatas (vários documentos com o mesmo ID).
+
+      </para>
+      <warning>
+       <para>
+        PECL Solr &lt; 2.0 $allowDups foi usado em vez de $overwrite, que faz a mesma funcionalidade com a opção booleana exatamente oposta.
+       </para>
+       <para>
+        $allowDups = false é o mesmo que $overwrite = true
+       </para>
+      </warning>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>commitWithin</parameter></term>
+     <listitem>
+      <para>
+       Número de milissegundos para confirmar automaticamente este documento. Disponível desde Solr 1.4. Padrão (0) significa desabilitado.
+      </para>
+      <para>
+       Quando este valor é especificado, ele deixa o controle de quando fazer a confirmação
+       para o próprio Solr, otimizando o número de confirmações ao mínimo enquanto ainda
+       atende aos
+       requisitos de latência de atualização, e o Solr fará uma confirmação automaticamente
+       quando a adição mais antiga no buffer estiver pendente.
+       </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+    Retorna um objeto <type>SolrUpdateResponse</type> ou lança uma exceção em caso de falha.
+  </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <para>
+   Lança <classname>SolrClientException</classname> se o cliente falhar ou houver problema de conexão.
+  </para>
+  <para>
+   Lança <classname>SolrServerException</classname> se o servidor Solr falhar ao processar a solicitação.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <methodname>SolrClient::addDocuments</methodname></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$options = array
+(
+    'hostname' => SOLR_SERVER_HOSTNAME,
+    'login'    => SOLR_SERVER_USERNAME,
+    'password' => SOLR_SERVER_PASSWORD,
+    'port'     => SOLR_SERVER_PORT,
+);
+
+$client = new SolrClient($options);
+
+$doc = new SolrInputDocument();
+
+$doc->addField('id', 334455);
+$doc->addField('cat', 'Software');
+$doc->addField('cat', 'Lucene');
+
+$doc2 = clone $doc;
+
+$doc2->deleteField('id');
+$doc2->addField('id', 334456);
+
+$docs = array($doc, $doc2);
+
+$updateResponse = $client->addDocuments($docs);
+
+// nenhuma alteração será gravada no disco, a menos que $commitWithin seja passado ou SolrClient::commit seja chamado
+
+print_r($updateResponse->getResponse());
+
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+SolrObject Object
+(
+    [responseHeader] => SolrObject Object
+        (
+            [status] => 0
+            [QTime] => 2
+        )
+
+)
+
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><methodname>SolrClient::addDocument</methodname></member>
+    <member><methodname>SolrClient::commit</methodname></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
