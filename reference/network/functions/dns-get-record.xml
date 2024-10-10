@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 7be2426e49ee1c9131866f20b67a48aaea0a642a Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.dns-get-record" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>dns_get_record</refname>
+  <refpurpose>Busca registros de recursos DNS associados a um nome de host</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>array</type><type>false</type></type><methodname>dns_get_record</methodname>
+   <methodparam><type>string</type><parameter>hostname</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>type</parameter><initializer><constant>DNS_ANY</constant></initializer></methodparam>
+   <methodparam choice="opt"><type>array</type><parameter role="reference">authoritative_name_servers</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type>array</type><parameter role="reference">additional_records</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>raw</parameter><initializer>&false;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Busca registros de recursos DNS associados ao nome do host informado
+   no parâmetro <parameter>hostname</parameter>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>hostname</parameter></term>
+     <listitem>
+      <para>
+       <parameter>hostname</parameter> deve ser um nome de host DNS válido, como
+       "<literal>www.example.com</literal>". Pesquisas reversas podem ser geradas
+       usando a notação <literal>in-addr.arpa</literal>, mas
+       <function>gethostbyaddr</function> é mais adequada para
+       a maioria das pesquisas reversas.
+      </para>
+      <note>
+       <para>
+        De acordo com os padrões DNS, os endereços de e-mail são fornecidos no formato <literal>user.host</literal> (por
+        exemplo: <literal>hostmaster.example.com</literal> em oposição a <literal>hostmaster@example.com</literal>).
+        Certifique-se de verificar este valor e modificá-lo se necessário antes de usá-lo
+        com funções como <function>mail</function>.
+       </para>
+      </note>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>type</parameter></term>
+     <listitem>
+      <para>
+       Por padrão, <function>dns_get_record</function> procurará quaisquer
+       registros de recursos associados ao <parameter>hostname</parameter>.
+       Para limitar a consulta, especifique o parâmetro opcional <parameter>type</parameter>.
+       Pode ser qualquer uma das seguintes constantes:
+       <constant>DNS_A</constant>, <constant>DNS_CNAME</constant>,
+       <constant>DNS_HINFO</constant>, <constant>DNS_CAA</constant>,
+       <constant>DNS_MX</constant>, <constant>DNS_NS</constant>,
+       <constant>DNS_PTR</constant>, <constant>DNS_SOA</constant>,
+       <constant>DNS_TXT</constant>, <constant>DNS_AAAA</constant>,
+       <constant >DNS_SRV</constant>, <constant>DNS_NAPTR</constant>,
+       <constant>DNS_A6</constant>, <constant>DNS_ALL</constant>
+       ou <constant>DNS_ANY</constant>.
+      </para>
+      <note>
+       <para>
+        Devido às excentricidades no desempenho do libresolv
+        entre plataformas, <constant>DNS_ANY</constant> nem
+        sempre retornará todos os registros, o <constant>DNS_ALL</constant> mais lento
+        coletará todos os registros de forma mais confiável.
+       </para>
+      </note>
+      <note>
+       <para>
+        Windows: <constant>DNS_CAA</constant> não é suportado.
+        O suporte para <constant>DNS_A6</constant> não está implementado.
+       </para>
+      </note>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>authoritative_name_servers</parameter></term>
+     <listitem>
+      <para>
+       Passado por referência e, se fornecido, será preenchido com Registros de
+       Recursos para os <emphasis>Servidores de Nomes Autoritativos</emphasis>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>additional_records</parameter></term>
+     <listitem>
+      <para>
+       Passado por referência e, se fornecido, será preenchido com
+       quaisquer <emphasis>Registros Adicionais</emphasis>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>raw</parameter></term>
+     <listitem>
+      <para>
+       O parâmetro <parameter>type</parameter> será interpretado como um ID de tipo DNS bruto
+       (as constantes <literal>DNS_*</literal> não podem ser usadas).
+       O valor de retorno conterá uma chave <literal>data</literal>, que precisa
+       ser analisada manualmente.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Esta função retorna um array de arrays associativos,
+   &return.falseforfailure;. Cada array associativo contém,
+   <emphasis>no mínimo</emphasis>, as seguintes chaves:
+   <table>
+    <title>Atributos DNS Básicos</title>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>Atributo</entry>
+       <entry>Significado</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>host</entry>
+       <entry>
+        O registro no namespace DNS ao qual o restante dos dados associados se refere.
+       </entry>
+      </row>
+      <row>
+       <entry>class</entry>
+       <entry>
+        <function>dns_get_record</function> retorna apenas registros de classes da Internet e
+        como tal este parâmetro sempre retornará <literal>IN</literal>.
+       </entry>
+      </row>
+      <row>
+       <entry>type</entry>
+       <entry>
+        String contendo o tipo de registro.  Atributos adicionais também estarão contidos
+        no array resultante, dependendo do valor do tipo. Veja a tabela abaixo.
+       </entry>
+      </row>
+      <row>
+       <entry>ttl</entry>
+       <entry>
+        <literal>"Time To Live"</literal> (tempo de vida) restante para este registro. Isto <emphasis>não</emphasis> será
+        igual ao TTL original do registro, mas será igual ao TTL original menos qualquer
+        período de tempo decorrido desde que o servidor de nomes autoritativo foi consultado.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </table>
+  </para>
+  <para>
+   <table>
+    <title>Outras chaves nos arrays associativos dependentes do 'tipo'</title>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>Tipo</entry>
+       <entry>Colunas Extras</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry><literal>A</literal></entry>
+       <entry>
+        <literal>ip</literal>: Endereços IPv4 em notação decimal com pontos.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>MX</literal></entry>
+       <entry>
+        <literal>pri</literal>: Prioridade do trocador de mensagens.
+        Números mais baixos indicam maior prioridade.
+        <literal>target</literal>: FQDN do trocador de correio.
+        Consulte também <function>dns_get_mx</function>.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>CNAME</literal></entry>
+       <entry>
+        <literal>target</literal>: FQDN do local no namespace DNS ao qual
+        o registro tem alias.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>NS</literal></entry>
+       <entry>
+        <literal>target</literal>: FQDN do servidor de nomes que tem autoridade
+        para este nome de host.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>PTR</literal></entry>
+       <entry>
+        <literal>target</literal>: Local no namespace DNS para o qual
+        esse registro aponta.
+       </entry>
+      </row>
+       <row>
+       <entry><literal>TXT</literal></entry>
+       <entry>
+        <literal>txt</literal>:Dados de string arbitrários associados a este registro.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>HINFO</literal></entry>
+       <entry>
+        <literal>cpu</literal>: Número IANA que designa a CPU da máquina
+        referenciada por este registro.
+        <literal>os</literal>: Número IANA que designa o sistema operacional
+        na máquina referenciada por este registro.
+        Consulte os <link xlink:href="&url.iana.system-names;"><literal>Operating System
+        Names</literal></link> da IANA (Nomes de Sistemas Operacionais)
+        para o significado desses valores.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>CAA</literal></entry>
+       <entry>
+        <literal>flags</literal>: Um campo de bits de um byte; atualmente apenas o bit 0 está definido,
+        significando 'crítico'; outros bits são reservados e devem ser ignorados.
+        <literal>tag</literal>: O nome da tag CAA (sequência alfanumérica ASCII).
+        <literal>value</literal>: O valor da tag CAA (string binária, pode usar subformatos).
+        Para obter informações adicionais, consulte: <link xlink:href="&url.rfc;6844">RFC 6844</link>
+       </entry>
+      </row>
+      <row>
+       <entry><literal>SOA</literal></entry>
+       <entry>
+        <literal>mname</literal>: FQDN da máquina da qual os registros de
+        recursos foram originados.
+        <literal>rname</literal>: Endereço de e-mail do contato administrativo
+        deste domínio.
+        <literal>serial</literal>: Número de série desta revisão do domínio
+        solicitado.
+        <literal>refresh</literal>: Intervalo de atualização (segundos) que os servidores
+        de nomes secundários devem usar ao atualizar cópias remotas deste domínio.
+        <literal>retry</literal>: Tempo (segundos) de espera após uma
+        atualização com falha antes de fazer uma segunda tentativa.
+        <literal>expire</literal>: Período máximo de tempo (segundos) que um servidor DNS secundário
+        deve reter cópias remotas dos dados da zona sem uma
+        atualização bem-sucedida antes de descartar.
+        <literal>minimum-ttl</literal>: Período mínimo de tempo (segundos)
+        que um cliente pode continuar a usar uma resolução DNS antes de solicitar
+        uma nova resolução do servidor. Pode ser substituído por registros
+        de recursos individuais.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>AAAA</literal></entry>
+       <entry>
+        <literal>ipv6</literal>: Endereço IPv6
+       </entry>
+      </row>
+      <row>
+       <entry><literal>A6</literal></entry>
+       <entry>
+        <literal>masklen</literal>: Comprimento (em bits) a ser herdado do destino
+        especificado por <parameter>chain</parameter>.
+        <literal>ipv6</literal>: Endereço para este registro específico ser
+        mesclado com <parameter>chain</parameter>.
+        <literal>chain</literal>: Registro pai para mesclar com
+        dados <parameter>ipv6</parameter>.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>SRV</literal></entry>
+       <entry>
+        <literal>pri</literal>: (Prioridade) as prioridades mais baixas devem ser usadas primeiro.
+        <literal>weight</literal>: Classificação para ponderar quais dos <parameter>targets</parameter>
+        comumente priorizados devem ser escolhidos aleatoriamente.
+        <literal>target</literal> e <literal>port</literal>: nome do host e porta onde o serviço
+        solicitado pode ser encontrado.
+        Para obter informações adicionais, consulte: <link xlink:href="&url.rfc;2782">RFC 2782</link>.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>NAPTR</literal></entry>
+       <entry>
+        <literal>order</literal> e <literal>pref</literal>: Equivalente a
+        <parameter>pri</parameter> e <parameter>weight</parameter> acima.
+        <literal>flags</literal>, <literal>services</literal>, <literal>regex</literal>
+        e <literal>replacement</literal>: Parâmetros como definidos pela
+        <link xlink:href="&url.rfc;2915">RFC 2915</link>.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </table>
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>7.0.16, 7.1.2</entry>
+       <entry>
+        Adicionado suporte para tipo de registro CAA.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Usando <function>dns_get_record</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$result = dns_get_record("php.net");
+print_r($result);
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+Array
+(
+    [0] => Array
+        (
+            [host] => php.net
+            [type] => MX
+            [pri] => 5
+            [target] => pair2.php.net
+            [class] => IN
+            [ttl] => 6765
+        )
+
+    [1] => Array
+        (
+            [host] => php.net
+            [type] => A
+            [ip] => 64.246.30.37
+            [class] => IN
+            [ttl] => 8125
+        )
+
+)
+]]>
+    </screen>
+   </example>
+   <example>
+    <title>Usando <function>dns_get_record</function> e DNS_ANY</title>
+    <para>
+     Como é muito comum pesquisar o endereço IP de um servidor de e-mail
+     depois que o registro MX tenha sido resolvido, <function>dns_get_record</function>
+     também retorna um array em <parameter>additional_records</parameter> que
+     contém registros associados. <parameter>authoritative_name_servers</parameter>
+     também é retornado contendo uma lista de servidores de nomes
+     autoritativos.
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+/* Solicita o registro "ANY" para php.net
+   e cria arrays $authns e $addtl
+   contendo uma lista de servidores de nomes e
+   quaisquer registros adicionais que os
+   acompanham */
+$result = dns_get_record("php.net", DNS_ANY, $authns, $addtl);
+echo "Resultado = ";
+print_r($result);
+echo "Servidor de Nomes Autoritativo = ";
+print_r($authns);
+echo "Adicional = ";
+print_r($addtl);
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+Resultado = Array
+(
+    [0] => Array
+        (
+            [host] => php.net
+            [type] => MX
+            [pri] => 5
+            [target] => pair2.php.net
+            [class] => IN
+            [ttl] => 6765
+        )
+
+    [1] => Array
+        (
+            [host] => php.net
+            [type] => A
+            [ip] => 64.246.30.37
+            [class] => IN
+            [ttl] => 8125
+        )
+
+)
+Servidor de Nomes Autoritativo = Array
+(
+    [0] => Array
+        (
+            [host] => php.net
+            [type] => NS
+            [target] => remote1.easydns.com
+            [class] => IN
+            [ttl] => 10722
+        )
+
+    [1] => Array
+        (
+            [host] => php.net
+            [type] => NS
+            [target] => remote2.easydns.com
+            [class] => IN
+            [ttl] => 10722
+        )
+
+    [2] => Array
+        (
+            [host] => php.net
+            [type] => NS
+            [target] => ns1.easydns.com
+            [class] => IN
+            [ttl] => 10722
+        )
+
+    [3] => Array
+        (
+            [host] => php.net
+            [type] => NS
+            [target] => ns2.easydns.com
+            [class] => IN
+            [ttl] => 10722
+        )
+
+)
+Adicional = Array
+(
+    [0] => Array
+        (
+            [host] => pair2.php.net
+            [type] => A
+            [ip] => 216.92.131.5
+            [class] => IN
+            [ttl] => 6766
+        )
+
+    [1] => Array
+        (
+            [host] => remote1.easydns.com
+            [type] => A
+            [ip] => 64.39.29.212
+            [class] => IN
+            [ttl] => 100384
+        )
+
+    [2] => Array
+        (
+            [host] => remote2.easydns.com
+            [type] => A
+            [ip] => 212.100.224.80
+            [class] => IN
+            [ttl] => 81241
+        )
+
+    [3] => Array
+        (
+            [host] => ns1.easydns.com
+            [type] => A
+            [ip] => 216.220.40.243
+            [class] => IN
+            [ttl] => 81241
+        )
+
+    [4] => Array
+        (
+            [host] => ns2.easydns.com
+            [type] => A
+            [ip] => 216.220.40.244
+            [class] => IN
+            [ttl] => 81241
+        )
+
+)
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>dns_get_mx</function></member>
+    <member><function>dns_check_record</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
