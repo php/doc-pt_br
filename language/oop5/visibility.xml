@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: f5e5b54129045a7d02c5285a88cea0abff8ffb6f Maintainer: ae Status: ready --><!-- CREDITS: narigone,felipe,ae,fabioluciano -->
+<!-- EN-Revision: 7d7b378abd302430b8ce7cedb4b78c7033f5e88c Maintainer: ae Status: ready --><!-- CREDITS: narigone,felipe,ae,fabioluciano,leonardolara -->
  <sect1 xml:id="language.oop5.visibility" xmlns="http://docbook.org/ns/docbook">
   <title>Visibilidade</title>
   <para>
@@ -20,10 +20,9 @@
     protegidas. Propriedades declaradas sem visibilidade
     são definidas como públicas.
    </para>
-   <para>
-    <example>
-     <title>Declaração de propriedade</title>
-     <programlisting role="php">
+   <example>
+    <title>Declaração de propriedade</title>
+    <programlisting role="php">
 <![CDATA[
 <?php
 /**
@@ -75,9 +74,128 @@ $obj2->imprimeAlo(); // Mostra Public, Protected2, Undefined
 
 ?>
 ]]>
+    </programlisting>
+   </example>
+   <sect3 xml:id="language.oop5.visibility-members-aviz">
+    <title>Visibilidade de propriedade assimétrica</title>
+    <simpara>
+     A partir do PHP 8.4, as propriedades também podem ter sua
+     visibilidade definida de forma assimétrica, com escopo diferente para
+     leitura (<literal>get</literal>) e escrita (<literal>set</literal>).
+     Especificamente, a visibilidade <literal>set</literal> pode ser
+     especificada separadamente, desde que não seja mais permissiva que a
+     visibilidade padrão.
+    </simpara>
+    <example>
+     <title>Visibilidade de propriedade assimétrica</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+class Book
+{
+    public function __construct(
+        public private(set) string $title,
+        public protected(set) string $author,
+        protected private(set) int $pubYear,
+    ) {}
+}
+
+class SpecialBook extends Book
+{
+    public function update(string $author, int $year): void
+    {
+        $this->author = $author; // OK
+        $this->pubYear = $year; // Erro fatal
+    }
+}
+
+$b = new Book('How to PHP', 'Peter H. Peterson', 2024);
+
+echo $b->title; // Funciona
+echo $b->author; // Funciona
+echo $b->pubYear; // Erro fatal
+
+$b->title = 'How not to PHP'; // Erro fatal
+$b->author = 'Pedro H. Peterson'; // Erro fatal
+$b->pubYear = 2023; // Erro fatal
+?>
+]]>
+    </programlisting>
+   </example>
+    <para>Existem algumas advertências em relação à visibilidade assimétrica:</para>
+    <itemizedlist>
+     <listitem>
+      <simpara>
+       Somente propriedades tipadas podem ter uma visibilidade <literal>set</literal> separada.
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       A visibilidade <literal>set</literal> deve ser a mesma
+       de <literal>get</literal> ou mais restritiva. Ou seja,
+       <code>public protected(set)</code> e <code>protected protected(set)</code>
+       são permitidos, mas <code>protected public(set)</code> causará um erro de sintaxe.
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       Se uma propriedade for <literal>public</literal>, a visibilidade principal poderá ser
+       omitida. Ou seja, <code>public private(set)</code> e <code>private(set)</code>
+       terão o mesmo resultado.
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       Uma propriedade com visibilidade <literal>private(set)</literal>
+       é automaticamente <literal>final</literal> e não pode ser declarada novamente em uma classe filha.
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       A obtenção de uma referência para uma propriedade segue a visibilidade <literal>set</literal>, não <literal>get</literal>.
+       Isso ocorre porque uma referência pode ser usada para modificar o valor da propriedade.
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       Da mesma forma, tentar escrever em uma propriedade de array envolve uma operação <literal>get</literal> e
+       <literal>set</literal> internamente e, portanto, seguirá a visibilidade <literal>set</literal>,
+       como é sempre a mais restritiva.
+      </simpara>
+     </listitem>
+    </itemizedlist>
+    <simpara>
+     Quando uma classe estende outra, a classe filha pode redefinir
+     qualquer propriedade que não seja <literal>final</literal>. Ao fazer isso,
+     pode ampliar a visibilidade principal ou a visibilidade <literal>set</literal>,
+     desde que a nova visibilidade seja igual ou mais ampla
+     que a classe pai. Entretanto, esteja ciente de que se uma propriedade <literal>private</literal>
+     for substituída, ela na verdade não altera a propriedade da classe pai,
+     mas cria uma nova propriedade com um nome interno diferente.
+    </simpara>
+    <example>
+     <title>Herança de propriedade assimétrica</title>
+     <programlisting role="php">
+<![CDATA[
+<?php
+class Book
+{
+    protected string $title;
+    public protected(set) string $author;
+    protected private(set) int $pubYear;
+}
+
+class SpecialBook extends Book
+{
+    public protected(set) $title; // OK, pois a leitura é mais ampla e a escrita igual.
+    public string $author; // OK, pois a leitura é a mesma e a escrita é mais ampla.
+    public protected(set) int $pubYear; // Erro fatal. propriedades private(set) são finais.
+}
+?>
+]]>
      </programlisting>
     </example>
-   </para>
+   </sect3>
   </sect2>
 
   <sect2 xml:id="language.oop5.visiblity-methods">
@@ -87,10 +205,9 @@ $obj2->imprimeAlo(); // Mostra Public, Protected2, Undefined
     ou protegido. Métodos sem qualquer declaração explícita serão
     definidos como público.
    </para>
-   <para>
-    <example>
-     <title>Declaração de método</title>
-     <programlisting role="php">
+   <example>
+    <title>Declaração de método</title>
+    <programlisting role="php">
 <![CDATA[
 <?php
 /**
@@ -101,16 +218,16 @@ class MinhaClasse
     // Declara um construtor público
     public function __construct() { }
 
-    // Declara um método public
+    // Declara um método público
     public function MeuPublico() { }
 
-    // Declara um método protected
+    // Declara um método protegido
     protected function MeuProtegido() { }
 
-    // Declara um método private
+    // Declara um método privado
     private function MeuPrivado() { }
 
-    // Esse é public
+    // Esse é público
     function Foo()
     {
         $this->MeuPublico();
@@ -176,9 +293,8 @@ $myFoo->test(); // Bar::testPrivate
                 // Foo::testPublic
 ?>
 ]]>
-     </programlisting>
-    </example>
-   </para>
+    </programlisting>
+   </example>
   </sect2>
 
   <sect2 xml:id="language.oop5.visiblity-constants">
@@ -188,10 +304,9 @@ $myFoo->test(); // Bar::testPrivate
     ou privadas. Constantes declaradas sem visibilidade explícita
     são definidas como públicas.
    </para>
-   <para>
-    <example>
-     <title>Declaração de constantes (desde o PHP 7.1.0)</title>
-     <programlisting role="php">
+   <example>
+    <title>Declaração de constantes (desde o PHP 7.1.0)</title>
+    <programlisting role="php">
 <![CDATA[
 <?php
 /**
@@ -242,9 +357,8 @@ echo MyClass2::MY_PUBLIC; // Funciona
 $myclass2->foo2(); // Public and Protected funcionam, mas não Private
 ?>
 ]]>
-     </programlisting>
-    </example>
-   </para>
+    </programlisting>
+   </example>
   </sect2>
 
   <sect2 xml:id="language.oop5.visibility-other-objects">
