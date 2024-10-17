@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 5bc68add3da3cd18c40f851e944b15095d3a26aa Maintainer: fernandoc Status: ready --><!-- CREDITS: fernandoc,leonardolara -->
+<!-- EN-Revision: ee14f82484f6289278255f798f1e8b93cdc2cab5 Maintainer: fernandoc Status: ready --><!-- CREDITS: fernandoc,leonardolara -->
 <refentry xml:id="mysqli.change-user" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>mysqli::change_user</refname>
   <refname>mysqli_change_user</refname>
-  <refpurpose>Modifica o usuário para a conexão com o banco de dados especificada</refpurpose>
+  <refpurpose>Altera o usuário da conexão com o banco de dados</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
@@ -25,8 +25,11 @@
    <methodparam><type class="union"><type>string</type><type>null</type></type><parameter>database</parameter></methodparam>
   </methodsynopsis>
   <para>
-   Muda o usuário na conexão com o banco de dados especificado e define o
-   banco atual.
+   Tenta conexão ao banco de dados especificado usando as credenciais fornecidas.
+  </para>
+  <para>
+   Em comparação ao método <methodname>mysqli::connect</methodname>, este método não
+   não fechará a conexão atual se a nova conexão não puder ser aberta.
   </para>
   <para>
    Para conseguir mudar usuários com sucesso, os parâmetors <parameter>username</parameter> e
@@ -61,12 +64,8 @@
      <term><parameter>database</parameter></term>
      <listitem>
       <para>
-       O banco de dados a ser designado.
-      </para>
-      <para>
-       Se desejado, o valor &null; pode ser passado, resultando somente em mudança
-       de usuário e não selecionando o banco. Para selecionar o banco neste
-       caso, utilize a função <function>mysqli_select_db</function>.
+       O nome do banco de dados. Se &null; ou uma string vazia forem passados,
+       a conexão ao servidor será aberta sem banco de dados padrão.
       </para>
      </listitem>
     </varlistentry>
@@ -89,89 +88,82 @@
  <refsect1 role="examples">
   &reftitle.examples;
   <example>
-   <title>Exemplo de <methodname>mysqli::change_user</methodname></title>
+   <title>Redefinindo a sessão da conexão</title>
    <para>&style.oop;</para>
    <programlisting role="php">
 <![CDATA[
 <?php
 
-/* Conecta ao banco 'test' */
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $mysqli = new mysqli("localhost", "meu_usuario", "minha_senha", "teste");
 
-/* verifica a conexão */
-if (mysqli_connect_errno()) {
-    printf("Conexão falhou: %s\n", mysqli_connect_error());
-    exit();
-}
-
-/* Define uma variável 'a' */
 $mysqli->query("SET @a:=1");
 
-/* Redefine e seleciona um novo banco */
 $mysqli->change_user("meu_usuario", "minha_senha", "mundo");
 
-if ($result = $mysqli->query("SELECT DATABASE()")) {
-    $row = $result->fetch_row();
-    printf("Banco padrão: %s\n", $row[0]);
-    $result->close();
-}
+$result = $mysqli->query("SELECT DATABASE()");
+$row = $result->fetch_row();
+printf("Banco de dados padrão: %s\n", $row[0]);
 
-if ($result = $mysqli->query("SELECT @a")) {
-    $row = $result->fetch_row();
-    if ($row[0] === NULL) {
-        printf("Valor da variável 'a' é NULL\n");
-    }
-    $result->close();
+$result = $mysqli->query("SELECT @a");
+$row = $result->fetch_row();
+if ($row[0] === null) {
+    printf("Valor da variável 'a' é NULL\n");
 }
-
-/* fecha a conexão */
-$mysqli->close();
-?>
 ]]>
    </programlisting>
    <para>&style.procedural;</para>
    <programlisting role="php">
 <![CDATA[
 <?php
-/* Conecta ao banco 'teste' */
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $link = mysqli_connect("localhost", "meu_usuario", "minha_senha", "teste");
 
-/* verifica a conexão */
-if (!$link) {
-    printf("Conexão falhou: %s\n", mysqli_connect_error());
-    exit();
-}
-
-/* Define a variável 'a' */
 mysqli_query($link, "SET @a:=1");
 
-/* redefine tudo e seleciona um novo banco */
 mysqli_change_user($link, "meu_usuario", "minha_senha", "mundo");
 
-if ($result = mysqli_query($link, "SELECT DATABASE()")) {
-    $row = mysqli_fetch_row($result);
-    printf("Banco padrão: %s\n", $row[0]);
-    mysqli_free_result($result);
-}
+$result = mysqli_query($link, "SELECT DATABASE()");
+$row = mysqli_fetch_row($result);
+printf("Banco de dados padrão: %s\n", $row[0]);
 
-if ($result = mysqli_query($link, "SELECT @a")) {
-    $row = mysqli_fetch_row($result);
-    if ($row[0] === NULL) {
-        printf("Valor da variável 'a' é NULL\n");
-    }
-    mysqli_free_result($result);
+$result = mysqli_query($link, "SELECT @a");
+$row = mysqli_fetch_row($result);
+if ($row[0] === null) {
+    printf("Valor da variável 'a' é NULL\n");
 }
-
-/* fecha a conexão */
-mysqli_close($link);
-?>
 ]]>
    </programlisting>
    &examples.outputs;
    <screen>
 <![CDATA[
-Banco padrão: mundo
+Banco de dados padrão: mundo
 Valor da variável 'a' é NULL
+]]>
+   </screen>
+  </example>
+  <example>
+   <title>Se <parameter>database</parameter> for &null; a conexão é aberta sem selecionar nenhum banco de dados padrão</title>
+   <para>&style.oop;</para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$mysqli = new mysqli("localhost", "meu_usuario", "minha_senha", "teste");
+
+$mysqli->change_user("meu_usuario", "minha_senha", null);
+
+$result = $mysqli->query("SELECT DATABASE()");
+$row = $result->fetch_row();
+printf("Banco de dados padrão: %s\n", $row[0]);
+]]>
+   </programlisting>
+   &examples.outputs;
+   <screen>
+<![CDATA[
+Banco de dados padrão:
 ]]>
    </screen>
   </example>
