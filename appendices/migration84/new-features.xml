@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 5fbf0f0cbce2dda6a379d8bda33d5b1869702e47 Maintainer: leonardolara Status: ready -->
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: e58da81ffc869010f3785810690bbd8ac9005ac4 Maintainer: leonardolara Status: ready -->
 <sect1 xml:id="migration84.new-features">
  <title>Novos Recursos</title>
 
@@ -54,11 +54,37 @@ class Example
 
   <!-- RFC: https://wiki.php.net/rfc/lazy-objects -->
   <sect3 xml:id="migration84.new-features.core.lazy-objects">
-   <title>Objetos Preguiçosos</title>
-
+   <title>Objetos Lentos</title>
    <simpara>
-    TODO
+    Agora é possível criar objetos cuja inicialização é adiada até
+    serem acessados. Bibliotecas e estruturas podem aproveitar esses objetos lentos
+    para adiar a busca de dados ou dependências necessárias para inicialização.
    </simpara>
+<informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+class Example
+{
+    public function __construct(private int $data)
+    {
+    }
+
+    // ...
+}
+
+$initializer = static function (Example $ghost): void {
+    // Busca dados ou dependências
+    $data = ...;
+    // Inicializa
+    $ghost->__construct($data);
+};
+
+$reflector = new ReflectionClass(Example::class);
+$object = $reflector->newLazyGhost($initializer);
+]]>
+    </programlisting>
+   </informalexample>
   </sect3>
 
   <!-- RFC: https://wiki.php.net/rfc/deprecated_attribute -->
@@ -412,7 +438,7 @@ class Example
 
   <!-- RFC: https://wiki.php.net/rfc/lazy-objects -->
   <para>
-   Vários novos métodos e constantes relacionados com a funcionalidade de objetos preguiçosos
+   Vários novos métodos e constantes relacionados com a funcionalidade de objetos lentos
    foram adicionados:
 
    <simplelist>

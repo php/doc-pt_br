@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 6a5b42e0d34c76890fd96be2b0b57516363b4c8a Maintainer: ae Status: ready --><!-- CREDITS: #lisaldo,narigone-->
+<!-- EN-Revision: 87d3bf2e9ea7da5abbeca3e60ea7cf7abfa6f7f3 Maintainer: ae Status: ready --><!-- CREDITS: #lisaldo,narigone-->
 <!-- splitted from ./index.xml, last change in rev 1.66 -->
   <chapter xml:id="security.cgi-bin" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
    <title>Instalando como binário CGI</title>
@@ -10,13 +10,14 @@
      Usando o PHP como binário <acronym>CGI</acronym> é uma opção de
      instalação que por alguma razão não deseja integrar o PHP como um
      módulo no servidor (como o Apache), ou usará o PHP com
-     tipos diferentes de <acronym>CGI</acronym> wrappers para criar ambientes chroot e
-     setuid seguros para os scripts. Esse tipo de instalação normalmente involve
-     copiar o binário executável para o diretório cgi-bin do servidor web. CERT
-     advisory <link xlink:href="&url.cert;">CA-96.11</link> recomenda não
-     colocar qualquer interpretador nesse diretório. Mesmo se o binário do
-     PHP pode ser usado como um interpretador autônomo, o PHP foi desenhado
-     para previnir os ataques que essa forma de instalação torna possível:
+     tipos diferentes de empacotadores <acronym>CGI</acronym> para criar ambientes
+     <command>chroot</command> e <command>setuid</command> seguros
+     para os scripts. Esta configuração geralmente envolve a instalação
+     do binário <command>php</command> executável para o diretório <filename class="directory">cgi-bin</filename> do servidor web.
+     A CERT Advisory <link xlink:href="&url.cert;">CA-96.11</link> recomenda
+     não colocar nenhum interpretador em <filename class="directory">cgi-bin</filename>.
+     Mesmo se o binário <command>php</command> possa ser usado como um interpretador autônomo,
+     o PHP foi projetado para evitar os ataques que essa forma de instalação torna possível:
     </simpara>
     <itemizedlist>
      <listitem>
@@ -25,13 +26,13 @@
        role="url">http://my.host/cgi-bin/php?/etc/passwd</filename>
       </simpara>
       <simpara>
-       A informação de consulta em uma URL depois da interrogração (?) é
+       A informação de consulta em uma URL depois da interrogração (<literal>?</literal>) é
        passada como argumentos de linha de comando para o interpretador pela
        interface CGI. Normalmente os interpretadores abrem e executam o arquivo
        especificado como primeiro argumento na linha de comando.
       </simpara>
       <simpara>
-       Quando invocado como binárgio CGI, o PHP se recusa a interpretar os
+       Quando invocado como binárgio CGI, o <command>php</command> se recusa a interpretar os
        argumentos de linha de comando.
       </simpara>
      </listitem>
@@ -46,7 +47,7 @@
        convencionalmente usada para especificar o nome do arquivo a ser
        aberto e interpretado pelo programa <acronym>CGI</acronym>
        Normalmente algumas diretivas de configuração do servidor web (Apache:
-       Action) são usadas para redirecionar requisições para documentos como
+       <literal>Action</literal>) são usadas para redirecionar requisições para documentos como
        <filename
        role="url">http://my.host/secret/script.php</filename> para o
        interpretados do PHP. Dessa maneira, o servidor web primeiro checa
@@ -94,18 +95,18 @@
      role="php">http://my.host/dir/script.php</filename>.
     </simpara>
     <simpara>
-     Redirecionamento pode ser configurado no Apache usando AddHandler
-     e diretivas Action (veja abaixo).
+     Redirecionamento pode ser configurado no Apache usando <literal>AddHandler</literal>
+     e diretivas <literal>Action</literal> (veja abaixo).
     </simpara>
    </sect1>
 
    <sect1 xml:id="security.cgi-bin.force-redirect">
     <title>Caso 2: usando <literal>cgi.force_redirect</literal></title>
     <simpara>
-     A configuração da diretiva <link
+     A diretiva de configuração <link
      linkend="ini.cgi.force-redirect">cgi.force_redirect</link>
-     previne qualquer um chamar
-     diretamente o PHP com uma URL do tipo <filename
+     impede que <command>php</command> seja chamado
+     diretamente com uma URL do tipo <filename
      role="php">http://my.host/cgi-bin/php/secretdir/script.php</filename>.
      Ao invés disso, PHP só irá executar dessa forma se tiver passado
      por um servidor web com essa diretiva.
@@ -145,10 +146,11 @@ AddHandler php-script .php
      interpretados e não enviado ao navegador.
     </simpara>
     <simpara>
-     Além disso, se o método para assegura que as requisições não são
+     Além disso, se o método para assegurar que as requisições não são
      redirecionadas, como descrito na seção anterior, não estiver
-     disponível, é necessário configura um doc_root para os script que
-     é diferente do doc_root do servidor web.
+     disponível, é necessário configurar um
+     <link linkend="ini.doc-root">doc_root</link> no script que
+     seja diferente do diretório raiz dos documentos do servidor web.
     </simpara>
     <simpara>
      Você pode configura a raiz de documentos dos scripts PHP pela
@@ -164,17 +166,17 @@ AddHandler php-script .php
     </simpara>
     <simpara>
      Outra opção utilizável é <link
-     linkend="ini.user-dir">user_dir</link>. Quando user_dir não existir,
-     a única coisa controlando o nome do arquivo aberto é
+     linkend="ini.user-dir">user_dir</link>. Quando <parameter>user_dir</parameter> for
+     indefinido, a única coisa controlando o arquivo aberto é
      <parameter>doc_root</parameter>. Abrir uma URL como <filename
      role="url">http://my.host/~user/doc.php</filename> não resulta
      em abrir um arquivo no diretório home de users, mas um arquivo
      chamado <filename role="uri">~user/doc.php</filename> dentro de
-     doc_root (sim, um nome de diretório começando com til
+     <parameter>doc_root</parameter> (sim, um nome de diretório começando com til
      [<literal>~</literal>]).
     </simpara>
     <simpara>
-     Se user_dir existir e tiver valor de, por exemplo, <filename
+     Se <parameter>user_dir</parameter> estiver, por exemplo, definido para <filename
      role="dir">public_php</filename>, uma requisição como <filename
      role="url">http://my.host/~user/doc.php</filename> abrirá
      o arquivo chamado <filename>doc.php</filename> no diretório

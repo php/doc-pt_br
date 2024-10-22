@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: b7dbf6357d4c2d68ffb52158076f692ed532b546 Maintainer: ae Status: ready --><!-- CREDITS: ae,felipe,fabioluciano,adiel,gabrielsanva,leonardolara -->
+<!-- EN-Revision: d6baeae3fa6e100b6b4b4ecd59fda030aa32f694 Maintainer: ae Status: ready --><!-- CREDITS: ae,felipe,fabioluciano,adiel,gabrielsanva,leonardolara -->
  <chapter xml:id="language.variables" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Variáveis</title>
 
@@ -201,6 +201,11 @@ $unset_array[] = 'value'; // Não gera um alerta.
    </warning>
 
    <simpara>
+    Uma variável pode ser destruída usando o construtor de linguagem
+    <function>unset</function>.
+   </simpara>
+
+   <simpara>
     Para obter informações sobre funções relacionadas a variáveis, consulte a
     <link linkend="ref.var">Referência de funções variáveis</link>.
    </simpara>
@@ -210,22 +215,12 @@ $unset_array[] = 'value'; // Não gera um alerta.
    <title>Variáveis Predefinidas</title>
 
    <para>
-    O PHP fornece um grande número de variáveis predefinidas para qualquer script
-    que ele execute. Muitas dessas variáveis, no entanto, não podem ser totalmente
-    documentadas, pois dependem de qual servidor está sendo usado, a
-    versão e configuração do servidor, e outros fatores. Algumas dessas
-    variáveis não estarão disponíveis quando o PHP for executado na
-    <link linkend="features.commandline">linha de comando</link>.
-    Consulte a <link linkend="reserved.variables">lista de variáveis predefinidas</link>
-    para mais detalhes.
-   </para>
-
-   <para>
-    O PHP fornece um conjunto adicional de arrays predefinidos
+    O PHP fornece um número de
+    <link linkend="reserved.variables">variáveis predefinidas</link>.
+    O PHP também fornece um conjunto adicional de arrays predefinidos
     contendo as variáveis do servidor web (se aplicável), as
-    variáveis de ambiente e as entradas do usuário. Esses novos arrays são especiais
-    por serem automaticamente globais - ou seja, estão
-    disponíveis automaticamente em qualquer escopo. Por esta razão, são conhecidos como
+    variáveis de ambiente e as entradas do usuário. Esses estão automaticamente disponíveis em
+    qualquer escopo. Por essa razão, também são conhecidos como
     "superglobais" (não há um mecanismo no PHP para
     superglobais definidos pelo usuário). Consulte a
     <link linkend="language.variables.superglobals">lista de superglobais</link>
@@ -254,51 +249,53 @@ $unset_array[] = 'value'; // Não gera um alerta.
 
    <simpara>
     O escopo de uma variável é o contexto onde ela está definida.
-    A maioria das variáveis do PHP tem somente um único escopo.
-    Este escopo único abrange também arquivos inseridos por <function>include</function>
-    e <function>require</function>. Por exemplo:
+    O PHP tem um escopo de função e um escopo global.
+    Qualquer variável definida fora de uma função está limitada ao escopo global.
+    Quando um arquivo é incluído, o código que ele contém herda o escopo da variável
+    da linha na qual a inclusão ocorre.
    </simpara>
-   <informalexample>
+   <example>
+    <title>Exemplo de escopo global de variável</title>
     <programlisting role="php">
 <![CDATA[
 <?php
 $a = 1;
-include 'b.inc';
+include 'b.inc'; // Variável $a estará disponível dentro de b.inc
 ?>
 ]]>
     </programlisting>
-   </informalexample>
+   </example>
+
    <simpara>
-    Aqui, a variável <varname>$a</varname> estará disponível
-    no script incluído <filename>b.inc</filename>. Entretanto, nas
-    funções definidas pelo usuário, um escopo de função local é introduzido. Qualquer
-    variável utilizada dentro de uma função é, por padrão, limitada ao
-    escopo local da função. Por exemplo:
+    Qualquer variável criada dentro de uma função nomeada ou de
+    uma função <link linkend="functions.anonymous">anônima</link>
+    é limitada ao escopo do corpo da função.
+    Entretanto, <link linkend="functions.arrow">funções de seta</link>
+    vinculam variáveis ​​do escopo pai para disponibilizá-las dentro do corpo.
+    Se uma inclusão de arquivo ocorrer dentro de uma função dentro
+    do arquivo chamador, as variáveis ​​contidas no arquivo chamado estarão
+    disponíveis como se tivessem sido definidas dentro da função chamadora.
    </simpara>
 
-   <informalexample>
+   <example>
+    <title>Exemplo de escopo local de variável</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-$a = 1; /* escopo global */
+$a = 1; // escopo global
 
-function Teste()
+function test()
 {
-    echo $a; /* referência a uma variável do escopo local */
+    echo $a; // Variável $a é indefinida já que refere-se a uma versão local de $a
 }
-
-Teste();
 ?>
 ]]>
     </programlisting>
-   </informalexample>
+   </example>
 
    <simpara>
-    Este script gerará uma diagnóstico de variável indefinida de nível <constant>E_WARNING</constant>
-    (ou nível <constant>E_NOTICE</constant> antes do PHP 8.0.0).
-    Entretanto, se a configuração INI
-    <link linkend="ini.display-errors">display_errors</link> estiver configurada para esconder
-    tais diagnósticos, nada será exibido.
+    O exemplo acima irá gerar um <constant>E_WARNING</constant> de variável indefinida
+    (ou um <constant>E_NOTICE</constant> antes do PHP 8.0.0).
     Isto acontece porque a instrução echo
     refere-se a uma versão local da variável <varname>$a</varname>,
     e não possui nenhum valor atribuído neste escopo. Pode-se
@@ -314,7 +311,12 @@ Teste();
    <sect2 xml:id="language.variables.scope.global">
     <title>A palavra-chave <literal>global</literal></title>
     <simpara>
-     Primeiro, um exemplo de uso de <literal>global</literal>:
+     A palavra-chave <literal>global</literal> é usada para vincular uma variável
+     de um escopo global a um escopo local. A palavra-chave pode ser usada com
+     uma lista de variáveis ​​ou com uma única variável. Uma variável local será criada
+     referenciando a variável global de mesmo nome. Se a variável global
+     não existir, a variável será criada no escopo global e
+     receberá o valor &null;.
     </simpara>
     <para>
      <example>
@@ -337,11 +339,17 @@ echo $b;
 ?>
 ]]>
       </programlisting>
+      &example.outputs;
+      <screen>
+<![CDATA[
+3
+]]>
+      </screen>
      </example>
     </para>
 
    <simpara>
-    O script acima exibirá <literal>3</literal>. Declarar
+    Declarar
     <varname>$a</varname> e <varname>$b</varname> como globais na
     função fará com que todas as referências a essas variáveis refiram-se às
     versões globais. Não há um limite para o número de variáveis
@@ -400,10 +408,10 @@ function test_superglobal()
     </example>
    </para>
    <note>
-    <para>
+    <simpara>
      Utilizar a instrução <literal>global</literal> fora de uma função não é
      um erro. Pode ser utilizado se o arquivo for incluído de dentro de uma função.
-    </para>
+    </simpara>
    </note>
   </sect2>
 
@@ -467,10 +475,7 @@ function Teste()
 
    <simpara>
     Variáveis estáticas fornecem uma solução para lidar com funções
-    recursivas. Uma função recursiva é aquela que chama a si mesma. Cuidados
-    devem ser tomados ao escrever funções recursivas porque é
-    possível que ela continue na recursão indefinidamente. Deve-se assegurar
-    que há uma maneira adequada de terminar a recursão. A seguinte
+    recursivas. A seguinte
     função recursiva conta até 10, utilizando a variável
     estática <varname>$count</varname> para saber quando parar:
    </simpara>
