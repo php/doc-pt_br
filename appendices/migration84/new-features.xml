@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: e58da81ffc869010f3785810690bbd8ac9005ac4 Maintainer: leonardolara Status: ready -->
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 5f4b6a6233d82fea8fa8dbbcee76073adb4bcaad Maintainer: leonardolara Status: ready -->
 <sect1 xml:id="migration84.new-features">
  <title>Novos Recursos</title>
 
@@ -11,17 +11,47 @@
    <title>Ganchos de Propriedades</title>
 
    <simpara>
-    TODO
+    Propriedades de objetos agora podem ter uma lógica adicional associada com suas
+    operações <literal>get</literal> e <literal>set</literal>.
+    Dependendo do uso, isso pode ou não tornar a propriedade virtual,
+    ou seja, não existe nenhum valor de apoio.
    </simpara>
 
    <informalexample>
     <programlisting role="php">
 <![CDATA[
 <?php
-/*
-examples
-*/
+class Person
+{
+    // Uma propriedade "virtual". Não pode ser definida explicitamente.
+    public string $fullName {
+        get => $this->firstName . ' ' . $this->lastName;
+    }
 
+    // Todas as operações de escrita passam por este gancho e o resultado é o que for escrito.
+    // Acesso de leitura ocorre normalmente.
+    public string $firstName {
+        set => ucfirst(strtolower($value));
+    }
+
+    // Todas as operações de escrita passam por este gancho, que precisa escrever no próprio valor de apoio.
+    // Acesso de leitura ocorre normalmente.
+    public string $lastName {
+        set {
+            if (strlen($value) < 2) {
+                throw new \InvalidArgumentException('Muito curto');
+            }
+            $this->lastName = $value;
+        }
+    }
+}
+
+$p = new Person();
+
+$p->firstName = 'pedro';
+print $p->firstName; // Exibe "Pedro"
+$p->lastName = 'Pedroso';
+print $p->fullName; // Exibe "Pedro Pedroso"
 ]]>
     </programlisting>
    </informalexample>
