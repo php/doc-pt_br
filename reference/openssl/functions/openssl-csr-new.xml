@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 5bc68add3da3cd18c40f851e944b15095d3a26aa Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: b6d0da041ac2b5eee3820bf2c2062872f4459dfe Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.openssl-csr-new" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>openssl_csr_new</refname>
@@ -9,9 +9,9 @@
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type class="union"><type>OpenSSLCertificateSigningRequest</type><type>false</type></type><methodname>openssl_csr_new</methodname>
+   <type class="union"><type>OpenSSLCertificateSigningRequest</type><type>bool</type></type><methodname>openssl_csr_new</methodname>
    <methodparam><type>array</type><parameter>distinguished_names</parameter></methodparam>
-   <methodparam><modifier role="attribute">#[\SensitiveParameter]</modifier><type>OpenSSLAsymmetricKey</type><parameter role="reference">private_key</parameter></methodparam>
+   <methodparam><modifier role="attribute">#[\SensitiveParameter]</modifier><type class="union"><type>OpenSSLAsymmetricKey</type><type>null</type></type><parameter role="reference">private_key</parameter></methodparam>
    <methodparam choice="opt"><type class="union"><type>array</type><type>null</type></type><parameter>options</parameter><initializer>&null;</initializer></methodparam>
    <methodparam choice="opt"><type class="union"><type>array</type><type>null</type></type><parameter>extra_attributes</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
@@ -38,11 +38,13 @@
      <term><parameter>private_key</parameter></term>
      <listitem>
       <para>
-       <parameter>private_key</parameter> deve ser definido par uma chave privada que tenha sido
-       gerada anteriormente por <function>openssl_pkey_new</function> (ou
-       de outra forma obtida pelas outras funções da família openssl_pkey).
-       A poção pública correspondente da chave será usada para assinar o
-       <acronym>CSR</acronym>.
+       <parameter>private_key</parameter> deve ser definido par uma chave privada que
+       tenha sido gerada anteriormente por <function>openssl_pkey_new</function> (ou
+       de outra forma obtida pelas outras funções da família openssl_pkey), ou
+       uma variável &null;. Se o valor for uma variável &null;, uma nova chave primária será
+       gerada com base no parâmetro <parameter>options</parameter> fornecido e
+       será atribuída à variável informada. A parte pública correspondente da
+       chave será usada para assinar o <acronym>CSR</acronym>.
       </para>
      </listitem>
     </varlistentry>
@@ -52,8 +54,8 @@
       <para>
        Por padrão, a informação no <literal>openssl.conf</literal> do sistema
        é utilizada para inicializar a requisição; uma seção do arquivo de configuração
-       pode ser eppecificada configurando a chave <literal>config_section_section</literal> do parâmetro
-       <parameter>options</parameter>.  Um arquivo de configuração openssl alternativo
+       pode ser especificada configurando a chave <literal>config_section_section</literal> no parâmetro
+       <parameter>options</parameter>. Um arquivo de configuração Openssl alternativo
        pode ser especificado configurando o valor da chave
        <literal>config</literal> para o caminho do arquivo a ser usado.
        As chaves a seguir, se estiverem presentes em <parameter>options</parameter>,
@@ -94,8 +96,7 @@
            <entry>private_key_bits</entry>
            <entry><type>int</type></entry>
            <entry>default_bits</entry>
-           <entry>Especifica quantos bits devem ser usados para gerar uma chave
-            privada</entry>
+           <entry>Especifica quantos bits devem ser usados para gerar uma chave privada</entry>
           </row>
           <row>
            <entry>private_key_type</entry>
@@ -150,7 +151,8 @@
      <listitem>
       <para>
        <parameter>extra_attributes</parameter> é usado para especificar opções
-       de configuração adicionais para o <acronym>CSR</acronym>. Ambos <parameter>distinguished_names</parameter> e
+       de configuração adicionais para o <acronym>CSR</acronym>. Ambos
+       <parameter>distinguished_names</parameter> e
        <parameter>extra_attributes</parameter> são arrays associativos cujas chaves são
        convertidas para OIDs e aplicadas à parte relevante da requisição.
       </para>
@@ -163,7 +165,8 @@
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
-   Retorna o <acronym>CSR</acronym>&return.falseforfailure;.
+   Retorna o <acronym>CSR</acronym> em caso de sucesso, &true; se a criação do CSR for
+   bem sucedida mas a assintura falhar&return.falseforfailure;.
   </para>
  </refsect1>
 
