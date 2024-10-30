@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: e5ab2937efd9b1d7184993e0fdfa957893f7f827 Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.openssl-decrypt" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>openssl_decrypt</refname>
+  <refpurpose>Descritografa dados</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>string</type><type>false</type></type><methodname>openssl_decrypt</methodname>
+   <methodparam><type>string</type><parameter>data</parameter></methodparam>
+   <methodparam><type>string</type><parameter>cipher_algo</parameter></methodparam>
+   <methodparam><modifier role="attribute">#[\SensitiveParameter]</modifier><type>string</type><parameter>passphrase</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>options</parameter><initializer>0</initializer></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>iv</parameter><initializer>""</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>string</type><type>null</type></type><parameter>tag</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>aad</parameter><initializer>""</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Descriptografa uma string bruta ou codificada em base64 usando um determinado método e senha.
+  </para>
+
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>data</parameter></term>
+     <listitem>
+      <para>
+       A mensagem criptografada a ser descriptografada.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>cipher_algo</parameter></term>
+     <listitem>
+      <para>
+       O método de criptografia. Para obter uma lista de métodos de criptografia disponíveis, use
+       <function>openssl_get_cipher_methods</function>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>passphrase</parameter></term>
+     <listitem>
+      <para>
+       A senha. Se a senha for menor que o esperado, ela será preenchida silenciosamente com
+       caracteres <literal>NUL</literal>; se a senha for maior que o esperado, ela será
+       truncada silenciosamente.
+      </para>
+      <caution>
+       <simpara>
+        Não há função de derivação de chave usada para <parameter>passphrase</parameter> como o próprio nome
+        pode sugerir. A única operação utilizada é o preenchimento com caracteres <literal>NUL</literal>
+        ou truncamento se o comprimento for diferente do esperado.
+       </simpara>
+      </caution>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+      <term><parameter>options</parameter></term>
+      <listitem>
+       <para>
+        <parameter>options</parameter> pode ser uma das constantes
+        <constant>OPENSSL_RAW_DATA</constant>,
+        <constant>OPENSSL_ZERO_PADDING</constant>
+        ou <constant>OPENSSL_DONT_ZERO_PAD_KEY</constant>.
+       </para>
+      </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>iv</parameter></term>
+     <listitem>
+      <para>
+       Um Vetor de Inicialização (IV) não-&null;. Se o IV for menor que o esperado, ele será preenchido com
+       caracteres <literal>NUL</literal> e um alerta será emitido; se a senha for maior
+       que o esperado, ela será truncada e um alerta será emitido.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>tag</parameter></term>
+     <listitem>
+      <para>
+       A etiqueta de autenticação no modo de criptografia AEAD. Se estiver incorreto, a autenticação falha e a função retorna &false;.
+      </para>
+      <caution>
+       <simpara>
+        O comprimento da etiqueta <parameter>tag</parameter> não é verificado pela função.
+        É responsabilidade do chamador garantir que o comprimento da etiqueta
+        corresponda ao comprimento da etiqueta recuperada quando <function>openssl_encrypt</function>
+        for chamada. Caso contrário, a descriptografia poderá ser bem-sucedida se a etiqueta fornecida
+        corresponder apenas ao início da etiqueta adequada.
+       </simpara>
+      </caution>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>aad</parameter></term>
+     <listitem>
+      <para>
+       Dados autenticados adicionais.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   A string descriptografada em caso de sucesso&return.falseforfailure;.
+  </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <para>
+   Emite um erro de nível <constant>E_WARNING</constant> se um algoritmo de criptografia
+   desconhecido for passado através do parâmetro <parameter>cipher_algo</parameter>.
+  </para>
+  <para>
+   Emite um erro de nível <constant>E_WARNING</constant> se um valor vazio for passado
+   através do parâmetro <parameter>iv</parameter>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.1.0</entry>
+      <entry><parameter>tag</parameter> agora pode ser nulo.</entry>
+     </row>
+     <row>
+      <entry>7.1.0</entry>
+      <entry>Os parâmetros <parameter>tag</parameter> e <parameter>aad</parameter> foram adicionados.</entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>openssl_encrypt</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
