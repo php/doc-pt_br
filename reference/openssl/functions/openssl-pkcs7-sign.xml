@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 5bc68add3da3cd18c40f851e944b15095d3a26aa Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.openssl-pkcs7-sign" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>openssl_pkcs7_sign</refname>
+  <refpurpose>Assina uma mensagem S/MIME</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>bool</type><methodname>openssl_pkcs7_sign</methodname>
+   <methodparam><type>string</type><parameter>input_filename</parameter></methodparam>
+   <methodparam><type>string</type><parameter>output_filename</parameter></methodparam>
+   <methodparam><type class="union"><type>OpenSSLCertificate</type><type>string</type></type><parameter>certificate</parameter></methodparam>
+   <methodparam><modifier role="attribute">#[\SensitiveParameter]</modifier><type class="union"><type>OpenSSLAsymmetricKey</type><type>OpenSSLCertificate</type><type>array</type><type>string</type></type><parameter>private_key</parameter></methodparam>
+   <methodparam><type class="union"><type>array</type><type>null</type></type><parameter>headers</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>flags</parameter><initializer><constant>PKCS7_DETACHED</constant></initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>string</type><type>null</type></type><parameter>untrusted_certificates_filename</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   <function>openssl_pkcs7_sign</function> pega o conteúdo do arquivo
+   chamado <parameter>input_filename</parameter> e o assina usando o
+   certificado informado em <parameter>certificate</parameter> e sua chave privada
+   correspondente especificada por
+   <parameter>private_key</parameter>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>input_filename</parameter></term>
+     <listitem>
+      <para>
+       O arquivo de entrada a ser assinado digitalmente.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>output_filename</parameter></term>
+     <listitem>
+      <para>
+       O arquivo no qual a assinatura digital será gravada.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>certificate</parameter></term>
+     <listitem>
+      <para>
+       O certificado X.509 usado para assinar digitalmente <parameter>input_filename</parameter>.
+       Consulte <link linkend="openssl.certparams">Parâmetros de chave/certificado</link> para obter uma lista de valores válidos.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>private_key</parameter></term>
+     <listitem>
+      <para>
+       <parameter>private_key</parameter> é a chave privada correspondente ao <parameter>certificate</parameter>.
+       Consulte <link linkend="openssl.certparams">Parâmetros de chave pública/privada</link> para obter uma lista de valores válidos.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>headers</parameter></term>
+     <listitem>
+      <para>
+       <parameter>headers</parameter> é um array de cabeçalhos que
+       serão anexados aos dados após serem assinados (veja
+       <function>openssl_pkcs7_encrypt</function> para mais informações sobre
+       o formato deste parâmetro).
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>flags</parameter></term>
+     <listitem>
+      <para>
+       <parameter>flags</parameter> são opções que podem ser usadas para alterar a saída - veja as <link linkend="openssl.pkcs7.flags">constantes PKCS7</link>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>untrusted_certificates_filename</parameter></term>
+     <listitem>
+      <para>
+       <parameter>untrusted_certificates_filename</parameter> especifica o nome de um arquivo contendo
+       vários certificados extras para incluir na assinatura que pode, por
+       exemplo, ser usado para ajudar o destinatário a verificar o certificado que você usou.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.success;
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       <parameter>certificate</parameter> agora aceita uma instância de <classname>OpenSSLCertificate</classname>;
+       anteriormente, um &resource; do tipo <literal>OpenSSL X.509 CSR</literal> era aceito.
+      </entry>
+     </row>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       <parameter>private_key</parameter> agora aceita uma instância de <classname>OpenSSLAsymmetricKey</classname>
+       ou de <classname>OpenSSLCertificate</classname>;
+       anteriormente, um &resource; do tipo <literal>OpenSSL key</literal> ou <literal>OpenSSL X.509 CSR</literal>
+       era aceito.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>openssl_pkcs7_sign</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// a mensagem que você deseja assinar para que o destinatário possa ter certeza de que
+// foi você quem a enviou
+$data = <<<EOD
+
+Você tem minha autorização para gastar R$ 10 mil em despesas de jantar.
+
+O Presidente
+EOD;
+// salva mensagem em arquivo
+$fp = fopen("msg.txt", "w");
+fwrite($fp, $data);
+fclose($fp);
+// criptografa o arquivo
+if (openssl_pkcs7_sign("msg.txt", "assinado.txt", "file://meu_certificado.pem",
+    array("file://meu_certificado.pem", "minha_senha"),
+    array("To" => "fulanodetal@example.com", // sintaxe de chaves
+          "From: HQ <presidente@example.com>", // sintaxe de índice
+          "Subject" => "Ultra secreto")
+    )) {
+    // mensagem assinada - enviando!
+    exec(ini_get("sendmail_path") . " < assinado.txt");
+}
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
