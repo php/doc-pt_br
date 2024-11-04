@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: c0fa5077c8862405942d8aac7360c5169558b59b Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xml:id="reflectionclass.newlazyproxy" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
+ <refnamediv>
+  <refname>ReflectionClass::newLazyProxy</refname>
+  <refpurpose>Cria uma nova instância de proxy lento</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis role="ReflectionClass">
+   <modifier>public</modifier> <type>object</type><methodname>ReflectionClass::newLazyProxy</methodname>
+   <methodparam><type>callable</type><parameter>factory</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>options</parameter><initializer>0</initializer></methodparam>
+  </methodsynopsis>
+  <simpara>
+   Cria uma nova instância de proxy lento da classe, anexando a
+   função <parameter>factory</parameter> a ela. O construtor não é
+   chamado e as propriedades não são definidas com seus valores padrão. Quando é
+   feita uma tentativa de observar ou modificar o estado do proxy pela primeira
+   vez, a função de fábrica é chamada para fornecer uma instância real, que
+   é então anexada ao proxy. Depois disso, todas as interações subsequentes
+   com o proxy são encaminhadas para a instância real. Consulte
+   <link linkend="language.oop5.lazy-objects.initialization-triggers">Gatilhos de
+   Inicialização</link> e <link linkend="language.oop5.lazy-objects.initialization-sequence">Sequência
+   de Inicialização</link> .
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <variablelist>
+   <varlistentry>
+    <term><parameter>factory</parameter></term>
+    <listitem>
+     <simpara>
+      A fábrica é uma função de retorno com a seguinte assinatura:
+     </simpara>
+     <para>
+      <methodsynopsis>
+       <type>object</type><methodname><replaceable>factory</replaceable></methodname>
+       <methodparam><type>object</type><parameter>object</parameter></methodparam>
+      </methodsynopsis>
+      <variablelist>
+       <varlistentry>
+        <term><parameter>object</parameter></term>
+        <listitem>
+         <simpara>
+          O parâmetro <parameter>object</parameter> informa o objeto que está
+          sendo inicializado. Neste ponto, o objeto não está mais marcado como
+          lento e acessá-lo não aciona a inicialização novamente.
+         </simpara>
+        </listitem>
+       </varlistentry>
+      </variablelist>
+     </para>
+     <simpara>
+      A função de fábrica deve retornar um objeto, chamado de
+      <emphasis>instância real</emphasis>, que é então anexado ao
+      proxy. Esta instância real não deve ser lenta e não deve ser o
+      próprio proxy. Se a instância real não tiver a mesma classe
+      do proxy, a classe do proxy deverá ser uma subclasse da classe da
+      instância real, sem propriedades adicionais, e não deverá substituir os métodos
+      <methodname>__destruct</methodname> ou
+      <methodname>__clone</methodname>.
+     </simpara>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('reflectionclass.newlazyghost.parameters.options')/*)">
+     <xi:fallback/>
+    </xi:include>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <simpara>
+   Retorna uma instância de proxy lento. Se o objeto não tiver propriedades, ou se todas as suas
+   propriedades forem estáticas ou virtuais, uma instância normal (não-lenta) será retornada.
+   Veja também
+   <link linkend="language.oop5.lazy-objects.lifecycle">Ciclo de Vida de Objetos
+   Lentos</link>.
+  </simpara>
+ </refsect1>
+
+ <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('reflectionclass.newlazyghost')/db:refsect1[@role='errors'])">
+  <xi:fallback/>
+ </xi:include>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Uso básico</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class Example {
+    public function __construct(public int $prop) {
+        echo __METHOD__, "\n";
+    }
+}
+
+$reflector = new ReflectionClass(Example::class);
+$object = $reflector->newLazyProxy(function (Example $object) {
+     $realInstance = new Example(1);
+     return $realInstance;
+});
+
+var_dump($object);
+var_dump($object instanceof Example);
+
+// Aciona a inicialização e encaminha a busca de propriedade para a instância real
+var_dump($object->prop);
+
+var_dump($object);
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+lazy proxy object(Example)#3 (0) {
+  ["prop"]=>
+  uninitialized(int)
+}
+bool(true)
+Example::__construct
+int(1)
+lazy proxy object(Example)#3 (1) {
+  ["instance"]=>
+  object(Example)#4 (1) {
+    ["prop"]=>
+    int(1)
+  }
+}
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><link linkend="language.oop5.lazy-objects">Lazy objects</link></member>
+   <member><methodname>ReflectionClass::newLazyGhost</methodname></member>
+   <member><methodname>ReflectionClass::newInstanceWithoutConstructor</methodname></member>
+   <member><methodname>ReflectionClass::resetAsLazyProxy</methodname></member>
+   <member><methodname>ReflectionClass::markLazyObjectAsInitialized</methodname></member>
+   <member><methodname>ReflectionClass::initializeLazyObject</methodname></member>
+   <member><methodname>ReflectionClass::isUninitializedLazyObject</methodname></member>
+   <member><methodname>ReflectionProperty::setRawValueWithoutLazyInitialization</methodname></member>
+   <member><methodname>ReflectionProperty::skipLazyInitialization</methodname></member>
+   <member><methodname>ReflectionProperty::isLazy</methodname></member>
+  </simplelist>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
