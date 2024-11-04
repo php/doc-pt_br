@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: c0fa5077c8862405942d8aac7360c5169558b59b Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<sect1 xml:id="language.oop5.lazy-objects" xmlns="http://docbook.org/ns/docbook">
+ <title>Objetos Lentos</title>
+
+ <simpara>
+  Um objeto lento é um objeto cuja inicialização é adiada até que seu
+  estado seja observado ou modificado. Alguns exemplos de casos de uso incluem componentes
+  de injeção de dependência que fornecem serviços lentos totalmente inicializados somente se
+  necessário, <acronym>ORM</acronym>s fornecendo entidades lentas que se
+  hidratam do banco de dados somente quando acessados, ou um analisador JSON que
+  atrasa a análise até que os elementos sejam acessados.
+ </simpara>
+
+ <simpara>
+  Duas estratégias de objetos lentos são suportadas: Objetos Fantasmas e Proxies
+  Virtuais, doravante denominados &quot;fantasmas lentos&quot; e
+  &quot;proxies lentos&quot;.
+  Em ambas as estratégias, o objeto lento é anexado a um inicializador ou fábrica
+  que é chamado automaticamente quando seu estado é observado ou modificado pela
+  primeira vez. Do ponto de vista da abstração, os objetos fantasmas lentos são
+  indistinguíveis dos não-lentos: eles podem ser usados ​​sem que se saiba que são
+  lentos, permitindo que sejam passados ​​e usados ​​por códigos que desconhecem a
+  lentidão. Os proxies lentos são igualmente transparentes, mas deve-se ter cuidado ao
+  usar sua identidade, pois o proxy e sua instância real possuem identidades
+  diferentes.
+ </simpara>
+
+ <sect2 xml:id="language.oop5.lazy-objects.creation">
+  <title>Criando Objetos Lentos</title>
+
+  <simpara>
+   É possível criar uma instância lenta de qualquer classe definida pelo usuário ou da
+   classe <classname>stdClass</classname> (outras classes internas não são
+   suportadas), ou redefinir uma instância dessas classes para torná-la lenta.
+   Os pontos de entrada para criar um objeto lento são os métodos
+   <methodname>ReflectionClass::newLazyGhost</methodname> e
+   <methodname>ReflectionClass::newLazyProxy</methodname>.
+  </simpara>
+
+  <simpara>
+   Ambos os métodos aceitam uma função que é chamada quando o objeto requer
+   inicialização. O comportamento esperado da função varia dependendo da
+   estratégia em uso, conforme descrito na documentação de referência de cada método.
+  </simpara>
+
+  <example>
+   <title>Criando um Fantasma Lento</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class Example
+{
+    public function __construct(public int $prop)
+    {
+        echo __METHOD__, "\n";
+    }
+}
+
+$reflector = new ReflectionClass(Example::class);
+$lazyObject = $reflector->newLazyGhost(function (Example $object) {
+    // Inicializa o objeto no local
+    $object->__construct(1);
+});
+
+var_dump($lazyObject);
+var_dump(get_class($lazyObject));
+
+// Dispara a inicialização
+var_dump($lazyObject->prop);
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+lazy ghost object(Example)#3 (0) {
+["prop"]=>
+uninitialized(int)
+}
+string(7) "Example"
+Example::__construct
+int(1)
+]]>
+   </screen>
+  </example>
+
+  <example>
+   <title>Criando um Proxy Lento</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class Example
+{
+    public function __construct(public int $prop)
+    {
+        echo __METHOD__, "\n";
+    }
+}
+
+$reflector = new ReflectionClass(Example::class);
+$lazyObject = $reflector->newLazyProxy(function (Example $object) {
+    // Cria e retorna a instância real
+    return new Example(1);
+});
+
+var_dump($lazyObject);
+var_dump(get_class($lazyObject));
+
+// Dispara a inicialização
+var_dump($lazyObject->prop);
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+lazy proxy object(Example)#3 (0) {
+  ["prop"]=>
+  uninitialized(int)
+}
+string(7) "Example"
+Example::__construct
+int(1)
+]]>
+   </screen>
+  </example>
+
+  <simpara>
+   Qualquer acesso às propriedades de um objeto lento aciona sua inicialização
+   (inclusive via <classname>ReflectionProperty</classname>).
+   No entanto, certas propriedades podem ser conhecidas antecipadamente e não devem acionar
+   a inicialização quando acessadas:
+  </simpara>
+
+  <example>
+   <title>Inicializando Propriedades Ansiosamente</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class BlogPost
+{
+    public function __construct(
+        private int $id,
+        private string $title,
+        private string $content,
+    ) { }
+}
+
+$reflector = new ReflectionClass(BlogPost::class);
+
+$post = $reflector->newLazyGhost(function ($post) {
+    $data = fetch_from_store($post->id);
+    $post->__construct($data['id'], $data['title'], $data['content']);
+});
+
+// Sem esta linha, a seguinte chamada a ReflectionProperty::setValue()
+// acionaria a inicialização.
+$reflector->getProperty('id')->skipLazyInitialization($post);
+$reflector->getProperty('id')->setValue($post, 123);
+
+// Alternativamente, pode-se usar isso diretamente:
+$reflector->getProperty('id')->setRawValueWithoutLazyInitialization($post, 123);
+
+// A propriedade id pode ser acessada sem acionar a inicialização
+var_dump($post->id);
+?>
+]]>
+   </programlisting>
+  </example>
+
+  <simpara>
+   Os métodos <methodname>ReflectionProperty::skipLazyInitialization</methodname> e
+   <methodname>ReflectionProperty::setRawValueWithoutLazyInitialization</methodname>
+   oferecem maneiras de contornar a inicialização lenta ao acessar uma propriedade.
+  </simpara>
+ </sect2>
+
+ <sect2 xml:id="language.oop5.lazy-objects.patterns">
+  <title>Sobre Estratégias de Objetos Lentos</title>
+
+  <simpara>
+   <emphasis>Fantasmas lentos</emphasis> são objetos que inicializam no local e,
+   uma vez inicializados, são indistinguíveis de um objeto que nunca foi lento.
+   Esta estratégia é adequada quando são controladas tanto a instanciação quanto a
+   inicialização do objeto, tornando-a inadequada se qualquer um deles for
+   gerenciado por outra parte.
+  </simpara>
+
+  <simpara>
+   <emphasis>Proxies lentos</emphasis>, uma vez inicializados, atuam como proxies para
+   uma instância real: qualquer operação em um proxy lento inicializado é encaminhada
+   para a instância real. A criação da instância real pode ser delegada
+   a outra parte, tornando esta estratégia útil nos casos em que fantasmas lentos
+   são inadequados. Embora os proxies lentos sejam quase tão transparentes quanto os fantasmas
+   lentos, é necessário cautela quando sua identidade é usada, pois o proxy
+   e sua instância real possuem identidades distintas.
+  </simpara>
+ </sect2>
+
+ <sect2 xml:id="language.oop5.lazy-objects.lifecycle">
+  <title>Ciclo de Vida de Objetos Lentos</title>
+
+  <simpara>
+   Os objetos podem se tornar lentos no momento da instanciação usando
+   <methodname>ReflectionClass::newLazyGhost</methodname> ou
+   <methodname>ReflectionClass::newLazyProxy</methodname>, ou após
+   a instanciação usando
+   <methodname>ReflectionClass::resetAsLazyGhost</methodname> ou
+   <methodname>ReflectionClass::resetAsLazyProxy</methodname>. Depois disso, um
+   objeto lento pode ser inicializado por meio de uma das seguintes operações:
+  </simpara>
+
+  <simplelist>
+   <member>
+    Interagir com o objeto de uma forma que acione a inicialização automática. Consulte
+    <link linkend="language.oop5.lazy-objects.initialization-triggers">Gatilhos de
+    inicialização</link>.
+   </member>
+   <member>
+    Marcar todas as suas propriedades como não-lentas usando
+    <methodname>ReflectionProperty::skipLazyInitialization</methodname> ou
+    <methodname>ReflectionProperty::setRawValueWithoutLazyInitialization</methodname>.
+   </member>
+   <member>
+    Chamar explicitamente <methodname>ReflectionClass::initializeLazyObject</methodname>
+    ou <methodname>ReflectionClass::markLazyObjectAsInitialized</methodname>.
+   </member>
+  </simplelist>
+
+  <simpara>
+   Como os objetos lentos são inicializados quando todas as suas propriedades são marcadas
+   como não-lentas, os métodos acima não marcarão um objeto como lento se nenhuma propriedade
+   puder ser marcada como lenta.
+  </simpara>
+ </sect2>
+
+ <sect2 xml:id="language.oop5.lazy-objects.initialization-triggers">
+  <title>Gatilhos de Inicialização</title>
+
+  <simpara>
+   Objetos lentos são projetados para serem totalmente transparentes para seus consumidores,
+   portanto, operações normais que observam ou modificam o estado do objeto
+   acionarão automaticamente a inicialização antes que a operação seja executada. Isto
+   inclui, mas não está limitado às seguintes operações:
+  </simpara>
+
+  <simplelist>
+   <member>
+    Ler ou escrever uma propriedade.
+   </member>
+   <member>
+    Testar se uma propriedade está definida ou desativada.
+   </member>
+   <member>
+    Acessar ou modificar uma propriedade via
+    <methodname>ReflectionProperty::getValue</methodname>,
+    <methodname>ReflectionProperty::getRawValue</methodname>,
+    <methodname>ReflectionProperty::setValue</methodname>
+    ou <methodname>ReflectionProperty::setRawValue</methodname>.
+   </member>
+   <member>
+    Listae propriedades com
+    <methodname>ReflectionObject::getProperties</methodname>,
+    <methodname>ReflectionObject::getProperty</methodname> ou
+    <function>get_object_vars</function>.
+   </member>
+   <member>
+    Iterar sobre propriedades de um objeto que não implementa
+    <interfacename>Iterator</interfacename> ou
+    <interfacename>IteratorAggregate</interfacename> usando
+    <link linkend="control-structures.foreach">foreach</link>.
+   </member>
+   <member>
+    Serializar o objeto com <function>serialize</function>,
+    <function>json_encode</function> etc.
+   </member>
+   <member>
+    <link linkend="language.oop5.lazy-objects.cloning">Clonar</link> o
+    objeto.
+   </member>
+  </simplelist>
+
+  <simpara>
+   Chamadas de método que não acessam o estado do objeto não acionarão
+   a inicialização. Da mesma forma, as interações com o objeto que invocam métodos
+   mágicos ou funções de gancho não acionarão a inicialização se esses métodos
+   ou funções não acessarem o estado do objeto.
+  </simpara>
+
+  <sect3>
+   <title>Operações sem Acionamento</title>
+
+   <simpara>
+    Os seguintes métodos específicos ou operações de baixo nível permitem acesso ou
+    modificação de objetos lentos sem acionar a inicialização:
+   </simpara>
+
+   <simplelist>
+    <member>
+     Marcar propriedades como não-lentas com
+     <methodname>ReflectionProperty::skipLazyInitialization</methodname> ou
+     <methodname>ReflectionProperty::setRawValueWithoutLazyInitialization</methodname>.
+    </member>
+    <member>
+     Recuperar a representação interna de propriedades usando
+     <function>get_mangled_object_vars</function> ou através da
+     <link linkend="language.types.array.casting">conversão de um objeto para um
+     array</link>.
+    </member>
+    <member>
+     Usar <function>serialize</function> quando
+     <constant>ReflectionClass::SKIP_INITIALIZATION_ON_SERIALIZE</constant>
+     está definida, a menos que
+     <link linkend="object.serialize">__serialize()</link> ou
+     <link linkend="object.sleep">__sleep()</link> acionem a inicialização.
+    </member>
+    <member>
+     Chamar <methodname>ReflectionObject::__toString</methodname>.
+    </member>
+    <member>
+     Usar <function>var_dump</function> ou
+     <function>debug_zval_dump</function>, a menos que
+     <link linkend="object.debuginfo">__debugInfo()</link> acione
+     a inicialização.
+    </member>
+   </simplelist>
+  </sect3>
+ </sect2>
+
+ <sect2 xml:id="language.oop5.lazy-objects.initialization-sequence">
+  <title>Sequência de Inicialização</title>
+
+  <simpara>
+   Esta seção descreve a sequência de operações executadas quando
+   a inicialização é acionada, com base na estratégia em uso.
+  </simpara>
+
+  <sect3>
+   <title>Objetos Fantasmas</title>
+   <simplelist>
+    <member>
+     O objeto é marcado como não-lento.
+    </member>
+    <member>
+     Propriedades não inicializadas com
+     <methodname>ReflectionProperty::skipLazyInitialization</methodname> ou
+     <methodname>ReflectionProperty::setRawValueWithoutLazyInitialization</methodname>
+     são definidas com seus valores padrão, se houver. Neste estágio, o objeto
+     se assemelha a um criado com
+     <methodname>ReflectionClass::newInstanceWithoutConstructor</methodname>,
+     exceto pelas propriedades já inicializadas.
+    </member>
+    <member>
+     A função inicializadora é então chamada com o objeto como seu primeiro
+     parâmetro. A função é esperada, mas não obrigatória, para inicializar
+     o estado do objeto e deve retornar &null; ou nenhum valor. O objeto não é
+     mais lento neste ponto, então a função pode acessar suas propriedades
+     diretamente.
+    </member>
+   </simplelist>
+   <simpara>
+    Após a inicialização, o objeto é indistinguível de um objeto que
+    nunca foi lento.
+   </simpara>
+  </sect3>
+
+  <sect3>
+   <title>Objetos Proxy</title>
+   <simplelist>
+    <member>
+     O objeto é marcado como não-lento.
+    </member>
+    <member>
+     Ao contrário dos objetos fantasmas, as propriedades do objeto não são modificadas
+     neste estágio.
+    </member>
+    <member>
+     A função de fábrica é chamada com o objeto como seu primeiro parâmetro e
+     deve retornar uma instância não-lenta de uma classe compatível (veja
+     <methodname>ReflectionClass::newLazyProxy</methodname>).
+    </member>
+    <member>
+     A instância retornada é chamada de <emphasis>instância
+     real</emphasis> e é anexada ao proxy.
+    </member>
+    <member>
+     Os valores das propriedades do proxy são descartados como se
+     <function>unset</function> tivesse sido chamada.
+    </member>
+   </simplelist>
+   <simpara>
+    Após a inicialização, acessar qualquer propriedade no proxy
+    produzirá o mesmo resultado que acessar a propriedade correspondente na
+    instância real; todos os acessos de propriedade no proxy são encaminhados
+    para a instância real, incluindo propriedades declaradas, dinâmicas,
+    inexistentes ou marcadas com
+    <methodname>ReflectionProperty::skipLazyInitialization</methodname> ou
+    <methodname>ReflectionProperty::setRawValueWithoutLazyInitialization</methodname>.
+   </simpara>
+   <simpara>
+    O objeto proxy em si <emphasis>não</emphasis> é substituído
+    pela instância real.
+   </simpara>
+   <simpara>
+    Embora a fábrica receba o proxy como primeiro parâmetro, não se
+    espera modificá-lo (modificações são permitidas, mas serão perdidas
+    durante a etapa final de inicialização). Entretanto, o proxy pode ser usado
+    para decisões baseadas nos valores das propriedades inicializadas, na classe,
+    no próprio objeto ou em sua identidade. Por exemplo, o inicializador pode
+    usar o valor de uma propriedade inicializada ao criar a instância real.
+   </simpara>
+  </sect3>
+
+  <sect3>
+   <title>Comportamento Comum</title>
+
+   <simpara>
+    O escopo e o contexto <varname>$this</varname> do inicializador ou da função de
+    fábrica permanecem inalterados e as restrições de visibilidade usuais se aplicam.
+   </simpara>
+
+   <simpara>
+    Após a inicialização bem-sucedida, o inicializador ou função de fábrica
+    não é mais referenciado pelo objeto e pode ser liberado se não tiver
+    outras referências.
+   </simpara>
+
+   <simpara>
+    Se o inicializador lançar uma exceção, o estado do objeto será revertido para seu
+    estado de pré-inicialização e o objeto será marcado como lento novamente. Em outras
+    palavras, todos os efeitos no próprio objeto são revertidos. Outros efeitos colaterais,
+    como efeitos em outros objetos, não são revertidos. Isso evita
+    a exposição de uma instância parcialmente inicializada em caso de falha.
+   </simpara>
+  </sect3>
+ </sect2>
+
+ <sect2 xml:id="language.oop5.lazy-objects.cloning">
+  <title>Clonagem</title>
+
+  <simpara>
+   <link linkend="language.oop5.cloning">Clonar</link>
+   um objeto lento aciona sua inicialização antes do clone ser
+   criado, resultando em um objeto inicializado.
+  </simpara>
+
+  <simpara>
+   Para objetos proxy, tanto o proxy quanto sua instância real são clonados e
+   o clone do proxy é retornado.
+   O método <link linkend="object.clone"><literal>__clone</literal></link>
+   é chamado na instância real, não no proxy.
+   O proxy clonado e a instância real são vinculados como estão durante
+   a inicialização, portanto, os acessos ao clone do proxy são encaminhados para o clone
+   da instância real.
+  </simpara>
+
+  <simpara>
+   Esse comportamento garante que o clone e o objeto original mantenham
+   estados separados. As alterações no objeto original ou no estado de seu inicializador
+   após a clonagem não afetam o clone. Clonar o proxy e sua instância
+   real, em vez de retornar apenas um clone da instância real, garante
+   que a operação de clonagem retorne consistentemente um objeto da mesma classe.
+  </simpara>
+ </sect2>
+
+ <sect2 xml:id="language.oop5.lazy-objects.destructors">
+  <title>Destrutores</title>
+
+  <simpara>
+   Para fantasmas lentos, o destrutor só é chamado se o objeto tiver sido
+   inicializado. Para proxies, o destrutor só é chamado na instância real,
+   se existir.
+  </simpara>
+
+  <simpara>
+   Os métodos <methodname>ReflectionClass::resetAsLazyGhost</methodname> e
+   <methodname>ReflectionClass::resetAsLazyProxy</methodname> podem invocar
+   o destrutor do objeto que está sendo redefinido.
+  </simpara>
+ </sect2>
+</sect1>
