@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: c0fa5077c8862405942d8aac7360c5169558b59b Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xml:id="reflectionclass.resetaslazyghost" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>ReflectionClass::resetAsLazyGhost</refname>
+  <refpurpose>Redefine um objeto e o marca como lento</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis role="ReflectionClass">
+   <modifier>public</modifier> <type>void</type><methodname>ReflectionClass::resetAsLazyGhost</methodname>
+   <methodparam><type>object</type><parameter>object</parameter></methodparam>
+   <methodparam><type>callable</type><parameter>initializer</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>options</parameter><initializer>0</initializer></methodparam>
+  </methodsynopsis>
+  <simpara>
+   Redefine um objeto existente informado em <parameter>object</parameter> e marca-o como lento.
+  </simpara>
+  <simpara>
+   O destrutor do objeto é chamado (se existir), a menos que
+   a opção <constant>ReflectionClass::SKIP_DESTRUCTOR</constant> seja especificada. No
+   caso especial em que o objeto é um proxy inicializado, a instância real
+   é desanexada do proxy. Se a instância real não for mais referenciada
+   em outro lugar, seu destrutor será chamado independentemente da
+   opção <constant>SKIP_DESTRUCTOR</constant>.
+  </simpara>
+  <simpara>
+   As propriedades dinâmicas são removidas e o valor das propriedades declaradas na
+   classe é descartado como se <function>unset</function> tivesse sido chamada, e
+   marcado como lento. Isso implica que se o objeto for uma instância de uma subclasse
+   com propriedades adicionais, essas propriedades não serão modificadas e não serão
+   tornadas lentas.
+   <link linkend="language.oop5.properties.readonly-properties">Propriedades
+   somente leitura</link> também não são modificadas e não se tornam lentas se forem
+   marcadas com <literal>final</literal> ou se a própria classe for <literal>final</literal>.
+  </simpara>
+  <simpara>
+   Se nenhuma propriedade foi marcada como lenta, o objeto não será marcado como lento. Consulte
+   também
+   <link linkend="language.oop5.lazy-objects.lifecycle">Ciclo de Vida de Objetos
+   Lentos</link>.
+  </simpara>
+  <simpara>
+   Caso contrário, após chamar este método, o comportamento do objeto será o mesmo
+   de um objeto criado por
+   <methodname>ReflectionClass::newLazyGhost</methodname> (exceto para
+   propriedades de subclasse e somente leitura, conforme descrito acima).
+  </simpara>
+  <simpara>
+   O objeto não é substituído por outros, e sua identidade se mantém
+   inalterada. Funcionalidades como <function>spl_object_id</function>,
+   <function>spl_object_hash</function>,
+   <classname>SplObjectStorage</classname>, <classname>WeakMap</classname>,
+   <classname>WeakReference</classname> ou
+   <link linkend="language.oop5.object-comparison">o operador identidade
+   (<literal>===</literal>)</link> não são afetadas.
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <variablelist>
+   <varlistentry>
+    <term><parameter>object</parameter></term>
+    <listitem>
+     <simpara>
+      Um objeto não-lento ou um objeto lento inicializado.
+     </simpara>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><parameter>initializer</parameter></term>
+    <listitem>
+     <simpara>
+      Uma função de retorno do inicializador com a mesma assinatura e finalidade de
+      <methodname>ReflectionClass::newLazyGhost</methodname>.
+     </simpara>
+    </listitem>
+   </varlistentry>
+   <varlistentry xml:id="reflectionclass.resetaslazyghost.parameters.options">
+    <term><parameter>options</parameter></term>
+    <listitem>
+     <para>
+      <parameter>options</parameter> pode ser uma combinação das seguintes
+      opções:
+      <variablelist>
+       <varlistentry>
+        <term>
+         <constant>ReflectionClass::SKIP_INITIALIZATION_ON_SERIALIZE</constant>
+        </term>
+        <listitem>
+         <simpara>
+          Por padrão, a serialização de um objeto lento aciona sua
+          inicialização. Definir esta opção impede a inicialização, permitindo
+          que objetos lentos sejam serializados sem serem inicializados.
+         </simpara>
+        </listitem>
+       </varlistentry>
+       <varlistentry>
+        <term>
+         <constant>ReflectionClass::SKIP_DESTRUCTOR</constant>
+        </term>
+        <listitem>
+         <simpara>
+          Por padrão, o destrutor de objetos é chamado (se houver) antes de torná-lo
+          lento. Isso fornece segurança em relação a qualquer estado preexistente
+          no objeto. Esta opção desativa esse comportamento, permitindo que os objetos sejam redefinidos
+          como lentos sem chamar o destrutor.
+         </simpara>
+        </listitem>
+       </varlistentry>
+      </variablelist>
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <simpara>
+   &return.void;
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <simpara>
+   Uma exceção <classname>ReflectionException</classname> é lançada se o objeto for lento e
+   não inicializado.
+  </simpara>
+  <simpara>
+   Um <classname>Error</classname> é lançado se o objeto estiver sendo inicializado, ou se as
+   propriedades do objeto estão sendo iteradas com
+   <link linkend="control-structures.foreach"><literal>foreach</literal></link>.
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><methodname>ReflectionClass::newLazyGhost</methodname></member>
+   <member><methodname>ReflectionClass::resetAsLazyProxy</methodname></member>
+  </simplelist>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
