@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 14767af0f05dffa6fdb9b49e1a1f4e9ca7022a60 Maintainer: ae Status: ready --><!-- CREDITS: geekcom,ae -->
+<!-- EN-Revision: cd391e65a613a729f9bbded2b1249e2d7143400c Maintainer: ae Status: ready --><!-- CREDITS: geekcom,ae -->
 <reference xml:id="class.weakreference" role="class" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
 
  <title>A classe WeakReference</title>
@@ -13,6 +13,11 @@
    <para>
     Referências fracas permitem que o programador mantenha uma referência a um objeto que não impede
     que o objeto seja destruído. Eles são úteis para implementar estruturas como cache.
+    Se o objeto original tiver sido destruído, &null; será retornado
+    ao chamar o método <methodname>WeakReference::get</methodname>.
+    O objeto original será destruído quando o
+    <link linkend="features.gc.refcounting-basics">refcount</link> dele cair para zero;
+    criar referências fracas não aumenta o <literal>refcount</literal> do objeto que está sendo referenciado.
    </para>
    <para>
     <classname>WeakReference</classname>s não podem ser serializadas.
@@ -50,11 +55,16 @@
      <programlisting role="php">
 <![CDATA[
 <?php
-$obj = new stdClass;
+
+$obj = new stdClass();
 $weakref = WeakReference::create($obj);
+
 var_dump($weakref->get());
+
 unset($obj);
+
 var_dump($weakref->get());
+
 ?>
 ]]>
      </programlisting>
