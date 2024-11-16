@@ -1,4 +1,4 @@
- <variablelist role="constant_list"><!-- EN-Revision: fb2b760cac71413ec55fe403086586fd1560a002 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+ <variablelist role="constant_list"><!-- EN-Revision: c29164e0e6db5f24c46d8f98d520003cfde9d1fa Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
   <title><function>curl-setopt</function></title>
   <varlistentry xml:id="constant.curlopt-abstract-unix-socket">
    <term>
@@ -597,6 +597,7 @@
      É condicionalmente habilitada por padrão se o PHP for compilado sem uso de threads
      (CLI, FCGI, Apache2-Prefork, etc.).
      Disponível a partir do cURL 7.9.3 e descontinuada a partir do cURL 7.11.1.
+     A partir do PHP 8.4, esta opção não tem mais qualquer efeito.
     </para>
    </listitem>
   </varlistentry>
@@ -970,6 +971,8 @@
      Um tempo limite em segundos em que o cURL aguardará uma resposta de um servidor FTP.
      Esta opção substitui <constant>CURLOPT_TIMEOUT</constant>.
      Esta opção aceita qualquer valor que possa ser convertido em um <type>int</type> válido.
+     Este nome de opção foi substituído por <constant>CURLOPT_SERVER_RESPONSE_TIMEOUT</constant>,
+     disponível a partir do PHP 8.4.0.
      Disponível a partir do cURL 7.10.8 e defasado a partir do cURL 7.85.0.
     </para>
    </listitem>
@@ -3852,6 +3855,8 @@
      frequência destas sondas podem ser controlados pelas opções <constant>CURLOPT_TCP_KEEPIDLE</constant>
      e <constant>CURLOPT_TCP_KEEPINTVL</constant>, desde que o sistema operacional
      as suporte. Se definida para <literal>0</literal> (padrão), as sondas são desabilitadas.
+     O número máximo de sondas pode ser definido com a opção
+     <constant>CURLOPT_TCP_KEEPCNT</constant>.
      Disponível a partir do cURL 7.25.0.
     </para>
    </listitem>
@@ -3883,6 +3888,19 @@
      Nem todos os sistemas operacionais suportam esta opção.
      O padrão é <literal>60</literal>.
      Disponível a partir do cURL 7.25.0.
+    </para>
+   </listitem>
+  </varlistentry>
+  <varlistentry xml:id="constant.curlopt-tcp-keepcnt">
+   <term>
+    <constant>CURLOPT_TCP_KEEPCNT</constant>
+    (<type>int</type>)
+   </term>
+   <listitem>
+    <para>
+     Define o número máximo de sondas de verificação de atividade TCP.
+     O padrão é <literal>9</literal>.
+     Disponível a partir do PHP 8.4.0 e cURL 8.9.0.
     </para>
    </listitem>
   </varlistentry>
@@ -4427,6 +4445,22 @@
     </para>
    </listitem>
   </varlistentry>
+  <varlistentry xml:id="constant.curlopt-server-response-timeout">
+   <term>
+    <constant>CURLOPT_SERVER_RESPONSE_TIMEOUT</constant>
+    (<type>int</type>)
+   </term>
+   <listitem>
+    <para>
+     Um tempo limite em segundos que o cURL esperará por uma resposta de um servidor
+     <acronym>FTP</acronym>, <acronym>SFTP</acronym>, <acronym>IMAP</acronym>,
+     <acronym>SCP</acronym>, <acronym>SMTP</acronym> ou <acronym>POP3</acronym>.
+     Esta opção substitui a opção <constant>CURLOPT_FTP_RESPONSE_TIMEOUT</constant> existente
+     que foi descontinuada no cURL 7.85.0.
+     Disponível a partir do PHP 8.4.0.
+    </para>
+   </listitem>
+  </varlistentry>
   <varlistentry xml:id="constant.curlopt-xoauth2-bearer">
    <term>
     <constant>CURLOPT_XOAUTH2_BEARER</constant>
@@ -4438,6 +4472,207 @@
      Defina como &null; para desabilitar.
      O padrão é &null;.
      Disponível a partir do PHP 7.0.7 e cURL 7.33.0.
+    </para>
+   </listitem>
+  </varlistentry>
+  <varlistentry xml:id="constant.curlopt-prereqfunction">
+   <term>
+    <constant>CURLOPT_PREREQFUNCTION</constant>
+    (<type>int</type>)
+   </term>
+   <listitem>
+    <para>
+     Uma função do tipo <type>callable</type> com a seguinte assinatura que é chamada depois que
+     a conexão é estabelecida, mas antes que a carga útil da solicitação (por exemplo, a
+     solicitação GET/POST/DELETE de uma conexão HTTP) seja enviada e pode ser usada para cancelar
+     ou permitir a conexão dependendo do endereço IP de origem e destino e dos números
+     de porta:
+     <methodsynopsis>
+      <type>int</type><methodname><replaceable>callback</replaceable></methodname>
+      <methodparam><type>CurlHandle</type><parameter>curlHandle</parameter></methodparam>
+      <methodparam><type>string</type><parameter>destination_ip</parameter></methodparam>
+      <methodparam><type>string</type><parameter>local_ip</parameter></methodparam>
+      <methodparam><type>int</type><parameter>destination_port</parameter></methodparam>
+      <methodparam><type>int</type><parameter>local_port</parameter></methodparam>
+     </methodsynopsis>
+     <variablelist role="function_parameters">
+      <varlistentry>
+       <term><parameter>curlHandle</parameter></term>
+       <listitem>
+        <simpara>
+         O identificador cURL.
+        </simpara>
+       </listitem>
+      </varlistentry>
+      <varlistentry>
+       <term><parameter>destination_ip</parameter></term>
+       <listitem>
+        <simpara>
+         O IP primário do servidor remoto estabelecido com esta conexão.
+         Para <acronym>FTP</acronym>, este é o IP da conexão de controle.
+         Os endereços IPv6 são representados sem colchetes.
+        </simpara>
+       </listitem>
+      </varlistentry>
+      <varlistentry>
+       <term><parameter>local_ip</parameter></term>
+       <listitem>
+        <simpara>
+         O IP de origem para esta conexão.
+         Os endereços IPv6 são representados sem colchetes.
+        </simpara>
+       </listitem>
+      </varlistentry>
+      <varlistentry>
+       <term><parameter>destination_port</parameter></term>
+       <listitem>
+        <simpara>
+         O número da porta primária no servidor remoto estabelecido com esta conexão.
+         Para <acronym>FTP</acronym>, esta é a porta para a conexão de controle.
+         Este pode ser um número de porta <acronym>TCP</acronym> ou <acronym>UDP</acronym> dependendo do protocolo.
+        </simpara>
+       </listitem>
+      </varlistentry>
+      <varlistentry>
+       <term><parameter>local_port</parameter></term>
+       <listitem>
+        <simpara>
+         O número da porta de origem para esta conexão.
+         Este pode ser um número de porta <acronym>TCP</acronym> ou <acronym>UDP</acronym> dependendo do protocolo.
+        </simpara>
+       </listitem>
+      </varlistentry>
+     </variablelist>
+     Retorne <constant>CURL_PREREQFUNC_OK</constant> para permitir a solicitação ou
+     <constant>CURL_PREREQFUNC_ABORT</constant> para abortar a transferência.
+     Disponível a partir do PHP 8.4.0 e cURL 7.80.0.
+    </para>
+   </listitem>
+  </varlistentry>
+  <varlistentry xml:id="constant.curlopt-debugfunction">
+   <term>
+    <constant>CURLOPT_DEBUGFUNCTION</constant>
+    (<type>int</type>)
+   </term>
+   <listitem>
+    <para>
+     Disponível a partir do PHP 8.4.0.
+     Esta opção requer a opção <constant>CURLOPT_VERBOSE</constant> habilitada.
+     Uma função do tipo <type>callable</type> para substituir a saída detalhada do cURL padrão.
+     Esse retorno de chamada é chamado durante vários estágios da solicitação com informações detalhadas de depuração.
+     O retorno de chamada deve corresponder à seguinte assinatura:
+     <methodsynopsis>
+      <type>void</type><methodname><replaceable>callback</replaceable></methodname>
+      <methodparam><type>CurlHandle</type><parameter>curlHandle</parameter></methodparam>
+      <methodparam><type>int</type><parameter>type</parameter></methodparam>
+      <methodparam><type>string</type><parameter>data</parameter></methodparam>
+     </methodsynopsis>
+     <variablelist role="function_parameters">
+      <varlistentry>
+       <term><parameter>curlHandle</parameter></term>
+       <listitem>
+        <simpara>
+         O identificador cURL.
+        </simpara>
+       </listitem>
+      </varlistentry>
+      <varlistentry>
+       <term><parameter>type</parameter></term>
+       <listitem>
+        <simpara>
+         Uma das seguintes constantes indicando o tipo do valor <parameter>data</parameter>:
+        </simpara>
+        <variablelist xml:id="constant.curl-debugfunction.constants" role="constant_list">
+         <varlistentry xml:id="constant.curlinfo-text">
+          <term>
+           <constant>CURLINFO_TEXT</constant>
+           (<type>int</type>)
+          </term>
+          <listitem>
+           <simpara>
+            Texto informativo.
+           </simpara>
+          </listitem>
+         </varlistentry>
+         <varlistentry xml:id="constant.curlinfo-header-in">
+          <term>
+           <constant>CURLINFO_HEADER_IN</constant>
+           (<type>int</type>)
+          </term>
+          <listitem>
+           <simpara>
+            Dados de cabeçalho (ou semelhantes a cabeçalho) recebidos do par.
+           </simpara>
+          </listitem>
+         </varlistentry>
+         <varlistentry xml:id="constant.curlinfo-header-out-debug">
+          <term>
+           <constant linkend="constant.curlinfo-header-out-debug">CURLINFO_HEADER_OUT</constant>
+           (<type>int</type>)
+          </term>
+          <listitem>
+           <simpara>
+            Dados de cabeçalho (ou semelhantes a cabeçalho) enviados ao par.
+           </simpara>
+          </listitem>
+         </varlistentry>
+         <varlistentry xml:id="constant.curlinfo-data-in">
+          <term>
+           <constant>CURLINFO_DATA_IN</constant>
+           (<type>int</type>)
+          </term>
+          <listitem>
+           <simpara>
+            Dados de protocolo não processados ​​recebidos do par.
+            Mesmo que os dados sejam codificados ou compactados, eles não são fornecidos decodificados nem descompactados para esse retorno de chamada.
+           </simpara>
+          </listitem>
+         </varlistentry>
+         <varlistentry xml:id="constant.curlinfo-data-out">
+          <term>
+           <constant>CURLINFO_DATA_OUT</constant>
+           (<type>int</type>)
+          </term>
+          <listitem>
+           <simpara>
+            Dados de protocolo enviados ao par.
+           </simpara>
+          </listitem>
+         </varlistentry>
+         <varlistentry xml:id="constant.curlinfo-ssl-data-in">
+          <term>
+           <constant>CURLINFO_SSL_DATA_IN</constant>
+           (<type>int</type>)
+          </term>
+          <listitem>
+           <simpara>
+            Dados <acronym>SSL</acronym>/<acronym>TLS</acronym> (binários) recebidos do par.
+           </simpara>
+          </listitem>
+         </varlistentry>
+         <varlistentry xml:id="constant.curlinfo-ssl-data-out">
+          <term>
+           <constant>CURLINFO_SSL_DATA_OUT</constant>
+           (<type>int</type>)
+          </term>
+          <listitem>
+           <simpara>
+            Dados <acronym>SSL</acronym>/<acronym>TLS</acronym> (binários) enviados ao par.
+           </simpara>
+          </listitem>
+         </varlistentry>
+        </variablelist>
+       </listitem>
+      </varlistentry>
+      <varlistentry>
+       <term><parameter>data</parameter></term>
+       <listitem>
+        <simpara>
+         Dados detalhados de depuração do tipo indicado pelo parâmetro <parameter>type</parameter>.
+        </simpara>
+       </listitem>
+      </varlistentry>
+     </variablelist>
     </para>
    </listitem>
   </varlistentry>
