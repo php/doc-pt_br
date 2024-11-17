@@ -1,114 +1,162 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 86e6094e86b84a51d00ab217ac50ce8dde33d82a Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 2aaaf1967f2510471b694daf8e41a419fc98b751 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.exit" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>exit</refname>
-  <refpurpose>Mostra uma mensagem e termina o script atual</refpurpose>
+  <refpurpose>Termina o script atual com um código ou uma mensagem de status</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>void</type><methodname>exit</methodname>
-   <methodparam choice="opt"><type>string</type><parameter>status</parameter></methodparam>
+   <type>never</type><methodname>exit</methodname>
+   <methodparam choice="opt"><type class="union"><type>string</type><type>int</type></type><parameter>status</parameter><initializer>0</initializer></methodparam>
   </methodsynopsis>
-  <methodsynopsis>
-   <type>void</type><methodname>exit</methodname>
-   <methodparam><type>int</type><parameter>status</parameter></methodparam>
-  </methodsynopsis>
-  <para>
+  <simpara>
    Termina a execução do script.
    <link linkend="function.register-shutdown-function">Funções de desligamento</link>
-   e <link linkend="language.oop5.decon.destructor">destruidores de objeto</link>
-   sempre serão executados mesmo que <literal>exit</literal> seja chamada.
-  </para>
-  <para>
-   <literal>exit</literal> é uma construção de linguagem e pode ser chamada
-   sem parênteses se <parameter>status</parameter> não foi informado.
-  </para>
+   e <link linkend="language.oop5.decon.destructor">destrutores de objeto</link>
+   sempre serão executados mesmo que <function>exit</function> seja chamada.
+   Entretanto, blocos &finally; nunca são executados.
+  </simpara>
+  <simpara>
+   Um código de saída igual a <literal>0</literal> é usado para indicar que o programa
+   foi bem sucedido em suas tarefas.
+   Qualquer outro valor indica que algum tipo de erro ocorreu durante a execução.
+  </simpara>
+  <simpara>
+   <function>exit</function> é uma função especial
+   porque tem um token dedicado no analisador,
+   e como tal pode ser usada como uma instrução (ou seja, sem parênteses) para
+   terminar o script com o código de status padrão.
+  </simpara>
+  <caution>
+   <simpara>
+    Não é possível desabilitar ou criar uma função com namespace ocultando
+    a função global <function>exit</function>.
+   </simpara>
+  </caution>
  </refsect1>
 
  <refsect1 role="parameters">
   &reftitle.parameters;
-  <para>
-   <variablelist>
-    <varlistentry>
-     <term><parameter>status</parameter></term>
-     <listitem>
-      <para>
-       Se <parameter>status</parameter> for uma string, a função mostra
-       <parameter>status</parameter> logo antes de sair.
-      </para>
-      <para>
-       Se <parameter>status</parameter> for um <type>int</type>, este valor será
-       usado como o estado da saída e não será mostrado Estados de saída devem estar
-       no intervalo de 0 a 254, o estado de saída 255 é reservado pelo PHP e não deve
-       ser usado. O estado 0 é usado para terminar o programa
-       com sucesso.
-      </para>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-  </para>
+  <variablelist>
+   <varlistentry>
+    <term><parameter>status</parameter></term>
+    <listitem>
+     <simpara>
+      Se <parameter>status</parameter> for uma string,
+      esta função exibe o <parameter>status</parameter> logo antes de sair.
+      O código de saída retornado pelo PHP será <literal>0</literal>.
+     </simpara>
+     <para>
+      Se <parameter>status</parameter> for um <type>int</type>,
+      o código de saída retornado pelo PHP será <parameter>status</parameter>.
+      <note>
+       <simpara>
+        Códigos de saída devem estar no intervalo <literal>0</literal> a <literal>254</literal>,
+        o código de saída <literal>255</literal> é reservado pelo PHP e não deve ser usado.
+       </simpara>
+      </note>
+     </para>
+     <warning>
+      <simpara>
+       Antes do PHP 8.4.0, <function>exit</function> não seguia o padrão do PHP de
+       <link linkend="language.types.type-juggling.function">conversão automática de tipos</link> e
+       nem respeitava a
+       declaração
+       <link linkend="language.types.declarations.strict"><literal>strict_types</literal></link>.
+      </simpara>
+      <simpara>
+       Qualquer valor que não fosse do tipo <type>int</type> era convertido para <type>string</type>,
+       incluindo valores dos tipos <type>resource</type> e <type>array</type>.
+       A partir do PHP 8.4.0, ela segue a conversão automática de tipos e lança uma
+       exceção do tipo <exceptionname>TypeError</exceptionname> para valores inválidos.
+      </simpara>
+     </warning>
+    </listitem>
+   </varlistentry>
+  </variablelist>
  </refsect1>
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-   &return.void;
-  </para>
+  <simpara>
+   Como a função termina o script PHP, nenhum valor é retornado.
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.4.0</entry>
+      <entry>
+       <function>exit</function> agora é uma função verdadeira,
+       portanto segue a
+       <link linkend="language.types.type-juggling.function">conversão automática de tipos</link> usual,
+       é afetada pela declaração
+       <link linkend="language.types.declarations.strict"><literal>strict_types</literal></link>,
+       pode ser chamada com argumentos nomeados, e pode ser uma
+       <link linkend="functions.variable-functions">função variável</link>.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
  </refsect1>
 
  <refsect1 role="examples">
   &reftitle.examples;
-  <para>
-   <example>
-    <title>Exemplo de <literal>exit</literal></title>
-    <programlisting role="php">
+  <example>
+   <title>Exemplo básico de <function>exit</function></title>
+   <programlisting role="php">
 <![CDATA[
 <?php
 
-$filename = '/path/to/data-file';
-$file = fopen($filename, 'r')
-    or exit("unable to open file ($filename)");
-
-?>
-]]>
-    </programlisting>
-   </example>
-  </para>
-  <para>
-   <example>
-    <title>Exemplo de <literal>exit</literal> com estado de saída</title>
-    <programlisting role="php">
-<![CDATA[
-<?php
-
-//sai do programa normalmente
-exit;
+// sai do programa normalmente
 exit();
 exit(0);
 
-//sai com código de erro
+// sai com um código de erro
 exit(1);
-exit(0376); //octal
 
 ?>
 ]]>
-    </programlisting>
-   </example>
-  </para>
-  <para>
-   <example>
-    <title>Desligamento de funções e destruidores de objeto são executados independentemente</title>
-    <programlisting role="php">
+   </programlisting>
+  </example>
+  <example>
+   <title>Exemplo de <function>exit</function> com uma <type>string</type></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$filename = '/caminho/para/arquivo-de-dados';
+$file = fopen($filename, 'r')
+    or exit("não foi possível abrir o arquivo ($filename)");
+
+?>
+]]>
+   </programlisting>
+  </example>
+  <example>
+   <title>Funções de desligamento e destrutores de objeto são executados independentemente</title>
+   <programlisting role="php">
 <![CDATA[
 <?php
 class Foo
 {
     public function __destruct()
     {
-        echo 'Destruidor: ' . __METHOD__ . '()' . PHP_EOL;
+        echo 'Destrutor: ' . __METHOD__ . '()' . PHP_EOL;
     }
 }
 
@@ -124,41 +172,52 @@ exit();
 echo 'Este texto não será mostrado.';
 ?>
 ]]>
-    </programlisting>
-    &example.outputs;
-    <screen>
- <![CDATA[
- Desligamento: shutdown()
- Destruidor: Foo::__destruct()
- ]]>
-    </screen>
-   </example>
-  </para>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+Desligamento: shutdown()
+Destrutor: Foo::__destruct()
+]]>
+   </screen>
+  </example>
+  <example>
+   <title><function>exit</function> como uma instrução</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+// sai do programa normalmente com um código de saída igual a 0
+exit;
+
+?>
+]]>
+   </programlisting>
+  </example>
  </refsect1>
 
  <refsect1 role="notes">
   &reftitle.notes;
-
-  &note.language-construct;
-
-  <note>
-   <para>
-    Esta construção de linguagem é equivalente a <function>die</function>.
-   </para>
-  </note>
+  <warning>
+   <simpara>
+    Antes do PHP 8.4.0, <function>exit</function> era uma construção de linguagem
+    e não uma função, portanto não era possível chamá-la usando
+    <link linkend="functions.variable-functions">funções variáveis</link>,
+    ou <link linkend="functions.named-arguments">argumentos nomeados</link>.
+   </simpara>
+  </warning>
  </refsect1>
 
  <refsect1 role="seealso">
   &reftitle.seealso;
-  <para>
-   <simplelist>
-    <member><function>register_shutdown_function</function></member>
-   </simplelist>
-  </para>
+  <simplelist>
+   <member><function>register_shutdown_function</function></member>
+   <member><link linkend="function.register-shutdown-function">Funções de desligamento</link></member>
+   <member><link linkend="language.oop5.decon.destructor">Destrutores de objeto</link></member>
+  </simplelist>
  </refsect1>
 
 </refentry>
-
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
