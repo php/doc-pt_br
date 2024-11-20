@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 5bc68add3da3cd18c40f851e944b15095d3a26aa Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.openssl-sign" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>openssl_sign</refname>
+  <refpurpose>Gera assinatura</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>bool</type><methodname>openssl_sign</methodname>
+   <methodparam><type>string</type><parameter>data</parameter></methodparam>
+   <methodparam><type>string</type><parameter role="reference">signature</parameter></methodparam>
+   <methodparam><modifier role="attribute">#[\SensitiveParameter]</modifier><type class="union"><type>OpenSSLAsymmetricKey</type><type>OpenSSLCertificate</type><type>array</type><type>string</type></type><parameter>private_key</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>string</type><type>int</type></type><parameter>algorithm</parameter><initializer><constant>OPENSSL_ALGO_SHA1</constant></initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   <function>openssl_sign</function> calcula uma assinatura para os dados
+   informados em <parameter>data</parameter> gerando uma assinatura digital
+   criptográfica usando a chave privada associada a
+   <parameter>private_key</parameter>. Observe que os dados em si
+   não são criptografados.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>data</parameter></term>
+     <listitem>
+      <para>
+       A string de dados a ser assinada.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>signature</parameter></term>
+     <listitem>
+      <para>
+       Se a chamada for bem-sucedida, a assinatura será retornada em
+       <parameter>signature</parameter>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>private_key</parameter></term>
+     <listitem>
+      <para>
+       <classname>OpenSSLAsymmetricKey</classname> - uma chave, retornada por <function>openssl_get_privatekey</function>
+      </para>
+      <para>
+       <type>string</type> - uma chave no formato <acronym>PEM</acronym>
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>algorithm</parameter></term>
+     <listitem>
+      <para>
+       <type>int</type> - um destes <link linkend="openssl.signature-algos">Algoritmos de Assinatura</link>.
+      </para>
+      <para>
+       <type>string</type> - uma string válida retornada por <function>openssl_get_md_methods</function>, por exemplo, "sha256WithRSAEncryption" ou "sha384".
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.success;
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       <parameter>private_key</parameter> agora aceita uma instância de <classname>OpenSSLAsymmetricKey</classname>
+       ou <classname>OpenSSLCertificate</classname>;
+       anteriormente, um &resource; do tipo <literal>OpenSSL key</literal> ou <literal>OpenSSL X.509</literal>
+       era aceito.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>openssl_sign</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// Presume-se que $data contenha os dados a serem assinados
+
+// busca a chave privada do arquivo e a prepara
+$pkeyid = openssl_pkey_get_private("file://src/openssl-0.9.6/demos/sign/key.pem");
+
+// calcula assinatura
+openssl_sign($data, $signature, $pkeyid);
+
+// libera a chave da memória
+openssl_free_key($pkeyid);
+?>
+]]>
+    </programlisting>
+   </example>
+   <example>
+    <title>Exemplo de <function>openssl_sign</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// dados a serem assinados
+$data = 'my data';
+
+// cria nova chave pública e privada
+$new_key_pair = openssl_pkey_new(array(
+    "private_key_bits" => 2048,
+    "private_key_type" => OPENSSL_KEYTYPE_RSA,
+));
+openssl_pkey_export($new_key_pair, $private_key_pem);
+
+$details = openssl_pkey_get_details($new_key_pair);
+$public_key_pem = $details['key'];
+
+// cria assinatura
+openssl_sign($data, $signature, $private_key_pem, OPENSSL_ALGO_SHA256);
+
+// grava para mais tarde
+file_put_contents('private_key.pem', $private_key_pem);
+file_put_contents('public_key.pem', $public_key_pem);
+file_put_contents('signature.dat', $signature);
+
+// verifica assinatura
+$r = openssl_verify($data, $signature, $public_key_pem, "sha256WithRSAEncryption");
+var_dump($r);
+?>
+]]>
+    </programlisting>
+   </example>
+
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>openssl_verify</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
