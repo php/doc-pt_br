@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: db22a7cfcbc3af221f67e228336ac3e2d62aaf2c Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 35ca7f1087870c6023ef7a3dd0248501741c8194 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.openlog" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>openlog</refname>
@@ -21,8 +21,8 @@
   <para>
    O uso de <function>openlog</function> é opcional. Ela
    será automaticamente chamada por <function>syslog</function> se
-   necessário, e nesse caso <parameter>prefix</parameter> será padronizado
-   como &false;.
+   necessário, e nesse caso o padrão de <parameter>prefix</parameter> será
+   uma string vazia.
   </para>
  </refsect1>
 
@@ -42,53 +42,15 @@
      <term><parameter>flags</parameter></term>
      <listitem>
       <para>
-       O argumento <parameter>flags</parameter> é usado para indicar
-       quais opções de registro serão usadas ao gerar uma mensagem de registro.
-       <table>
-        <title>Opções de <function>openlog</function></title>
-        <tgroup cols="2">
-         <thead>
-          <row>
-           <entry>Constante</entry>
-           <entry>Descrição</entry>
-          </row>
-         </thead>
-         <tbody>
-          <row>
-           <entry><constant>LOG_CONS</constant></entry>
-           <entry>
-            se houver um erro ao enviar dados para o registrador do sistema,
-            grava diretamente no console do sistema
-           </entry>
-          </row>
-          <row>
-           <entry><constant>LOG_NDELAY</constant></entry>
-           <entry>
-            abre a conexão com o registrador imediatamente
-           </entry>
-          </row>
-          <row>
-           <entry><constant>LOG_ODELAY</constant></entry>
-           <entry>
-            (padrão) retarda a abertura da conexão até que a primeira
-            mensagem seja registrada
-           </entry>
-          </row>
-          <row>
-           <entry><constant>LOG_PERROR</constant></entry>
-           <entry>exibe mensagem de registro também na saída de erro padrão</entry>
-          </row>
-          <row>
-           <entry><constant>LOG_PID</constant></entry>
-           <entry>inclui PID em cada mensagem</entry>
-          </row>
-         </tbody>
-        </tgroup>
-       </table>
-       Pode-se usar uma ou mais dessas opções. Ao usar múltiplas opções,
-       basta combiná-las com uma operação binária <literal>OR</literal>, ou seja, para abrir a conexão
-       imediatamente, escrever no console e incluir o PID em cada mensagem,
-       deve-se usar: <literal>LOG_CONS | LOG_NDELAY | LOG_PID</literal>
+       Máscara de bits das seguinte constantes:
+       <simplelist>
+        <member><constant>LOG_CONS</constant></member>
+        <member><constant>LOG_NDELAY</constant></member>
+        <member><constant>LOG_ODELAY</constant></member>
+        <member><constant>LOG_NOWAIT</constant></member>
+        <member><constant>LOG_PERROR</constant></member>
+        <member><constant>LOG_PID</constant></member>
+       </simplelist>
       </para>
      </listitem>
     </varlistentry>
@@ -97,80 +59,29 @@
      <listitem>
       <para>
        O argumento <parameter>facility</parameter> é usado para especificar que
-       tipo de programa está registrando a mensagem. Isto permite que seja especificado
-       (na configuração do syslog da máquina) como as mensagens provenientes de
-       diferentes módulos serão tratadas.
-       <table>
-        <title>Módulos de <function>openlog</function></title>
-        <tgroup cols="2">
-         <thead>
-          <row>
-           <entry>Constante</entry>
-           <entry>Descrição</entry>
-          </row>
-         </thead>
-         <tbody>
-          <row>
-           <entry><constant>LOG_AUTH</constant></entry>
-           <entry>
-            mensagens de segurança/autorização (consulte
-            <constant>LOG_AUTHPRIV</constant>
-            em sistemas onde esta constante estiver definida)
-           </entry>
-          </row>
-          <row>
-           <entry><constant>LOG_AUTHPRIV</constant></entry>
-           <entry>mensagens de segurança/autorização (privadas)</entry>
-          </row>
-          <row>
-           <entry><constant>LOG_CRON</constant></entry>
-           <entry>daemons de relógio ('cron' e 'at')</entry>
-          </row>
-          <row>
-           <entry><constant>LOG_DAEMON</constant></entry>
-           <entry>outros daemons de sistema</entry>
-          </row>
-          <row>
-           <entry><constant>LOG_KERN</constant></entry>
-           <entry>mensagens do kernel</entry>
-          </row>
-          <row>
-           <entry><constant>LOG_LOCAL0</constant> ... <constant>LOG_LOCAL7</constant></entry>
-           <entry>reservadas para uso local, não disponíveis no Windows</entry>
-          </row>
-          <row>
-           <entry><constant>LOG_LPR</constant></entry>
-           <entry>subsistema de impressora de linha</entry>
-          </row>
-          <row>
-           <entry><constant>LOG_MAIL</constant></entry>
-           <entry>subsistemas de e-mail</entry>
-          </row>
-          <row>
-           <entry><constant>LOG_NEWS</constant></entry>
-           <entry>subsistema de notícias USENET</entry>
-          </row>
-          <row>
-           <entry><constant>LOG_SYSLOG</constant></entry>
-           <entry>mensagens geradas internamente pelo syslogd</entry>
-          </row>
-          <row>
-           <entry><constant>LOG_USER</constant></entry>
-           <entry>mensagens genéricas no nível do usuário</entry>
-          </row>
-          <row>
-           <entry><constant>LOG_UUCP</constant></entry>
-           <entry>subsistema UUCP</entry>
-          </row>
-         </tbody>
-        </tgroup>
-       </table>
+       tipo de módulo está registrando a mensagem.
+       Isto permite que o arquivo de configuração que mensagens provenientes de diferentes
+       módulos serão tratadas diferentemente.
+       Deve ser uma das constantes a seguir:
+       <simplelist>
+        <member><constant>LOG_AUTH</constant></member>
+        <member><constant>LOG_AUTHPRIV</constant></member>
+        <member><constant>LOG_CRON</constant></member>
+        <member><constant>LOG_DAEMON</constant></member>
+        <member><constant>LOG_KERN</constant></member>
+        <member><constant>LOG_LOCAL<replaceable>[0-7]</replaceable></constant></member>
+        <member><constant>LOG_LPR</constant></member>
+        <member><constant>LOG_MAIL</constant></member>
+        <member><constant>LOG_NEWS</constant></member>
+        <member><constant>LOG_SYSLOG</constant></member>
+        <member><constant>LOG_USER</constant></member>
+        <member><constant>LOG_UUCP</constant></member>
+       </simplelist>
       </para>
       <note>
-       <para>
-        <constant>LOG_USER</constant> é o único tipo de registro válido nos sistemas
-        operacionais Windows.
-       </para>
+       <simpara>
+        Este parâmetro é ignorado no Windows.
+       </simpara>
       </note>
      </listitem>
     </varlistentry>
