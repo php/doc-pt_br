@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 3d522c890d98c563bb283cf89ec5da5f535cfb8f Maintainer: ae Status: ready --><!-- CREDITS: felipe,narigone,fabioluciano,ae -->
+<!-- EN-Revision: 2e7c00fd314a708ecbd495ef7cc9ae8c8462c33c Maintainer: ae Status: ready --><!-- CREDITS: felipe,narigone,fabioluciano,ae,leonardolara -->
  <sect1 xml:id="language.oop5.interfaces" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Interfaces de Objetos</title>
   <para>
-   Interfaces de objetos permitem a criação de códigos que especificam quais métodos
-   uma classe deve implementar, sem definir como esses métodos serão
+   Interfaces de objetos permitem a criação de códigos que especificam quais métodos e propriedades
+   uma classe deve implementar, sem definir como esses métodos ou propriedades serão
    implementados. Interfaces compartilham o namespace com classes e traits, então eles
    não podem usar os mesmos nomes.
   </para>
@@ -88,6 +88,87 @@
     como <link linkend="language.oop5.constants">constantes de classes</link>, com exceção de
     não podem ser sobrescritas por uma classe/interface herdeira.
    </para>
+  </sect2>
+  <sect2 xml:id="language.oop5.interfaces.properties">
+   <title>Propriedades</title>
+   <simpara>
+    A partir do PHP 8.4.0, as interfaces também podem declarar propriedades.
+    Se o fizerem, a declaração deverá especificar se a propriedade deve ser legível,
+    gravável ou ambas.
+    A declaração da interface se aplica apenas ao acesso público de leitura e gravação.
+   </simpara>
+   <simpara>
+    Uma classe pode satisfazer uma propriedade de interface de diversas maneiras.
+    Pode definir uma propriedade pública.
+    Pode definir uma
+    <link linkend="language.oop5.property-hooks.virtual">propriedade virtual</link> pública
+    que implementa apenas o gancho correspondente.
+    Ou uma propriedade de leitura pode ser satisfeita por uma propriedade <literal>readonly</literal>.
+    Entretanto, uma propriedade de interface configurável não pode ser <literal>somente leitura</literal>.
+   </simpara>
+   <example>
+    <title>Exemplo de propriedades de interface</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+interface I
+{
+    // Uma classe de implementação DEVE ter uma propriedade legível publicamente,
+    // mas ser ou não configurável publicamente é irrestrito.
+    public string $readable { get; }
+
+    // Uma classe de implementação DEVE ter uma propriedade gravável publicamente,
+    // mas ser ou não legível publicamente é irrestrito.
+    public string $writeable { set; }
+
+    // Uma classe de implementação DEVE ter uma propriedade que seja
+    // tanto legível quanto gravável publicamente.
+    public string $both { get; set; }
+}
+
+    // Esta classe implementa todas as três propriedades como propriedades tradicionais
+    // e sem ganchos; Isso é totalmente válido.
+class C1 implements I
+{
+    public string $readable;
+
+    public string $writeable;
+
+    public string $both;
+}
+
+// Esta classe implementa todas as três propriedades usando apenas os
+// ganchos solicitados. Isto também é inteiramente válido.
+class C2 implements I
+{
+    private string $written = '';
+    private string $all = '';
+
+    // Usa apenas um gancho get para criar uma propriedade virtual.
+    // Isso satisfaz o requisito "public get".
+    // Não é gravável, mas não é exigido pela interface.
+    public string $readable { get => strtoupper($this->writeable); }
+
+    // A interface requer apenas que a propriedade seja configurável,
+    // mas incluir operações get também é totalmente válido.
+    // Este exemplo cria uma propriedade virtual, o que é aceitável.
+    public string $writeable {
+        get => $this->written;
+        set => $value;
+    }
+
+    // Esta propriedade exige que tanto a leitura quanto a gravação
+    // sejam possíveis, portanto, precisamos implementar ambas ou
+    // permitir que ela tenha o comportamento padrão.
+    public string $both {
+        get => $this->all;
+        set => strtoupper($value);
+    }
+}
+?>
+]]>
+    </programlisting>
+   </example>
   </sect2>
   <sect2 xml:id="language.oop5.interfaces.examples">
    &reftitle.examples;

@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 9ee9eccf455188ab6eb352194eb6f9eb99e15606 Maintainer: ae Status: ready --><!-- CREDITS: narigone,ae,fabioluciano,geekcom -->
+<!-- EN-Revision: 2e7c00fd314a708ecbd495ef7cc9ae8c8462c33c Maintainer: ae Status: ready --><!-- CREDITS: narigone,ae,fabioluciano,geekcom,leonardolara -->
  <sect1 xml:id="language.oop5.abstract" xmlns="http://docbook.org/ns/docbook">
   <title>Abstração de Classes</title>
 
   <para>
-   O PHP possui métodos e classes abstratas. Classes definidas como
+   O PHP possui métodos, classes e propriedades abstratas. Classes definidas como
    abstratas não podem ser instanciadas, e qualquer classe que
-   contenha ao menos um método abstrato também deve ser abstrata. Métodos
-   são definidos como abstratos declarando a intenção em sua assinatura, e não podem
-   definir a implementação.
+   contenha ao menos um método abstrato ou uma propriedade abstrata também deve ser abstrata.
+   Métodos definidos como abstratos simplesmente declaram a assinatura e se ele é público ou protegido;
+   eles não podem definir a implementação. Propriedade definidas como abstratas
+   podem declarar um requisito para o comportamento de <literal>get</literal> ou <literal>set</literal>,
+   e podem fornecer uma implementação para uma das operações, mas não para ambas.
   </para>
 
   <para>
@@ -19,8 +21,18 @@
    <link linkend="language.oop.lsp">compatibilidade de assinatura</link>.
   </para>
 
+  <simpara>
+   A partir do PHP 8.4, uma classe abstrata pode declarar uma propriedade abstrata, seja pública ou protegida.
+   Uma propriedade abstrata protegida pode ser satisfeita por uma propriedade que pode ser lida/gravada no
+   escopo protegido ou público.
+  </simpara>
+  <simpara>
+   Uma propriedade abstrata pode ser satisfeita por uma propriedade padrão ou por uma propriedade
+   com <link linkend="language.oop5.property-hooks">ganchos</link> definidos, correspondentes à operação necessária.
+  </simpara>
+
   <example>
-   <title>Exemplo de classe abstrata</title>
+   <title>Exemplo de método abstrato</title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -80,7 +92,7 @@ FOO_ConcreteClass2
   </example>
 
   <example>
-   <title>Exemplo de classe abstrata</title>
+   <title>Exemplo de método abstrato</title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -120,6 +132,66 @@ Mr. Pacman
 Mrs. Pacwoman
 ]]>
    </screen>
+  </example>
+  <example>
+   <title>Exemplo de propriedade abstrata</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+abstract class A
+{
+    // A extensão de classes deve ter uma propriedade que pode ser obtida publicamente.
+    abstract public string $readable { get; }
+
+    // A extensão de classes deve ter uma propriedade gravável protegida ou pública.
+    abstract protected string $writeable { set; }
+
+    // A extensão de classes deve ter uma propriedade simétrica protegida ou pública.
+    abstract protected string $both { get; set; }
+}
+
+class C extends A
+{
+    // Isto satisfaz o requisito e também o torna configurável, o que é válido.
+    public string $readable;
+
+    // Isso NÃO satisfaria o requisito, pois não é legível publicamente.
+    protected string $readable;
+
+    // Isso satisfaz exatamente o requisito, portanto é suficiente.
+    // Pode ser alterado, somente a partir do escopo protegido.
+    protected string $writeable {
+        set => $value;
+    }
+
+    // Isso expande a visibilidade de protegida para pública, o que é aceitável.
+    public string $both;
+}
+?>
+]]>
+   </programlisting>
+  </example>
+  <simpara>
+   Uma propriedade abstrata em uma classe abstrata pode fornecer implementações para qualquer gancho,
+   mas deve ter <literal>get</literal> ou <literal>set</literal> declarado, mas não definido (como no exemplo acima).
+  </simpara>
+  <example>
+   <title>Exemplo de propriedade abstrata</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+abstract class A
+{
+    // Isso fornece uma implementação de conjunto padrão (mas substituível)
+    // e requer que classes filhas forneçam uma implementação get.
+    abstract public string $foo {
+        get;
+        set { $this->foo = $value };
+    }
+}
+?>
+ ]]>
+   </programlisting>
   </example>
  </sect1>
 <!-- Keep this comment at the end of the file
