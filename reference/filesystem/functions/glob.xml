@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: fdd2aca71cfb2af77e365633a57e79e22bc1786e Maintainer: diogo Status: ready --><!-- CREDITS: galvao,leonardolara -->
+<!-- EN-Revision: 5fb1bb4a70dc9cf2538d9a78f423579b805137b4 Maintainer: leonardolara Status: ready --><!-- CREDITS: diogo,galvao,leonardolara -->
 <refentry xml:id="function.glob" xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude">
  <refnamediv>
   <refname>glob</refname>
-  <refpurpose>Acha caminhos que combinam com um padrão</refpurpose>
+  <refpurpose>Encontra caminhos que combinam com uma expressão</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
@@ -15,10 +15,17 @@
   </methodsynopsis>
   <para>
    A função <function>glob</function> procura por todos os caminhos
-   que combinem com o padrão <parameter>pattern</parameter> de acordo
+   que correspondem à expressão em <parameter>pattern</parameter> de acordo
    com as regras usadas pela função glob() da libc, que é semelhante
    às regras usadas por shells comuns.
   </para>
+  <simpara>
+   O comportamento em sistemas Unix e macOS é determinado pela implementação
+   de glob() no sistema. No Windows, é usada uma implementação que está em conformidade
+   com a definição POSIX 1003.2 para glob() e inclui
+   uma extensão para lidar com a convenção <literal>[!...]</literal>
+   para negar um intervalo.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -78,13 +85,9 @@
   <para>
    Retorna um array contendo os arquivos/diretórios que corresponderam, um array
    vazio se nenhum arquivo correspondeu ou &false; em caso de erro.
+   A menos que <literal>GLOB_NOSORT</literal> tenha sido usada, os nomes serão
+   ordenados alfabeticamente e numericamente.
   </para>
-  <note>
-   <para>
-    Em alguns sistemas é impossível distinguir entre resultado vazio ou um
-    erro.
-   </para>
-  </note>
  </refsect1>
 
  <refsect1 role="examples">
@@ -110,6 +113,30 @@ foreach (glob("*.txt") as $arquivo) {
 tamanho de funclist.txt 44686
 tamanho de funcsummary.txt 267625
 tamanho de quickref.txt 137820
+]]>
+    </screen>
+   </example>
+   <example>
+    <title>
+     Exemplo com uma expressão mais complexa
+    </title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+foreach (glob("caminho/*/*.{txt,md}", \GLOB_BRACE) as $filename) {
+    echo "$filename\n";
+}
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+caminho/docs/mailinglist-rules.md
+caminho/docs/README.md
+caminho/docs/release-process.md
+caminho/pear/install-pear.txt
+caminho/Zend/README.md
 ]]>
     </screen>
    </example>
