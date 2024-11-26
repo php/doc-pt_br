@@ -19,7 +19,7 @@ php doc-base/scripts/translation/qaxml.a.php
 php doc-base/scripts/translation/qaxml.e.php
 php doc-base/scripts/translation/qaxml.p.php
 php doc-base/scripts/translation/qaxml.t.php
-php doc-base/scripts/translation/qaxml.t.php
+php doc-base/scripts/translation/qaxml.w.php
 
 php doc-base/scripts/translation/qaxml.t.php acronym
 php doc-base/scripts/translation/qaxml.t.php classname
