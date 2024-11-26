@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 31b6ff768992a82022aade13880c595e19e054ba Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 4806183da465f81cd39158d03df4c4d8aa7df6aa Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.is-callable" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>is_callable</refname>
@@ -17,7 +17,9 @@
    <methodparam choice="opt"><type>string</type><parameter role="reference">callable_name</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
   <para>
-   Verifica se um valor é do tipo <type>callable</type>.
+   Verifica se o valor informado em <parameter>value</parameter> é do tipo <type>callable</type>,
+   ou se pode ser chamado usando a função
+   <function>call_user_func</function>.
   </para>
  </refsect1>
 
@@ -29,7 +31,7 @@
      <term><parameter>value</parameter></term>
      <listitem>
       <para>
-       O valor a ser verificado
+       O valor a ser verificado.
       </para>
      </listitem>
     </varlistentry>
@@ -38,10 +40,10 @@
      <listitem>
       <para>
        Se definido para &true; a função apenas verifica se
-       <parameter>value</parameter> pode ser uma função o método. Ela irá apenas
-       rejeitar variáveis simples que não sejam strings, ou um array que não
-       tem estrutura válida para ser usado como função de chamada de retorno. Os válidos
-       devem ter apenas 2 entradas, a primeira delas é um objeto
+       <parameter>value</parameter> pode ser uma função ou método. Ela irá
+       rejeitar quaisquer valores que não sejam objetos chamáveis, strings ou arrays
+       com uma estrutura válida para ser usado como uma função de retorno. Um array chamável válido
+       tem 2 entradas, a primeira delas é um objeto
        ou uma string, e a segunda uma string.
       </para>
      </listitem>
@@ -50,10 +52,10 @@
      <term><parameter>callable_name</parameter></term>
      <listitem>
       <para>
-       Recebe o "nome da função chamável". No exemplo abaixo é
-       "someClass::someMethod". Note, entretando, que embora a implicação de
-       que someClass::SomeMethod() seja um método estático que pode ser chamado, este não
-       é o caso.
+       Recebe o "nome da função chamável", por exemplo,
+       <literal>"AlgumaClasse::algumMétodo"</literal>. Observe, entretanto, que embora
+       a implicação de que <literal>AlgumaClasse::algumMétodo()</literal> seja um
+       método estático chamável, este não é o caso.
       </para>
      </listitem>
     </varlistentry>
@@ -73,45 +75,59 @@
   &reftitle.examples;
   <para>
    <example>
-    <title>Exemplo de <function>is_callable</function></title>
+    <title>Verificando se uma string pode ser chamada como uma função</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-// Como verificar uma variável para ver se ela pode ser chamada
-// como uma função
-
-//
-// Variável simples contendo uma função
-//
 
 function someFunction() {}
 
 $functionVariable = 'someFunction';
 
-var_dump(is_callable($functionVariable, false, $callable_name)); // bool(true)
+var_dump(is_callable($functionVariable, false, $callable_name));
 
-echo $callable_name, "\n"; // someFunction
-
-//
-// Array contendo um método
-//
-
-class someClass
-{
-    function someMethod() {}
-}
-
-$anObject = new someClass();
-
-$methodVariable = [$anObject, 'someMethod'];
-
-var_dump(is_callable($methodVariable, true, $callable_name));  // bool(true)
-
-echo $callable_name, "\n";  // someClass::someMethod
+var_dump($callable_name);
 
 ?>
 ]]>
     </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+bool(true)
+string(12) "someFunction"
+]]>
+    </screen>
+   </example>
+   <example>
+    <title>Checking whether an array can be called as a function</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+class SomeClass
+{
+    function someMethod() {}
+}
+
+$anObject = new SomeClass();
+
+$methodVariable = [$anObject, 'someMethod'];
+
+var_dump(is_callable($methodVariable, true, $callable_name));
+
+var_dump($callable_name);
+
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+bool(true)
+string(21) "SomeClass::someMethod"
+]]>
+    </screen>
    </example>
    <example>
     <title>Exemplo de <function>is_callable</function> e contrutores</title>
@@ -173,6 +189,7 @@ bool(false)
   &reftitle.seealso;
   <para>
    <simplelist>
+    <member><function>call_user_func</function></member>
     <member><function>function_exists</function></member>
     <member><function>method_exists</function></member>
    </simplelist>
