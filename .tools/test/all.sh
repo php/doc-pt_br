@@ -1,7 +1,7 @@
 
-(cd doc-base; git pull --rebase --autostash)
-(cd en;       git pull --rebase --autostash)
-(cd pt_BR;    git pull --rebase --autostash)
+git -C doc-base pull --rebase --autostash
+git -C en       pull --rebase --autostash
+git -C pt_BR    pull --rebase --autostash
 
 php doc-base/configure.php -q --with-lang=pt_BR --enable-xml-details
 
@@ -10,10 +10,14 @@ php doc-base/scripts/revcheck.php pt_BR > revcheck.html
 nohup xdg-open revcheck.html </dev/null >/dev/null 2>&1 &
 
 echo
-(cd pt_BR; git status)
+git -C pt_BR status
 echo
 
 php doc-base/scripts/translation/configure.php pt_BR
+
+echo
+echo Rodando testes de sincronia...
+set -x
 
 php doc-base/scripts/translation/qaxml.a.php
 php doc-base/scripts/translation/qaxml.e.php

@@ -5,19 +5,18 @@ else msg=$1;
 fi
 
 set +e
-cd pt_BR
 
 behind=0
-LC_ALL=C git status -sb | grep -q 'behind' && behind=1
+LC_ALL=C git -C pt_BR status -sb | grep -q 'behind' && behind=1
 if [ $behind = 1 ]; then
     echo "Algum repositório desatualizado."
-    echo "Utilize 'git status' para verificar e 'git pull --rebase --autostash' para sincronizar."
+    echo "Utilize 'git -C pt_BR status' para verificar e 'git -C pt_BR pull --rebase --autostash' para sincronizar."
     exit
 else
-    git commit -a -m "$msg"
-    git push
-    git status
+    git -C pt_BR commit -a -m "$msg"
+    git -C pt_BR push
+    git -C pt_BR status
 fi
 
 set -e
-cd ..
+

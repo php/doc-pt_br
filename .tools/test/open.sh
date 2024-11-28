@@ -15,5 +15,4 @@ br="pt_BR/${linha}";
 #echo $br;
 
 nohup gedit $en $br > /dev/null 2>&1 &
-#atom $en $br
 

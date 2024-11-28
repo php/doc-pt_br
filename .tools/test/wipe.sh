@@ -1,20 +1,21 @@
 
-(cd en;    git clean -f -d)
-(cd en;    git checkout .)
-(cd en;    git reset  --hard )
-(cd en;    git pull --rebase )
-(cd en;    git rebase --skip )
+set -x
 
-(cd pt_BR; git clean -f -d)
-(cd pt_BR; git checkout .)
-(cd pt_BR; git reset  --hard )
-(cd pt_BR; git pull --rebase )
-(cd pt_BR; git rebase --skip )
+git -C en rebase --abort
+git -C en clean -f -d
+git -C en clean -fdx --quiet
+git -C en restore .
+git -C en pull --rebase
 
-(cd doc-base; git pull)
-(cd en;       git pull)
-(cd pt_BR;    git pull)
+git -C pt_BR rebase --abort
+git -C pt_BR clean -f -d
+git -C pt_BR clean -fdx --quiet
+git -C pt_BR restore .
+git -C pt_BR pull --rebase
 
-(cd en;    git status)
-(cd pt_BR; git status)
+git -C doc-base pull --rebase
+
+git -C doc-base status
+git -C en       status
+git -C pt_BR    status
 
