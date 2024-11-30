@@ -5,7 +5,7 @@ git -C pt_BR    pull --rebase --autostash
 
 php doc-base/configure.php -q --with-lang=pt_BR --enable-xml-details
 
-rm revcheck.html
+rm -f revcheck.html
 php doc-base/scripts/revcheck.php pt_BR > revcheck.html
 nohup xdg-open revcheck.html </dev/null >/dev/null 2>&1 &
 
@@ -17,7 +17,6 @@ php doc-base/scripts/translation/configure.php pt_BR
 
 echo
 echo Rodando testes de sincronia...
-set -x
 
 php doc-base/scripts/translation/qaxml.a.php
 php doc-base/scripts/translation/qaxml.e.php
