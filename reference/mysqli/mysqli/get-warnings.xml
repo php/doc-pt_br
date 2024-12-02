@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 035c126c0393fe154bac46e2c3c489ebadce48a5 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 2cc28adf4bea27371e03ef0367ea45897cfb6446 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="mysqli.get-warnings" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>mysqli::get_warnings</refname>
@@ -20,7 +20,98 @@
    <methodparam><type>mysqli</type><parameter>mysql</parameter></methodparam>
   </methodsynopsis>
 
-  &warn.undocumented.func;
+  <simpara>
+   Retorna uma lista vinculada individualmente composta por
+   <classname>mysqli_warning</classname> ou &false; se não houver alertas.
+   Cada objeto na lista corresponde a uma única linha do resultado de
+   <code>SHOW WARNINGS</code>.
+   Chamar <methodname>mysqli_warning::next</methodname> irá recarregar o objeto
+   com os valores da próxima linha.
+  </simpara>
+  <note>
+   <simpara>
+    Para recuperar mensagens de alerta, é recomendado usar o comando SQL
+    <literal>SHOW WARNINGS [limit row_count]</literal> em vez desta função.
+   </simpara>
+  </note>
+  <warning>
+   <simpara>
+    A lista vinculada não pode ser retrocedida ou recuperada novamente.
+   </simpara>
+  </warning>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <variablelist>
+   &mysqli.link.description;
+  </variablelist>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <simpara>
+   Retorna uma lista vinculada individualmente composta por
+   <classname>mysqli_warning</classname> or &false; se não houver alertas.
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Percorrendo a lista vinculada para buscar todos os alertas</title>
+   <para>&style.oop;</para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$mysqli = new mysqli("localhost", "my_user", "my_password", "world");
+
+$mysqli->query("SELECT 1/0, CAST('NULL' AS UNSIGNED)");
+
+if ($mysqli->warning_count > 0) {
+    $warning = $mysqli->get_warnings();
+    if ($warning !== false) {
+        do {
+            printf("Número do erro: %s\n", $warning->errno);
+            printf("Mensagem: %s\n", $warning->message);
+        } while ($warning->next());
+    }
+}
+]]>
+   </programlisting>
+   <para>&style.procedural;</para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$link = mysqli_connect("localhost", "user", "password", "test");
+
+mysqli_query($link, "SELECT 1/0, CAST('NULL' AS UNSIGNED)");
+
+if (mysqli_warning_count($link) > 0) {
+    $warning = mysqli_get_warnings($link);
+    if ($warning !== false) {
+        do {
+            printf("Número do erro: %s\n", $warning->errno);
+            printf("Mensagem: %s\n", $warning->message);
+        } while ($warning->next());
+    }
+}
+]]>
+   </programlisting>
+   &examples.outputs;
+   <screen>
+<![CDATA[
+Número do erro: 1365
+Mensagem: Division by 0
+Número do erro: 1292
+Mensagem: Truncated incorrect INTEGER value: 'NULL'
+]]>
+   </screen>
+  </example>
  </refsect1>
 
 </refentry>
