@@ -17,6 +17,6 @@ convencional de _fork_ e _pull requests_ do GitHub.
 
 [revcheck-summary]: http://doc.php.net/revcheck.php?p=filesummary&lang=pt_br
 
-[revcheck-graph]: http://doc.php.net/images/revcheck/info_revcheck_php_pt_br.png
+[revcheck-graph]: https://doc.php.net/img-status-lang.php?lang=pt_br
 
 [wiki]: https://github.com/php/doc-pt_br/wiki
