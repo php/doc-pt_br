@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: de9c65c91ff1710d8b2d2ec955caea0162679305 Maintainer: leonardolara Status: ready --><!-- CREDITS: felipe,leonardolara -->
-<refentry xml:id="function.filter-input-array" xmlns="http://docbook.org/ns/docbook">
+<!-- EN-Revision: 53054bf8decc8648cf2e90a493692a161e2371af Maintainer: leonardolara Status: ready --><!-- CREDITS: felipe,leonardolara -->
+<refentry xml:id="function.filter-input-array" xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude">
  <refnamediv>
   <refname>filter_input_array</refname>
   <refpurpose>Obtem variáveis externas e opcionalmente as filtra</refpurpose>
  </refnamediv>
+
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
@@ -18,147 +19,59 @@
    chamar a função <function>filter_input</function>.
   </para>
  </refsect1>
+
  <refsect1 role="parameters">
   &reftitle.parameters;
-  <para>
-   <variablelist>
-    <varlistentry>
-     <term><parameter>type</parameter></term>
-     <listitem>
-      <para>
-       Uma das constantes <constant>INPUT_GET</constant>, <constant>INPUT_POST</constant>,
-       <constant>INPUT_COOKIE</constant>, <constant>INPUT_SERVER</constant> ou
-       <constant>INPUT_ENV</constant>.
-      </para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><parameter>options</parameter></term>
-     <listitem>
-      <para>
-       Um array definindo os argumentos. Uma chave válida é uma <type>string</type>
-       contendo um nome da variável, e um valor válido é um <link
-       linkend="filter.filters">tipo de filtro</link>, ou um <type>array</type>
-       opcionalmente especificando o filtro, marcas e opções. Se o valor for um
-       array, chaves válidas são <literal>filter</literal> que especifica o
-       <link linkend="filter.filters">tipo de filtro</link>,
-       <literal>flags</literal> que especifica quaisquer marcas que se aplicam ao
-       filtro, e <literal>options</literal> que especifica quaisquer opções
-       que serão aplicadas ao filtro. Veja os exemplos abaixo para um melhor entendimento.
-      </para>
-      <para>
-       Este parâmetro pode ser também um inteiro contendo uma <link
-       linkend="filter.constants">constante de filtro</link>. Desta forma, todos os valores no
-       array de entrada serão filtradas por este filtro.
-      </para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><parameter>add_empty</parameter></term>
-     <listitem>
-      <para>
-       Adiciona chaves faltantes como &null; ao valor de retorno.
-      </para>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-  </para>
+  <variablelist>
+   <varlistentry>
+    <term><parameter>type</parameter></term>
+    <listitem>
+     <simpara>
+      Uma das constantes <constant>INPUT_<replaceable>*</replaceable></constant>.
+     </simpara>
+     <warning>
+      <simpara>
+       O conteúdo da superglobal que está sendo filtrada é o conteúdo "bruto"
+       original fornecido pela <acronym>SAPI</acronym>,
+       antes de qualquer modificação de usuário na superglobal.
+       Para filtrar uma superglobal modificada, use
+       a função <function>filter_var_array</function>.
+      </simpara>
+     </warning>
+    </listitem>
+   </varlistentry>
+   <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('function.filter-var-array')/db:refsect1[@role='parameters']//db:varlistentry[db:term[db:parameter[text()='options']]]/.)">
+    <xi:fallback/>
+   </xi:include>
+   <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('function.filter-var-array')/db:refsect1[@role='parameters']//db:varlistentry[db:term[db:parameter[text()='add_empty']]]/.)">
+    <xi:fallback/>
+   </xi:include>
+  </variablelist>
  </refsect1>
+
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-   Um array contendo os valores das variáveis requisitads em caso de sucesso.
-   Se o array de entrada designado por <parameter>type</parameter> não for preenchido,
-   a função retorna &null; se a marca <constant>FILTER_NULL_ON_FAILURE</constant>
-   não for fornecida, ou &false; caso contrário. Para outras falhas, &false; é retornado.
-  </para>
-  <para>
-   Um valor de array será &false; se o filtro falhar, ou &null; se
-   a variável não estiver definida. Ou, se a marca <constant>FILTER_NULL_ON_FAILURE</constant>
-   for usada, a função retorna &false; se a variável não estiver definida e &null; se o filtro
-   falhar. Se o parâmetro <parameter>add_empty</parameter> for &false;, nenhum elemento
-   de array será adicionado para variáveis não definidas.
-  </para>
- </refsect1>
-
- <refsect1 role="examples">
-  &reftitle.examples;
-  <para>
-   <example>
-    <title>Um exemplo da <function>filter_input_array</function></title>
-    <programlisting role="php">
-<![CDATA[
-<?php
-
-/* dados realmente vieram de POST
-$_POST = array(
-    'product_id' => 'libgd<script>',
-    'component'  => array('10'),
-    'version'    => '2.0.33',
-    'testarray'  => array('2', '23', '10', '12'),
-    'testscalar' => '2',
-);
-*/
-
-$args = array(
-    'product_id'   => FILTER_SANITIZE_ENCODED,
-    'component'    => array('filter'    => FILTER_VALIDATE_INT,
-                            'flags'     => FILTER_REQUIRE_ARRAY,
-                            'options'   => array('min_range' => 1, 'max_range' => 10)
-                           ),
-    'version'     => FILTER_SANITIZE_ENCODED,
-    'doesnotexist' => FILTER_VALIDATE_INT,
-    'testscalar'   => array(
-                            'filter' => FILTER_VALIDATE_INT,
-                            'flags'  => FILTER_REQUIRE_SCALAR,
-                           ),
-    'testarray'    => array(
-                            'filter' => FILTER_VALIDATE_INT,
-                            'flags'  => FILTER_REQUIRE_ARRAY,
-                           )
-
-);
-
-$myinputs = filter_input_array(INPUT_POST, $args);
-
-var_dump($myinputs);
-echo "\n";
-?>
-]]>
-    </programlisting>
-    &example.outputs;
-    <screen>
-<![CDATA[
-array(6) {
-  ["product_id"]=>
-  string(17) "libgd%3Cscript%3E"
-  ["component"]=>
-  array(1) {
-    [0]=>
-    int(10)
-  }
-  ["version"]=>
-  string(6) "2.0.33"
-  ["doesnotexist"]=>
-  NULL
-  ["testscalar"]=>
-  int(2)
-  ["testarray"]=>
-  array(4) {
-    [0]=>
-    int(2)
-    [1]=>
-    int(23)
-    [2]=>
-    int(10)
-    [3]=>
-    int(12)
-  }
-}
-]]>
-    </screen>
-   </example>
-  </para>
+  <simpara>
+   Em caso de sucesso, um &array; contendo os valores das variáveis solicitadas.
+  </simpara>
+  <simpara>
+   Em caso de falha, retorna &false;.
+   Exceto se a falha é aquela na qual o array de entrada designado por
+   <parameter>type</parameter> não é populado onde &null; é retornado
+   se a opção <constant>FILTER_NULL_ON_FAILURE</constant> for utilizada.
+  </simpara>
+  <simpara>
+   Entradas faltantes do array de entrada serão populadas no
+   &array; retornado se <parameter>add_empty</parameter> for &true;.
+   Neste caso, entradas faltantes serão definidas para &null;,
+   a menos que a opção <constant>FILTER_NULL_ON_FAILURE</constant> seja usada,
+   que neste caso serão &false;.
+  </simpara>
+  <simpara>
+   Uma entrada do &array; retornado será &false; se o filtro falhar,
+   a menos que a opção <constant>FILTER_NULL_ON_FAILURE</constant> seja usada,
+   que neste caso será &null;.
+  </simpara>
  </refsect1>
 
  <refsect1 role="notes">
@@ -174,13 +87,19 @@ array(6) {
 
  <refsect1 role="seealso">
   &reftitle.seealso;
-  <para>
-   <simplelist>
-    <member><function>filter_input</function></member>
-    <member><function>filter_var_array</function></member>
-    <member><xref linkend="filter.filters"/></member>
-   </simplelist>
-  </para>
+  <simplelist>
+   <member><function>filter_input</function></member>
+   <member><function>filter_var</function></member>
+   <member><function>filter_var_array</function></member>
+   <member>
+    Filtros de validação
+    <constant>FILTER_VALIDATE_<replaceable>*</replaceable></constant>
+   </member>
+   <member>
+    Filtros de sanitização
+    <constant>FILTER_SANITIZE_<replaceable>*</replaceable></constant>
+   </member>
+  </simplelist>
  </refsect1>
 
 </refentry>

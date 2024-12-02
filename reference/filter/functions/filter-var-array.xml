@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: de9c65c91ff1710d8b2d2ec955caea0162679305 Maintainer: leonardolara Status: ready --><!-- CREDITS: felipe,leonardolara -->
+<!-- EN-Revision: 53054bf8decc8648cf2e90a493692a161e2371af Maintainer: leonardolara Status: ready --><!-- CREDITS: felipe,leonardolara -->
 <refentry xml:id="function.filter-var-array" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>filter_var_array</refname>
-  <refpurpose>Obtêm múltiplas variáveis e opcionalmente as filtra</refpurpose>
+  <refpurpose>Obtêm e opcionalmente filtra múltiplas variáveis</refpurpose>
  </refnamediv>
+
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
@@ -13,55 +14,71 @@
    <methodparam choice="opt"><type class="union"><type>array</type><type>int</type></type><parameter>options</parameter><initializer><constant>FILTER_DEFAULT</constant></initializer></methodparam>
    <methodparam choice="opt"><type>bool</type><parameter>add_empty</parameter><initializer>&true;</initializer></methodparam>
   </methodsynopsis>
-  <para>
-   Esta função é útil para receber muitos valores sem repetidamente
-   chamar a função <function>filter_var</function>.
-  </para>
+  <simpara>
+   Filtra um &array; associativo de valores usando filtros de validação
+   <constant>FILTER_VALIDATE_<replaceable>*</replaceable></constant>,
+   filtros de sanitização
+   <constant>FILTER_SANITIZE_<replaceable>*</replaceable></constant>,
+   ou filtros customizados.
+  </simpara>
  </refsect1>
+
  <refsect1 role="parameters">
   &reftitle.parameters;
-  <para>
-   <variablelist>
-    <varlistentry>
-     <term><parameter>array</parameter></term>
-     <listitem>
-      <para>
-       Um array com as chaves string contendo os dados a filtrar.
-      </para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><parameter>options</parameter></term>
-     <listitem>
-      <para>
-       Um array definindo os argumentos. Uma chave válida é uma <type>string</type>
-       contendo o nome da variável, e um valor válido é um
-       <link linkend="filter.filters">tipo de filtro</link> ou um
-       <type>array</type> opcionalmente especificando o filtro, marcas e opções.
-       Se o valor for um array, chaves válida são <literal>filter</literal>
-       que especifica o <link linkend="filter.filters">tipo de filtro</link>,
-       <literal>flags</literal> que especifica alguma marca aplicada ao
-       filtro, e <literal>options</literal> que especifica uma opção
-       que é aplicada ao filtro. Veja o exemplo abaixo para um melhor entendimento.
-      </para>
-      <para>
-       Este parâmetro pode ser também um inteiro contendo uma <link
-       linkend="filter.constants">constante de filtro</link>. Desta forma, todos valores no
-       array de entrada serão filtrados por este filtro.
-      </para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><parameter>add_empty</parameter></term>
-     <listitem>
-      <para>
-       Adiciona chaves faltantes como &null; ao valor de retorno.
-      </para>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-  </para>
+  <variablelist>
+   <varlistentry>
+    <term><parameter>array</parameter></term>
+    <listitem>
+     <simpara>
+      Um &array; associativo contendo os dados a filtrar.
+     </simpara>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><parameter>options</parameter></term>
+    <listitem>
+     <simpara>
+      Pode ser um <type>array</type> associativo de opções,
+      ou o filtro a aplicar a cada entrada,
+      que pode ser um filtro de validação usando uma das constantes
+      <constant>FILTER_VALIDATE_<replaceable>*</replaceable></constant>,
+      ou um filtro de sanitização, usando uma das
+      constantes
+      <constant>FILTER_SANITIZE_<replaceable>*</replaceable></constant>.
+     </simpara>
+     <simpara>
+      O array de opções é um array associativo onde a chave corresponde
+      a uma chave no <parameter>array</parameter> de dados e o valor
+      associado é o filtro a ser aplicado a esta entrada
+      ou um array associativo descrevendo como e qual filtro deve ser
+      aplicado a esta entrada.
+     </simpara>
+     <simpara>
+      O array associativo que descreve como um filtro deve ser aplicado
+      deve conter a chave <literal>'filter'</literal> cujo valor associado
+      é o filtro a ser aplicado, que pode ser uma das constantes
+      <constant>FILTER_VALIDATE_<replaceable>*</replaceable></constant>,
+      <constant>FILTER_SANITIZE_<replaceable>*</replaceable></constant>,
+      <constant>FILTER_UNSAFE_RAW</constant> ou
+      <constant>FILTER_CALLBACK</constant>.
+      Opcionalmente, ele pode conter a chave <literal>'flags'</literal>
+      que especifica os sinalizadores que se aplicam ao filtro,
+      e a chave <literal>'options'</literal> que especifica quaisquer opções
+      que se aplicam ao filtro.
+     </simpara>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><parameter>add_empty</parameter></term>
+    <listitem>
+     <para>
+      Adiciona chaves ausentes como &null; ao valor de retorno.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
  </refsect1>
+
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
   <para>
@@ -80,37 +97,40 @@
 <![CDATA[
 <?php
 
-$data = array(
-    'product_id'    => 'libgd<script>',
-    'component'     => '10',
-    'versions'      => '2.0.33',
-    'testscalar'    => array('2', '23', '10', '12'),
-    'testarray'     => '2',
-);
+$data = [
+    'product_id' => 'libgd<script>',
+    'component'  => '10',
+    'versions'   => '2.0.33',
+    'testscalar' => ['2', '23', '10', '12'],
+    'testarray'  => '2',
+];
 
-$args = array(
+$filters = [
     'product_id'   => FILTER_SANITIZE_ENCODED,
-    'component'    => array('filter'    => FILTER_VALIDATE_INT,
-                            'flags'     => FILTER_FORCE_ARRAY,
-                            'options'   => array('min_range' => 1, 'max_range' => 10)
-                           ),
-    'versions'     => FILTER_SANITIZE_ENCODED,
+    'component'    => [
+        'filter'   => FILTER_VALIDATE_INT,
+        'flags'    => FILTER_FORCE_ARRAY,
+        'options'  => [
+            'min_range' => 1,
+            'max_range' => 10,
+        ],
+    ],
+    'versions'     => [
+        'filter' => FILTER_SANITIZE_ENCODED
+    ],
+    'testscalar'   => [
+        'filter' => FILTER_VALIDATE_INT,
+        'flags'  => FILTER_REQUIRE_SCALAR,
+    ],
+    'testarray'    => [
+        'filter' => FILTER_VALIDATE_INT,
+        'flags'  => FILTER_FORCE_ARRAY,
+    ],
     'doesnotexist' => FILTER_VALIDATE_INT,
-    'testscalar'   => array(
-                            'filter' => FILTER_VALIDATE_INT,
-                            'flags'  => FILTER_REQUIRE_SCALAR,
-                           ),
-    'testarray'    => array(
-                            'filter' => FILTER_VALIDATE_INT,
-                            'flags'  => FILTER_FORCE_ARRAY,
-                           )
+];
 
-);
+var_dump(filter_var_array($data, $filters));
 
-$myinputs = filter_var_array($data, $args);
-
-var_dump($myinputs);
-echo "\n";
 ?>
 ]]>
     </programlisting>
@@ -127,8 +147,6 @@ array(6) {
   }
   ["versions"]=>
   string(6) "2.0.33"
-  ["doesnotexist"]=>
-  NULL
   ["testscalar"]=>
   bool(false)
   ["testarray"]=>
@@ -136,6 +154,8 @@ array(6) {
     [0]=>
     int(2)
   }
+  ["doesnotexist"]=>
+  NULL
 }
 ]]>
     </screen>
@@ -145,14 +165,19 @@ array(6) {
 
  <refsect1 role="seealso">
   &reftitle.seealso;
-  <para>
-   <simplelist>
-    <member><function>filter_input_array</function></member>
-    <member><function>filter_var</function></member>
-    <member><function>filter_input</function></member>
-    <member><xref linkend="filter.filters"/></member>
-   </simplelist>
-  </para>
+  <simplelist>
+   <member><function>filter_input_array</function></member>
+   <member><function>filter_var</function></member>
+   <member><function>filter_input</function></member>
+   <member>
+    Filtros de validação
+    <constant>FILTER_VALIDATE_<replaceable>*</replaceable></constant>
+   </member>
+   <member>
+    Filtros de sanitização
+    <constant>FILTER_SANITIZE_<replaceable>*</replaceable></constant>
+   </member>
+  </simplelist>
  </refsect1>
 
 </refentry>
