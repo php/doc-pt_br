@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 9e0f03ac354d797d1d16c0fcc1663e5e170f2727 Maintainer: adiel Status: ready -->
+<!-- EN-Revision: 51610360d58ed09bc9d1312f419057c0d1d1a998 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="pdo.sqlitecreateaggregate" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>PDO::sqliteCreateAggregate</refname>
   <refpurpose>
-   Registra uma função de agregação definida pelo usuário para uso em declarações SQL
+   &Alias; <methodname>Pdo\Sqlite::createAggregate</methodname>
   </refpurpose>
  </refnamediv>
 
@@ -12,257 +12,16 @@
   &reftitle.description;
   <methodsynopsis>
    <modifier>public</modifier> <type>bool</type><methodname>PDO::sqliteCreateAggregate</methodname>
-   <methodparam><type>string</type><parameter>function_name</parameter></methodparam>
-   <methodparam><type>callable</type><parameter>step_func</parameter></methodparam>
-   <methodparam><type>callable</type><parameter>finalize_func</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>num_args</parameter></methodparam>
+   <methodparam><type>string</type><parameter>name</parameter></methodparam>
+   <methodparam><type>callable</type><parameter>step</parameter></methodparam>
+   <methodparam><type>callable</type><parameter>finalize</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>numArgs</parameter><initializer>-1</initializer></methodparam>
   </methodsynopsis>
-  &warn.experimental.func;
-  <para>
-   Este método é semelhante a <xref linkend="pdo.sqlitecreatefunction"/>,
-   exceto que registra funções que podem ser usadas para calcular um resultado
-   agregado através de todas as linhas de uma consulta.
-  </para>
-  <para>
-   A principal diferença entre este método e
-   <xref linkend="pdo.sqlitecreatefunction" />
-   é que duas funções são necessárias para gerenciar a agregação.
-  </para>
+  <simpara>
+   &info.method.alias; <methodname>Pdo\Sqlite::createAggregate</methodname>.
+  </simpara>
  </refsect1>
-
- <refsect1 role="parameters">
-  &reftitle.parameters;
-  <para>
-   <variablelist>
-    <varlistentry>
-     <term><parameter>function_name</parameter></term>
-     <listitem>
-      <para>
-       O nome da função usada nas declarações SQL.
-      </para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><parameter>step_func</parameter></term>
-     <listitem>
-      <para>
-       Função callback chamada para cada linha do conjunto de resultados.
-       A função PHP deve acumular o resultado e armazená-lo no contexto de
-       agregação.
-      </para>
-      <para>
-       Esta função precisa ser definida como:
-       <methodsynopsis>
-        <type>mixed</type><methodname><replaceable>step</replaceable></methodname>
-        <methodparam><type>mixed</type><parameter>context</parameter></methodparam>
-        <methodparam><type>int</type><parameter>rownumber</parameter></methodparam>
-        <methodparam><type>mixed</type><parameter>value</parameter></methodparam>
-        <methodparam rep="repeat"><type>mixed</type><parameter>values</parameter></methodparam>
-       </methodsynopsis>
-       <variablelist>
-        <varlistentry>
-         <term><parameter>context</parameter></term>
-         <listitem>
-          <para>
-           &null; para a primeira linha; nas linhas subsequentes terá o valor
-           que foi retornado anteriormente da função step; isso deve ser usado
-           para manter o estado de agregação.
-          </para>
-         </listitem>
-        </varlistentry>
-        <varlistentry>
-         <term><parameter>rownumber</parameter></term>
-         <listitem>
-          <para>
-           O número da linha atual.
-          </para>
-         </listitem>
-        </varlistentry>
-        <varlistentry>
-         <term><parameter>value</parameter></term>
-         <listitem>
-          <para>
-           O primeiro argumento passado para a agregação.
-          </para>
-         </listitem>
-        </varlistentry>
-        <varlistentry>
-         <term><parameter>values</parameter></term>
-         <listitem>
-          <para>
-           Outros argumentos passados para a agregação.
-          </para>
-         </listitem>
-        </varlistentry>
-       </variablelist>
-       O valor retornado desta função será usado como o argumento
-       <parameter>context</parameter> na próxima chamada das funções step ou
-       finalize.
-      </para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><parameter>finalize_func</parameter></term>
-     <listitem>
-      <para>
-       Função de chamada de retorno para agregar os dados "passados" de cada linha.
-       Depois que todas as linhas forem processadas, esta função será chamada e
-       deverá então pegar os dados do contexto de agregação e retornar o
-       resultado. Esta função deve retornar um tipo reconhecido pelo SQLite
-       (ou seja, um
-       <link linkend="language.types.intro">tipo escalar</link>).
-      </para>
-      <para>
-       Esta função precisa ser definida como:
-       <methodsynopsis>
-        <type>mixed</type><methodname><replaceable>fini</replaceable></methodname>
-        <methodparam><type>mixed</type><parameter>context</parameter></methodparam>
-        <methodparam><type>int</type><parameter>rowcount</parameter></methodparam>
-       </methodsynopsis>
-       <variablelist>
-        <varlistentry>
-         <term><parameter>context</parameter></term>
-         <listitem>
-          <para>
-           Contém o valor retornado da última chamada à função step.
-          </para>
-         </listitem>
-        </varlistentry>
-        <varlistentry>
-         <term><parameter>rowcount</parameter></term>
-         <listitem>
-          <para>
-           Contém o número de linhas nas quais a agregação foi executada.
-          </para>
-         </listitem>
-        </varlistentry>
-       </variablelist>
-       O valor retornado desta função será usado como valor retornado da
-       agregação.
-      </para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><parameter>num_args</parameter></term>
-     <listitem>
-      <para>
-       Indica ao analisador SQLite se a função callback aceita um número
-       predeterminado de argumentos.
-      </para>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-  </para>
- </refsect1>
-
- <refsect1 role="returnvalues">
-  &reftitle.returnvalues;
-  <para>
-   &return.success;
-  </para>
- </refsect1>
-
- <refsect1 role="examples">
-  &reftitle.examples;
-  <para>
-   <example>
-    <title>Exemplo de função de agregação max_length</title>
-    <programlisting role="php">
-     <![CDATA[
-<?php
-$dados = array(
-   'um',
-   'dois',
-   'três',
-   'quatro',
-   'cinco',
-   'seis',
-   'sete',
-   'oito',
-   'nove',
-   'dez',
-   );
-$db = new PDO('sqlite::memory:');
-$db->exec("CREATE TABLE strings(a)");
-$insert = $db->prepare('INSERT INTO strings VALUES (?)');
-foreach ($dados as $string) {
-    $insert->execute(array($string));
-}
-$insert = null;
-
-function max_len_step($context, $rownumber, $string)
-{
-    if (strlen($string) > $context) {
-        $context = strlen($string);
-    }
-    return $context;
-}
-
-function max_len_finalize($context, $rowcount)
-{
-    return $context === null ? 0 : $context;
-}
-
-$db->sqliteCreateAggregate('max_len', 'max_len_step', 'max_len_finalize');
-
-var_dump($db->query('SELECT max_len(a) from strings')->fetchAll());
-
-?>
-]]>
-    </programlisting>
-   </example>
-  </para>
-  <para>
-   Neste exemplo, está sendo criada uma função de agregação que irá calcular o
-   comprimento da string mais longa de uma das colunas da tabela.
-   Para cada linha, a função <literal>max_len_step</literal> é chamada e recebe
-   um parâmetro <literal>$context</literal>. O parâmetro de contexto
-   é como qualquer outra variável PHP e pode conter um array ou até
-   mesmo um valor de objeto. Neste exemplo, ele está sendo usado apenas para
-   manter o comprimento máximo visto até agora; se a
-   <literal>$string</literal> tiver um comprimento maior que o máximo
-   atual, o contexto será atualizado para conter esse novo comprimento máximo.
-  </para>
-  <para>
-   Após todas as linhas terem sido processadas, o SQLite chama a função
-   <literal>max_len_finalize</literal> para determinar o resultado agregado.
-   Aqui, algum tipo de cálculo poderia ser realizado com base nos dados
-   encontrados no parâmetro <literal>$context</literal>.
-   Porém, neste exemplo simples, o resultado foi calculado à medida que a
-   consulta avançava, portanto é necessário apenas retornar o valor do contexto.
-  </para>
-  <tip>
-   <para>
-    NÃO é recomendado armazenar uma cópia dos valores no
-    contexto e depois processá-los no final, pois isso faria com que o SQLite
-    usasse muita memória para processar a consulta - basta pensar em quanta
-    memória seria necessária se um milhão linhas fossem armazenadas na memória,
-    cada uma contendo uma string de 32 bytes de comprimento.
-   </para>
-  </tip>
-  <tip>
-   <para>
-    <xref linkend="pdo.sqlitecreatefunction" /> e
-    <xref linkend="pdo.sqlitecreateaggregate" />
-    podem ser usados para substituir funções SQL nativas do SQLite.
-   </para>
-  </tip>
- </refsect1>
-
-
- <refsect1 role="seealso">
-  &reftitle.seealso;
-  <para>
-   <simplelist>
-    <member><xref linkend="pdo.sqlitecreatefunction" /></member>
-    <member><function>sqlite_create_function</function></member>
-    <member><function>sqlite_create_aggregate</function></member>
-   </simplelist>
-  </para>
- </refsect1>
-
 </refentry>
-
  <!-- Keep this comment at the end of the file
  Local variables:
  mode: sgml
