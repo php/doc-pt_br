@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 4d17b7b4947e7819ff5036715dd706be87ae4def Maintainer: leonardolara Status: ready -->
+
+<reference xml:id="class.yaf-config-ini" role="class" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
+
+ <title>A classe Yaf_Config_Ini</title>
+ <titleabbrev>Yaf_Config_Ini</titleabbrev>
+
+ <partintro>
+
+<!-- {{{ Yaf_Config_Ini intro -->
+  <section xml:id="yaf-config-ini.intro">
+   &reftitle.intro;
+   <para>
+    Yaf_Config_Ini permite que os desenvolvedores armazenem dados de configuração em um
+    formato INI familiar e os leiam no aplicativo usando sintaxe de propriedade de
+    objeto aninhado. O formato INI é especializado para fornecer a capacidade
+    de ter uma hierarquia de chaves de dados de configuração e herança entre
+    seções de dados de configuração. As hierarquias de dados de configuração são suportadas
+    separando as chaves com o caractere ponto ("."). Uma seção
+    pode estender ou herdar de outra seção seguindo o nome da seção
+    com dois pontos (":") e o nome da seção da qual os dados
+    serão herdados.
+    <note>
+     <para>
+      Yaf_Config_Ini utiliza a função PHP parse_ini_file(). Revise
+      esta documentação para estar ciente de seus comportamentos específicos, que se propagam
+      para Yaf_Config_Ini, e sobre como os valores especiais de "&true;", "&false;",
+      "yes", "no" e "&null;" são manipulados.
+     </para>
+    </note>
+   </para>
+  </section>
+<!-- }}} -->
+
+  <section xml:id="yaf-config-ini.synopsis">
+   &reftitle.classsynopsis;
+
+<!-- {{{ Synopsis -->
+   <classsynopsis>
+    <ooclass><classname>Yaf_Config_Ini</classname></ooclass>
+
+<!-- {{{ Class synopsis -->
+    <classsynopsisinfo>
+     <ooclass>
+      <classname>Yaf_Config_Ini</classname>
+     </ooclass>
+
+     <ooclass>
+      <modifier>extends</modifier>
+      <classname>Yaf_Config_Abstract</classname>
+     </ooclass>
+
+     <oointerface>
+      <interfacename>Iterator</interfacename>
+     </oointerface>
+
+     <oointerface>
+      <interfacename>ArrayAccess</interfacename>
+     </oointerface>
+
+     <oointerface>
+      <interfacename>Countable</interfacename>
+     </oointerface>
+    </classsynopsisinfo>
+<!-- }}} -->
+    <classsynopsisinfo role="comment">&Properties;</classsynopsisinfo>
+
+
+    <classsynopsisinfo role="comment">&Methods;</classsynopsisinfo>
+    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.yaf-config-ini')/db:refentry/db:refsect1[@role='description']/descendant::db:constructorsynopsis[not(@role='procedural')])" />
+    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.yaf-config-ini')/db:refentry/db:refsect1[@role='description']/descendant::db:methodsynopsis[1])" />
+
+    <classsynopsisinfo role="comment">&InheritedMethods;</classsynopsisinfo>
+    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.yaf-config-abstract')/db:refentry/db:refsect1[@role='description']/descendant::db:methodsynopsis[1])" />
+
+   </classsynopsis>
+<!-- }}} -->
+
+  </section>
+
+
+<!-- {{{ Yaf_Config_Ini properties -->
+  <section xml:id="yaf-config-ini.props">
+   &reftitle.properties;
+   <variablelist>
+    <varlistentry xml:id="yaf-config-ini.props.config">
+     <term><varname>_config</varname></term>
+     <listitem>
+      <para></para>
+     </listitem>
+    </varlistentry>
+    <varlistentry xml:id="yaf-config-ini.props.readonly">
+     <term><varname>_readonly</varname></term>
+     <listitem>
+      <para></para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </section>
+<!-- }}} -->
+
+ <section role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <function>Yaf_Config_Ini</function></title>
+   <para>
+    Este exemplo ilustra um uso básico de Yaf_Config_Ini para carregar
+    dados de configuração de um arquivo INI. Neste exemplo, existem
+    dados de configuração para um sistema de produção e para um sistema de testes.
+    Como os dados de configuração do sistema de testes são muito semelhantes aos
+    da produção, a seção de testes herda da seção de produção.
+    Neste caso, a decisão é arbitrária e poderia ter sido escrita
+    de forma inversa, com a seção de produção herdando da seção de
+    testes, embora este possa não ser o caso para situações mais complexas.
+    Suponha, então, que os seguintes dados de configuração estejam contidos em
+    /caminho/para/config.ini:
+   </para>
+   <programlisting role="ini">
+<![CDATA[
+; Dados de configuração do site de produção
+[producao]
+webhost                  = www.example.com
+database.adapter         = pdo_mysql
+database.params.host     = db.example.com
+database.params.username = dbuser
+database.params.password = secret
+database.params.dbname   = dbname
+
+; Os dados de configuração do site de teste herdam da produção e
+; substituem os valores conforme necessário
+[testes : producao]
+database.params.host     = dev.example.com
+database.params.username = devuser
+database.params.password = devsecret
+]]>
+   </programlisting>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$config = new Yaf_Config_Ini('/caminho/para/config.ini', 'testes');
+
+var_dump($config->database->params->host);
+var_dump($config->database->params->dbname);
+var_dump($config->get("database.params.username"));
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+string(15) "dev.example.com"
+string(6) "dbname"
+string(7) "devuser
+]]>
+   </screen>
+  </example>
+  </section>
+
+ </partintro>
+
+ &reference.yaf.entities.yaf-config-ini;
+
+</reference>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
