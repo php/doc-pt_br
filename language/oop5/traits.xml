@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 1eec5a5abad2e54d02eb49161d5e7beffa632308 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: 6564f8d246764451b71234921ed156376a4b4219 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
  <sect1 xml:id="language.oop5.traits" xmlns="http://docbook.org/ns/docbook">
   <title>Traits</title>
   <para>
@@ -399,24 +399,30 @@ class MyHelloWorld {
     <programlisting role="php">
 <![CDATA[
 <?php
-trait Counter {
-    public function inc() {
+
+trait Counter
+{
+    public function inc()
+    {
         static $c = 0;
         $c = $c + 1;
         echo "$c\n";
     }
 }
 
-class C1 {
+class C1
+{
     use Counter;
 }
 
-class C2 {
+class C2
+{
     use Counter;
 }
 
-$o = new C1(); $o->inc(); // echo 1
-$p = new C2(); $p->inc(); // echo 1
+$o = new C1(); $o->inc(); // exibe 1
+$p = new C2(); $p->inc(); // exibe 1
+
 ?>
 ]]>
     </programlisting>
@@ -426,17 +432,22 @@ $p = new C2(); $p->inc(); // echo 1
     <programlisting role="php">
 <![CDATA[
 <?php
-trait StaticExample {
-    public static function doSomething() {
-        return 'Doing something';
+
+trait StaticExample
+{
+    public static function doSomething()
+    {
+        return 'Fazendo algo';
     }
 }
 
-class Example {
+class Example
+{
     use StaticExample;
 }
 
 Example::doSomething();
+
 ?>
 ]]>
     </programlisting>
@@ -445,23 +456,28 @@ Example::doSomething();
     <title>Propriedades Estáticas</title>
     <caution>
      <simpara>
-      Antes do PHP 8.3.0, propriedades estáticas eram compartilhadas por todas as classes
-      que usavam o trait. A partir do PHP 8.3.0, cada classe que usa o trait tem sua
-      própria cópia da propriedade estática.
+      Antes do PHP 8.3.0, propriedades estáticas definidas em um trait eram compartilhadas por um única hierarquia de classes
+      que usavam o trait. A partir do PHP 8.3.0, a propriedade estática do trait inserida na classe filha
+      substitui a propriedade estática que a classe filha herdou da classe pai deinida em conjunto com
+      o mesmo trait.
      </simpara>
     </caution>
     <programlisting role="php">
      <![CDATA[
 <?php
-trait StaticExample {
+
+trait StaticExample
+{
     public static $static = 'foo';
 }
 
-class Example {
+class Example
+{
     use StaticExample;
 }
 
 echo Example::$static;
+
 ?>
 ]]>
     </programlisting>
@@ -478,16 +494,20 @@ echo Example::$static;
     <programlisting role="php">
 <![CDATA[
 <?php
-trait PropertiesTrait {
+
+trait PropertiesTrait
+{
     public $x = 1;
 }
 
-class PropertiesExample {
+class PropertiesExample
+{
     use PropertiesTrait;
 }
 
-$example = new PropertiesExample;
+$example = new PropertiesExample();
 $example->x;
+
 ?>
 ]]>
     </programlisting>
@@ -576,26 +596,37 @@ class ConstantsExample {
   <title>Métodos finais</title>
   <simpara>
    A partir do PHP 8.3.0, o modificador <link linkend="language.oop5.final">final</link>
-   pode ser aplicado a métodos originários de traits.
+   pode ser aplicado a métodos importados de traits com o uso do operador <literal>as</literal>,
+   que permite a modificação da visibilidade de método originária do trait na classe onde ele é usado.
   </simpara>
   <example xml:id="language.oop5.traits.final-methods.example">
    <title>Definindo um método originário de um trait como <literal>final</literal></title>
    <programlisting role="php">
     <![CDATA[
 <?php
-trait ConstantsTrait {
-    public function method() {
+
+trait ConstantsTrait
+{
+    public function method()
+    {
         echo 'Olá';
     }
 }
 
-class ConstantsExample {
-    use ConstantsTrait;
-
-    final public function method() {
-        echo 'Olá, Mundo';
+class FinalExampleA
+{
+    use CommonTrait {
+        CommonTrait::method as final; // O 'final' evitará que classes filhas
+                                      // substituam o método
     }
 }
+
+class FinalExampleB extends FinalExampleA
+{
+     public function method() {} // Fatal error: Cannot override final method
+                                 // FinalExampleA::method()
+}
+
 ?>
 ]]>
    </programlisting>
