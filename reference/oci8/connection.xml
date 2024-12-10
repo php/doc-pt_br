@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 5e41012cfdf8f2eff5fa56de446c7656afac536c Maintainer: leonardolara Status: ready -->
+<chapter xml:id="oci8.connection" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Manipulação e conjunto de conexões do OCI8</title>
+ <section>
+  <title>Funções de conexão</title>
+  <para>
+   A extensão OCI8 fornece três funções diferentes para
+   conexão com o Oracle. A função de conexão padrão
+   é <function>oci_connect</function>. Ela cria uma conexão a
+   um banco de dados Oracle e retorna um recurso usado pelas chamadas
+   subsequentes ao banco de dados.
+  </para>
+  <para>
+   Conectar-se a um servidor Oracle é uma operação razoavelmente custosa
+   em termos de tempo que leva para ser concluída.
+   A função <function>oci_pconnect</function> usa um cache persistente
+   de conexões que pode ser reutilizado em diferentes solicitações
+   de script. Isso significa que a sobrecarga de conexão normalmente
+   ocorrerá apenas uma vez por processo PHP (ou processo filho do Apache).
+  </para>
+  <para>
+   Se a aplicação se conectar ao Oracle usando um conjunto diferente de credenciais de
+   banco de dados para cada usuário da web, o cache persistente empregado por
+   <function>oci_pconnect</function> se tornará menos útil à medida que o
+   número de usuários simultâneos aumentar, a ponto de poder
+   começar a afetar adversamente o desempenho geral do servidor Oracle
+   devido à manutenção de muitas conexões inativas. Se a
+   aplicação estiver estruturada desta forma, é recomendado
+   ajustá-lo usando as configurações
+   <link linkend="ini.oci8.max-persistent">oci8.max_persistent</link>
+   e <link linkend="ini.oci8.persistent-timeout">oci8.persistent_timeout</link>
+   (elas darão controle sobre o tamanho e o tempo de vida do
+   cache de conexão persistente), ou usar o Oracle Database
+   Resident Connection Pooling (no Oracle Database 11g ou posterior) ou usar
+   <function>oci_connect</function> em vez disso.
+  </para>
+  <para>
+   Tanto <function>oci_connect</function> quanto
+   <function>oci_pconnect</function> empregam um cache de conexão; se
+   múltiplas chamadas a
+   <function>oci_connect</function> usarem os mesmos parâmetros em um determinado
+   script, a segunda chamada e as subsequentes retornarão o identificador
+   de conexão existente. O cache usado
+   por <function>oci_connect</function> é limpo no final da
+   execução do script ou quando o identificador de conexão é explicitamente fechado. A
+   função <function>oci_pconnect</function> tem comportamento semelhante,
+   embora seu cache seja mantido separadamente e sobreviva entre
+   requisições HTTP.
+  </para>
+  <para>
+   Esse recurso de cache significa que os dois identificadores não são isolados
+   transacionalmente (eles são, na verdade, o mesmo identificador de conexão, portanto
+   não há nenhum tipo de isolamento). Se o aplicativo precisar de duas conexões separadas
+   e isoladas transacionalmente,
+   use <function>oci_new_connect</function>.
+  </para>
+  <para>
+   O cache <function>oci_pconnect</function> é limpo e quaisquer
+   conexões de banco de dados são fechadas quando o processo PHP termina, portanto,
+   o uso eficaz de conexões persistentes requer que o PHP seja um
+   módulo Apache ou usado com FPM, ou similar. Conexões persistentes
+   não terão nenhum benefício sobre <function>oci_connect</function>
+   quando o PHP for usado com CGI ou através da linha de comando.
+  </para>
+  <para>
+   A função <function>oci_new_connect</function> sempre cria uma
+   nova conexão com o servidor Oracle, independentemente de outras
+   conexões que já possam existir. Aplicações web de alto tráfego
+   devem evitar o uso de
+   <function>oci_new_connect</function>, especialmente nas seções mais movimentadas
+   da aplicação.
+  </para>
+  <para>
+   Conexões persistentes podem ser
+   fechadas pelo usuário, permitindo maior controle sobre o uso dos
+   recursos da conexão. Conexões persistentes agora também serão fechadas
+   automaticamente quando não houver nenhuma variável PHP fazendo referência a elas, como
+   no final do escopo de uma função de usuário PHP. Isso reverterá
+   qualquer transação não confirmada. Essas alterações nas conexões
+   persistentes fazem com que elas se comportem de maneira semelhante às conexões
+   não persistentes, simplificando a interface, permitindo maior
+   consistência e previsibilidade da aplicação.
+   Use <link linkend="ini.oci8.old-oci-close-semantics">oci8.old_oci_close_semantics</link>
+   definido como
+   <emphasis>On</emphasis> para manter o comportamento histórico.
+  </para>
+  <para>
+   O restabelecimento automático de conexões persistentes PHP após o reaparecimento
+   de um processo Apache ou FPM significa que os gatilhos <literal>LOGON</literal>
+   do Oracle Database são recomendados apenas para definir atributos de sessão e não para
+   solicitações de conexão de usuário por aplicação.
+  </para>
+ </section>
+ <section>
+  <title>Conjunto de conexões DRCP</title>
+  <para>
+   O PHP suporta Oracle Database Resident
+   Connection Pooling (DRCP). O DRCP permite um uso mais eficiente da
+   memória da máquina de banco de dados e oferece alta escalabilidade. Nenhuma, ou apenas
+   uma mínima, alteração na aplicação é necessária para usar o DRCP.
+  </para>
+  <para>
+   O DRCP é adequado para aplicações que se conectam usando poucos esquemas de
+   banco de dados e mantêm conexões de abertas por um curto período de
+   tempo. Outras aplicações devem usar os processos de servidor
+   de banco de dados <literal>Dedicated</literal> (dedicados) padrão da Oracle ou
+   usar servidores <literal>Shared</literal> (compartilhados).
+  </para>
+  <para>
+   O DRCP beneficia todas as três funções de conexão, mas oferece a maior
+   escalabilidade quando as conexões são criadas
+   com <function>oci_pconnect</function>.
+  </para>
+  <para>
+   Para que o DRCP esteja disponível no OCI8, as bibliotecas cliente Oracle usadas pelo
+   PHP e a versão do banco de dados Oracle devem ser 11g ou superior.
+  </para>
+  <para>
+   A documentação sobre DRCP é encontrada em vários manuais da Oracle. Por
+   exemplo,
+   consulte <link xlink:href="&url.oracle.drcp.configure;">Configuring
+   Database Resident Connection Pooling</link> (em inglês) na documentação do
+   Oracle para obter informações de uso.
+   Um <link xlink:href="&url.oracle.drcp.whitepaper;">artigo
+   técnico do DRCP</link> (em inglês) contém informações básicas sobre o DRCP.
+  </para>
+  <para>
+   Para usar o DRCP, instale a extensão OCI8 e as bibliotecas Oracle 11g (ou posterior)
+   e siga estas etapas:
+  </para>
+  <para>
+   <itemizedlist>
+    <listitem>
+     <para>
+      Como administrador de banco de dados privilegiado, use um programa como
+      o SQL*Plus para iniciar o conjunto de conexões no banco de dados:
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+    SQL> execute dbms_connection_pool.start_pool;
+]]>
+       </screen>
+      </informalexample>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Opcionalmente,
+      use <literal>dbms_connection_pool.alter_param()</literal> para
+      definir as configurações de DRCP. As configurações atuais do conjunto podem ser
+      consultadas na visualização <literal>DBA_CPOOL_INFO</literal>.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Atualize as cadeias de conexão usadas. Para aplicativos PHP que
+      atualmente se conectam usando um nome de conexão de rede
+      como <literal>MYDB</literal>:
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+    $c = oci_pconnect("meu_usuario", "minha_senha", "MYDB");
+]]>
+       </screen>
+      </informalexample>
+     </para>
+     <para>
+      modifique o arquivo tnsnames.ora e adicione
+      uma cláusula <literal>(SERVER=POOLED)</literal>, por exemplo:
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+    MYDB = (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp) (HOST=meuhost.dom.com)
+           (PORT=1521))(CONNECT_DATA=(SERVICE_NAME=vendas)
+           (SERVER=POOLED)))
+]]>
+       </screen>
+      </informalexample>
+     </para>
+     <para>
+      Alternativamente, modifique a sintaxe do Easy Connect no PHP e adicione
+      <literal>:POOLED</literal> após o nome do serviço:
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+    $c = oci_pconnect("meu_usuario", "minha_senha", "meuhost.dom.com:1521/vendas:POOLED");
+]]>
+       </screen>
+      </informalexample>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Edite o &php.ini; e escolha um nome de classe de conexão. Este nome
+      indica uma divisão lógica do conjunto de conexões e pode ser
+      usado para isolar o conjunto para aplicações separadas. Quaisquer aplicações
+      PHP com o mesmo nome de usuário e valor de classe de conexão
+      poderão compartilhar conexões no conjunto, proporcionando maior
+      escalabilidade.
+     </para>
+     <para>
+      <informalexample>
+       <screen>
+<![CDATA[
+    oci8.connection_class = "MY_APPLICATION_NAME"
+]]>
+       </screen>
+      </informalexample>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Execute a aplicação, conectando-se ao banco de dados 11g (ou posterior).
+     </para>
+    </listitem>
+    </itemizedlist>
+  </para>
+  <note>
+   <para>
+    Aplicações que usam bibliotecas Oracle Client 10g que exigem o desempenho de
+    conexões persistentes podem reduzir a quantidade de memória do servidor de banco de dados
+    necessária usando servidores Oracle <literal>Shared</literal>
+    (anteriormente conhecidos como Multi Threaded Servers). Consulte a documentação
+    da Oracle para obter informações.
+   </para>
+  </note>
+  <note>
+   <para>
+    A alteração de senha em conexões DRCP falhará com o erro
+    <emphasis>ORA-56609: Usage not supported with DRCP</emphasis> (uso não suportado com DRCP).
+    Esta é uma restrição documentada do Oracle Database 11g.
+   </para>
+  </note>
+ </section>
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
+
