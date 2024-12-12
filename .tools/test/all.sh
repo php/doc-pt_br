@@ -3,7 +3,7 @@ git -C doc-base pull --rebase --autostash
 git -C en       pull --rebase --autostash
 git -C pt_BR    pull --rebase --autostash
 
-php doc-base/configure.php -q --with-lang=pt_BR --enable-xml-details
+php doc-base/configure.php -q --disable-sources-file --enable-xml-details --with-lang=pt_BR
 
 rm -f revcheck.html
 php doc-base/scripts/revcheck.php pt_BR > revcheck.html
@@ -44,4 +44,3 @@ php doc-base/scripts/translation/qaxml.t.php computeroutput
 php doc-base/scripts/translation/qaxml.t.php filename
 php doc-base/scripts/translation/qaxml.t.php literal
 php doc-base/scripts/translation/qaxml.t.php varname
-
