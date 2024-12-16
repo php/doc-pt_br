@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 4d17b7b4947e7819ff5036715dd706be87ae4def Maintainer: leonardolara Status: ready -->
+
+<reference xml:id="class.yaf-router" role="class" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
+
+ <title>A classe Yaf_Router</title>
+ <titleabbrev>Yaf_Router</titleabbrev>
+
+ <partintro>
+
+<!-- {{{ Yaf_Router intro -->
+  <section xml:id="yaf-router.intro">
+   &reftitle.intro;
+   <para>
+    <classname>Yaf_Router</classname> é o roteador padrão da extensão. Roteamento é
+    o processo de pegar um ponto de extremidade de URI (aquela parte do URI que vem
+    depois da base: veja <methodname>Yaf_Request_Abstract::setBaseUri</methodname>)
+    e decompô-lo em parâmetros para determinar qual módulo, controlador e
+    ação desse controlador deve receber a requisição. Esses valores de módulo,
+    controlador, ação e outros parâmetros são empacotados em um
+    objeto <classname>Yaf_Request_Abstract</classname> que é então processado por
+    <classname>Yaf_Dispatcher</classname>. O roteamento ocorre apenas uma vez: quando a requisição
+    é recebida inicialmente e antes do primeiro controlador ser despachado.
+
+    <classname>Yaf_Router</classname> foi projetado para permitir funcionalidades
+    semelhantes a mod_rewrite usando estruturas PHP puras. É vagamente baseado no
+    roteamento Ruby on Rails e não requer nenhum conhecimento prévio de reescrita
+    de URL de servidor web. Ele foi projetado para funcionar com uma única regra mod_rewrite
+    do Apache (uma destas):
+   <example>
+    <title>Regra de re-escrita para Apache</title>
+   <programlisting role="conf">
+<![CDATA[
+RewriteEngine on
+RewriteRule !\.(js|ico|gif|jpg|png|css|html)$ index.php
+]]>
+   </programlisting>
+   </example>
+   ou (preferível):
+   <example>
+   <title>Regra de re-escrita para Apache</title>
+   <programlisting role="conf">
+<![CDATA[
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} -s [OR]
+RewriteCond %{REQUEST_FILENAME} -l [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^.*$ - [NC,L]
+RewriteRule ^.*$ index.php [NC,L]
+]]>
+   </programlisting>
+  </example>
+   Se o Lighttpd for usado, a seguinte regra de re-escrita é válida:
+   <example>
+    <title>Regra de re-escrita para Lighttpd</title>
+   <programlisting role="conf">
+<![CDATA[
+url.rewrite-once = (
+  ".*\?(.*)$" => "/index.php?$1",
+  ".*\.(js|ico|gif|jpg|png|css|html)$" => "$0",
+  "" => "/index.php"
+)
+]]>
+   </programlisting>
+  </example>
+   Se o Nginx for usado, use a seguinte regra de re-escrita:
+   <example>
+    <title>Regra de re-escrita para Nginx</title>
+   <programlisting role="conf">
+<![CDATA[
+server {
+  listen ****;
+  server_name  yourdomain.com;
+  root   document_root;
+  index  index.php index.html;
+
+  if (!-e $request_filename) {
+    rewrite ^/(.*)  /index.php/$1 last;
+  }
+}
+]]>
+   </programlisting>
+  </example>
+   </para>
+  </section>
+<!-- }}} -->
+
+  <section xml:id="yaf-router.default">
+   <title>Rota padrão</title>
+   <para>
+    <classname>Yaf_Router</classname> vem pré-configurado com uma rota padrão
+    <classname>Yaf_Route_Static</classname>, que corresponderá aos URIs no formato
+    de controlador/ação. Além disso, um nome de módulo pode ser especificado como o primeiro
+    elemento do caminho, permitindo URIs no formato módulo/controlador/ação. Por fim,
+    também corresponderá a quaisquer parâmetros adicionais anexados ao URI por padrão
+    - controlador/ação/var1/valor1/var2/valor2.
+    <note>
+     <para>
+      O nome do módulo deve ser definido na configuração, considerando application.module="Index,Foo,Bar".
+      Neste caso apenas Index, Foo e Bar podem ser considerados como nome do módulo.
+      Caso não seja configurado, existirá apenas um módulo chamado "Index".
+     </para>
+    </note>
+   </para>
+
+   <para>
+   Alguns exemplos de como essas rotas são correspondidas:
+   <example>
+    <title>Exemplo de <classname>Yaf_Route_Static</classname> (rota padrão)</title>
+   <programlisting role="conf">
+<![CDATA[
+// Assumindo a seguinte configuração:
+$conf = array(
+   "application" => array(
+      "modules" => "Index,Blog",
+   ),
+);
+
+Apenas controlador:
+http://examplo/noticias
+    controlador == noticias
+Apenas ação (quando definido yaf.action_prefer=1 no php.ini)
+    ação        == noticias
+
+Módulo inválido é mapeado para nome de controlador:
+http://example/foo
+    controlador == foo
+
+Módulo + controlador:
+http://example/blog/arquivo
+    module      == blog
+    controlador == arquivo
+
+Módulo + controlado + ação:
+http://example/blog/arquivo/lista
+    module      == blog
+    controlador == arquivo
+    ação        == lista
+
+Módulo + controlado + ação + parâmetros:
+http://example/blog/archive/lista/ordem/alfa/data/decres
+    module      == blog
+    controlador == archive
+    ação        == lista
+    ordem       == alfa
+    data        == decres
+]]>
+   </programlisting>
+  </example>
+
+  </para>
+  </section>
+
+  <section xml:id="yaf-router.synopsis">
+   &reftitle.classsynopsis;
+
+<!-- {{{ Synopsis -->
+   <classsynopsis>
+    <ooclass><classname>Yaf_Router</classname></ooclass>
+
+<!-- {{{ Class synopsis -->
+    <classsynopsisinfo>
+     <ooclass>
+      <classname>Yaf_Router</classname>
+     </ooclass>
+    </classsynopsisinfo>
+<!-- }}} -->
+    <classsynopsisinfo role="comment">&Properties;</classsynopsisinfo>
+    <fieldsynopsis>
+     <modifier>protected</modifier>
+     <varname linkend="yaf-router.props.routes">_routes</varname>
+    </fieldsynopsis>
+    <fieldsynopsis>
+     <modifier>protected</modifier>
+     <varname linkend="yaf-router.props.current">_current</varname>
+    </fieldsynopsis>
+
+
+    <classsynopsisinfo role="comment">&Methods;</classsynopsisinfo>
+    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.yaf-router')/db:refentry/db:refsect1[@role='description']/descendant::db:constructorsynopsis[not(@role='procedural')])" />
+    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.yaf-router')/db:refentry/db:refsect1[@role='description']/descendant::db:methodsynopsis[1])" />
+   </classsynopsis>
+<!-- }}} -->
+
+  </section>
+
+
+<!-- {{{ Yaf_Router properties -->
+  <section xml:id="yaf-router.props">
+   &reftitle.properties;
+   <variablelist>
+    <varlistentry xml:id="yaf-router.props.routes">
+     <term><varname>_routes</varname></term>
+     <listitem>
+      <para>
+      registered routes stack
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry xml:id="yaf-router.props.current">
+     <term><varname>_current</varname></term>
+     <listitem>
+      <para>
+       after routing phase, this indicated the name of which route
+       is used to route current request.
+
+       you can get this name by
+       <methodname>Yaf_Router::getCurrentRoute</methodname>.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </section>
+<!-- }}} -->
+
+
+ </partintro>
+
+ &reference.yaf.entities.yaf-router;
+
+</reference>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
