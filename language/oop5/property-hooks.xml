@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: b34210e11d0922cb14a134e244cb5846a3d2ac67 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: c925e1a0ce0659ee1c12d80f9a4a58b10cc4222f Maintainer: leonardolara Status: ready -->
 <sect1 xml:id="language.oop5.property-hooks" xmlns="http://docbook.org/ns/docbook">
  <title>Ganchos de Propriedade</title>
 
@@ -199,6 +199,72 @@ class Example
    Em uma propriedade apoiada, omitir um gancho <literal>get</literal> ou<literal>set</literal>
    significa que o comportamento padrão de leitura ou gravação será usado.
   </simpara>
+  <note>
+   <simpara>
+    Gachos podem ser definidos ao usar
+    <link linkend="language.oop5.decon.constructor.promotion">promoção de propriedade de construtor</link>.
+    No entando, quando isso é feito, os valores fornecidos
+    ao construtor precisam ter o tipo associado à propriedade correspondido,
+    independentemente do que o gancho <literal>set</literal> possa permitir.
+   </simpara>
+   <simpara>
+    Considere o seguinte:
+   </simpara>
+   <programlisting role="php">
+<![CDATA[
+class Example
+{
+    public function __construct(
+        public private(set) DateTimeInterface $created {
+            set (string|DateTimeInterface $value) {
+                if (is_string($value)) {
+                    $value = new DateTimeImmutable($value);
+                }
+                $this->created = $value;
+            }
+        },
+    ) {
+    }
+}
+]]>
+   </programlisting>
+   <simpara>
+    Internamente, o mecanismo decompõe para o seguinte:
+   </simpara>
+   <programlisting role="php">
+<![CDATA[
+class Example
+{
+    public private(set) DateTimeInterface $created {
+        set (string|DateTimeInterface $value) {
+            if (is_string($value)) {
+                $value = new DateTimeImmutable($value);
+            }
+            $this->created = $value;
+        }
+    }
+
+    public function __construct(
+        DateTimeInterface $created,
+    ) {
+        $this->created = $created;
+    }
+}
+]]>
+   </programlisting>
+   <simpara>
+    Quaisquer tentativas de definir a propriedade fora do construtor
+    permitirão valores do tipo <type>string</type> ou <interfacename>DateTimeInterface</interfacename>
+    mas o construtor permitirá apenas <interfacename>DateTimeInterface</interfacename>.
+    Isto acontece porque o tipo definido para a propriedade (<interfacename>DateTimeInterface</interfacename>)
+    é usado como o tipo do parâmetro dentro da assinatura do construtor, não importando o que
+    o gancho <literal>set</literal> permite.
+   </simpara>
+   <simpara>
+    Se este tipo de comportamento do construtor for necessário, a promoção de
+    propriedade de construtor não pode ser usada.
+   </simpara>
+  </note>
  </sect2>
  <sect2 xml:id="language.oop5.property-hooks.virtual">
   <title>Propriedades virtuais</title>

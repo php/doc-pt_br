@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 6564f8d246764451b71234921ed156376a4b4219 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: b5f0c19bec9f70f1cbdc1480b3f3c92c608489d1 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
  <sect1 xml:id="language.oop5.traits" xmlns="http://docbook.org/ns/docbook">
   <title>Traits</title>
   <para>
@@ -420,12 +420,21 @@ class C2
     use Counter;
 }
 
-$o = new C1(); $o->inc(); // exibe 1
-$p = new C2(); $p->inc(); // exibe 1
+$o = new C1();
+$o->inc();
+$p = new C2();
+$p->inc();
 
 ?>
 ]]>
     </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+1
+1
+]]>
+    </screen>
    </example>
    <example xml:id="language.oop5.traits.static.ex2">
     <title>Métodos Estáticos</title>
@@ -446,41 +455,67 @@ class Example
     use StaticExample;
 }
 
-Example::doSomething();
+echo Example::doSomething();
 
 ?>
 ]]>
     </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Fazendo algo
+]]>
+    </screen>
    </example>
    <example xml:id="language.oop5.traits.static.ex3">
     <title>Propriedades Estáticas</title>
     <caution>
      <simpara>
-      Antes do PHP 8.3.0, propriedades estáticas definidas em um trait eram compartilhadas por um única hierarquia de classes
-      que usavam o trait. A partir do PHP 8.3.0, a propriedade estática do trait inserida na classe filha
-      substitui a propriedade estática que a classe filha herdou da classe pai deinida em conjunto com
-      o mesmo trait.
+      Antes do PHP 8.3.0, propriedades estáticas definidas em um trait eram compartilhadas
+      por todas as classes na mesma herança hierárquica que usavam o trait.
+      A partir do PHP 8.3.0, se uma classe filha usa um trait com uma propriedade estática,
+      ela será considerada distinta daquela definida na classe pai.
      </simpara>
     </caution>
     <programlisting role="php">
      <![CDATA[
 <?php
 
-trait StaticExample
+trait T
 {
-    public static $static = 'foo';
+    public static $counter = 1;
 }
 
-class Example
+class A
 {
-    use StaticExample;
+    use T;
+
+    public static function incrementCounter()
+    {
+        static::$counter++;
+    }
 }
 
-echo Example::$static;
+class B extends A
+{
+    use T;
+}
+
+A::incrementCounter();
+
+echo A::$counter, "\n";
+echo B::$counter, "\n";
 
 ?>
 ]]>
     </programlisting>
+    &example.outputs.83;
+    <screen>
+<![CDATA[
+2
+1
+]]>
+    </screen>
    </example>
   </sect2>
 
@@ -562,10 +597,16 @@ class ConstantsExample {
 }
 
 $example = new ConstantsExample;
-echo $example::FLAG_MUTABLE; // 1
+echo $example::FLAG_MUTABLE;
 ?>
 ]]>
    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+1
+]]>
+    </screen>
   </example>
   <para>
    Se uma Trait define uma constante, uma classe não pode definir uma constante com
@@ -596,8 +637,10 @@ class ConstantsExample {
   <title>Métodos finais</title>
   <simpara>
    A partir do PHP 8.3.0, o modificador <link linkend="language.oop5.final">final</link>
-   pode ser aplicado a métodos importados de traits com o uso do operador <literal>as</literal>,
-   que permite a modificação da visibilidade de método originária do trait na classe onde ele é usado.
+   pode ser aplicado, com o uso do operador <literal>as</literal>,
+   a métodos importados de traits. Isto pode ser usado para evitar que classes filhas
+   substituam o método. Entretanto, a classe que usa o trait ainda poderá
+   substituir o método.
   </simpara>
   <example xml:id="language.oop5.traits.final-methods.example">
    <title>Definindo um método originário de um trait como <literal>final</literal></title>
@@ -616,20 +659,24 @@ trait ConstantsTrait
 class FinalExampleA
 {
     use CommonTrait {
-        CommonTrait::method as final; // O 'final' evitará que classes filhas
-                                      // substituam o método
+        CommonTrait::method as final; // O 'final' evita que classes filhas substituam o método
     }
 }
 
 class FinalExampleB extends FinalExampleA
 {
-     public function method() {} // Fatal error: Cannot override final method
-                                 // FinalExampleA::method()
+     public function method() {}
 }
 
 ?>
 ]]>
    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+Fatal error: Cannot override final method FinalExampleA::method() in ...
+]]>
+    </screen>
   </example>
  </sect2>
 
