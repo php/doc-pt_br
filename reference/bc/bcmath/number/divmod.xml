@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: c7e83fbbbcde9f54affc09424d032c38492a3ff4 Maintainer: leonardolara Status: ready -->
+<refentry xml:id="bcmath-number.divmod" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
+ <refnamediv>
+  <refname>BcMath\Number::divmod</refname>
+  <refpurpose>Obtém quociente e resto de um número de precisão arbitrária</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis role="BcMath\\Number">
+   <modifier>public</modifier> <type>array</type><methodname>BcMath\Number::divmod</methodname>
+   <methodparam><type class="union"><type>BcMath\Number</type><type>string</type><type>int</type></type><parameter>num</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>int</type><type>null</type></type><parameter>scale</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <simpara>
+   Obtém quociente e resto da divisão de <varname>$this</varname> por <parameter>num</parameter>.
+  </simpara>
+ </refsect1>
+
+ <!-- parameters -->
+ <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('bcmath-number.div')/db:refsect1[@role='parameters'])" />
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <simpara>
+   Retorna um <type>array</type> indexado onde o primeiro elemento é o quociente como um novo
+   objeto <classname>BcMath\Number</classname> e o segundo elemento é o resto como um novo
+   objeto <classname>BcMath\Number</classname>.
+  </simpara>
+  <simpara>
+   O quociente é sempre um valor inteiro, portanto a <property>BcMath\Number::scale</property> do quociente será
+   sempre <literal>0</literal>, independente se <parameter>scale</parameter> foi definido explicitamente.
+  </simpara>
+  <simpara>
+   Se <parameter>scale</parameter> for definido explicitamente, a <property>BcMath\Number::scale</property> do
+   resto será o valor especificado.
+   Quando a <property>BcMath\Number::scale</property> do objeto de resto do resultado for definida automaticamente,
+   a maior <property>BcMath\Number::scale</property> dos dois números usados para a operação de resto é usada.
+  </simpara>
+  <simpara>
+   Isto é, se as <property>BcMath\Number::scale</property>s de fois valores forem <literal>2</literal>
+   e <literal>5</literal> respectivamente, a <property>BcMath\Number::scale</property> do resto
+   será <literal>5</literal>.
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <!-- ValueError cases -->
+  <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('bcmath-number.add')/db:refsect1[@role='errors']/db:para[1])" />
+  <!-- The DivisionByZeroError case -->
+  <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('bcmath-number.div')/db:refsect1[@role='errors']/db:simpara[1])" />
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>BcMath\Number::divmod</methodname> quando <parameter>scale</parameter> não for especificado</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+echo '8.3 / 2.22' . PHP_EOL;
+[$quot, $rem] = new BcMath\Number('8')->divmod(new BcMath\Number('2.22'));
+var_dump($quot, $rem);
+
+echo PHP_EOL . '8.3 / 8.3' . PHP_EOL;
+[$quot, $rem] = new BcMath\Number('8.3')->divmod('8.3');
+var_dump($quot, $rem);
+
+echo PHP_EOL . '10 / -3' . PHP_EOL;
+[$quot, $rem] = new BcMath\Number('10')->divmod(-3);
+var_dump($quot, $rem);
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+8.3 / 2.22
+object(BcMath\Number)#3 (2) {
+  ["value"]=>
+  string(1) "3"
+  ["scale"]=>
+  int(0)
+}
+object(BcMath\Number)#4 (2) {
+  ["value"]=>
+  string(4) "1.34"
+  ["scale"]=>
+  int(2)
+}
+
+8.3 / 8.3
+object(BcMath\Number)#2 (2) {
+  ["value"]=>
+  string(1) "1"
+  ["scale"]=>
+  int(0)
+}
+object(BcMath\Number)#5 (2) {
+  ["value"]=>
+  string(3) "0.0"
+  ["scale"]=>
+  int(1)
+}
+
+10 / -3
+object(BcMath\Number)#3 (2) {
+  ["value"]=>
+  string(2) "-3"
+  ["scale"]=>
+  int(0)
+}
+object(BcMath\Number)#1 (2) {
+  ["value"]=>
+  string(1) "1"
+  ["scale"]=>
+  int(0)
+}
+]]>
+   </screen>
+  </example>
+
+  <example>
+   <title>Exemplo de <methodname>BcMath\Number::divmod</methodname> especificando <parameter>scale</parameter> explicitamente</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+echo '8.3 / 2.22' . PHP_EOL;
+[$quot, $rem] = new BcMath\Number('8')->divmod(new BcMath\Number('2.22'), 1);
+var_dump($quot, $rem);
+
+echo PHP_EOL . '8.3 / 8.3' . PHP_EOL;
+[$quot, $rem] = new BcMath\Number('8.3')->divmod('8.3', 4);
+var_dump($quot, $rem);
+
+echo PHP_EOL . '10 / -3' . PHP_EOL;
+[$quot, $rem] = new BcMath\Number('10')->divmod(-3, 5);
+var_dump($quot, $rem);
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+8.3 / 2.22
+object(BcMath\Number)#3 (2) {
+  ["value"]=>
+  string(1) "3"
+  ["scale"]=>
+  int(0)
+}
+object(BcMath\Number)#4 (2) {
+  ["value"]=>
+  string(3) "1.3"
+  ["scale"]=>
+  int(1)
+}
+
+8.3 / 8.3
+object(BcMath\Number)#2 (2) {
+  ["value"]=>
+  string(1) "1"
+  ["scale"]=>
+  int(0)
+}
+object(BcMath\Number)#5 (2) {
+  ["value"]=>
+  string(6) "0.0000"
+  ["scale"]=>
+  int(4)
+}
+
+10 / -3
+object(BcMath\Number)#3 (2) {
+  ["value"]=>
+  string(2) "-3"
+  ["scale"]=>
+  int(0)
+}
+object(BcMath\Number)#1 (2) {
+  ["value"]=>
+  string(7) "1.00000"
+  ["scale"]=>
+  int(5)
+}
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><function>bcdivmod</function></member>
+   <member><methodname>BcMath\Number::div</methodname></member>
+   <member><methodname>BcMath\Number::mod</methodname></member>
+  </simplelist>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

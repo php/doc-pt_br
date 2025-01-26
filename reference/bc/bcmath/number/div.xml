@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: c7e83fbbbcde9f54affc09424d032c38492a3ff4 Maintainer: leonardolara Status: ready -->
+<refentry xml:id="bcmath-number.div" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
+ <refnamediv>
+  <refname>BcMath\Number::div</refname>
+  <refpurpose>Divide por um número de precisão arbitrária</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis role="BcMath\\Number">
+   <modifier>public</modifier> <type>BcMath\Number</type><methodname>BcMath\Number::div</methodname>
+   <methodparam><type class="union"><type>BcMath\Number</type><type>string</type><type>int</type></type><parameter>num</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>int</type><type>null</type></type><parameter>scale</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <simpara>
+   Divide <varname>$this</varname> por <parameter>num</parameter>.
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <variablelist>
+   <varlistentry>
+    <term><parameter>num</parameter></term>
+    <listitem>
+     <simpara>
+      O divisor.
+     </simpara>
+    </listitem>
+   </varlistentry>
+   <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('bcmath-number.add')/db:refsect1[@role='parameters']/descendant::db:varlistentry[2])" />
+  </variablelist>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <simpara>
+   Retorna o resultado da divisão como um novo objeto <classname>BcMath\Number</classname>.
+  </simpara>
+  <simpara>
+   Quando a propriedade <property>BcMath\Number::scale</property> do objeto resultante é definida automaticamente,
+   a <property>BcMath\Number::scale</property> do dividendo é usada. Entretanto, em casos como
+   uma divisão indivisível, a <property>BcMath\Number::scale</property> do resultado é expandida.
+   Expansão é feita apenas quando necessário, até um limite de <literal>+10</literal>.
+  </simpara>
+  <simpara>
+   Ou seja, se a <property>BcMath\Number::scale</property> do dividendo for <literal>5</literal>,
+   a <property>BcMath\Number::scale</property> do resultado estará entre <literal>5</literal> e
+   <literal>15</literal>.
+  </simpara>
+  <simpara>
+    Mesmo em cálculos indivisíveis, a <property>BcMath\Number::scale</property> não será sempre
+    <literal>+10</literal>.
+    Considera-se que um <literal>0</literal> no final do resultado não precisa de expansão, então a
+    <property>BcMath\Number::scale</property> é reduzida por essa quantidade.
+    A <property>BcMath\Number::scale</property> nunca será menor que a
+    <property>BcMath\Number::scale</property> anterior à expansão.
+    Consulte também o <link linkend="bcmath-number.div.example.expansion-scale">exemplo de código</link>.
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <para>
+   Este método lança uma exceção <exceptionname>ValueError</exceptionname> nos seguintes casos:
+   <simplelist>
+    <member><parameter>num</parameter> é uma<type>string</type> e não é uma string numérica BCMath bem formada</member>
+    <member><parameter>scale</parameter> está fora do intervalo válido</member>
+    <member><property>BcMath\Number::scale</property> do objeto resultante está fora do intervalo válido</member>
+   </simplelist>
+  </para>
+  <simpara>
+   Este método lança uma exceção <exceptionname>DivisionByZeroError</exceptionname> se
+   <parameter>num</parameter> for <literal>0</literal>.
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>BcMath\Number::div</methodname> quando <parameter>scale</parameter> não for especificado</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$number = new BcMath\Number('0.002');
+
+$ret1 = $number->div(new BcMath\Number('2.000'));
+$ret2 = $number->div('-3');
+$ret3 = $number->div(32);
+
+var_dump($number, $ret1, $ret2, $ret3);
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+object(BcMath\Number)#1 (2) {
+  ["value"]=>
+  string(5) "0.002"
+  ["scale"]=>
+  int(3)
+}
+object(BcMath\Number)#3 (2) {
+  ["value"]=>
+  string(5) "0.001"
+  ["scale"]=>
+  int(3)
+}
+object(BcMath\Number)#2 (2) {
+  ["value"]=>
+  string(16) "-0.0006666666666"
+  ["scale"]=>
+  int(13)
+}
+object(BcMath\Number)#4 (2) {
+  ["value"]=>
+  string(9) "0.0000625"
+  ["scale"]=>
+  int(7)
+}
+]]>
+   </screen>
+  </example>
+
+  <example>
+   <title>Exemplo de <methodname>BcMath\Number::div</methodname> especificando <parameter>scale</parameter> explicitamente</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$number = new BcMath\Number('0.002');
+
+$ret1 = $number->div(new BcMath\Number('2.000'), 15);
+$ret2 = $number->div('-3', 5);
+$ret3 = $number->div(32, 2);
+
+var_dump($number, $ret1, $ret2, $ret3);
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+object(BcMath\Number)#1 (2) {
+  ["value"]=>
+  string(5) "0.002"
+  ["scale"]=>
+  int(3)
+}
+object(BcMath\Number)#3 (2) {
+  ["value"]=>
+  string(17) "0.001000000000000"
+  ["scale"]=>
+  int(15)
+}
+object(BcMath\Number)#2 (2) {
+  ["value"]=>
+  string(8) "-0.00066"
+  ["scale"]=>
+  int(5)
+}
+object(BcMath\Number)#4 (2) {
+  ["value"]=>
+  string(4) "0.00"
+  ["scale"]=>
+  int(2)
+}
+]]>
+   </screen>
+  </example>
+
+  <example xml:id="bcmath-number.div.example.expansion-scale">
+   <title>Exemplo de <methodname>BcMath\Number::div</methodname> expandindo <property>BcMath\Number::scale</property> do objeto resultante</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+var_dump(
+    new BcMath\Number('0.001')->div('10001'),
+    new BcMath\Number('0.001')->div('10001', 13),
+    new BcMath\Number('0.001')->div('100000000000001'),
+);
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+object(BcMath\Number)#2 (2) {
+  ["value"]=>
+  string(13) "0.00000009999"
+  ["scale"]=>
+  int(11)
+}
+object(BcMath\Number)#3 (2) {
+  ["value"]=>
+  string(15) "0.0000000999900"
+  ["scale"]=>
+  int(13)
+}
+object(BcMath\Number)#4 (2) {
+  ["value"]=>
+  string(5) "0.000"
+  ["scale"]=>
+  int(3)
+}
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><function>bcdiv</function></member>
+   <member><methodname>BcMath\Number::divmod</methodname></member>
+   <member><methodname>BcMath\Number::mod</methodname></member>
+   <member><methodname>BcMath\Number::sqrt</methodname></member>
+   <member><methodname>BcMath\Number::pow</methodname></member>
+   <member><methodname>BcMath\Number::mul</methodname></member>
+  </simplelist>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
