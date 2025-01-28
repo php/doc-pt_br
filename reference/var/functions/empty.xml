@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 4a07033f7ac5ab121357051cc94ec48b9f6f58fc Maintainer: fabioluciano Status: ready --><!-- CREDITS: felipe,fabioluciano,cviniciussdias  -->
+<!-- EN-Revision: e6e9c116083c3d1aeb3d1fc2e45f51fbcb0d5182 Maintainer: leonardolara Status: ready --><!-- CREDITS: felipe,fabioluciano,cviniciussdias,leonardolara  -->
 <refentry xml:id="function.empty" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>empty</refname>
@@ -29,6 +29,7 @@
        Nenhum aviso é gerado se a variável não existir.
        Isso significa que a função <function>empty</function> é essencialmente
        o equivalente sucinto de <command>!isset($var) || $var == false</command>.
+       Isto também se aplica a estruturas aninhadas, tais como um array multidimensional ou propriedades em encadeadas.
       </para>
      </listitem>
     </varlistentry>
@@ -71,7 +72,7 @@ if (isset($var)) {
    </example>
   </para>
   <example>
-   <title>Função <function>empty</function> em Deslocamentos de String</title>
+   <title>Função <function>empty</function> em posições de string</title>
    <programlisting role="php">
 <![CDATA[
 <?php
@@ -79,7 +80,6 @@ $expected_array_got_string = 'somestring';
 var_dump(empty($expected_array_got_string['some_key']));
 var_dump(empty($expected_array_got_string[0]));
 var_dump(empty($expected_array_got_string['0']));
-var_dump(empty($expected_array_got_string[0.5]));
 var_dump(empty($expected_array_got_string['0.5']));
 var_dump(empty($expected_array_got_string['0 Mostel']));
 ?>
@@ -91,9 +91,40 @@ var_dump(empty($expected_array_got_string['0 Mostel']));
 bool(true)
 bool(false)
 bool(false)
+bool(true)
+bool(true)
+]]>
+   </screen>
+  </example>
+  <example>
+   <title><function>empty</function> on array multidimensional</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$multidimensional = [
+    'some' => [
+        'deep' => [
+            'nested' => 'value'
+        ]
+    ]
+];
+
+if (!empty($multidimensional['some']['some']['nested'])) {
+    $someVariable = $multidimensional['some']['deep']['nested'];
+}
+
+var_dump(empty($multidimensional['some-undefined-key']));
+var_dump(empty($multidimensional['some']['deep']['unknown']));
+var_dump(empty($multidimensional['some']['deep']['nested']));
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+bool(true)
+bool(true)
 bool(false)
-bool(true)
-bool(true)
 ]]>
    </screen>
   </example>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: daf4cc624df3c21d472149725feb377b1beedb04 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: a8863b0123dc5348c91e67198b995222878a7e65 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="pdostatement.fetch" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>PDOStatement::fetch</refname>
@@ -53,13 +53,18 @@
         </para></listitem>
         <listitem><para>
          <literal>PDO::FETCH_CLASS</literal>: retorna uma nova instância da classe
-         solicitada, mapeando as colunas do conjunto de resultados às propriedades
-         nomeadas na classe, e chamando o construtor na sequência, a menos que
-         <literal>PDO::FETCH_PROPS_LATE</literal> também seja fornecida.
-         Se o parâmetro <parameter>mode</parameter>
-         incluir PDO::FETCH_CLASSTYPE (por exemplo <literal>PDO::FETCH_CLASS |
-         PDO::FETCH_CLASSTYPE</literal>), o nome da classe será
-         determinado a partir do valor da primeira coluna.
+         solicitada. O objeto é inicializado mapeando as colunas do
+         conjunto de resultados para propriedades na classe. Isso ocorre antes do
+         construtor ser chamado, permitindo que as propriedades sejam preenchidas independentemente
+         de sua visibilidade ou se estão marcadas como <literal>readonly</literal>.
+         Se uma propriedade não existir na classe, o método mágico <link linkend="object.set">__set()</link>
+         será invocado se existir; caso contrário, será criada uma propriedade
+         pública dinâmica. Entretanto, quando <constant>PDO::FETCH_PROPS_LATE</constant>
+         também é fornecido, o construtor é chamado <emphasis>antes</emphasis>
+         de as propriedades serem preenchidas. Se <parameter>mode</parameter> incluir
+         <constant>PDO::FETCH_CLASSTYPE</constant> (por exemplo,
+         <literal>PDO::FETCH_CLASS | PDO::FETCH_CLASSTYPE</literal>), o nome
+         da classe é determinado a partir do valor da primeira coluna.
         </para></listitem>
         <listitem><para>
          <literal>PDO::FETCH_INTO</literal>: atualiza uma instância existente
@@ -266,11 +271,11 @@ Reading backwards:
 
    <example><title>Ordem de construção</title>
     <simpara>
-     Quando objetos são buscados através de <literal>PDO::FETCH_CLASS</literal>, as propriedades
+     Quando objetos são buscados através de <constant>PDO::FETCH_CLASS</constant>, as propriedades
      do objeto são atribuídas primeiro, e depois o construtor da classe é
-     invocado. Se <literal>PDO::FETCH_PROPS_LATE</literal> também for informado, esta ordem
-     é revertida, isto, é, primeiro o construtor é chamado, e depois as
-     propriedades são atribuídas.
+     invocado. Entretanto, quando <constant>PDO::FETCH_PROPS_LATE</constant> também for informada,
+     esta ordem é revertida, isto, é, primeiro o construtor é chamado, e
+     depois as propriedades são atribuídas.
     </simpara>
     <programlisting role="php">
 <![CDATA[

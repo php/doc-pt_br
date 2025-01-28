@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: df1e7145848499f193d0e106a86c27a9b94d130e Maintainer: ae Status: ready --><!-- CREDITS: ae,felipe,fabioluciano,adiel,gabrielsanva,leonardolara -->
+<!-- EN-Revision: 7d804723a85d3a8039ba3d0d2c8c414e85f5ede1 Maintainer: leonardolara Status: ready --><!-- CREDITS: ae,felipe,fabioluciano,adiel,gabrielsanva,leonardolara -->
  <chapter xml:id="language.variables" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Variáveis</title>
 
@@ -514,7 +514,7 @@ function Teste()
 <![CDATA[
 <?php
 function foo(){
-    static $int = 0;          // correro
+    static $int = 0;          // correto
     static $int = 1+2;        // correto
     static $int = sqrt(121);  // correto a partir do PHP 8.3
 
@@ -526,6 +526,35 @@ function foo(){
      </programlisting>
     </example>
    </para>
+
+   <simpara>
+    Variáveis ​​estáticas dentro de funções anônimas persistem apenas dentro daquela
+    instância de função específica. Se a função anônima for recriada em cada
+    chamada, a variável estática será reinicializada.
+   </simpara>
+   <example>
+    <title>Variáveis ​​estáticas em funções anônimas</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+function funcaoExemplo($input) {
+    $result = (static function () use ($input) {
+        static $counter = 0;
+        $counter++;
+        return "Entrada: $input, Contador: $counter\n";
+    });
+
+    return $result();
+}
+
+// Chamadas a funcaoExemplo irão recriar a função anônima, de forma que a variável
+// estática não reterá seu valor.
+echo funcaoExemplo('A'); // Exibe: Entrada: A, Contador: 1
+echo funcaoExemplo('B'); // Exibe: Entrada: B, Contador: 1
+?>
+]]>
+    </programlisting>
+   </example>
 
    <para>
     A partir do PHP 8.1.0, quando um método com variáveis estáticas é herdado (mas não sobrescrito),

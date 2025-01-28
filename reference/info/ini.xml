@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: ada1d79de35239334b68d0120b011530e31244ff Maintainer: ae Status: ready --><!-- CREDITS: ae, adiel -->
+<!-- EN-Revision: b1116af46680f7baf89c46610430a3b63ce9a1f0 Maintainer: leonardolara Status: ready --><!-- CREDITS: ae, adiel, leonardolara -->
 <section xml:id="info.configuration" xmlns="http://docbook.org/ns/docbook">
  &reftitle.runtime;
  &extension.runtime;
@@ -21,7 +21,7 @@
      <entry>"1"</entry>
      <entry><constant>INI_ALL</constant></entry>
      <entry>
-      Desencorajado desde o PHP 8.3.0
+      Descontinuado desde o PHP 8.3.0
      </entry>
     </row>
     <row>
@@ -29,7 +29,7 @@
      <entry>"0"</entry>
      <entry><constant>INI_ALL</constant></entry>
      <entry>
-      Desencorajado desde o PHP 8.3.0
+      Descontinuado desde o PHP 8.3.0
      </entry>
     </row>
     <row>
@@ -37,7 +37,7 @@
      <entry>"1"</entry>
      <entry><constant>INI_ALL</constant></entry>
      <entry>
-      Desencorajado desde o PHP 8.3.0
+      Descontinuado desde o PHP 8.3.0
      </entry>
     </row>
     <row>
@@ -45,7 +45,7 @@
      <entry>NULL</entry>
      <entry><constant>INI_ALL</constant></entry>
      <entry>
-      Desencorajado desde o PHP 8.3.0
+      Descontinuado desde o PHP 8.3.0
      </entry>
     </row>
     <row>
@@ -98,6 +98,24 @@
      <entry>"1"</entry>
      <entry><constant>INI_ALL</constant></entry>
      <entry></entry>
+    </row>
+    <row>
+     <entry><link linkend="ini.zend.max-allowed-stack-size">zend.max_allowed_stack_size</link></entry>
+     <entry>"0"</entry>
+     <entry><constant>INI_SYSTEM</constant></entry>
+     <entry>Disponível a partir do PHP 8.3.0.</entry>
+    </row>
+    <row>
+     <entry><link linkend="ini.zend.reserved-stack-size">zend.reserved_stack_size</link></entry>
+     <entry>"0"</entry>
+     <entry><constant>INI_SYSTEM</constant></entry>
+     <entry>Disponível a partir do PHP 8.3.0.</entry>
+    </row>
+    <row>
+     <entry><link linkend="ini.fiber.stack-size">fiber.stack_size</link></entry>
+     <entry></entry>
+     <entry><constant>INI_ALL</constant></entry>
+     <entry>Disponível a partir do PHP 8.1.0.</entry>
     </row>
     </tbody>
    </tgroup>
@@ -304,6 +322,110 @@
     </listitem>
    </varlistentry>
 
+   <varlistentry xml:id="ini.zend.max-allowed-stack-size">
+    <term>
+     <parameter>zend.max_allowed_stack_size</parameter>
+     <type>int</type>
+    </term>
+    <listitem>
+     <para>
+      O espaço máximo de pilha nativa que o sistema operacional permite que
+      o programa consuma.
+      Tentar consumir mais do que o sistema operacional permite
+      normalmente resulta em uma falha grave, sem informações de depuração facilmente
+      disponíveis.
+      Para facilitar a depuração, o mecanismo lança uma exceção
+      <classname>Error</classname>
+      antes que isso aconteça (quando o programa usa mais que
+      <link linkend="ini.zend.max-allowed-stack-size">zend.max_allowed_stack_size</link>-<link linkend="ini.zend.reserved-stack-size">zend.reserved_stack_size</link>
+      bytes de pilha).
+     </para>
+     <para>
+      A recursão no código definido pelo usuário não consome espaço de pilha nativo.
+      No entanto, funções internas e métodos mágicos sim.
+      A recursão muito profunda envolvendo essas funções pode fazer com que o programa
+      esgote todo o espaço de pilha nativa disponível.
+     </para>
+     <para>
+      Os valores possíveis para este parâmetro são:
+      <simplelist>
+       <member>
+        <literal>0</literal>:
+        Detecta automaticamente o espaço máximo de pilha nativa que o sistema operacional
+        permite que o programa consuma.
+        Este é o padrão.
+        Quando a detecção não é possível, um padrão conhecido do sistema é usado.
+       </member>
+       <member>
+        <literal>-1</literal>: Desativa a verificação do tamanho da pilha no mecanismo.
+       </member>
+       <member>
+        Inteiro positivo: um tamanho fixo, em bytes.
+        Definir esse valor muito alto tem o mesmo efeito que desabilitar a verificação do
+        tamanho da pilha.
+       </member>
+      </simplelist>
+     </para>
+     <para>
+      Como o tamanho da pilha dos
+      <link linkend="language.fibers">fibers</link>
+      é determinado por
+      <link linkend="ini.fiber.stack-size">fiber.stack_size</link>,
+      o valor deste parâmetro é usado em vez do
+      <link linkend="ini.zend.max-allowed-stack-size">zend.max_allowed_stack_size</link>
+      ao verificar o uso da pilha durante a execução de um Fiber.
+     </para>
+     <note>
+      <para>
+       Isso não está relacionado a estouros de <emphasis>buffer</emphasis> de pilha e não é um recurso
+       de segurança.
+      </para>
+     </note>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="ini.zend.reserved-stack-size">
+    <term>
+     <parameter>zend.reserved_stack_size</parameter>
+     <type>int</type>
+    </term>
+    <listitem>
+     <para>
+      O tamanho da pilha reservada, em bytes.
+      Isso é subtraído do
+      <link linkend="ini.zend.max-allowed-stack-size">tamanho máximo permitido da pilha</link>,
+      como um buffer, ao verificar o tamanho da pilha.
+     </para>
+     <para>
+      Os valores possíveis para este parâmetro são:
+      <simplelist>
+       <member>
+        <literal>0</literal>: Detecta automaticamente um tamanho razoável.
+       </member>
+       <member>
+        Inteiro positivo: um tamanho fixo, em bytes.
+       </member>
+      </simplelist>
+     </para>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry xml:id="ini.fiber.stack-size">
+    <term>
+     <parameter>fiber.stack_size</parameter>
+     <type>int</type>
+    </term>
+    <listitem>
+     <para>
+      O tamanho da pilha nativa, em bytes, alocado para cada
+      <link linkend="language.fibers">Fiber</link>.
+     </para>
+     <para>
+      O valor padrão é 1MiB em sistemas com tamanho de ponteiro inferior a
+      8 bytes ou 2MiB caso contrário.
+     </para>
+    </listitem>
+   </varlistentry>
   </variablelist>
  </para>
 </section>
