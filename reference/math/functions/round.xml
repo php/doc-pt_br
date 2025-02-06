@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: f721489eaeb79ff096971fe5a5b101c2ebab8eeb Maintainer: ae Status: ready --><!-- CREDITS: marquesdanielb,ae,leonardolara -->
+<!-- EN-Revision: 15b93836d93f01ea6d90a68cacf04ce0d9fb8eff Maintainer: leonardolara Status: ready --><!-- CREDITS: marquesdanielb,ae,leonardolara -->
 <refentry xml:id="function.round" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>round</refname>
@@ -11,7 +11,7 @@
    <type>float</type><methodname>round</methodname>
    <methodparam><type class="union"><type>int</type><type>float</type></type><parameter>num</parameter></methodparam>
    <methodparam choice="opt"><type>int</type><parameter>precision</parameter><initializer>0</initializer></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>mode</parameter><initializer><constant>PHP_ROUND_HALF_UP</constant></initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>int</type><type>RoundingMode</type></type><parameter>mode</parameter><initializer>RoundingMode::HalfAwayFromZero</initializer></methodparam>
   </methodsynopsis>
   <para>
    Retorna um valor arredondado de <parameter>num</parameter> com a precisão especificada em
@@ -71,7 +71,7 @@
      <term><parameter>mode</parameter></term>
      <listitem>
       <para>
-       Use uma das seguintes constantes para especificar o modo ao qual o arredondamento ocorre.
+       Use <enumname>RoundingMode</enumname> ou uma das seguintes constantes a seguir para especificar o modo com o qual o arredondamento ocorre.
        <informaltable>
         <tgroup cols="2">
          <thead>
@@ -112,6 +112,7 @@
          </tbody>
         </tgroup>
        </informaltable>
+       No entanto, observe que alguns modos novos adicionados existem apenas em <link linkend="enum.roundingmode">RoundingMode</link>.
       </para>
      </listitem>
     </varlistentry>
@@ -145,6 +146,12 @@
      </row>
     </thead>
     <tbody>
+     <row>
+      <entry>8.4.0</entry>
+      <entry>
+       Quatro novos modos de arredondamento foram adicionados.
+      </entry>
+     </row>
      <row>
       <entry>8.4.0</entry>
       <entry>
@@ -321,6 +328,61 @@ float(-1.5)
 ]]>
     </screen>
    </example>
+  <example>
+   <title>Exemplo de uso de <enumname>RoundingMode</enumname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+foreach (RoundingMode::cases() as $mode) {
+    foreach ([
+        8.5,
+        9.5,
+        -3.5,
+    ] as $number) {
+        printf("%-17s: %+.17g -> %+.17g\n", $mode->name, $number, round($number, 0, $mode));
+    }
+    echo "\n";
+}
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen role="php">
+<![CDATA[
+HalfAwayFromZero : +8.5 -> +9
+HalfAwayFromZero : +9.5 -> +10
+HalfAwayFromZero : -3.5 -> -4
+
+HalfTowardsZero  : +8.5 -> +8
+HalfTowardsZero  : +9.5 -> +9
+HalfTowardsZero  : -3.5 -> -3
+
+HalfEven         : +8.5 -> +8
+HalfEven         : +9.5 -> +10
+HalfEven         : -3.5 -> -4
+
+HalfOdd          : +8.5 -> +9
+HalfOdd          : +9.5 -> +9
+HalfOdd          : -3.5 -> -3
+
+TowardsZero      : +8.5 -> +8
+TowardsZero      : +9.5 -> +9
+TowardsZero      : -3.5 -> -3
+
+AwayFromZero     : +8.5 -> +9
+AwayFromZero     : +9.5 -> +10
+AwayFromZero     : -3.5 -> -4
+
+NegativeInfinity : +8.5 -> +8
+NegativeInfinity : +9.5 -> +9
+NegativeInfinity : -3.5 -> -4
+
+PositiveInfinity : +8.5 -> +9
+PositiveInfinity : +9.5 -> +10
+PositiveInfinity : -3.5 -> -3
+]]>
+   </screen>
+  </example>
   </para>
  </refsect1>
 
