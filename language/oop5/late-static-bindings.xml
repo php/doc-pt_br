@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 9ee9eccf455188ab6eb352194eb6f9eb99e15606 Maintainer: ae Status: ready --><!-- CREDITS: felipe, fabioluciano -->
+<!-- EN-Revision: 009f215fc983eeded6161676bcffdd8cf3b6b080 Maintainer: leonardolara Status: ready --><!-- CREDITS: felipe, fabioluciano, leonardolara -->
  <sect1 xml:id="language.oop5.late-static-bindings" xmlns="http://docbook.org/ns/docbook">
-  <title>Late Static Bindings</title>
+  <title>Vinculações Estáticas Tardias</title>
   <para>
-   O PHP implementa um recurso chamado late static bindings que
+   O PHP implementa um recurso chamado Vinculações Estáticas Tardias que
    pode ser usado para referenciar a classe chamada no contexto de herança estática.
   </para>
 
   <para>
-   Mais precisamente, late static bindings funcionam através do armazenamento do nome da classe na
+   Mais precisamente, Vinculações Estáticas Tardias funcionam através do armazenamento do nome da classe na
    última "chamada não encaminhada". No caso de chamadas a métodos estáticos, é a
    classe explicitamente chamada (normalmente o nome a esquerda do operador
    <link linkend="language.oop5.paamayim-nekudotayim"><literal>::</literal></link>);
@@ -24,12 +24,12 @@
   </para>
 
   <para>
-   Esse recurso foi chamado de "late static bindings" de uma perspectiva interna em
-   mente. "Late binding" vem do fato que <literal>static::</literal>
+   Esse recurso foi chamado de "Vinculações Estáticas Tardias" de uma perspectiva interna em
+   mente. "Vinculação tardia" vem do fato que <literal>static::</literal>
    não será resolvido usando a classe onde o método foi definido, mas
    computada utilizando informações em tempo de execução.
 
-   É também chamado "static binding" pois pode ser utilizado em (mas não
+   É também chamado "vinculação estática" pois pode ser utilizado em (mas não
    limitado a) chamadas de métodos estáticos.
   </para>
 
@@ -45,22 +45,30 @@
     <programlisting role="php">
 <![CDATA[
 <?php
-class A {
-    public static function who() {
+
+class A
+{
+    public static function who()
+    {
         echo __CLASS__;
     }
-    public static function test() {
+
+    public static function test()
+    {
         self::who();
     }
 }
 
-class B extends A {
-    public static function who() {
+class B extends A
+{
+    public static function who()
+    {
         echo __CLASS__;
     }
 }
 
 B::test();
+
 ?>
 ]]>
     </programlisting>
@@ -75,10 +83,10 @@ A
   </sect2>
 
   <sect2 xml:id="language.oop5.late-static-bindings.usage">
-   <title>Uso de Late Static Bindings</title>
+   <title>Uso de Vinculações Estáticas Tardias</title>
 
    <para>
-    Late static bindings tenta resolver a limitação introduzindo uma
+    Vinculações Estáticas Tardias tentam resolver a limitação introduzindo uma
     palavra-chave que referencia a classe que foi inicialmente chamada em tempo de execução.
     Basicamente, é uma palavra-chave que permite referenciar
     <literal>B</literal> em <literal>test()</literal>, no exemplo
@@ -87,26 +95,34 @@ A
    </para>
 
    <example>
-    <title>Simples uso do <literal>static::</literal></title>
+    <title>Uso simples de <literal>static::</literal></title>
     <programlisting role="php">
 <![CDATA[
 <?php
-class A {
-    public static function who() {
+
+class A
+{
+    public static function who()
+    {
         echo __CLASS__;
     }
-    public static function test() {
-        static::who(); // Here comes Late Static Bindings
+
+    public static function test()
+    {
+        static::who(); // Aqui acontecem as Vinculações Estáticas Tardias
     }
 }
 
-class B extends A {
-    public static function who() {
+class B extends A
+{
+    public static function who()
+    {
         echo __CLASS__;
     }
 }
 
 B::test();
+
 ?>
 ]]>
     </programlisting>
@@ -119,7 +135,7 @@ B
    </example>
    <note>
     <para>
-     Em contextos não estáticos a classe chamada será a classe da instância
+     Em contextos não estáticos, a classe chamada será a classe da instância
      do objeto. Assim como <literal>$this-></literal> chamará métodos privados
      do mesmo escopo, utilizar <literal>static::</literal> pode ter
      resultados diferentes. Outra diferença é que <literal>static::</literal>
@@ -127,54 +143,66 @@ B
     </para>
    </note>
    <example>
-    <title>Uso do <literal>static::</literal> em um contexto não-estático</title>
+    <title>Uso de <literal>static::</literal> em um contexto não-estático</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-class A {
-    private function foo() {
-        echo "success!\n";
+
+class A
+{
+    private function foo()
+    {
+        echo "successo!\n";
     }
-    public function test() {
+
+    public function test()
+    {
         $this->foo();
         static::foo();
     }
 }
 
-class B extends A {
+class B extends A
+{
    /* foo() será copiado para B, assim seu escopo ainda será A e
     * e a chamada funcionará */
 }
 
-class C extends A {
-    private function foo() {
+class C extends A
+{
+    private function foo()
+    {
         /* método original foi substituído, escopo agora é C */
     }
 }
 
 $b = new B();
 $b->test();
+
 $c = new C();
-$c->test();   //fails
+try {
+    $c->test();
+} catch (Error $e) {
+    echo $e->getMessage();
+}
+
 ?>
 ]]>
     </programlisting>
     &example.outputs;
     <screen>
 <![CDATA[
-success!
-success!
-success!
-
-
-Fatal error:  Call to private method C::foo() from context 'A' in /tmp/test.php on line 9
+successo!
+successo!
+successo!
+Call to private method C::foo() from scope A
 ]]>
     </screen>
    </example>
    <note>
     <para>
-     As resoluções de Late static bindings terminarão quando a chamada é realizada
-     sem retorno. Por outro lado chamadas estáticas utilizando instruções como
+     As resoluções de Vinculações Estáticas Tardias terminarão quando a chamada for realizada
+     sem retorno. Por outro lado, chamadas estáticas utilizando instruções como
      <literal>parent::</literal> ou <literal>self::</literal> irão repassar a informação
      do chamador.
     </para>
@@ -183,34 +211,45 @@ Fatal error:  Call to private method C::foo() from context 'A' in /tmp/test.php 
      <programlisting role="php">
 <![CDATA[
 <?php
-class A {
-    public static function foo() {
+
+class A
+{
+    public static function foo()
+    {
         static::who();
     }
 
-    public static function who() {
+    public static function who()
+    {
         echo __CLASS__."\n";
     }
 }
 
-class B extends A {
-    public static function test() {
+class B extends A
+{
+    public static function test()
+    {
         A::foo();
         parent::foo();
         self::foo();
     }
 
-    public static function who() {
+    public static function who()
+    {
         echo __CLASS__."\n";
     }
 }
-class C extends B {
-    public static function who() {
+
+class C extends B
+{
+    public static function who()
+    {
         echo __CLASS__."\n";
     }
 }
 
 C::test();
+
 ?>
 ]]>
      </programlisting>
