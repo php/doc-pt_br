@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: dd07341fae2c414adc1f700be0890ff32e8daab4 Maintainer: leonardolara Status: ready -->
+
+<refentry xml:id="function.eio-get-event-stream" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>eio_get_event_stream</refname>
+  <refpurpose>Obtém fluxo representando uma variável usada em comunicações internas com libeio</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>mixed</type><methodname>eio_get_event_stream</methodname>
+   <void />
+  </methodsynopsis>
+  <para>
+   <function>eio_get_event_stream</function> adquire um fluxo representando uma
+   variável utilizada nas comunicações internas com o libeio. Pode ser usado para vincular-se
+   a algum loop de eventos fornecido por outra extensão PECL, por exemplo,
+   libevent.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  &no.function.parameters;
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   <function>eio_get_event_stream</function> retorna um fluxo em caso de sucesso;
+   caso contrário, &null;
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Usando eio com libevent</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+function my_eio_poll($fd, $events, $arg) {
+    /* Algum regulamento do libevent pode vir aqui .. */
+    if (eio_nreqs()) {
+        eio_poll();
+    }
+    /* .. e aqui */
+}
+
+function my_res_cb($d, $r) {
+    var_dump($r); var_dump($d);
+}
+
+$base = event_base_new();
+$event = event_new();
+
+$fd = eio_get_event_stream();
+var_dump($fd);
+
+eio_nop(EIO_PRI_DEFAULT, "my_res_cb", "nop data");
+eio_mkdir("/tmp/abc-eio-temp", 0750, EIO_PRI_DEFAULT, "my_res_cb", "mkdir data");
+/* algumas outras chamadas eio_* aqui ... */
+
+
+// define opções de evento
+event_set($event, $fd, EV_READ /*| EV_PERSIST*/, "my_eio_poll", array($event, $base));
+
+// define base de evento
+event_base_set($event, $base);
+
+// habilita o evento
+event_add($event);
+
+// inicia loop de evento
+event_base_loop($base);
+
+/* O mesmo estará disponível através da interface libevent em buffer */
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+int(3)
+int(0)
+string(8) "nop data"
+int(0)
+string(10) "mkdir data"
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
