@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 9e2d8231b5d8a3795b365c6770fab288e59e6249 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: d35d7d811ccf7662eefe4f23ff1cabc727a917ca Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <chapter xml:id="features.dtrace" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>Instrumentação dimâmica DTrace</title>
 
@@ -11,32 +11,32 @@
    disponível em um número de plataformas incluindo Solaris, macOS,
    Oracle Linux e BSD. DTrace pode instrumentar comportamento do sistema operacional
    e execução de programa de usuário. Ele pode exibir valores de argumentos e ser
-   usado para inferir estatísticas de desempenho. Os sensores são monitorados pos scripts
+   usado para inferir estatísticas de desempenho. As sondas são monitorados pos scripts
    criados pelo usuário escritos na linguagem própria do DTrace (D). Isto
    permite uma análise eficiente de pontos de dados.
   </para>
 
   <para>
-   Sensores PHP que não estão monitorados ativamente por um script
+   Sondas PHP que não estão monitorados ativamente por um script
    D do usuário não contêm código instrumentado, então não há
    degradação de desempenho durante a execução normal da aplicação.
-   Sensores que estão sendo monitorados incorrem em uma sobrecarga pequena o suficiente
+   Sondas que estão sendo monitoradas incorrem em uma sobrecarga pequena o suficiente
    para permitir monitoramento pelo DTrace em sistemas ativos em fase de produção.
   </para>
 
   <para>
-   PHP incorpora sensores com "Instrumentação Estaticamente Definida no Nível de Usuário" (USDT em inglês)
-   que são ativados em tempo de execução. Por exemplo, quando um script D
-   está monitorando o sensor de <literal>function-entry</literal> do PHP, então
-   a cada momento que uma função do PHP é chamada, este sensor é disparado e
+   PHP incorpora sondas com "Instrumentação Estaticamente Definida no Nível de Usuário" (USDT em inglês)
+   que são ativadas em tempo de execução. Por exemplo, quando um script D
+   está monitorando a sonda de <literal>function-entry</literal> do PHP,
+   a cada momento que uma função do PHP é chamada, esta sonda é disparada e
    o código de ação do script D associado é executado.  Este código de ação
-   poderia, por exemplo, imprimir argumentos de sensor como a localização do arquivo-fonte
+   poderia, por exemplo, imprimir argumentos de sonda como a localização do arquivo-fonte
    da função PHP. Ou a ação poderia agregar dados como
    o númedo de vezes que cada função é chamada.
   </para>
 
   <para>
-   Apenas os sensores USDT do PHP são descritas aqui. Refira-se à literatura externa do Dtrace,
+   Apenas as sondas USDT do PHP são descritas aqui. Refira-se à literatura externa do Dtrace,
    tanto geral quanto específica do sistema operacional, para entender como
    o DTrace pode ser usado para instrumentar funções arbitrárias, e como ele pode ser
    usado para instrumentar comportamento do sistema operacional. Note que nem todas as
@@ -44,7 +44,7 @@
   </para>
 
   <para>
-   Os sensores estáticos do Dtrace no PHP podem alternativamente ser utilizados com a
+   As sondas estáticas do Dtrace no PHP podem alternativamente ser utilizadas com a
    ferramenta SystemTap de algumas distribuições Linux.
   </para>
  </sect1>
@@ -52,12 +52,12 @@
  <sect1 xml:id="features.dtrace.dtrace">
   <title>Usando PHP e DTrace</title>
   <para>
-   O PHP pode ser configuracom com sensores estáticos do DTrace em plataformas que
+   O PHP pode ser configurado com sondas estáticas do DTrace em plataformas que
    suportam a Instrumentação Dinâmica do DTrace.
   </para>
 
   <sect2 xml:id="features.dtrace.install">
-   <title>Configurando o PHP para Sensores Estáticos DTrace</title>
+   <title>Configurando o PHP para Sondas Estáticas DTrace</title>
 
    <para>
     Refira-se à documentação externa específica da plataforma para habilitar
@@ -91,22 +91,25 @@
     </informalexample>
    </para>
    <para>
-    Isto habilita sensores estáticos no núcleo do PHP. Quaisquer extensões PHP
-    que fornecem seus próprios sensores devem ser construídas separadamente como
+    Isto faz com que as sondas estáticas estejam disponíveis no núcleo do PHP. Quaisquer extensões PHP
+    que fornecem seus próprios sondas devem ser construídas separadamente como
     extensões compartilhadas.
+   </para>
+   <para>
+    Para habilitar as sondas, defina a variável de ambiente <option>USE_ZEND_DTRACE=1</option> para os processos alvos do PHP.
    </para>
   </sect2>
 
   <sect2 xml:id="features.dtrace.static-probes">
-  <title>Sensores Estáticos DTrace no Núcleo do PHP</title>
+  <title>Sondas Estáticos DTrace no Núcleo do PHP</title>
   <table>
-   <title>Os sensores estáticos a seguir estão disponíveis no PHP</title>
+   <title>As sondas estáticos a seguir estão disponíveis no PHP</title>
    <tgroup cols="2">
     <thead>
      <row>
-      <entry>Nome do Sensor</entry>
-      <entry>Descrição do Sensor</entry>
-      <entry>Argumentos do Sensor</entry>
+      <entry>Nome da Sonda</entry>
+      <entry>Descrição da Sonda</entry>
+      <entry>Argumentos da Sonda</entry>
      </row>
     </thead>
     <tbody>
@@ -171,14 +174,14 @@
    </tgroup>
   </table>
   <para>
-   Extensões de PHP podem também conter sensores estáticos adicionais.
+   Extensões de PHP podem também conter sondas estáticas adicionais.
   </para>
   </sect2>
 
   <sect2 xml:id="features.dtrace.list-probes">
-   <title>Listando os Sensores Estáticos DTrace no PHP</title>
+   <title>Listando As Sondas Estáticas DTrace no PHP</title>
    <para>
-    Para listar os sensores disponíveis, inicie um processo PHP e então execute:
+    Para listar as sondas disponíveis, inicie um processo PHP e então execute:
     <informalexample>
      <programlisting>
 <![CDATA[
@@ -230,7 +233,7 @@
    </para>
 
    <para>
-    Se um processo PHP não estiver em execução, então nenhum sensor PHP será mostrado.
+    Se um processo PHP não estiver em execução, então nenhuma sonda PHP será mostrada.
    </para>
   </sect2>
 
@@ -239,7 +242,7 @@
    <para>
     Este exemplo mostra o básico da linguagem D de scripts DTrace.
     <example>
-     <title>Arquivo <filename>all_probes.d</filename> para instrumentar todos os Sensores Estáticos PHP com DTrace</title>
+     <title>Arquivo <filename>all_probes.d</filename> para instrumentar todas as Sondas Estáticas do PHP com DTrace</title>
      <programlisting>
 <![CDATA[
 #!/usr/sbin/dtrace -Zs
@@ -338,12 +341,12 @@ php*:::request-startup
     Este script usa a opção <literal>-Z</literal> para a aplicação
     <filename>dtrace</filename>, permitindo que ela seja executada quando não
     há processo PHP em execução. Se esta opção fosse omitida, o script
-    iria terminar imediatamente porque ele saberia que nenhum dos sensores
-    a serem monitorados existiriam.
+    iria terminar imediatamente porque ele saberia que nenhuma das sondas
+    a serem monitoradas existiriam.
    </para>
 
    <para>
-    O script instrumenta todos os pontos de sensores estáticos do núcleo do PHP durante toda a
+    O script instrumenta todos os pontos de sondas estáticas do núcleo do PHP durante toda a
     duração de um script PHP em execução. Execute o script D:
     <informalexample>
      <programlisting>
@@ -356,7 +359,7 @@ php*:::request-startup
 
    <para>
     Executa um script PHP ou aplicação. O script D de monitoramento terá
-    como saída os argumentos de cada um dos sensores quando for disparado.
+    como saída os argumentos de cada uma das sondas quando for disparado.
    </para>
 
    <para>
@@ -365,9 +368,9 @@ php*:::request-startup
    </para>
 
    <para>
-    Em máquinas com múltiplas CPUs, pode parecer que os sensor estão em ordem
-    não sequencial. Isto depende de qual CPU está processando os sensores,
-    e como as threads migram atráves dos CPUs. Mostrar os timestamps dos sensores
+    Em máquinas com múltiplas CPUs, pode parecer que as sondas estão em ordem
+    não sequencial. Isto depende de qual CPU está processando as sondas,
+    e como as threads migram atráves dos CPUs. Mostrar os timestamps das sondas
     irá ajudar a reduzir a confusão, por exemplo:
     <informalexample>
      <programlisting>
@@ -392,10 +395,10 @@ php*:::function-entry
  </sect1>
 
  <sect1 xml:id="features.dtrace.systemtap">
-  <title>Usando SystemTap com Sensores Estáticos DTrace</title>
+  <title>Usando SystemTap com Sondas Estáticas DTrace</title>
   <para>
    Em algumas distribuições Linux, o utilitário SystemTap de instrumentação pode ser
-   usado para instrumentar sensores estáticos do PHP. Isso está disponível no
+   usado para instrumentar sondas estáticas do PHP. Isso está disponível no
    PHP 5.4.20 e PHP 5.5.
   </para>
 
@@ -414,7 +417,7 @@ php*:::function-entry
    </para>
 
    <para>
-    Instale o PHP com os sensores DTrace habilitados:
+    Instale o PHP com as sondas DTrace habilitadas:
     <informalexample>
      <programlisting role="shell">
 <![CDATA[
@@ -427,10 +430,10 @@ php*:::function-entry
   </sect2>
 
   <sect2 xml:id="features.dtrace.systemtap-list-probes">
-   <title>Listando os Sensores Estáticos com SystemTap</title>
+   <title>Listando as Sondas Estáticas com SystemTap</title>
 
    <para>
-    Os sensores estáticos em PHP podem ser listados usando <filename>stap</filename>:
+    As sondas estáticas em PHP podem ser listados usando <filename>stap</filename>:
     <informalexample>
      <programlisting>
 <![CDATA[
@@ -467,7 +470,7 @@ process("sapi/cli/php").provider("php").mark("request__startup")
 
    <para>
     <example>
-     <title><filename>all_probes.stp</filename> para instrumentação de todos os Sensores Estáticos do PHP com SystemTap</title>
+     <title><filename>all_probes.stp</filename> para instrumentação de todos as Sondas Estáticas do PHP com SystemTap</title>
      <programlisting role="shell">
 <![CDATA[
 probe process("sapi/cli/php").provider("php").mark("compile__file__entry") {
@@ -537,7 +540,7 @@ probe process("sapi/cli/php").provider("php").mark("request__startup") {
     </example>
    </para>
    <para>
-    O script acima irá instrumentar todos os pontos de sensores estáticos do núcleo do PHP
+    O script acima irá instrumentar todos os pontos de sondas estáticas do núcleo do PHP
     durante toda a duração de um script PHP em execução:
     <informalexample>
      <programlisting>

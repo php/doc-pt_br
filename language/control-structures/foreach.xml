@@ -1,22 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: e49940b757b35b8ef26bb64380c231eda7b49fc4 Maintainer: lhsazevedo Status: ready --><!-- CREDITS: fabioluciano,geekcom,lhsazevedo -->
-
+<!-- EN-Revision: 44ae7cb94991c11c93bc23f8a6544f81bb36cf1a Maintainer: leonardolara Status: ready --><!-- CREDITS: fabioluciano,geekcom,lhsazevedo,leonardolara -->
 <sect1 xml:id="control-structures.foreach" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>foreach</title>
  <?phpdoc print-version-for="foreach"?>
  <para>
   O construtor <literal>foreach</literal> fornece uma maneira fácil de
-  iterar sobre arrays. O <literal>foreach</literal> funciona somente em arrays
-  e objetos, e emitirá um erro ao tentar usá-lo em uma variável
-  com um tipo de dado diferente ou em uma variável não inicializada. Possui
-  duas sintaxes:
+  iterar sobre <type>array</type>s e objetos <interfacename>Traversable</interfacename>.
+  O <literal>foreach</literal> emitirá um erro quando usado com
+  uma variável contendo um tipo de dado diferente ou com uma variável não inicializada.
   <informalexample>
+   <simpara>
+    <literal>foreach</literal> pode, opcionalmente, obter a chave (<literal>key</literal>) de cada elemento:
+   </simpara>
    <programlisting>
 <![CDATA[
-foreach (iterable_expression as $valor)
-    statement
-foreach (iterable_expression as $chave => $valor)
-    statement
+foreach (expressão_iterável as $valor) {
+    lista_de_instruções
+}
+
+foreach (expressão_iterável as $chave => $valor) {
+    lista_de_instruções
+}
 ]]>
    </programlisting>
   </informalexample>
@@ -40,160 +44,88 @@ foreach (iterable_expression as $chave => $valor)
   <link linkend="language.oop5.iterations">customizar a iteração em objetos</link>.
  </simpara>
 
- <para>
-  Para modificar diretamente elementos de um array dentro de um laço, preceda
- <literal>$valor</literal> com  &amp;. Neste caso, o valor será atribuído por
- <link linkend="language.references">referência</link>.
-  <informalexample>
-   <programlisting role="php">
+ <example>
+  <title>Usos comuns de <literal>foreach</literal></title>
+  <programlisting role="php">
 <![CDATA[
 <?php
-$arr = array(1, 2, 3, 4);
-foreach ($arr as &$valor) {
-    $valor = $valor * 2;
-}
-// $arr agora é array(2, 4, 6, 8)
-unset($valor); // quebra a referência com o último elemento
-?>
-]]>
-   </programlisting>
-  </informalexample>
- </para>
- <warning>
-  <para>
-   A referência ao <literal>$valor</literal> e o último elemento do array
-   permanecerá inalterado mesmo após a iteração do <literal>foreach</literal>.
-   É recomendado destruí-lo utilizando a função <function>unset</function>.
-   Caso contrário você experienciará o seguinte comportamento:
-  </para>
-  <informalexample>
-   <programlisting role="php">
-<![CDATA[
-<?php
-$arr = array(1, 2, 3, 4);
-foreach ($arr as &$valor) {
-    $valor = $valor * 2;
-}
-// $arr agora é array(2, 4, 6, 8)
+/* Examplo: somente valor */
 
-// sem um unset($valor), $valor continuará como referência ao último item: $arr[3]
+$array = [1, 2, 3, 17];
 
-foreach ($arr as $chave => $valor) {
-    // $arr[3] será atualizado com cada valor de $arr...
-    echo "{$chave} => {$valor} ";
-    print_r($arr);
-}
-// ...até que, o segundo e último valor é copiado para o último valor
-
-// saída:
-// 0 => 2 Array ( [0] => 2, [1] => 4, [2] => 6, [3] => 2 )
-// 1 => 4 Array ( [0] => 2, [1] => 4, [2] => 6, [3] => 4 )
-// 2 => 6 Array ( [0] => 2, [1] => 4, [2] => 6, [3] => 6 )
-// 3 => 6 Array ( [0] => 2, [1] => 4, [2] => 6, [3] => 6 )
-?>
-]]>
-   </programlisting>
-  </informalexample>
- </warning>
- <para>
-  É possível iterar o valor de um array constante por referência
-  <informalexample>
-   <programlisting role="php">
-<![CDATA[
-<?php
-foreach (array(1, 2, 3, 4) as &$valor) {
-    $valor = $valor * 2;
-}
-?>
-]]>
-   </programlisting>
-  </informalexample>
- </para>
- <para>
-  <note>
-   <para>
-    O <literal>foreach</literal> não possui suporte a habilidade
-    de suprimir mensagens de erro utilizando
-    <literal linkend="language.operators.errorcontrol">@</literal>.
-   </para>
-  </note>
- </para>
- <para>
-  Mais alguns exemplos para demonstrar o uso:
-  <informalexample>
-   <programlisting role="php">
-<![CDATA[
-<?php
-/* Exemplo foreach1: somente valores */
-
-$a = array(1, 2, 3, 17);
-
-foreach ($a as $v) {
-    echo "Valor atual de \$a: $v.\n";
+foreach ($array as $value) {
+    echo "Elemento atual de \$array: $value.\n";
 }
 
-/* Exemplo foreach 2: valor com acesso manual (apenas ilustrativo) */
+/* Examplo: chave e valor */
 
-$a = array(1, 2, 3, 17);
-
-$i = 0; /* apenas para ilustrar */
-
-foreach ($a as $v) {
-    echo "\$a[$i] => $v.\n";
-    $i++;
-}
-
-/* Exemplo foreach 3: chave e valor */
-
-$a = array(
+$array = [
     "um" => 1,
     "dois" => 2,
     "três" => 3,
     "dezessete" => 17
-);
+];
 
-foreach ($a as $k => $v) {
-    echo "\$a[$k] => $v.\n";
+foreach ($array as $key => $value) {
+    echo "Chave: $key => Valor: $value\n";
 }
 
-/* Exemplo foreach 4: arrays multi dimensionais */
-$a = array();
-$a[0][0] = "a";
-$a[0][1] = "b";
-$a[1][0] = "y";
-$a[1][1] = "z";
+/* Examplo: arrays chave-valor multidimensionais */
+$grid = [];
+$grid[0][0] = "a";
+$grid[0][1] = "b";
+$grid[1][0] = "y";
+$grid[1][1] = "z";
 
-foreach ($a as $v1) {
-    foreach ($v1 as $v2) {
-        echo "$v2\n";
+foreach ($grid as $y => $row) {
+    foreach ($row as $x => $value) {
+        echo "Valor na posição x=$x e y=$y: $value\n";
     }
 }
 
-/* Exemplo foreach 5: arrays dinâmicos */
+/* Examplo: arrays dinâmicos */
 
-foreach (array(1, 2, 3, 4, 5) as $v) {
-    echo "$v\n";
+foreach (range(1, 5) as $value) {
+    echo "$value\n";
 }
 ?>
 ]]>
-   </programlisting>
-  </informalexample>
- </para>
+  </programlisting>
+ </example>
+ <note>
+  <para>
+   <literal>foreach</literal> não suporta a capacidade de
+   supressão de mensagens de erro usando o operador
+   <link linkend="language.operators.errorcontrol"><literal>@</literal></link>.
+  </para>
+ </note>
 
  <sect2 xml:id="control-structures.foreach.list">
-  <title>Desempacotando arrays aninhados com o construtor list()</title>
+  <title>Desempacotando arrays aninhados</title>
   <?phpdoc print-version-for="foreach.list"?>
-
   <para>
-   É possível iterar sobre um array de arrays e desempacotar
-   arrays aninhados em variáveis do laço fornecendo o construtor <function>list</function>
-   como valor.
+   É possível iterar sobre um array de arrays e desempacotar o array aninhado
+   em variáveis do laço usando
+   <link linkend="language.types.array.syntax.destructuring">desestruturação de array</link>
+   através de <literal>[]</literal> ou usando o contrutor de linguagem <function>list</function>
+   como o valor.
+
+   <note>
+    <simpara>
+     Observe que
+     <link linkend="language.types.array.syntax.destructuring">desestruturação de array</link>
+     através de <literal>[]</literal> só é possível a partir do PHP 7.1.0.
+    </simpara>
+   </note>
   </para>
 
   <para>
-   Por exemplo:
-
    <informalexample>
+    <simpara>
+     Em ambos os exemplos a seguir, <literal>$a</literal> será definida para
+     o primeiro elemento do array aninhado e <literal>$b</literal>
+     conterá o segundo elemento:
+    </simpara>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -202,9 +134,11 @@ $array = [
     [3, 4],
 ];
 
+foreach ($array as [$a, $b]) {
+    echo "A: $a; B: $b\n";
+}
+
 foreach ($array as list($a, $b)) {
-    // $a contém o primeiro elemento do array aninhado,
-    // e $b contém o segundo elemento.
     echo "A: $a; B: $b\n";
 }
 ?>
@@ -221,22 +155,26 @@ A: 3; B: 4
   </para>
 
   <para>
-   Pode-se se fornecer menos elementos ao construtor <function>list</function> aos que
-   existem no array aninhado, neste caso, os valores do array que sobrarem serão
-   ignorados.
-
+   Ao fornecer menos variáveis que o número de elementos no array,
+   os elementos restantes serão ignorados.
+   Da mesma forma, elementos podem ser pulados usando uma vírgula:
    <informalexample>
     <programlisting role="php">
 <![CDATA[
 <?php
 $array = [
-    [1, 2],
-    [3, 4],
+    [1, 2, 3],
+    [3, 4, 6],
 ];
 
-foreach ($array as list($a)) {
-    // Veja que não existe $b aqui.
-    echo "$a\n";
+foreach ($array as [$a, $b]) {
+    // Observe que não existe $c aqui.
+    echo "$a $b\n";
+}
+
+foreach ($array as [, , $c]) {
+    // Pulando $a e $b
+    echo "$c\n";
 }
 ?>
 ]]>
@@ -244,8 +182,10 @@ foreach ($array as list($a)) {
     &example.outputs;
     <screen>
 <![CDATA[
-1
-3
+1 2
+3 4
+5
+6
 ]]>
     </screen>
    </informalexample>
@@ -264,7 +204,7 @@ $array = [
     [3, 4],
 ];
 
-foreach ($array as list($a, $b, $c)) {
+foreach ($array as [$a, $b, $c]) {
     echo "A: $a; B: $b; C: $c\n";
 }
 ?>
@@ -273,7 +213,6 @@ foreach ($array as list($a, $b, $c)) {
     &example.outputs;
     <screen>
 <![CDATA[
-
 Notice: Undefined offset: 2 in example.php on line 7
 A: 1; B: 2; C:
 
@@ -285,6 +224,90 @@ A: 3; B: 4; C:
   </para>
  </sect2>
 
+ <sect2 xml:id="control-structures.foreach.reference">
+  <title>foreach e referências</title>
+  <para>
+   É possível modificar elementos de array diretamente dentro de um laço precedendo
+   <literal>$value</literal> com <literal>&amp;</literal>.
+   Neste caso, o valor será atribuído por
+   <link linkend="language.references">referência</link>.
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$arr = [1, 2, 3, 4];
+foreach ($arr as &$value) {
+    $value = $value * 2;
+}
+// $arr agora é [2, 4, 6, 8]
+unset($value); // quebra a referência com o último elemento
+?>
+]]>
+    </programlisting>
+   </informalexample>
+  </para>
+  <warning>
+   <simpara>
+    A referência a um <literal>$value</literal> do último elemento do array
+    permanece mesmo depois do laço <literal>foreach</literal>. É recomendado
+    destruir essas referências usando <function>unset</function>.
+    Caso contrário, o comportamento a seguir irá ocorrer:
+   </simpara>
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$arr = [1, 2, 3, 4];
+foreach ($arr as &$value) {
+    $value = $value * 2;
+}
+// $arr agora é [2, 4, 6, 8]
+
+// sem um unset($value), $value ainda é uma referência ao último item: $arr[3]
+
+foreach ($arr as $key => $value) {
+    // $arr[3] será atualizado com cada valor de $arr...
+    echo "{$key} => {$value} ";
+    print_r($arr);
+}
+// ...até finalmente o penúltimo valor ser copiado no último valor
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+0 => 2 Array ( [0] => 2, [1] => 4, [2] => 6, [3] => 2 )
+1 => 4 Array ( [0] => 2, [1] => 4, [2] => 6, [3] => 4 )
+2 => 6 Array ( [0] => 2, [1] => 4, [2] => 6, [3] => 6 )
+3 => 6 Array ( [0] => 2, [1] => 4, [2] => 6, [3] => 6 )
+]]>
+    </screen>
+   </informalexample>
+  </warning>
+  <example>
+  <title>Iterando valores de um array constante por referência</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+foreach ([1, 2, 3, 4] as &$value) {
+    $value = $value * 2;
+}
+?>
+]]>
+   </programlisting>
+  </example>
+ </sect2>
+
+ <sect2 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><link linkend="language.types.array">array</link></member>
+   <member><interfacename>Traversable</interfacename></member>
+   <member><link linkend="language.types.iterable">iterable</link></member>
+   <member><function>list</function></member>
+  </simplelist>
+ </sect2>
 </sect1>
 
 <!-- Keep this comment at the end of the file
