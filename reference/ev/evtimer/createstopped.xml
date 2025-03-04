@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: f80105b4fc1196bd8d5fecb98d686b580b1ff65d Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xml:id="evtimer.createstopped" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>EvTimer::createStopped</refname>
+  <refpurpose>Cria objeto observador EvTimer parado</refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <modifier>final</modifier>
+   <modifier>public</modifier>
+   <modifier>static</modifier>
+   <type>EvTimer</type>
+   <methodname>EvTimer::createStopped</methodname>
+   <methodparam>
+    <type>float</type>
+    <parameter>after</parameter>
+   </methodparam>
+   <methodparam>
+    <type>float</type>
+    <parameter>repeat</parameter>
+   </methodparam>
+   <methodparam>
+    <type>callable</type>
+    <parameter>callback</parameter>
+   </methodparam>
+   <methodparam
+   choice="opt">
+    <type>mixed</type>
+    <parameter>data</parameter>
+    <initializer>&null;</initializer>
+   </methodparam>
+   <methodparam
+   choice="opt">
+    <type>int</type>
+    <parameter>priority</parameter>
+    <initializer>0</initializer>
+   </methodparam>
+  </methodsynopsis>
+  <para>
+   Cria objeto observador EvTimer parado. Diferentemente de
+   <methodname>EvTimer::__construct</methodname>,
+   esse método não inicia o observador automaticamente.
+  </para>
+ </refsect1>
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <variablelist>
+   <varlistentry>
+    <term>
+     <parameter>after</parameter>
+    </term>
+    <listitem>
+     <para>
+      Configura o temporizador para disparo após
+      <parameter>after</parameter>
+      segundos.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <parameter>repeat</parameter>
+    </term>
+    <listitem>
+     <para>
+      Se este parâmetro for
+      <literal>0.0</literal>,
+      o temporizador será automaticamente parado quando o tempo limite for atingido.
+      Se for positivo, será o intervalo em segundos no qual o temporizador será
+      automaticamente configurado para disparar novamente, até ser parado manualmente.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <parameter>callback</parameter>
+    </term>
+    <listitem>
+     <para>
+      Consulte
+      <link linkend="ev.watcher-callbacks">funções de retorno
+       observadoras</link>.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <parameter>data</parameter>
+    </term>
+    <listitem>
+     <para>
+      Dados personalizados associados com o observador.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <parameter>priority</parameter>
+    </term>
+    <listitem>
+     <para>
+      <link linkend="ev.constants.watcher-pri">Prioridade de observadores</link>.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna um objeto EvTimer watcher em caso de sucesso.
+  </para>
+ </refsect1>
+ <refsect1 role="examples">
+  &reftitle.examples;
+ <example>
+   <title>Monitora alterações em /var/log/messages. Evita perder atualizações por meio de um atraso de um segundo</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$timer = EvTimer::createStopped(0., 1.02, function ($w) {
+    $w->stop();
+
+    $stat = $w->data;
+
+    // 1 segundo após a alteração mais recente do arquivo
+    printf("Tamanho atual: %ld\n", $stat->attr()['size']);
+});
+
+$stat = new EvStat("/var/log/messages", 0., function () use ($timer) {
+    // Reinicia o observador do temporizador
+    $timer->again();
+});
+
+$timer->data = $stat;
+
+Ev::run();
+?>
+]]>
+   </programlisting>
+  </example>
+ </refsect1>
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member>
+    <methodname>EvTimer::__construct</methodname>
+   </member>
+   <member>
+    <classname>EvPeriodic</classname>
+   </member>
+  </simplelist>
+ </refsect1>
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
