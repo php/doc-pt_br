@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 8d666e819852f6b0561b40fcf8689b747568865c Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<!-- EN-Revision: 8d666e819852f6b0561b40fcf8689b747568865c Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandowobeto,leonardolara -->
 <chapter xml:id="ev.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  &reftitle.examples;
  <example>
@@ -26,26 +26,26 @@ $w2 = new EvTimer(2, 1, function ($w) {
 
 // Cria um cronômetro parado. Ele ficará inativo até que nós mesmos o iniciemos
 $w_stopped = EvTimer::createStopped(10, 5, function($w) {
-    echo "Retorno de chamada de um timer criado como parado\n";
+    echo "Função de retorno de um temporizador criado como parado\n";
 
-    // Pare o observador após 2 iterações
+    // Para o observador após 2 iterações
     Ev::iteration() >= 2 and $w->stop();
 });
 
-// Faça um loop até que Ev::stop() seja chamado ou todos os observadores parem
+// Faz um laço até que Ev::stop() seja chamado ou todos os observadores parem
 Ev::run();
 
-// Comece e veja se funciona
+// Começa e vê se funciona
 $w_stopped->start();
-echo "Execute uma única iteração\n";
+echo "Executa uma única iteração\n";
 Ev::run(Ev::RUN_ONCE);
 
-echo "Reinicie o segundo observador e tente lidar com os mesmos eventos, mas não bloqueie\n";
+echo "Reinicia o segundo observador e tenta lidar com os mesmos eventos, mas não bloqueia\n";
 $w2->again();
 Ev::run(Ev::RUN_NOWAIT);
 
 $w = new EvTimer(10, 0, function() {});
-echo "Executando um loop de bloqueio\n";
+echo "Executando um laço de bloqueio\n";
 Ev::run();
 echo "FIM\n";
 ?>
@@ -65,10 +65,10 @@ iteração = 3
 iteração = 4
 é chamado a cada segundo, é iniciado após 2 segundos
 iteração = 5
-Execute uma única iteração
-Retorno de chamada de um timer criado como parado
-Reinicie o segundo observador e tente lidar com os mesmos eventos, mas não bloqueie
-Executando um loop de bloqueio
+Executa uma única iteração
+Função de retorno de um temporizador criado como parado
+Reinicia o segundo observador e tente lidar com os mesmos eventos, mas não bloqueia
+Executando um laço de bloqueio
 é chamado a cada segundo, é iniciado após 2 segundos
 iteração = 8
 é chamado a cada segundo, é iniciado após 2 segundos
@@ -145,13 +145,13 @@ Ev::run(Ev::RUN_ONCE);
   </programlisting>
  </example>
  <example>
-  <title>Usa alguma E/S assíncrona para acessar um socket</title>
+  <title>Usa alguma E/S assíncrona para acessar um soquete</title>
   <programlisting role="php">
 <![CDATA[
 <?php
-/* Usa alguma E/S assíncrona para acessar um socket */
+/* Usa alguma E/S assíncrona para acessar um soquete */
 
-// A extensão `sockets' ainda registra avisos
+// A extensão `sockets` ainda registra alertas
 // para EINPROGRESS, EAGAIN/EWOULDBLOCK etc.
 error_reporting(E_ERROR);
 
@@ -163,10 +163,10 @@ $service_port = getservbyname('www', 'tcp');
 // Obtém o endereço IP do host alvo
 $address = gethostbyname('google.co.uk');
 
-// Cria um socket TCP/IP
+// Cria um soquete TCP/IP
 $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 if ($socket === FALSE) {
-    echo "socket_create() falhow: rasão: "
+    echo "socket_create() falhou: rasão: "
         .socket_strerror(socket_last_error()) . "\n";
 }
 
@@ -179,11 +179,11 @@ $timeout_watcher = new EvTimer(10.0, 0., function () use ($socket) {
     Ev::stop(Ev::BREAK_ALL);
 });
 
-// Faz a solicitação HEAD quando o socket é gravável
+// Faz a solicitação HEAD quando o soquete é gravável
 $write_watcher = new EvIo($socket, Ev::WRITE, function ($w)
     use ($socket, $timeout_watcher, $e_nonblocking)
 {
-    // Para o observador de tempo limite
+    // Interrompe o observador de tempo limite
     $timeout_watcher->stop();
     // Para de escrever o observador
     $w->stop();
@@ -193,13 +193,13 @@ $write_watcher = new EvIo($socket, Ev::WRITE, function ($w)
     $in .= "Connection: Close\r\n\r\n";
 
     if (!socket_write($socket, $in, strlen($in))) {
-        trigger_error("Falha ao escrever $in no socket", E_USER_ERROR);
+        trigger_error("Falha ao escrever $in no soquete", E_USER_ERROR);
     }
 
     $read_watcher = new EvIo($socket, Ev::READ, function ($w, $re)
         use ($socket, $e_nonblocking)
     {
-        // O socket é legível. recv() 20 bytes usando modo sem bloqueio
+        // O soquete é legível. recv() 20 bytes usando modo sem bloqueio
         $ret = socket_recv($socket, $out, 20, MSG_DONTWAIT);
 
         if ($ret) {
@@ -249,15 +249,15 @@ Connection: close
   </screen>
  </example>
  <example>
-  <title>Incorporando um loop em outro</title>
+  <title>Incorporando um laço em outro</title>
   <programlisting role="php">
 <![CDATA[
 <?php
 /*
-* Tenta obter um loop de eventos incorporável e incorporá-lo ao loop de eventos padrão.
-* Se for impossível, usa o loop padrão
-* O loop padrão é armazenado em $loop_hi, enquanto o loop incorporável é
-* armazenado em $loop_lo(que é $loop_hi no caso de nenhum loop incorporável poder ser
+* Tenta obter um laço de eventos incorporável e incorporá-lo ao laço de eventos padrão.
+* Se for impossível, usa o laço padrão
+* O laço padrão é armazenado em $loop_hi, enquanto o laço incorporável é
+* armazenado em $loop_lo(que é $loop_hi no caso de nenhum laço incorporável poder ser
 * usado).
 *
 * Amostra traduzida para PHP
@@ -269,7 +269,7 @@ $embed   = NULL;
 
 /*
 * Veja se há chance de conseguir um que funcione
-* (o valor 0 dos sinalizadores significa autodetecção)
+* (o valor 0 da opção significa autodetecção)
 */
 $loop_lo = Ev::embeddableBackends() & Ev::recommendedBackends()
     ? new EvLoop(Ev::embeddableBackends() & Ev::recommendedBackends())
@@ -285,14 +285,14 @@ if ($loop_lo) {
   </programlisting>
  </example>
  <example>
-  <title>Incorporando loop criado com back-end kqueue no loop padrão</title>
+  <title>Incorporando laço criado com back-end kqueue no laço padrão</title>
   <programlisting role="php">
 <![CDATA[
 <?php
 /*
 * Verifica se o kqueue está disponível, mas não é recomendado, e cria um backend kqueue
-* para uso com sockets (que geralmente funcionam com qualquer implementação do kqueue).
-* Armazena o loop de eventos kqueue/socket somente em loop_socket. (Pode-se opcionalmente
+* para uso com soquetes (que geralmente funcionam com qualquer implementação do kqueue).
+* Armazena o laço de eventos kqueue/somente_soquete em loop_socket. (Pode-se opcionalmente
 * usar EVFLAG_NOENV também)
 *
 * Exemplo emprestado de
@@ -312,7 +312,7 @@ if (!$socket_loop) {
     $socket_loop = $loop;
 }
 
-// Agora use $socket_loop para todos os sockets e $loop para qualquer outro
+// Agora use $socket_loop para todos os soquetes e $loop para qualquer outro
 ?>
 ]]>
   </programlisting>
@@ -333,20 +333,20 @@ Ev::run();
   </programlisting>
  </example>
  <example>
-  <title>Monitora alterações de /var/log/messages</title>
+  <title>Monitora alterações em /var/log/messages</title>
   <programlisting role="php">
 <![CDATA[
 <?php
 // Usa intervalo de atualização de 10 segundos.
 $w = new EvStat("/var/log/messages", 8, function ($w) {
-    echo "/var/log/messages mudou\n";
+    echo "/var/log/messages alterado\n";
 
     $attr = $w->attr();
 
     if ($attr['nlink']) {
         printf("Tamanho atual: %ld\n", $attr['size']);
-        printf("atime atual: %ld\n", $attr['atime']);
-        printf("mtime atual: %ld\n", $attr['mtime']);
+        printf("Horário de acesso atual: %ld\n", $attr['atime']);
+        printf("Horário de moficiação atual: %ld\n", $attr['mtime']);
     } else {
         fprintf(STDERR, "O arquivo `messages` não existe!");
         $w->stop();
