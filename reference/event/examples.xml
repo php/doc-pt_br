@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: ac397fd0da4d814b5a2f4ba49254f9b6093315e1 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<!-- EN-Revision: ac397fd0da4d814b5a2f4ba49254f9b6093315e1 Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandowobeto, leonardolara -->
 <chapter xml:id="event.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  &reftitle.examples;
  <example>
@@ -7,7 +7,7 @@
   <programlisting role="php">
 <![CDATA[
 <?php
-// Retorno de chamada de leitura
+// Função de retorno de leitura
 function readcb($bev, $base) {
     //$input = $bev->input; //$bev->getInput();
 
@@ -19,7 +19,7 @@ function readcb($bev, $base) {
     }
 }
 
-// Retorno de chamada de evento
+// Função de retorno de evento
 function eventcb($bev, $events, $base) {
     if ($events & EventBufferEvent::CONNECTED) {
         echo "Conectado.\n";
@@ -51,12 +51,12 @@ if (!$dns_base) {
     exit("Falha ao iniciar Base DNS\n");
 }
 
-$bev = new EventBufferEvent($base, /* usa socket interno */ NULL,
+$bev = new EventBufferEvent($base, /* usa soquete interno */ NULL,
     EventBufferEvent::OPT_CLOSE_ON_FREE | EventBufferEvent::OPT_DEFER_CALLBACKS,
     "readcb", /* writecb */ NULL, "eventcb"
 );
 if (!$bev) {
-    exit("Falha ao criar socket de bufferevent\n");
+    exit("Falha ao criar soquete de bufferevent\n");
 }
 
 //$bev->setCallbacks("readcb", /* writecb */ NULL, "eventcb", $base);
@@ -122,7 +122,7 @@ Pronto
  * 3. Lê a resposta de forma assíncrona e mostra na saída padrão.
  */
 
-// Retorno de chamada de leitura
+// Função de retorno de leitura
 function readcb($bev, $base) {
     $input = $bev->getInput();
 
@@ -131,7 +131,7 @@ function readcb($bev, $base) {
     }
 }
 
-// Retorno de chamada de evento
+// Função de retorno de evento
 function eventcb($bev, $events, $base) {
     if ($events & EventBufferEvent::CONNECTED) {
         echo "Conectado.\n";
@@ -149,10 +149,10 @@ function eventcb($bev, $events, $base) {
 $base = new EventBase();
 
 echo "passo 1\n";
-$bev = new EventBufferEvent($base, /* usa socket interno */ NULL,
+$bev = new EventBufferEvent($base, /* usa soquete interno */ NULL,
     EventBufferEvent::OPT_CLOSE_ON_FREE | EventBufferEvent::OPT_DEFER_CALLBACKS);
 if (!$bev) {
-    exit("Falha ao criar socket de bufferevent\n");
+    exit("Falha ao criar soquete de bufferevent\n");
 }
 
 echo "passo 2\n";
@@ -187,7 +187,7 @@ $base->dispatch();
 <![CDATA[
 <?php
 /*
-  * Servidor de eco simples baseado no ouvinte de conexão do libevent.
+  * Servidor de eco simples baseado no observador de conexão do libevent.
   *
   * Uso:
   * 1) Em uma janela de terminal, execute:
@@ -269,7 +269,7 @@ class MyListener {
         /*
         $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         if (!socket_bind($this->socket, '0.0.0.0', $port)) {
-            echo "Não foi possível ligação ao socket\n";
+            echo "Não foi possível ligação ao soquete\n";
             exit(1);
         }
         $this->listener = new EventListener($this->base,
@@ -285,7 +285,7 @@ class MyListener {
              "0.0.0.0:$port");
 
         if (!$this->listener) {
-            echo "Não foi possível criar o ouvinte";
+            echo "Não foi possível criar o observador";
             exit(1);
         }
 
@@ -296,7 +296,7 @@ class MyListener {
         $this->base->dispatch();
     }
 
-    // Este retorno de chamada é invocado quando há dados para ler em $bev
+    // Esta função de retorno é invocada quando há dados para ler em $bev
     public function acceptConnCallback($listener, $fd, $address, $ctx) {
         // Conseguimos uma nova conexão! Configure um bufferevent para ela. */
         $base = $this->base;
@@ -306,7 +306,7 @@ class MyListener {
     public function accept_error_cb($listener, $ctx) {
         $base = $this->base;
 
-        fprintf(STDERR, "Houve um erro %d (%s) no ouvinte. "
+        fprintf(STDERR, "Houve um erro %d (%s) no observador. "
             ."Desligando.\n",
             EventUtil::getLastSocketErrno(),
             EventUtil::getLastSocketError());
@@ -370,7 +370,7 @@ class MySslEchoServer {
             EventListener::OPT_CLOSE_ON_FREE | EventListener::OPT_REUSEABLE,
             -1, "$host:$port");
         if (!$this->listener) {
-            exit("Não foi possível criar o ouvinte\n");
+            exit("Não foi possível criar o observador\n");
         }
 
         $this->listener->setErrorCallback(array($this, "accept_error_cb"));
@@ -379,7 +379,7 @@ class MySslEchoServer {
         $this->base->dispatch();
     }
 
-    // Este retorno de chamada é invocado quando há dados para ler em $bev.
+    // Esta função de retorno é invocada quando há dados para ler em $bev.
     function ssl_read_cb($bev, $ctx) {
         $in = $bev->input; //$bev->getInput();
 
@@ -390,8 +390,8 @@ class MySslEchoServer {
         $bev->writeBuffer($in);
     }
 
-    // Este retorno de chamada é invocado quando algum evento ocorre no ouvinte de evento,
-    // por exemplo. conexão fechada ou ocorreu um erro
+    // Esta função de retorno é invocada quando algum evento ocorre no observador de evento,
+    // por exemplo, conexão fechada ou ocorrência de erro
     function ssl_event_cb($bev, $events, $ctx) {
         if ($events & EventBufferEvent::ERROR) {
             // Buscar erros da pilha de erros SSL
@@ -405,9 +405,9 @@ class MySslEchoServer {
         }
     }
 
-    // Este retorno de chamada é invocado quando um cliente aceita uma nova conexão
+    // Esta função de retorno é invocada quando um cliente aceita uma nova conexão
     function ssl_accept_cb($listener, $fd, $address, $ctx) {
-        // Conseguimos uma nova conexão! Configure um bufferevent para ela.
+        // Conseguimos uma nova conexão! Configura um bufferevent para ela.
         $this->bev = EventBufferEvent::sslSocket($this->base, $fd, $this->ctx,
             EventBufferEvent::SSL_ACCEPTING, EventBufferEvent::OPT_CLOSE_ON_FREE);
 
@@ -422,9 +422,9 @@ class MySslEchoServer {
             array($this, "ssl_event_cb"), NULL);
     }
 
-    // Este retorno de chamada é invocado quando não conseguimos configurar uma nova conexão para um cliente
+    // Esta função de retorno é invocada quando não é possível configurar uma nova conexão para um cliente
     function accept_error_cb($listener, $ctx) {
-        fprintf(STDERR, "Houve um erro %d (%s) no ouvinte. "
+        fprintf(STDERR, "Houve um erro %d (%s) no observador. "
             ."Desligando.\n",
             EventUtil::getLastSocketErrno(),
             EventUtil::getLastSocketError());
@@ -532,7 +532,7 @@ event_base_loop($base);
   <programlisting role="php">
 <![CDATA[
 <?php
-// Retorno de chamada para eio_nop()
+// Função de retorno para eio_nop()
 function my_nop_cb($d, $r) {
     echo "passo 6\n";
 }
@@ -601,7 +601,7 @@ echo "Recursos:\n";
 $features = $base->getFeatures();
 ($features & EventConfig::FEATURE_ET) and print "ET - edge-triggered IO\n";
 ($features & EventConfig::FEATURE_O1) and print "O1 - Operação O(1) para adicionar/remover eventos\n";
-($features & EventConfig::FEATURE_FDS) and print "FDS - tipos de descritor de arquivos arbitrários, e não somente sockets\n";
+($features & EventConfig::FEATURE_FDS) and print "FDS - tipos de descritor de arquivos arbitrários, e não somente soquetes\n";
 
 // Exigir recurso FDS
 if ($cfg->requireFeatures(EventConfig::FEATURE_FDS)) {
@@ -609,7 +609,7 @@ if ($cfg->requireFeatures(EventConfig::FEATURE_FDS)) {
 
     $base = new EventBase($cfg);
     ($base->getFeatures() & EventConfig::FEATURE_FDS)
-        and print "FDS - tipos de descritor de arquivos arbitrários, e não somente sockets\n";
+        and print "FDS - tipos de descritor de arquivos arbitrários, e não somente soquetes\n";
 }
 /* }}} */
 
@@ -1018,20 +1018,20 @@ PHP, date:
  </example>
  <example>
   <title>
-   Ouvinte de conexão baseado em um socket de domínio UNIX</title>
+   Observador de conexão baseado em um soquete de domínio UNIX</title>
   <programlisting role="php">
 <![CDATA[
 <?php
 /*
- * Servidor de eco simples baseado no ouvinte de conexão do libevent.
+ * Servidor de eco simples baseado no observador de conexão do libevent.
  *
  * Uso:
  * 1) Em uma janela de terminal, execute:
  *
- * $ php unix-domain-listener.php [path-to-socket]
+ * $ php unix-domain-listener.php [caminho-para-soquete]
  *
  * 2) Em outra janela do terminal abra a conexão
- * com o socket, por exemplo:
+ * com o soquete, por exemplo:
  *
  * $ socat - GOPEN:/tmp/1.sock
  *
@@ -1105,7 +1105,7 @@ class MyListener {
              "unix:$sock_path");
 
         if (!$this->listener) {
-            trigger_error("Não foi possível criar o ouvinte", E_USER_ERROR);
+            trigger_error("Não foi possível criar o observador", E_USER_ERROR);
         }
 
         $this->listener->setErrorCallback(array($this, "accept_error_cb"));
@@ -1115,7 +1115,7 @@ class MyListener {
         $this->base->dispatch();
     }
 
-    // Este retorno de chamada é invocado quando há dados para ler em $bev
+    // Esta função de retorno é invocada quando há dados para ler em $bev
     public function acceptConnCallback($listener, $fd, $address, $ctx) {
         // Conseguimos uma nova conexão! Configure um bufferevent para ela. */
         $base = $this->base;
@@ -1125,7 +1125,7 @@ class MyListener {
     public function accept_error_cb($listener, $ctx) {
         $base = $this->base;
 
-        fprintf(STDERR, "Ocorreu um erro %d (%s) no ouvinte. "
+        fprintf(STDERR, "Ocorreu um erro %d (%s) no observador. "
             ."Desligando.\n",
             EventUtil::getLastSocketErrno(),
             EventUtil::getLastSocketError());
@@ -1135,7 +1135,7 @@ class MyListener {
 }
 
 if ($argc <= 1) {
-    exit("Caminho do socket não fornecido\n");
+    exit("Caminho do soquete não fornecido\n");
 }
 $sock_path = $argv[1];
 
