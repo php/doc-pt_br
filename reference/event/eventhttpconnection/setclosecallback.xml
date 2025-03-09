@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 22583751fbfdaa3eaa41aeb6470d1343f5cb2c78 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xml:id="eventhttpconnection.setclosecallback" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>EventHttpConnection::setCloseCallback</refname>
+  <refpurpose>Define função de retorno para o fechamento da conexão</refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <modifier>public</modifier>
+   <type>void</type>
+   <methodname>EventHttpConnection::setCloseCallback</methodname>
+   <methodparam>
+    <type>callable</type>
+    <parameter>callback</parameter>
+   </methodparam>
+   <methodparam choice="opt">
+    <type>mixed</type>
+    <parameter>data</parameter>
+   </methodparam>
+  </methodsynopsis>
+  <para>
+   Define função de retorno para o fechamento da conexão.
+  </para>
+ </refsect1>
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <variablelist>
+   <varlistentry>
+    <term>
+     <parameter>callback</parameter>
+    </term>
+    <listitem>
+     <para>
+      Função de retorno que é chamada quando a conexão é fechada. Deve corresponder ao
+      seguinte protótipo:
+     </para>
+     <methodsynopsis>
+      <type>void</type>
+      <methodname>callback</methodname>
+      <methodparam
+        choice="opt">
+       <type>EventHttpConnection</type>
+       <parameter>conn</parameter>
+       <initializer>&null;</initializer>
+      </methodparam>
+      <methodparam
+        choice="opt">
+       <type>mixed</type>
+       <parameter>arg</parameter>
+       <initializer>&null;</initializer>
+      </methodparam>
+     </methodsynopsis>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.void;
+  </para>
+ </refsect1>
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>
+    Exemplo de <methodname>EventHttpConnection::setCloseCallback</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+/*
+ * Condigurando uma função de retorno de fechamento de conexão
+ *
+ * O script manipula conexões fechadas usando a API HTTP.
+ *
+ * Uso:
+ * 1) Inicie o servidor:
+ * $ php examples/http_closecb.php 4242
+ *
+ * 2) Abra um cliente em outro terminal.
+ * A sessão tipo Telnet deve se parecer com o seguinte:
+ *
+ * $ nc -t 127.0.0.1 4242
+ * GET / HTTP/1.0
+ * Connection: close
+ *
+ * O servidor produzirá algo semelhante ao seguinte:
+ *
+ * HTTP/1.0 200 OK
+ * Content-Type: multipart/x-mixed-replace;boundary=boundarydonotcross
+ * Connection: close
+ *
+ * <html>
+ *
+ * 3) Encerre a conexão do cliente abruptamente,
+ * ou seja, mate o processo, ou apenas pressione Ctrl-C.
+ *
+ * 4) Verifique se o servidor chamou _close_callback.
+ * O script deve gerar a string "_close_callback" na saída padrão.
+ *
+ * 5) Verifique se o processo do servidor não tem conexões órfãs,
+ * por exemplo, com o utilitário `lsof`.
+ */
+
+function _close_callback($conn)
+{
+    echo __FUNCTION__, PHP_EOL;
+}
+
+function _http_default($req, $dummy)
+{
+    $conn = $req->getConnection();
+    $conn->setCloseCallback('_close_callback', NULL);
+
+    /*
+    Ao habilitar Event::READ, protegemos o servidor contra conexões não fechadas.
+    Esta é uma peculiaridade do Libevent. A biblioteca desabilita eventos Event::READ
+    nesta conexão, e o servidor não é notificado sobre conexões
+    encerradas.
+
+    Então, cada vez que o cliente encerra a conexão abruptamente, obtemos uma conexão
+    órfã. Por exemplo, o seguinte é uma parte do comando `lsof -p $PID | grep TCP`
+    após o cliente ter encerrado a conexão:
+
+    57-php     15057 ruslan  6u  unix 0xffff8802fb59c780   0t0  125187 socket
+    58:php     15057 ruslan  7u  IPv4             125189   0t0     TCP *:4242 (LISTEN)
+    59:php     15057 ruslan  8u  IPv4             124342   0t0     TCP localhost:4242->localhost:37375 (CLOSE_WAIT)
+
+    onde $PID é o nosso ID de processo.
+
+    O bloco de código a seguir corrige esse tipo de conexão órfã.
+     */
+    $bev = $req->getBufferEvent();
+    $bev->enable(Event::READ);
+
+    // Temos que liberá-lo explicitamente. Veja EventHttpRequest::getConnection
+    $bev->free(); // Temos que liberá-lo explicitamente
+
+    $req->addHeader(
+        'Content-Type',
+        'multipart/x-mixed-replace;boundary=boundarydonotcross',
+        EventHttpRequest::OUTPUT_HEADER
+    );
+
+    $buf = new EventBuffer();
+    $buf->add('<html>');
+
+    $req->sendReply(200, "OK");
+    $req->sendReplyChunk($buf);
+}
+
+$port = 4242;
+if ($argc > 1) {
+    $port = (int) $argv[1];
+}
+if ($port <= 0 || $port > 65535) {
+    exit("Porta inválida");
+}
+
+$base = new EventBase();
+$http = new EventHttp($base);
+
+$http->setDefaultCallback("_http_default", NULL);
+$http->bind("0.0.0.0", $port);
+$base->loop();
+
+?>
+]]>
+   </programlisting>
+  </example>
+ </refsect1>
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
