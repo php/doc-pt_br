@@ -18,29 +18,32 @@ php doc-base/scripts/translation/configure.php pt_BR
 echo
 echo Rodando testes de sincronia...
 
-php doc-base/scripts/translation/qaxml.a.php
-php doc-base/scripts/translation/qaxml.e.php
-php doc-base/scripts/translation/qaxml.p.php
-php doc-base/scripts/translation/qaxml.t.php
-php doc-base/scripts/translation/qaxml.w.php
+php doc-base/scripts/broken.php
+php doc-base/scripts/translation/qaxml-revtag.php
 
-php doc-base/scripts/translation/qaxml.t.php acronym
-php doc-base/scripts/translation/qaxml.t.php classname
-php doc-base/scripts/translation/qaxml.t.php constant
-php doc-base/scripts/translation/qaxml.t.php envar
-php doc-base/scripts/translation/qaxml.t.php function
-php doc-base/scripts/translation/qaxml.t.php interfacename
-php doc-base/scripts/translation/qaxml.t.php parameter
-php doc-base/scripts/translation/qaxml.t.php type
-php doc-base/scripts/translation/qaxml.t.php classsynopsis
-php doc-base/scripts/translation/qaxml.t.php constructorsynopsis
-php doc-base/scripts/translation/qaxml.t.php destructorsynopsis
-php doc-base/scripts/translation/qaxml.t.php fieldsynopsis
-php doc-base/scripts/translation/qaxml.t.php funcsynopsis
-php doc-base/scripts/translation/qaxml.t.php methodsynopsis
+php doc-base/scripts/translation/qaxml-attributes.php
+php doc-base/scripts/translation/qaxml-entities.php
+php doc-base/scripts/translation/qaxml-pi.php
+php doc-base/scripts/translation/qaxml-tags.php --detail
+php doc-base/scripts/translation/qaxml-ws.php
 
-php doc-base/scripts/translation/qaxml.t.php code
-php doc-base/scripts/translation/qaxml.t.php computeroutput
-php doc-base/scripts/translation/qaxml.t.php filename
-php doc-base/scripts/translation/qaxml.t.php literal
-php doc-base/scripts/translation/qaxml.t.php varname
+php doc-base/scripts/translation/qaxml-tags.php --content=acronym
+php doc-base/scripts/translation/qaxml-tags.php --content=classname
+php doc-base/scripts/translation/qaxml-tags.php --content=constant
+php doc-base/scripts/translation/qaxml-tags.php --content=envar
+php doc-base/scripts/translation/qaxml-tags.php --content=function
+php doc-base/scripts/translation/qaxml-tags.php --content=interfacename
+php doc-base/scripts/translation/qaxml-tags.php --content=parameter
+php doc-base/scripts/translation/qaxml-tags.php --content=type
+php doc-base/scripts/translation/qaxml-tags.php --content=classsynopsis
+php doc-base/scripts/translation/qaxml-tags.php --content=constructorsynopsis
+php doc-base/scripts/translation/qaxml-tags.php --content=destructorsynopsis
+php doc-base/scripts/translation/qaxml-tags.php --content=fieldsynopsis
+php doc-base/scripts/translation/qaxml-tags.php --content=funcsynopsis
+php doc-base/scripts/translation/qaxml-tags.php --content=methodsynopsis
+
+php doc-base/scripts/translation/qaxml-tags.php --content=code
+php doc-base/scripts/translation/qaxml-tags.php --content=computeroutput
+php doc-base/scripts/translation/qaxml-tags.php --content=filename
+php doc-base/scripts/translation/qaxml-tags.php --content=literal
+php doc-base/scripts/translation/qaxml-tags.php --content=varname
