@@ -18,7 +18,7 @@ php doc-base/scripts/translation/configure.php pt_BR
 echo
 echo Rodando testes de sincronia...
 
-php doc-base/scripts/broken.php
+php doc-base/scripts/broken.php pt_BR
 php doc-base/scripts/translation/qaxml-revtag.php
 
 php doc-base/scripts/translation/qaxml-attributes.php
