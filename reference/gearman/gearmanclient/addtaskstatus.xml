@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 22583751fbfdaa3eaa41aeb6470d1343f5cb2c78 Maintainer: leonardolara Status: ready -->
+<refentry xml:id="gearmanclient.addtaskstatus" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>GearmanClient::addTaskStatus</refname>
+  <refpurpose>Adiciona uma tarefa para obter status</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis role="GearmanClient">
+   <modifier>public</modifier> <type class="union"><type>GearmanTask</type><type>false</type></type><methodname>GearmanClient::addTaskStatus</methodname>
+   <methodparam><type>string</type><parameter>job_handle</parameter></methodparam>
+   <methodparam choice="opt"><type>mixed</type><parameter>context</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Usado para solicitar informações de status do servidor Gearman, que chamará a função de retorno de status
+   especificada (definida usando <methodname>GearmanClient::setStatusCallback</methodname>).
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>job_handle</parameter></term>
+     <listitem>
+      <para>
+       O identificador de tarefa para a qual o status será obtido.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>context</parameter></term>
+     <listitem>
+      <para>
+       Dados a serem passados ​​para a função de retorno de status, geralmente uma referência a um array ou objeto.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Um objeto <classname>GearmanTask</classname> ou &false; em caso de falha.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Monitora a conclusão de várias tarefas em segundo plano</title>
+    <para>
+     Um atraso artificial é introduzido no trabalhador neste exemplo para simular
+     um processo de longa execução. Há apenas um trabalhador em execução para este exemplo.
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+/* Cria o objeto */
+$gmclient= new GearmanClient();
+
+/* Adiciona o servidor padrão */
+$gmclient->addServer();
+
+/* Inicia alguns trabalhos em segundo plano e salva os identificadores */
+$handles = array();
+$handles[0] = $gmclient->doBackground("reverse", "Hello World!");
+$handles[1] = $gmclient->doBackground("reverse", "!dlroW olleH");
+
+$gmclient->setStatusCallback("reverse_status");
+
+/* Pesquisa o servidor para ver quando esses trabalhos em segundo plano terminam; */
+/* um método melhor seria usar funções de retorno de eventos */
+do
+{
+   /* Usa a variável de contexto para rastrear quantas tarefas foram concluídas */
+   $done = 0;
+   $gmclient->addTaskStatus($handles[0], $done);
+   $gmclient->addTaskStatus($handles[1], $done);
+   $gmclient->runTasks();
+   echo "Realizadas: $done\n";
+   sleep(1);
+}
+while ($done != 2);
+
+function reverse_status($task, $done)
+{
+   if (!$task->isKnown())
+      $done++;
+}
+
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+Realizadas: 0
+Realizadas: 0
+Realizadas: 0
+Realizadas: 0
+Realizadas: 0
+Realizadas: 0
+Realizadas: 0
+Realizadas: 0
+Realizadas: 0
+Realizadas: 0
+Realizadas: 0
+Realizadas: 0
+Realizadas: 1
+Realizadas: 1
+Realizadas: 1
+Realizadas: 1
+Realizadas: 1
+Realizadas: 1
+Realizadas: 1
+Realizadas: 1
+Realizadas: 1
+Realizadas: 1
+Realizadas: 1
+Realizadas: 1
+Realizadas: 2
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><methodname>GearmanClient::setStatusCallback</methodname></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

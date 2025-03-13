@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 3c0b61c45a5dabe46865510311e57b77ea3dddb7 Maintainer: leonardolara Status: ready -->
+<refentry xml:id="gearmanclient.addtask" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>GearmanClient::addTask</refname>
+  <refpurpose>Adiciona uma tarefa para ser executada em paralelo</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis role="GearmanClient">
+   <modifier>public</modifier> <type class="union"><type>GearmanTask</type><type>false</type></type><methodname>GearmanClient::addTask</methodname>
+   <methodparam><type>string</type><parameter>function_name</parameter></methodparam>
+   <methodparam><type class="union"><type>string</type><type>int</type><type>float</type></type><parameter>workload</parameter></methodparam>
+   <methodparam choice="opt"><type>mixed</type><parameter>context</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>string</type><type>null</type></type><parameter>unique_key</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Adiciona uma tarefa para ser executada em paralelo com outras tarefas. Chame este método para todas as tarefas
+   para serem executadas em paralelo, então chame <methodname>GearmanClient::runTasks</methodname> para
+   executar a tarefa. Note que é preciso haver trabalhadores suficientes disponíveis para que todas as tarefas
+   sejam executadas em paralelo.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>function_name</parameter></term>
+     <listitem>
+      <para>
+       &gearman.parameter.functionname;
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>workload</parameter></term>
+     <listitem>
+      <para>
+       &gearman.parameter.workload;
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>context</parameter></term>
+     <listitem>
+      <para>
+       &gearman.parameter.context;
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>unique_key</parameter></term>
+     <listitem>
+      <para>
+       &gearman.parameter.unique;
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+ <para>
+   Um objeto <classname>GearmanTask</classname> ou &false; se a tarefa não pôde ser adicionada.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Envio básico de duas tarefas</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+# Cria o cliente gearman
+$gmclient= new GearmanClient();
+
+# Adiciona o servidor de tarefa padrão
+$gmclient->addServer();
+
+# Define uma função a ser chamada quando a tarefa estiver concluída
+$gmclient->setCompleteCallback("complete");
+
+# Adiciona uma tarefa para executar a função "reverse" na string "Hello World!"
+$gmclient->addTask("reverse", "Hello World!", null, "1");
+
+# Adiciona outra tarefa para executar a função "reverse" na string "!dlroW olleH"
+$gmclient->addTask("reverse", "!dlroW olleH", null, "2");
+
+# Executa as tarefas
+$gmclient->runTasks();
+
+function complete($task)
+{
+  print "CONCLUÍDO: " . $task->unique() . ", " . $task->data() . "\n";
+}
+
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+CONCLUÍDO: 2, Hello World!
+CONCLUÍDO: 1, !dlroW olleH
+]]>
+    </screen>
+   </example>
+   <example>
+    <title>Envio básico de duas tarefas com passagem de contexto de aplicação</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$client = new GearmanClient();
+$client->addServer();
+
+# Define uma função a ser chamada quando a tarefa estiver concluída
+$client->setCompleteCallback("reverse_complete");
+
+# Adiciona algumas tarefas para um marcador onde serão colocados os resultados
+$results = array();
+$client->addTask("reverse", "Hello World!", $results, "t1");
+$client->addTask("reverse", "!dlroW olleH", $results, "t2");
+
+$client->runTasks();
+
+# Os resultados agora devem ser preenchidos a partir das funções de retorno
+foreach ($results as $id => $result)
+   echo $id . ": " . $result['handle'] . ", " . $result['data'] . "\n";
+
+
+function reverse_complete($task, $results)
+{
+   $results[$task->unique()] = array("handle"=>$task->jobHandle(), "data"=>$task->data());
+}
+
+?>
+]]>
+    </programlisting>
+    &example.outputs.similar;
+    <screen>
+<![CDATA[
+t2: H.foo:21, Hello World!
+t1: H:foo:22, !dlroW olleH
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><methodname>GearmanClient::addTaskHigh</methodname></member>
+    <member><methodname>GearmanClient::addTaskLow</methodname></member>
+    <member><methodname>GearmanClient::addTaskBackground</methodname></member>
+    <member><methodname>GearmanClient::addTaskHighBackground</methodname></member>
+    <member><methodname>GearmanClient::addTaskLowBackground</methodname></member>
+    <member><methodname>GearmanClient::runTasks</methodname></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
