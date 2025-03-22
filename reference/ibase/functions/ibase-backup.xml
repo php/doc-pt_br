@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 4d8da419011b34623bc91aab8d5ef7f5b6bfb128 Maintainer: leonardolara Status: ready -->
+<refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.ibase-backup">
+ <refnamediv>
+  <refname>ibase_backup</refname>
+  <refpurpose>Inicia uma tarefa de backup no gerenciador de serviços e retorna imediatamente</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>mixed</type><methodname>ibase_backup</methodname>
+   <methodparam><type>resource</type><parameter>service_handle</parameter></methodparam>
+   <methodparam><type>string</type><parameter>source_db</parameter></methodparam>
+   <methodparam><type>string</type><parameter>dest_file</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>options</parameter><initializer>0</initializer></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>verbose</parameter><initializer>&false;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Esta função passa os argumentos para o servidor de banco de dados (remoto). Lá, ele inicia um novo processo de backup.
+   Portanto, nenhuma resposta será obtida.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>service_handle</parameter></term>
+     <listitem>
+      <para>
+       Uma conexão aberta anteriormente com o servidor de banco de dados.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>source_db</parameter></term>
+     <listitem>
+      <para>
+       O caminho absoluto do arquivo para o banco de dados no servidor de banco de dados. Pode-se também usar um apelido de banco de dados.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>dest_file</parameter></term>
+     <listitem>
+      <para>
+       O caminho para o arquivo de backup no servidor de banco de dados.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>options</parameter></term>
+     <listitem>
+      <para>
+       Opções adicionais para passar ao servidor de banco de dados para backup.
+       O parâmetro <parameter>options</parameter> pode ser uma combinação
+       das seguintes constantes:
+       <constant>IBASE_BKP_IGNORE_CHECKSUMS</constant>,
+       <constant>IBASE_BKP_IGNORE_LIMBO</constant>,
+       <constant>IBASE_BKP_METADATA_ONLY</constant>,
+       <constant>IBASE_BKP_NO_GARBAGE_COLLECT</constant>,
+       <constant>IBASE_BKP_OLD_DESCRIPTIONS</constant>,
+       <constant>IBASE_BKP_NON_TRANSPORTABLE</constant> ou
+       <constant>IBASE_BKP_CONVERT</constant>.
+       Leia a seção sobre <xref linkend="ibase.constants" /> para mais informações.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>verbose</parameter></term>
+     <listitem>
+      <para>
+       Como o processo de backup é feito no servidor de banco de dados, a saída não
+       poderá ser obtida. Este argumento é inútil.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.success;
+  </para>
+  <para>
+   Como o processo de backup é feito no servidor (remoto), esta função apenas passa os argumentos para ele.
+   Embora os argumentos sejam legais, não será obtido &false;.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>ibase_backup</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+// Conecta-se ao servidor de banco de dados por endereço IP e porta
+$service = ibase_service_attach ('10.1.11.200/3050', 'sysdba', 'masterkey');
+
+// Inicia o processo de backup no servidor de banco de dados
+// Faz backup do banco de dados de funcionários usando o caminho completo para /srv/backup/employees.fbk
+// Não usa nenhum argumento especial
+ibase_backup($service, '/srv/firebird/employees.fdb', '/srv/backup/employees.fbk');
+
+// Libera a conexão
+ibase_service_detach ($service);
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+
+  <para>
+   <example>
+    <title>Exemplo de <function>ibase_backup</function> com argumentos</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+// Conecta-se ao servidor de banco de dados por nome e porta padrão
+$service = ibase_service_attach ('fb-server.contoso.local', 'sysdba', 'masterkey');
+
+// Inicia o processo de backup no servidor de banco de dados
+// Faz backup do banco de dados de funcionários usando o apelido /srv/backup/employees.fbk.
+// Faz backup somente dos metadados. Não cria um backup transportável.
+ibase_backup($service, 'employees.fdb', '/srv/backup/employees.fbk', IBASE_BKP_METADATA_ONLY | IBASE_BKP_NON_TRANSPORTABLE);
+
+// Libera a conexão
+ibase_service_detach ($service);
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>ibase_restore</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
