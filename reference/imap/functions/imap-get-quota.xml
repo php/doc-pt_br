@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 34892f82742329af7e7b4b22be6ad21418fd9768 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xml:id="function.imap-get-quota" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>imap_get_quota</refname>
+  <refpurpose>Recupera as configurações de nível de cota e estatísticas de uso por caixa de correio</refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>array</type><type>false</type></type><methodname>imap_get_quota</methodname>
+   <methodparam><type>IMAP\Connection</type><parameter>imap</parameter></methodparam>
+   <methodparam><type>string</type><parameter>quota_root</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Recupera as configurações de nível de cota e estatísticas de uso por caixa de correio.
+  </para>
+  <para>
+   Para uma versão desta função para usuários não administradores,
+   consulte a função <function>imap_get_quotaroot</function> do PHP.
+  </para>
+ </refsect1>
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    &imap.imap-parameter.imap;
+    <varlistentry>
+     <term><parameter>quota_root</parameter></term>
+     <listitem>
+      <para>
+       <parameter>quota_root</parameter> normalmente deve estar no formato de
+       <literal>user.name</literal> onde name é a caixa de correio sobre a qual se deseja
+       recuperar informações.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna um array com valores inteiros de limite ("limit") e uso ("usage") para a caixa de correio
+   fornecida. O valor de limite representa a quantidade total de espaço
+   permitida para esta caixa de correio. O valor de uso representa o nível atual de capacidade da caixa de correio.
+   Retornará &false; em caso de falha.
+  </para>
+  <para>
+   A partir do PHP 4.3, a função reflete mais adequadamente a
+   funcionalidade conforme ditado pela <link xlink:href="&url.rfc;2087">RFC2087</link>.
+   O valor de retorno do array foi alterado para suportar um número ilimitado de
+   recursos retornados (por exemplo, mensagens ou subpastas) com cada recurso nomeado recebendo
+   uma chave de array individual. Cada valor de chave contém então um outro array com
+   os valores de uso e limite dentro dele.
+  </para>
+  <para>
+   Por razões de compatibilidade com versões anteriores, os métodos de acesso originais ainda estão
+   disponíveis para uso, embora seja sugerido atualizá-los.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     &imap.changelog.imap-param;
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>imap_get_quota</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$mbox = imap_open("{imap.example.org}", "mailadmin", "password", OP_HALFOPEN)
+      or die("Não foi possível conectar: " . imap_last_error());
+
+$quota_value = imap_get_quota($mbox, "user.kalowsky");
+if (is_array($quota_value)) {
+    echo "Nível de uso é: " . $quota_value['usage'];
+    echo "Nível de limite é: " . $quota_value['limit'];
+}
+
+imap_close($mbox);
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Exemplo de <function>imap_get_quota</function> para versão 4.3 ou superior</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$mbox = imap_open("{imap.example.org}", "mailadmin", "password", OP_HALFOPEN)
+      or die("Não foi possível conectar: " . imap_last_error());
+
+$quota_values = imap_get_quota($mbox, "user.kalowsky");
+if (is_array($quota_values)) {
+   $storage = $quota_values['STORAGE'];
+   echo "Nível de uso STORAGE é: " .  $storage['usage'];
+   echo "Nível de limite STORAGE é: " .  $storage['limit'];
+
+   $message = $quota_values['MESSAGE'];
+   echo "Nível de uso MESSAGE é: " .  $message['usage'];
+   echo "Nível de limite MESSAGE é: " .  $message['limit'];
+
+   /* ...  */
+}
+
+imap_close($mbox);
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <para>
+   Esta função está disponível atualmente apenas para usuários da biblioteca c-client2000
+   ou superior.
+  </para>
+  <para>
+   O <parameter>imap</parameter> fornecido deve ser aberto como administrador de e-mail,
+   caso contrário, esta função falhará.
+  </para>
+ </refsect1>
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>imap_open</function></member>
+    <member><function>imap_set_quota</function></member>
+    <member><function>imap_get_quotaroot</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

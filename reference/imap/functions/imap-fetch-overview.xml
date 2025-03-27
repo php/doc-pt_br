@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 34892f82742329af7e7b4b22be6ad21418fd9768 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xml:id="function.imap-fetch-overview" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>imap_fetch_overview</refname>
+  <refpurpose>Lê uma visão geral das informações nos cabeçalhos da mensagem fornecida</refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>array</type><type>false</type></type><methodname>imap_fetch_overview</methodname>
+   <methodparam><type>IMAP\Connection</type><parameter>imap</parameter></methodparam>
+   <methodparam><type>string</type><parameter>sequence</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>flags</parameter><initializer>0</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Esta função busca cabeçalhos de e-mail para a
+   sequência fornecida em <parameter>sequence</parameter> e retorna uma visão geral de seus
+   conteúdos.
+  </para>
+ </refsect1>
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    &imap.imap-parameter.imap;
+    <varlistentry>
+     <term><parameter>sequence</parameter></term>
+     <listitem>
+      <para>
+       Uma descrição de sequência de mensagens. Pode-se enumerar mensagens desejadas
+       com a sintaxe <literal>X,Y</literal> ou recuperar todas as mensagens
+       dentro de um intervalo com a sintaxe <literal>X:Y</literal>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>flags</parameter></term>
+     <listitem>
+      <para>
+       <parameter>sequence</parameter> conterá uma sequência de índices de mensagens
+       ou UIDs, se este parâmetro for definido como
+       <constant>FT_UID</constant>.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna um array de objetos descrevendo um cabeçalho de mensagem cada.
+   O objeto só definirá uma propriedade se ela existir. As possíveis
+   propriedades são:
+   <itemizedlist>
+    <listitem>
+     <simpara>
+      <literal>subject</literal> - o assunto da mensagem
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      <literal>from</literal> - quem enviou
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      <literal>to</literal> - destinatário
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      <literal>date</literal> - quando foi enviada
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      <literal>message_id</literal> - identificador da mensagem
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      <literal>references</literal> - é uma referência a esta identificação de mensagem
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      <literal>in_reply_to</literal> - é uma resposta a esta identificação de mensagem
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      <literal>size</literal> - tamanho em bytes
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      <literal>uid</literal> - UID que a mensagem tem na caixa de correio
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      <literal>msgno</literal> - número da mensagem na sequência da caixa de correio
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      <literal>recent</literal> - esta mensagem está marcada como recente
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      <literal>flagged</literal> -  esta mensagem está marcada
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      <literal>answered</literal> -  esta mensagem está marcada como respondida
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      <literal>deleted</literal> -  esta mensagem está marcada para exclusão
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      <literal>seen</literal> -  esta mensagem está marcada como já lida
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      <literal>draft</literal> -  esta mensagem está marcada como um rascunho
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      <literal>udate</literal> -  o timestamp UNIX da data/horário de chegada
+     </simpara>
+    </listitem>
+   </itemizedlist>
+   A função retorna &false; em caso de falha.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     &imap.changelog.imap-param;
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>imap_fetch_overview</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$mbox = imap_open("{imap.example.org:143}INBOX", "username", "password")
+     or die("Não foi possível conectar: " . imap_last_error());
+
+$MC = imap_check($mbox);
+
+// Obtém uma visão geral de todas as mensagens na caixa INBOX
+$result = imap_fetch_overview($mbox,"1:{$MC->Nmsgs}",0);
+foreach ($result as $overview) {
+    echo "#{$overview->msgno} ({$overview->date}) - De: {$overview->from}
+    {$overview->subject}\n";
+}
+imap_close($mbox);
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>imap_fetchheader</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
