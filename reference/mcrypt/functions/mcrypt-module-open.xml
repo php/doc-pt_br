@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: f27cfeeefc13717f86a53d7fefa0ce54f7bfaaaf Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.mcrypt-module-open" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>mcrypt_module_open</refname>
+  <refpurpose>Abre o módulo do algoritmo e o modo a ser utilizado</refpurpose>
+ </refnamediv>
+ <refsynopsisdiv>
+  &warn.deprecated.function-7-1-0.removed-7-2-0;
+ </refsynopsisdiv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>resource</type><methodname>mcrypt_module_open</methodname>
+   <methodparam><type>string</type><parameter>algorithm</parameter></methodparam>
+   <methodparam><type>string</type><parameter>algorithm_directory</parameter></methodparam>
+   <methodparam><type>string</type><parameter>mode</parameter></methodparam>
+   <methodparam><type>string</type><parameter>mode_directory</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Esta função abre o módulo do algoritmo e o modo a ser usado.
+   O nome do algoritmo é especificado em "algorithm", por exemplo, <literal>"twofish"</literal> ou é
+   uma das constantes <constant>MCRYPT_ciphername</constant>. O módulo é fechado chamando
+   <function>mcrypt_module_close</function>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>algorithm</parameter></term>
+     <listitem>
+      &mcrypt.parameter.cipher;
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>algorithm_directory</parameter></term>
+     <listitem>
+      <para>
+       O parâmetro <parameter>algorithm_directory</parameter> é usado para localizar
+       o módulo de criptografia. Quando é informado um nome de diretório, ele é usado. Quando
+       ele é definido como uma string vazia (<literal>""</literal>), o valor definido pela
+       diretiva <literal>mcrypt.algorithms_dir</literal> do &php.ini; é usado. Quando
+       ele não é definido, o diretório padrão usado é aquele que foi compilado
+       no libmcrypt (geralmente <filename>/usr/local/lib/libmcrypt</filename>).
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>mode</parameter></term>
+     <listitem>
+      &mcrypt.parameter.mode;
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>mode_directory</parameter></term>
+     <listitem>
+      <para>
+       O parâmetro <parameter>mode_directory</parameter> é usado para localizar
+       o módulo de criptografia. Quando é informado um nome de diretório, ele é usado. Quando
+       ele é definido como uma string vazia (<literal>""</literal>), o valor definido pela
+       diretiva <literal>mcrypt.modes_dir</literal> do &php.ini; é usado. Quando
+       ele não é definido, o diretório padrão usado é aquele que foi compilado em
+       no libmcrypt (geralmente <filename>/usr/local/lib/libmcrypt</filename>).
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Normalmente, ele retorna um descritor de criptografia ou &false; em caso de erro.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplos de <function>mcrypt_module_open</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+    $td = mcrypt_module_open(MCRYPT_DES, '',
+        MCRYPT_MODE_ECB, '/usr/lib/mcrypt-modes');
+
+    $td = mcrypt_module_open('rijndael-256', '', 'ofb', '');
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   A primeira linha no exemplo acima tentará abrir a cifra <literal>DES</literal> do
+   diretório padrão e o modo <literal>ECB</literal> do diretório
+   <filename>/usr/lib/mcrypt-modes</filename>. O segundo exemplo usa
+   strings como nome para a cifra e modo, isso só funciona quando a
+   extensão é compilada com o libmcrypt 2.4.x ou 2.5.x.
+  </para>
+
+  <para>
+   <example>
+    <title>Usando <function>mcrypt_module_open</function> em criptografia</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+    /* Abre a cifra */
+    $td = mcrypt_module_open('rijndael-256', '', 'ofb', '');
+
+    /* Cria o IV e determina o comprimento da chave, use MCRYPT_RAND
+     * no Windows */
+    $iv = mcrypt_create_iv(mcrypt_enc_get_iv_size($td), MCRYPT_DEV_RANDOM);
+    $ks = mcrypt_enc_get_key_size($td);
+
+    /* Cria a chave (somente como exemplo: MD5 não é um bom algoritmo de hash para isso) */
+    $key = substr(hash('md5', 'very secret key'), 0, $ks);
+
+    /* Inicializa a criptografia */
+    mcrypt_generic_init($td, $key, $iv);
+
+    /* Criptografa os dados */
+    $encrypted = mcrypt_generic($td, 'This is very important data');
+
+    /* Desinicializa o identificador de criptografia */
+    mcrypt_generic_deinit($td);
+
+    /* Inicializa o módulo de criptografia para descriptografia */
+    mcrypt_generic_init($td, $key, $iv);
+
+    /* Descriptografa a string criptografada */
+    $decrypted = mdecrypt_generic($td, $encrypted);
+
+    /* Desinicializa o identificador de criptografia e fecha o módulo */
+    mcrypt_generic_deinit($td);
+    mcrypt_module_close($td);
+
+    /* Exibe a string */
+    echo trim($decrypted) . "\n";
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>mcrypt_module_close</function></member>
+    <member><function>mcrypt_generic</function></member>
+    <member><function>mdecrypt_generic</function></member>
+    <member><function>mcrypt_generic_init</function></member>
+    <member><function>mcrypt_generic_deinit</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

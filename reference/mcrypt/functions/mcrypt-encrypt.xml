@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 5fabd07880ab15b0ad2cf7eb055c7c2b36d7120f Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.mcrypt-encrypt" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>mcrypt_encrypt</refname>
+  <refpurpose>Criptografa texto simples com parâmetros fornecidos</refpurpose>
+ </refnamediv>
+
+ <refsynopsisdiv>
+  &warn.deprecated.function-7-1-0.removed-7-2-0;
+ </refsynopsisdiv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>string</type><type>false</type></type><methodname>mcrypt_encrypt</methodname>
+   <methodparam><type>string</type><parameter>cipher</parameter></methodparam>
+   <methodparam><type>string</type><parameter>key</parameter></methodparam>
+   <methodparam><type>string</type><parameter>data</parameter></methodparam>
+   <methodparam><type>string</type><parameter>mode</parameter></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>iv</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Criptografa os dados e os retorna.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>cipher</parameter></term>
+     <listitem>
+      &mcrypt.parameter.cipher;
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>key</parameter></term>
+     <listitem>
+      <para>
+       A chave com a qual os dados serão criptografados. Se o tamanho da chave fornecida não for
+       suportado pela cifra, a função emitirá um aviso e retornará &false;.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>data</parameter></term>
+     <listitem>
+      <para>
+       Os dados que serão criptografados com <parameter>cipher</parameter>
+       e <parameter>mode</parameter> fornecidos. Se o tamanho dos dados não for n * tamanho_do_bloco,
+       os dados serão preenchidos com '<literal>\0</literal>'.
+      </para>
+      <para>
+       O texto criptografado retornado pode ser maior que o tamanho dos dados que foram
+       fornecidos por <parameter>data</parameter>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>mode</parameter></term>
+     <listitem>
+      &mcrypt.parameter.mode;
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>iv</parameter></term>
+     <listitem>
+      &mcrypt.parameter.iv.strict;
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna os dados criptografados como uma string &return.falseforfailure;.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>mcrypt_encrypt</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+    # --- CRIPTOGRAFIA ---
+
+    # A chave deve ser binária aleatória, use scrypt, bcrypt ou PBKDF2 para
+    # converter uma string em uma chave.
+    # A chave é especificada usando hexadecimal
+    $key = pack('H*', "bcb04b7e103a0cd8b54763051cef08bc55abe029fdebae5e1d417e2ffb2a00a3");
+
+    # Mostra o tamanho da chave. Use chaves de 16, 24 ou 32 bytes para AES-128, 192
+    # e 256 respectivamente
+    $key_size =  strlen($key);
+    echo "Tamanho da chave: " . $key_size . "\n";
+
+    $plaintext = "This string was AES-256 / CBC / ZeroBytePadding encrypted.";
+
+    # Cria um IV aleatório para usar com codificação CBC
+    $iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
+    $iv = mcrypt_create_iv($iv_size, MCRYPT_RAND);
+
+    # Cria um texto criptografado compatível com AES (tamanho do bloco Rijndael = 128)
+    # para manter o texto confidencial.
+    # Adequado somente para entrada codificada que nunca termina com o valor 00h
+    # (por causa do preenchimento padrão com zero).
+    $ciphertext = mcrypt_encrypt(MCRYPT_RIJNDAEL_128, $key,
+                                 $plaintext, MCRYPT_MODE_CBC, $iv);
+
+    # Adiciona o IV para que ele fique disponível para descriptografia
+    $ciphertext = $iv . $ciphertext;
+
+    # Codifica o texto criptografado resultante para que possa ser representado por uma string
+    $ciphertext_base64 = base64_encode($ciphertext);
+
+    echo  $ciphertext_base64 . "\n";
+
+    # === ALERTA ===
+
+    # O texto criptografado resultante não tem integridade ou autenticidade adicionada
+    # e não é protegido contra ataques "padding oracle".
+
+    # --- DESCRIPTOGRAFIA ---
+
+    $ciphertext_dec = base64_decode($ciphertext_base64);
+
+    # Recupera o IV, iv_size deve ser criado usando mcrypt_get_iv_size()
+    $iv_dec = substr($ciphertext_dec, 0, $iv_size);
+
+    # Recupera o texto criptografado (tudo, exceto o $iv_size na frente)
+    $ciphertext_dec = substr($ciphertext_dec, $iv_size);
+
+    # Pode remover caracteres com valor 00h do final do texto simples
+    $plaintext_dec = mcrypt_decrypt(MCRYPT_RIJNDAEL_128, $key,
+                                    $ciphertext_dec, MCRYPT_MODE_CBC, $iv_dec);
+
+    echo  $plaintext_dec . "\n";
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Tamanho da chave: 32
+ENJW8mS2KaJoNB5E5CoSAAu0xARgsR1bdzFWpEn+poYw45q+73az5kYi4j+0haevext1dGrcW8Qi59txfCBV8BBj3bzRP3dFCp3CPQSJ8eU=
+This string was AES-256 / CBC / ZeroBytePadding encrypted.
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>mcrypt_decrypt</function></member>
+    <member><function>mcrypt_module_open</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
