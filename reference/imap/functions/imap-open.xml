@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 34892f82742329af7e7b4b22be6ad21418fd9768 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xml:id="function.imap-open" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>imap_open</refname>
+  <refpurpose>Abre um fluxo <acronym>IMAP</acronym> para uma caixa de correio</refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>IMAP\Connection</type><type>false</type></type><methodname>imap_open</methodname>
+   <methodparam><type>string</type><parameter>mailbox</parameter></methodparam>
+   <methodparam><type>string</type><parameter>user</parameter></methodparam>
+   <methodparam><type>string</type><parameter>password</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>flags</parameter><initializer>0</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>retries</parameter><initializer>0</initializer></methodparam>
+   <methodparam choice="opt"><type>array</type><parameter>options</parameter><initializer>[]</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Abre um fluxo <acronym>IMAP</acronym> para a caixa de correio informada em <parameter>mailbox</parameter>.
+  </para>
+  <para>
+   Esta função também pode ser usada para abrir fluxos para servidores <acronym>POP3</acronym> e
+   <acronym>NNTP</acronym>, mas algumas funções e recursos estão
+   disponíveis apenas em servidores <acronym>IMAP</acronym>.
+  </para>
+ </refsect1>
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>mailbox</parameter></term>
+     <listitem>
+      <para>
+       Um nome de caixa de correio consiste em um servidor e um caminho de caixa de correio neste servidor.
+       O nome especial <literal>INBOX</literal> representa a caixa de correio pessoal
+       dos usuários atuais. Nomes de caixa de correio que contêm caracteres internacionais
+       além daqueles no escopo ASCII imprimível precisam ser codificados com
+       <function>imap_utf7_encode</function>.
+      </para>
+      &imap.mailboxname.insecure;
+      <para>
+       A parte do servidor, que é delimitada por '{' e '}', consiste no nome
+       ou endereço IP do servidor, uma porta opcional (prefixada por ':') e
+       uma especificação de protocolo opcional (prefixada por '/').
+      </para>
+      <para>
+       A parte do servidor é obrigatória em todos os parâmetros
+       da caixa de correio.
+      </para>
+      <para>
+       Todos os nomes que começam com <literal>{</literal> são nomes remotos e estão
+       no formato <literal>"{" remote_system_name [":" port] [flags] "}"
+       [mailbox_name]</literal> onde:
+       <itemizedlist>
+        <listitem>
+         <simpara>
+          <literal>remote_system_name</literal> - Nome de domínio da Internet ou
+          endereço IP entre colchetes do servidor.
+         </simpara>
+        </listitem>
+        <listitem>
+         <simpara>
+          <literal>port</literal> - número de porta TCP opcional, o padrão é a
+          porta padrão para esse serviço
+         </simpara>
+        </listitem>
+        <listitem>
+         <simpara>
+          <literal>flags</literal> - sinalizadores opcionais, veja a tabela a seguir.
+         </simpara>
+        </listitem>
+        <listitem>
+         <simpara>
+          <literal>mailbox_name</literal> - nome da caixa de correio remota, o padrão é INBOX
+         </simpara>
+        </listitem>
+       </itemizedlist>
+      </para>
+      <para>
+       <table>
+        <title>Sinalizadores opcionais para nomes</title>
+        <tgroup cols="2">
+         <thead>
+          <row>
+           <entry>Sinalizador</entry>
+           <entry>Descrição</entry>
+          </row>
+         </thead>
+         <tbody>
+          <row>
+           <entry><literal>/service=</literal><emphasis>serviço</emphasis></entry>
+           <entry>serviço de acesso à caixa de correio, o padrão é "imap"</entry>
+          </row>
+          <row>
+           <entry><literal>/user=</literal><emphasis>usuário</emphasis></entry>
+           <entry>nome de usuário remoto para login no servidor</entry>
+          </row>
+          <row>
+           <entry><literal>/authuser=</literal><emphasis>usuário</emphasis></entry>
+           <entry>usuário de autenticação remota; se especificado, este é o nome de usuário
+           cuja senha é usada (por exemplo, administrador)</entry>
+          </row>
+          <row>
+           <entry><literal>/anonymous</literal></entry>
+           <entry>acesso remoto como usuário anônimo</entry>
+          </row>
+          <row>
+           <entry><literal>/debug</literal></entry>
+           <entry>registra a telemetria do protocolo no registro de depuração do aplicativo</entry>
+          </row>
+          <row>
+           <entry><literal>/secure</literal></entry>
+           <entry>não transmite uma senha em texto simples pela rede</entry>
+          </row>
+          <row>
+           <entry><literal>/imap</literal>, <literal>/imap2</literal>,
+            <literal>/imap2bis</literal>, <literal>/imap4</literal>,
+            <literal>/imap4rev1</literal></entry>
+           <entry>equivalente a <literal>/service=imap</literal></entry>
+          </row>
+          <row>
+           <entry><literal>/pop3</literal></entry>
+           <entry>equivalent to <literal>/service=pop3</literal></entry>
+          </row>
+          <row>
+           <entry><literal>/nntp</literal></entry>
+           <entry>equivalent a <literal>/service=nntp</literal></entry>
+          </row>
+          <row>
+           <entry><literal>/norsh</literal></entry>
+           <entry>não usa rsh ou ssh para estabelecer uma sessão IMAP
+           pré-autenticada</entry>
+          </row>
+          <row>
+           <entry><literal>/ssl</literal></entry>
+           <entry>usa o <literal>Secure Socket Layer</literal> (SSL) para criptografar a sessão</entry>
+          </row>
+          <row>
+           <entry><literal>/validate-cert</literal></entry>
+           <entry>valida certificados do servidor TLS/SSL (este é o comportamento
+           padrão)</entry>
+          </row>
+          <row>
+           <entry><literal>/novalidate-cert</literal></entry>
+           <entry>não valida certificados do servidor TLS/SSL, necessário se
+           o servidor usa certificados autoassinados</entry>
+          </row>
+          <row>
+           <entry><literal>/tls</literal></entry>
+           <entry>força o uso de <literal>start-TLS</literal> para criptografar a sessão e rejeita
+           conexão com servidores que não o suportam</entry>
+          </row>
+          <row>
+           <entry><literal>/notls</literal></entry>
+           <entry>não faz uso de <literal>start-TLS</literal> para criptografar a sessão, mesmo com servidores
+           que o suportam</entry>
+          </row>
+          <row>
+           <entry><literal>/readonly</literal></entry>
+           <entry>solicita abertura de caixa de correio somente leitura (somente IMAP; ignorado em NNTP e
+           um erro com SMTP e POP3)</entry>
+          </row>
+         </tbody>
+        </tgroup>
+       </table>
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>user</parameter></term>
+     <listitem>
+      <para>
+       O nome de usuário
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>password</parameter></term>
+     <listitem>
+      <para>
+       A senha associada a <parameter>user</parameter>
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>flags</parameter></term>
+     <listitem>
+      <para>
+       O parâmetro <parameter>flags</parameter> consiste em uma máscara de bits com uma ou mais
+       das seguintes constantes:
+       <itemizedlist>
+        <listitem>
+         <simpara>
+          <constant>OP_READONLY</constant> - Abre a caixa de correio somente leitura
+         </simpara>
+        </listitem>
+        <listitem>
+         <simpara>
+          <constant>OP_ANONYMOUS</constant> - Não usa ou atualiza um
+          <filename>.newsrc</filename> para notícias (somente NNTP)
+         </simpara>
+        </listitem>
+        <listitem>
+         <simpara>
+          <constant>OP_HALFOPEN</constant> - Para nomes <acronym>IMAP</acronym>
+          e <acronym>NNTP</acronym>, abre uma conexão, mas
+          não abre uma caixa de correio.
+         </simpara>
+        </listitem>
+        <listitem>
+         <simpara>
+          <constant>CL_EXPUNGE</constant> - Expurga a caixa de correio automaticamente ao fechar a caixa de correio
+          (veja também <function>imap_delete</function> e
+          <function>imap_expunge</function>)
+         </simpara>
+        </listitem>
+        <listitem>
+         <simpara>
+          <constant>OP_DEBUG</constant> - Depura negociações de protocolo
+         </simpara>
+        </listitem>
+        <listitem>
+         <simpara>
+          <constant>OP_SHORTCACHE</constant> - Cache curto (somente <literal>elt</literal>)
+         </simpara>
+        </listitem>
+        <listitem>
+         <simpara>
+          <constant>OP_SILENT</constant> - Não deixa passar eventos (uso interno)
+         </simpara>
+        </listitem>
+        <listitem>
+         <simpara>
+          <constant>OP_PROTOTYPE</constant> - Retorna protótipo de driver
+         </simpara>
+        </listitem>
+        <listitem>
+         <simpara>
+          <constant>OP_SECURE</constant> - Não faz autenticação não segura
+         </simpara>
+        </listitem>
+       </itemizedlist>
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>retries</parameter></term>
+     <listitem>
+      <para>
+       Número máximo de tentativas de conexão
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>options</parameter></term>
+     <listitem>
+      <para>
+       Parâmetros de conexão, as seguintes chaves (string) podem ser usadas
+       para definir um ou mais parâmetros de conexão:
+       <itemizedlist>
+        <listitem>
+         <simpara>
+          <literal>DISABLE_AUTHENTICATOR</literal> - Desativa propriedades de autenticação
+         </simpara>
+        </listitem>
+       </itemizedlist>
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna uma instância <classname>IMAP\Connection</classname> em caso de sucesso,&return.falseforfailure;.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.1.0</entry>
+      <entry>
+       Retorna uma instância <classname>IMAP\Connection</classname> agora;
+       anteriormente, um &resource; era retornado.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Uso diferente de <function>imap_open</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// Para conectar-se a um servidor IMAP em execução na porta 143 na máquina local,
+// faça o seguinte:
+$mbox = imap_open("{localhost:143}INBOX", "user_id", "password");
+
+// Para conectar-se a um servidor POP3 na porta 110 no servidor local, use:
+$mbox = imap_open ("{localhost:110/pop3}INBOX", "user_id", "password");
+
+// Para conectar-se a um servidor SSL IMAP ou POP3, adicione /ssl após a especificação
+// do protocolo:
+$mbox = imap_open ("{localhost:993/imap/ssl}INBOX", "user_id", "password");
+
+// Para conectar-se a um servidor SSL IMAP ou POP3 com um certificado autoassinado,
+// adicione /ssl/novalidate-cert após a especificação do protocolo:
+$mbox = imap_open ("{localhost:995/pop3/ssl/novalidate-cert}", "user_id", "password");
+
+// Para conectar a um servidor NNTP na porta 119 no servidor local, use:
+$nntp = imap_open ("{localhost:119/nntp}comp.test", "", "");
+// Para se conectar a um servidor remoto, substitua "localhost" pelo nome ou
+// endereço IP do servidor ao qual você deseja se conectar.
+?>
+]]>
+    </programlisting>
+   </example>
+   <example>
+    <title>Exemplo de <function>imap_open</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$mbox = imap_open("{imap.example.org:143}", "username", "password");
+
+echo "<h1>Mailboxes</h1>\n";
+$folders = imap_listmailbox($mbox, "{imap.example.org:143}", "*");
+
+if ($folders == false) {
+    echo "Chamada falhou<br />\n";
+} else {
+    foreach ($folders as $val) {
+        echo $val . "<br />\n";
+    }
+}
+
+echo "<h1>Cabeçalhos em INBOX</h1>\n";
+$headers = imap_headers($mbox);
+
+if ($headers == false) {
+    echo "Chamada falhou<br />\n";
+} else {
+    foreach ($headers as $val) {
+        echo $val . "<br />\n";
+    }
+}
+
+imap_close($mbox);
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>imap_close</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
