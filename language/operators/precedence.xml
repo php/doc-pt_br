@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 43d07782b514d0c7a8487f2c74063739f302df8d Maintainer: ae Status: ready -->
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 16934048f79c6e117cd16a23c09c1b2ea502e284 Maintainer: leonardolara Status: ready --><!-- CREDITS: ae, leonardolara -->
 <sect1 xml:id="language.operators.precedence">
  <title>Precedência de Operadores</title>
  <titleabbrev>Precedência de Operadores</titleabbrev>
@@ -293,12 +293,32 @@
 <![CDATA[
 <?php
 $a = 3 * 3 % 5; // (3 * 3) % 5 = 4
-// associação do operador ternário difere do C/C++
-$a = true ? 0 : true ? 1 : 2; // (true ? 0 : true) ? 1 : 2 = 2 (antes do PHP 8.0.0)
+var_dump($a);
 
 $a = 1;
 $b = 2;
 $a = $b += 3; // $a = ($b += 3) -> $a = 5, $b = 5
+var_dump($a, $b);
+?>
+]]>
+   </programlisting>
+  </example>
+ </para>
+ <para>
+  O operador ternário requer especificamente o uso de parênteses para
+  remover a ambiguidade de precedência.
+ </para>
+ <para>
+  <example>
+   <title>Precedência explícita</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$a = true ? 0 : (true ? 1 : 2);
+var_dump($a);
+
+// isto não é permitido desde o PHP 8
+// $a = true ? 0 : true ? 1 : 2;
 ?>
 ]]>
    </programlisting>
@@ -313,11 +333,11 @@ $a = $b += 3; // $a = ($b += 3) -> $a = 5, $b = 5
   do código em volta.
   <example>
    <title>Ordem de avaliação não definida</title>
-   <programlisting role="php">
+   <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 $a = 1;
-echo $a + $a++; // pode imprimir 2 ou 3
+echo $a + $a++; // pode exibir 2 ou 3
 
 $i = 1;
 $array[$i] = $i++; // pode definir o índice 1 ou 2
@@ -326,15 +346,43 @@ $array[$i] = $i++; // pode definir o índice 1 ou 2
    </programlisting>
   </example>
   <example>
-   <title><literal>+</literal>, <literal>-</literal> and <literal>.</literal> possuem a mesma precedência</title>
+   <title>Precedência de <literal>+</literal>, <literal>-</literal> e <literal>.</literal></title>
    <programlisting role="php">
 <![CDATA[
 <?php
 $x = 4;
 // esta linha pode resultar em uma saída inesperada:
 echo "x menos um é igual a " . $x-1 . ", ou assim eu espero\n";
+
+// a precedência desejada pode ser aplicada utilizando parênteses:
+echo "x menos um é igual a " . ($x-1) . ", ou assim eu espero\n";
+
+// isto não é permitido e lança um TypeError:
+echo (("x menos um é igual a " . $x) - 1) . ", ou assim eu espero\n";
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+-1, ou assim eu espero
+-1, ou assim eu espero
+Fatal error: Uncaught TypeError: Unsupported operand types: string - int
+]]>
+   </screen>
+  </example>
+  <example>
+   <title>Antes do PHP 8, <literal>+</literal>, <literal>-</literal> e <literal>.</literal> tinham a mesma precedência</title>
+   <programlisting role="php" annotations="non-interactive">
+<![CDATA[
+<?php
+$x = 4;
+// this line might result in unexpected output:
+echo "x menos um é igual a " . $x-1 . ", ou assim eu espero\n";
+
 // porque é avaliada como esta linha (antes do PHP  8.0.0):
 echo (("x menos um é igual a " . $x) - 1) . ", ou assim eu espero\n";
+
 // a precedência desejada pode ser aplicada utilizando parênteses:
 echo "x menos um é igual a " . ($x-1) . ", ou assim eu espero\n";
 ?>
