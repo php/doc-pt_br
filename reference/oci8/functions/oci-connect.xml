@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 5e41012cfdf8f2eff5fa56de446c7656afac536c Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.oci-connect" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>oci_connect</refname>
+  <refpurpose>Conecta-se a um banco de dados Oracle</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>resource</type><type>false</type></type><methodname>oci_connect</methodname>
+   <methodparam><type>string</type><parameter>username</parameter></methodparam>
+   <methodparam><type>string</type><parameter>password</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>string</type><type>null</type></type><parameter>connection_string</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>encoding</parameter><initializer>""</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>session_mode</parameter><initializer><constant>OCI_DEFAULT</constant></initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Retorna um identificador de conexão necessário para a maioria das outras operações OCI8.
+  </para>
+  <para>
+   Para melhor desempenho, a maioria das aplicações deve usar conexões persistentes
+   com <function>oci_pconnect</function> em vez
+   de <function>oci_connect</function>.
+   Consulte <link linkend="oci8.connection">Manipulação de Conexões</link> para obter informações gerais
+   sobre gerenciamento de conexões e pool de conexões.
+  </para>
+  <para>
+   A segunda chamada e as subsequentes a <function>oci_connect</function>
+   com os mesmos parâmetros retornarão o identificador de conexão retornado
+   da primeira chamada. Isso significa que as transações em um identificador
+   também estão nos outros identificadores, pois usam a
+   <emphasis>mesma</emphasis> conexão de banco de dados subjacente. Se dois
+   identificadores precisarem ser isolados transacionalmente um do outro, use
+   <function>oci_new_connect</function>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>username</parameter></term>
+     <listitem>
+      <para>
+       O nome de usuário do Oracle.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>password</parameter></term>
+     <listitem>
+      <para>
+       A senha para <parameter>username</parameter>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>connection_string</parameter></term>
+     <listitem>
+      &oci.db;
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>encoding</parameter></term>
+     <listitem>
+      &oci.charset;
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>session_mode</parameter></term>
+     <listitem>
+      &oci.sessionmode;
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna um identificador de conexão ou &false; em caso de erro.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.0.0, PECL OCI8 3.0.0</entry>
+      <entry>
+       <parameter>connection_string</parameter> agora é anulável.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title><function>oci_connect</function> básico usando sintaxe Easy Connect</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+// Conecta-se ao serviço XE (ou seja, banco de dados) na máquina "localhost"
+$conn = oci_connect('hr', 'welcome', 'localhost/XE');
+if (!$conn) {
+    $e = oci_error();
+    trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+}
+
+$stid = oci_parse($conn, 'SELECT * FROM employees');
+oci_execute($stid);
+
+echo "<table border='1'>\n";
+while ($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
+    echo "<tr>\n";
+    foreach ($row as $item) {
+        echo "    <td>" . ($item !== null ? htmlentities($item, ENT_QUOTES) : "&nbsp;") . "</td>\n";
+    }
+    echo "</tr>\n";
+}
+echo "</table>\n";
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title><function>oci_connect</function> básico usando um nome de conexão de rede</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+// Conecta-se ao banco de dados MYDB descrito no arquivo tnsnames.ora,
+// Um exemplo de entrada tnsnames.ora para MYDB poderia ser:
+//   MYDB =
+//     (DESCRIPTION =
+//       (ADDRESS = (PROTOCOL = TCP)(HOST = mymachine.oracle.com)(PORT = 1521))
+//       (CONNECT_DATA =
+//         (SERVER = DEDICATED)
+//         (SERVICE_NAME = XE)
+//       )
+//     )
+
+$conn = oci_connect('hr', 'welcome', 'MYDB');
+if (!$conn) {
+    $e = oci_error();
+    trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+}
+
+$stid = oci_parse($conn, 'SELECT * FROM employees');
+oci_execute($stid);
+
+echo "<table border='1'>\n";
+while ($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
+    echo "<tr>\n";
+    foreach ($row as $item) {
+        echo "    <td>" . ($item !== null ? htmlentities($item, ENT_QUOTES) : "&nbsp;") . "</td>\n";
+    }
+    echo "</tr>\n";
+}
+echo "</table>\n";
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title><function>oci_connect</function> com um conjunto de caracteres explícito</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$conn = oci_connect('hr', 'welcome', 'localhost/XE', 'AL32UTF8');
+if (!$conn) {
+    $e = oci_error();
+    trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+}
+
+$stid = oci_parse($conn, 'SELECT * FROM employees');
+oci_execute($stid);
+
+echo "<table border='1'>\n";
+while ($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
+    echo "<tr>\n";
+    foreach ($row as $item) {
+        echo "    <td>" . ($item !== null ? htmlentities($item, ENT_QUOTES) : "&nbsp;") . "</td>\n";
+    }
+    echo "</tr>\n";
+}
+echo "</table>\n";
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Usando múltiplas chamadas a <function>oci_connect</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$c1 = oci_connect("hr", "welcome", 'localhost/XE');
+$c2 = oci_connect("hr", "welcome", 'localhost/XE');
+
+// Tanto $c1 quanto $c2 mostram o mesmo ID de recurso PHP, o que significa que eles usam a
+// mesma conexão de banco de dados subjacente
+echo "c1 é $c1<br>\n";
+echo "c2 é $c2<br>\n";
+
+function create_table($conn)
+{
+    $stmt = oci_parse($conn, "create table hallo (test varchar2(64))");
+    oci_execute($stmt);
+    echo "Tabela criada<br>\n";
+}
+
+function drop_table($conn)
+{
+    $stmt = oci_parse($conn, "drop table hallo");
+    oci_execute($stmt);
+    echo "Tabela excluída<br>\n";
+}
+
+function insert_data($connname, $conn)
+{
+    $stmt = oci_parse($conn, "insert into hallo
+              values(to_char(sysdate,'DD-MON-YY HH24:MI:SS'))");
+    oci_execute($stmt, OCI_DEFAULT);
+    echo "$connname inserida linha sem confirmação<br>\n";
+}
+
+function rollback($connname, $conn)
+{
+    oci_rollback($conn);
+    echo "$connname revertendo<br>\n";
+}
+
+function select_data($connname, $conn)
+{
+    $stmt = oci_parse($conn, "select * from hallo");
+    oci_execute($stmt, OCI_DEFAULT);
+    echo "$connname ----selecionando<br>\n";
+    while (oci_fetch($stmt)) {
+        echo "    " . oci_result($stmt, "TEST") . "<br>\n";
+    }
+    echo "$connname ----feito<br>\n";
+}
+
+create_table($c1);
+
+insert_data('c1', $c1);   // Insere uma linha usando c1
+sleep(2);                 // Espera para mostrar um horário diferente para a 2ª linha
+insert_data('c2', $c2);   // Insere uma linha usando c2
+
+select_data('c1', $c1);   // Os resultados de ambas as inserções são retornados
+select_data('c2', $c2);   // Os resultados de ambas as inserções são retornados
+
+rollback('c1', $c1);      // Reverte usando c1
+
+select_data('c1', $c1);   // Ambas as inserções foram revertidas
+select_data('c2', $c2);
+
+drop_table($c1);
+
+// Fechar uma das conexões torna a variável PHP inutilizável, mas
+// a outra pode ser usada
+oci_close($c1);
+echo "c1 é $c1<br>\n";
+echo "c2 é $c2<br>\n";
+
+
+// O resultado é:
+//    c1 é Resource id #5
+//    c2 é Resource id #5
+//    Tabela criada
+//    c1 inseriu linha sem confirmar
+//    c2 inseriu linha sem confirmar
+//    c1 ----selecionando
+//        09-DEC-09 12:14:43
+//        09-DEC-09 12:14:45
+//    c1 ----feito
+//    c2 ----selecionando
+//        09-DEC-09 12:14:43
+//        09-DEC-09 12:14:45
+//    c2 ----feito
+//    c1 revertendo
+//    c1 ----selecionando
+//    c1 ----feito
+//    c2 ----selecionando
+//    c2 ----feito
+//    Tabela excluída
+//    c1 é
+//    c2 é Resource id #5
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    Uma extensão OCI8 instalada ou configurada incorretamente
+    frequentemente se manifestará como um problema ou erro de conexão.
+    Consulte <link linkend="oci8.setup">Instalando/Configurando</link>
+    para obter informações sobre solução de problemas.
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>oci_pconnect</function></member>
+    <member><function>oci_new_connect</function></member>
+    <member><function>oci_close</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

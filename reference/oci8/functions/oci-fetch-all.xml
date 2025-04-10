@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: d33a6756e7a94bc06164d2a97bb0a3ffa19e3471 Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.oci-fetch-all" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>oci_fetch_all</refname>
+  <refpurpose>Busca várias linhas de uma consulta em um array bidimensional</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>int</type><methodname>oci_fetch_all</methodname>
+   <methodparam><type>resource</type><parameter>statement</parameter></methodparam>
+   <methodparam><type>array</type><parameter role="reference">output</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>offset</parameter><initializer>0</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>limit</parameter><initializer>-1</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>flags</parameter><initializer>OCI_FETCHSTATEMENT_BY_COLUMN | OCI_ASSOC</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Busca várias linhas de uma consulta em um array bidimensional.
+   Por padrão, todas as linhas são retornadas.
+  </para>
+  <para>
+   Esta função pode ser chamada apenas uma vez para cada consulta executada
+   com <function>oci_execute</function>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>statement</parameter></term>
+     <listitem>
+       &oci.arg.statement.id;
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>output</parameter></term>
+     <listitem>
+      <para>
+       A variável para conter as linhas retornadas.
+      </para>
+      <para>
+       As colunas LOB são retornadas como strings, onde o Oracle suporta
+       conversão.
+      </para>
+      <para>
+       Veja <function>oci_fetch_array</function> para mais informações
+       sobre como dados e tipos são obtidos.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>offset</parameter></term>
+     <listitem>
+      <para>
+       O número de linhas iniciais a serem descartadas ao buscar o
+       resultado. O valor padrão é 0, então a primeira linha em diante é
+       retornada.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>limit</parameter></term>
+     <listitem>
+      <para>
+       O número de linhas a serem retornadas. O padrão é -1, o que significa que retorna
+       todas as linhas a partir de <parameter>offset</parameter> + 1.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>flags</parameter></term>
+     <listitem>
+      <para>
+       O parâmetro <parameter>flags</parameter> indica a estrutura
+       do array e se arrays associativos devem ser usados.
+       <table>
+        <title>Modos de estrutura de array de <function>oci_fetch_all</function></title>
+        <tgroup cols="2">
+         <thead>
+          <row>
+           <entry>Constante</entry>
+           <entry>Descrição</entry>
+          </row>
+         </thead>
+         <tbody>
+          <row>
+           <entry><constant>OCI_FETCHSTATEMENT_BY_ROW</constant></entry>
+           <entry>O array externo conterá um sub-array por linha
+            de consulta.</entry>
+          </row>
+          <row>
+           <entry><constant>OCI_FETCHSTATEMENT_BY_COLUMN</constant></entry>
+           <entry>O array externo conterá um sub-array por coluna
+            de consulta. Este é o padrão.</entry>
+          </row>
+         </tbody>
+        </tgroup>
+       </table>
+      </para>
+      <para>
+       Os arrays podem ser indexados por título de coluna ou numericamente.
+       Apenas um modo de indexação será retornado.
+       <table>
+        <title><function>oci_fetch_all</function> Array Index Modes</title>
+        <tgroup cols="2">
+         <thead>
+          <row>
+           <entry>Constante</entry>
+           <entry>Descrição</entry>
+          </row>
+         </thead>
+         <tbody>
+          <row>
+           <entry><constant>OCI_NUM</constant></entry>
+           <entry>Índices numéricos são usados ​​para cada array de coluna.</entry>
+          </row>
+          <row>
+           <entry><constant>OCI_ASSOC</constant></entry>
+           <entry>Índices associativos são usados para cada array de
+            coluna. Este é o padrão.</entry>
+          </row>
+         </tbody>
+        </tgroup>
+       </table>
+      </para>
+      <para>
+       Use o operador de adição &quot;+&quot; para escolher uma combinação
+       de estrutura de array e modos de índice.
+      </para>
+      <para>
+       Os nomes de colunas padrão do Oracle não diferenciam maiúsculas de minúsculas e terão
+       chaves de array em letras maiúsculas. Os nomes de colunas que diferenciam maiúsculas de minúsculas terão
+       chaves de array usando a capitalização exata da coluna.
+       Use <function>var_dump</function>
+       em <parameter>output</parameter> para verificar a capitalização apropriada
+       a ser usada em cada consulta.
+      </para>
+      <para>
+       Consultas que tenham mais de uma coluna com o mesmo nome
+       devem usar apelidos de coluna. Caso contrário, apenas uma das colunas
+       aparecerá em um array associativo.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna o número de linhas em <parameter>output</parameter>, que
+   pode ser 0 ou mais.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>oci_fetch_all</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$conn = oci_connect('hr', 'welcome', 'localhost/XE');
+if (!$conn) {
+    $e = oci_error();
+    trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+}
+
+$stid = oci_parse($conn, 'SELECT POSTAL_CODE, CITY FROM locations WHERE ROWNUM < 3');
+oci_execute($stid);
+
+$nrows = oci_fetch_all($stid, $res);
+
+echo "$nrows linhas buscadas<br>\n";
+var_dump($res);
+
+// O resultado será:
+//    2 linhas buscadas
+//    array(2) {
+//      ["POSTAL_CODE"]=>
+//      array(2) {
+//        [0]=>
+//        string(6) "00989x"
+//        [1]=>
+//        string(6) "10934x"
+//      }
+//      ["CITY"]=>
+//      array(2) {
+//        [0]=>
+//        string(4) "Roma"
+//        [1]=>
+//        string(6) "Venice"
+//      }
+//    }
+
+// Tabelando os resultados
+echo "<table border='1'>\n";
+foreach ($res as $col) {
+    echo "<tr>\n";
+    foreach ($col as $item) {
+        echo "    <td>".($item !== null ? htmlentities($item, ENT_QUOTES) : "")."</td>\n";
+    }
+    echo "</tr>\n";
+}
+echo "</table>\n";
+
+oci_free_statement($stid);
+oci_close($conn);
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Exemplo de <function>oci_fetch_all</function> com <constant>OCI_FETCHSTATEMENT_BY_ROW</constant></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$conn = oci_connect('hr', 'welcome', 'localhost/XE');
+if (!$conn) {
+    $e = oci_error();
+    trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+}
+
+$stid = oci_parse($conn, 'SELECT POSTAL_CODE, CITY FROM locations WHERE ROWNUM < 3');
+oci_execute($stid);
+
+$nrows = oci_fetch_all($stid, $res, null, null, OCI_FETCHSTATEMENT_BY_ROW);
+
+echo "$nrows linhas buscadas<br>\n";
+var_dump($res);
+
+// O resultado será:
+//    2 linhas buscadas
+//    array(2) {
+//      [0]=>
+//      array(2) {
+//        ["POSTAL_CODE"]=>
+//        string(6) "00989x"
+//        ["CITY"]=>
+//        string(4) "Roma"
+//      }
+//      [1]=>
+//      array(2) {
+//        ["POSTAL_CODE"]=>
+//        string(6) "10934x"
+//        ["CITY"]=>
+//        string(6) "Venice"
+//      }
+//    }
+
+oci_free_statement($stid);
+oci_close($conn);
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title><function>oci_fetch_all</function> com <constant>OCI_NUM</constant></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$conn = oci_connect('hr', 'welcome', 'localhost/XE');
+if (!$conn) {
+    $e = oci_error();
+    trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+}
+
+$stid = oci_parse($conn, 'SELECT POSTAL_CODE, CITY FROM locations WHERE ROWNUM < 3');
+oci_execute($stid);
+
+$nrows = oci_fetch_all($stid, $res, null, null, OCI_FETCHSTATEMENT_BY_ROW + OCI_NUM);
+
+echo "$nrows linhas buscadas<br>\n";
+var_dump($res);
+
+// O resultado será:
+//    2 linhas buscadas
+//    array(2) {
+//      [0]=>
+//      array(2) {
+//        [0]=>
+//        string(6) "00989x"
+//        [1]=>
+//        string(4) "Roma"
+//      }
+//      [1]=>
+//      array(2) {
+//        [0]=>
+//        string(6) "10934x"
+//        [1]=>
+//        string(6) "Venice"
+//      }
+//    }
+
+oci_free_statement($stid);
+oci_close($conn);
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    Usar <parameter>offset</parameter> é muito ineficiente. Todas as
+    linhas a serem ignoradas são incluídas no conjunto de resultados que é
+    retornado do banco de dados para o PHP. Elas são então descartadas. É
+    mais eficiente usar SQL para restringir o deslocamento e o intervalo de
+    linhas na consulta. Veja <function>oci_fetch_array</function> para
+    um exemplo.
+   </para>
+  </note>
+  <note>
+   <para>
+    Consultas que retornam um grande número de linhas podem ser mais eficientes em termos de memória
+    se uma função de busca de linha única
+    como <function>oci_fetch_array</function> for usada.
+   </para>
+  </note>
+  <note>
+   &oci.use.setprefetch;
+  </note>
+  <note>
+   <para>
+    Esta função não retornará linhas do Conjuntos de Resultados Implícitos
+    do Oracle Database 12<emphasis>c</emphasis>. Use <function>oci_fetch_array</function>
+    em vez disso.
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>oci_fetch</function></member>
+    <member><function>oci_fetch_array</function></member>
+    <member><function>oci_fetch_assoc</function></member>
+    <member><function>oci_fetch_object</function></member>
+    <member><function>oci_fetch_row</function></member>
+    <member><function>oci_set_prefetch</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
