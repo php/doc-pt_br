@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: ed6de1ae20ce16c0c7be0b3fef282b6065bebfac Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.oci-fetch-object" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>oci_fetch_object</refname>
+  <refpurpose>Retorna a próxima linha de uma consulta como um objeto</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>stdClass</type><type>false</type></type><methodname>oci_fetch_object</methodname>
+   <methodparam><type>resource</type><parameter>statement</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>mode</parameter><initializer>OCI_ASSOC | OCI_RETURN_NULLS</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Retorna um objeto contendo a próxima linha do conjunto de resultados de uma consulta.
+   Cada atributo do objeto corresponde a uma coluna da linha.
+   Esta função normalmente é chamada em um laço até retornar
+   &false;, indicando que não existem mais linhas.
+  </para>
+  &oci.datatypes;
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>statement</parameter></term>
+     <listitem>
+       &oci.arg.statement.id;
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna um objeto. Cada atributo do objeto corresponde a uma
+   coluna da linha. Se não houver mais linhas
+   em <parameter>statement</parameter>, então &false; será retornado.
+  </para>
+  <para>
+   Quaisquer colunas <literal>LOB</literal> são retornadas como descritores LOB.
+  </para>
+  <para>
+   As colunas <literal>DATE</literal> são retornadas como strings
+   no formato de data atual. O formato padrão pode ser alterado com
+   variáveis ​​de ambiente Oracle, como <literal>NLS_LANG</literal> ou
+   por um comando <literal>ALTER SESSION SET
+   NLS_DATE_FORMAT</literal> executado anteriormente.
+  </para>
+  <para>
+   Os nomes de colunas padrão do Oracle, que não diferenciam maiúsculas de minúsculas, terão
+   nomes de atributos em letras maiúsculas. Os nomes de colunas que diferenciam maiúsculas de minúsculas terão
+   nomes de atributos usando a mesma capitalização de coluna.
+   Use <function>var_dump</function> no objeto de resultado para verificar
+   a capitalização apropriada para acesso ao atributo.
+  </para>
+  <para>
+   Os valores dos atributos serão &null; para quaisquer campos de
+   dados <literal>NULL</literal>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>oci_fetch_object</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+/*
+  Antes de executar, crie a tabela:
+    CREATE TABLE mytab (id NUMBER, description VARCHAR2(30));
+    INSERT INTO mytab (id, description) values (1, 'Fish and Chips');
+    COMMIT;
+*/
+
+$conn = oci_connect('hr', 'welcome', 'localhost/XE');
+if (!$conn) {
+    $e = oci_error();
+    trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+}
+
+$stid = oci_parse($conn, 'SELECT id, description FROM mytab');
+oci_execute($stid);
+
+while (($row = oci_fetch_object($stid)) != false) {
+    // Use nomes de atributos em letras maiúsculas para cada coluna padrão do Oracle
+    echo $row->ID . "<br>\n";
+    echo $row->DESCRIPTION . "<br>\n";
+}
+
+// O resultado é:
+//    1
+//    Fish and Chips
+
+oci_free_statement($stid);
+oci_close($conn);
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title><function>oci_fetch_object</function> com nomes de colunas que diferenciam maiúsculas de minúsculas</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+/*
+  Antes de executar, crie a tabela com um nome de coluna que diferencie maiúsculas de minúsculas:
+    CREATE TABLE mytab (id NUMBER, "MyDescription" VARCHAR2(30));
+    INSERT INTO mytab (id, "MyDescription") values (1, 'Iced Coffee');
+    COMMIT;
+*/
+
+$conn = oci_connect('hr', 'welcome', 'localhost/XE');
+if (!$conn) {
+    $e = oci_error();
+    trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+}
+
+$stid = oci_parse($conn, 'SELECT id, "MyDescription" FROM mytab');
+oci_execute($stid);
+
+while (($row = oci_fetch_object($stid)) != false) {
+    // Use nomes de atributos em letras maiúsculas para cada coluna padrão do Oracle
+    echo $row->ID . "<br>\n";
+    // Use a capitalização exata para o nome da coluna que diferencia maiúsculas de minúsculas
+    echo $row->MyDescription . "<br>\n";
+}
+
+// Resultado:
+//    1
+//    Iced Coffee
+
+oci_free_statement($stid);
+oci_close($conn);
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title><function>oci_fetch_object</function> com LOBs</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+/*
+  Antes de executar, crie a tabela:
+    CREATE TABLE mytab (id NUMBER, description CLOB);
+    INSERT INTO mytab (id, description) values (1, 'A very long string');
+    COMMIT;
+*/
+
+$conn = oci_connect('hr', 'welcome', 'localhost/XE');
+if (!$conn) {
+    $e = oci_error();
+    trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+}
+
+$stid = oci_parse($conn, 'SELECT id, description FROM mytab');
+oci_execute($stid);
+
+while (($row = oci_fetch_object($stid)) != false) {
+    echo $row->ID . "<br>\n";
+    // O código a seguir produzirá os primeiros 11 bytes de DESCRIPTION
+    echo $row->DESCRIPTION->read(11) . "<br>\n";
+}
+
+// O resultado é:
+//    1
+//    A very long
+
+oci_free_statement($stid);
+oci_close($conn);
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>oci_fetch</function></member>
+    <member><function>oci_fetch_all</function></member>
+    <member><function>oci_fetch_assoc</function></member>
+    <member><function>oci_fetch_array</function></member>
+    <member><function>oci_fetch_row</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
