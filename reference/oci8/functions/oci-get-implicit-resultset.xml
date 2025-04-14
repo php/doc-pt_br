@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: ed6de1ae20ce16c0c7be0b3fef282b6065bebfac Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.oci-get-implicit-resultset" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>oci_get_implicit_resultset</refname>
+  <refpurpose>Retorna o próximo recurso de instrução filho de um recurso de instrução pai que possui conjuntos de resultados implícitos do Oracle Database
+  </refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>resource</type><type>false</type></type><methodname>oci_get_implicit_resultset</methodname>
+   <methodparam><type>resource</type><parameter>statement</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Usado para buscar conjuntos consecutivos de resultados de consulta após a
+   execução de um bloco Oracle PL/SQL armazenado ou anônimo, onde esse
+   bloco retorna resultados de consulta com a
+   função PL/SQL <emphasis>DBMS_SQL.RETURN_RESULT</emphasis> do Oracle Database 12
+   (ou posterior). Isso permite que blocos PL/SQL retornem facilmente
+   resultados de consulta.
+  </para>
+  <para>
+   A instrução filha pode ser usada com qualquer uma das funções de busca do OCI8:
+   <function>oci_fetch</function>, <function>oci_fetch_all</function>,
+   <function>oci_fetch_array</function>, <function>oci_fetch_object</function>,
+   <function>oci_fetch_assoc</function> ou <function>oci_fetch_row</function>.
+  </para>
+  <para>
+   As instruções filhas herdam o valor de pré-busca da instrução pai,
+   ou podem ser definidas explicitamente com <function>oci_set_prefetch</function>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>statement</parameter></term>
+     <listitem>
+      <para>Um identificador de instrução OCI8 válido criado
+       por <function>oci_parse</function> e executado
+       por <function>oci_execute</function>. O identificador
+       da instrução pode ou não estar associado a uma instrução SQL
+       que retorna Conjuntos de Resultados Implícitos.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna um identificador de instrução para a próxima instrução filha disponível
+   em <parameter>statement</parameter>. Retorna &false; quando as instruções filhas
+   não existem ou todas as instruções filhas foram retornadas
+   por chamadas anteriores
+   para <function>oci_get_implicit_resultset</function>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Buscando conjuntos de resultados implícitos em um laço</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$conn = oci_connect('hr', 'welcome', 'localhost/pdborcl');
+if (!$conn) {
+    $e = oci_error();
+    trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+}
+
+$sql = 'DECLARE
+            c1 SYS_REFCURSOR;
+        BEGIN
+           OPEN c1 FOR SELECT city, postal_code FROM locations WHERE ROWNUM < 4 ORDER BY city;
+           DBMS_SQL.RETURN_RESULT(c1);
+           OPEN c1 FOR SELECT country_id FROM locations WHERE ROWNUM < 4 ORDER BY city;
+           DBMS_SQL.RETURN_RESULT(c1);
+        END;';
+
+$stid = oci_parse($conn, $sql);
+oci_execute($stid);
+
+while (($stid_c = oci_get_implicit_resultset($stid))) {
+    echo "<h2>Novo conjunto de resultados implícitos:</h2>\n";
+    echo "<table>\n";
+    while (($row = oci_fetch_array($stid_c, OCI_ASSOC+OCI_RETURN_NULLS)) != false) {
+        echo "<tr>\n";
+        foreach ($row as $item) {
+            echo "  <td>".($item!==null?htmlentities($item, ENT_QUOTES|ENT_SUBSTITUTE):"&nbsp;")."</td>\n";
+        }
+        echo "</tr>\n";
+    }
+    echo "</table>\n";
+}
+
+// Resultado:
+//    Novo conjunto de resultados implícitos:
+//     Beijing 190518
+//     Bern    3095
+//     Bombay  490231
+//    Novo conjunto de resultados implícitos:
+//     CN
+//     CH
+//     IN
+
+oci_free_statement($stid);
+oci_close($conn);
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+
+  <para>
+   <example>
+    <title>Obtendo identificadores de instruções filhas individualmente</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$conn = oci_connect('hr', 'welcome', 'localhost/pdborcl');
+if (!$conn) {
+    $e = oci_error();
+    trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+}
+
+$sql = 'DECLARE
+            c1 SYS_REFCURSOR;
+        BEGIN
+           OPEN c1 FOR SELECT city, postal_code FROM locations WHERE ROWNUM < 4 ORDER BY city;
+           DBMS_SQL.RETURN_RESULT(c1);
+           OPEN c1 FOR SELECT country_id FROM locations WHERE ROWNUM < 4 ORDER BY city;
+           DBMS_SQL.RETURN_RESULT(c1);
+        END;';
+
+$stid = oci_parse($conn, $sql);
+oci_execute($stid);
+
+$stid_1 = oci_get_implicit_resultset($stid);
+$stid_2 = oci_get_implicit_resultset($stid);
+
+$row = oci_fetch_array($stid_1, OCI_ASSOC+OCI_RETURN_NULLS);
+var_dump($row);
+$row = oci_fetch_array($stid_2, OCI_ASSOC+OCI_RETURN_NULLS);
+var_dump($row);
+$row = oci_fetch_array($stid_1, OCI_ASSOC+OCI_RETURN_NULLS);
+var_dump($row);
+$row = oci_fetch_array($stid_2, OCI_ASSOC+OCI_RETURN_NULLS);
+var_dump($row);
+
+// Resultado:
+//    array(2) {
+//      ["CITY"]=>
+//      string(7) "Beijing"
+//      ["POSTAL_CODE"]=>
+//      string(6) "190518"
+//    }
+//    array(1) {
+//      ["COUNTRY_ID"]=>
+//      string(2) "CN"
+//    }
+//    array(2) {
+//      ["CITY"]=>
+//      string(4) "Bern"
+//      ["POSTAL_CODE"]=>
+//      string(4) "3095"
+//    }
+//    array(1) {
+//      ["COUNTRY_ID"]=>
+//      string(2) "CH"
+//    }
+
+oci_free_statement($stid);
+oci_close($conn);
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+
+  <para>
+   <example>
+    <title>Definindo explicitamente a contagem de pré-busca</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$conn = oci_connect('hr', 'welcome', 'localhost/pdborcl');
+if (!$conn) {
+    $e = oci_error();
+    trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+}
+
+$sql = 'DECLARE
+            c1 SYS_REFCURSOR;
+        BEGIN
+           OPEN c1 FOR SELECT city, postal_code FROM locations ORDER BY city;
+           DBMS_SQL.RETURN_RESULT(c1);
+        END;';
+
+$stid = oci_parse($conn, $sql);
+oci_execute($stid);
+
+$stid_c = oci_get_implicit_resultset($stid);
+oci_set_prefetch($stid_c, 200);   // Defina a pré-busca antes de buscar na instrução filho
+echo "<table>\n";
+while (($row = oci_fetch_array($stid_c, OCI_ASSOC+OCI_RETURN_NULLS)) != false) {
+    echo "<tr>\n";
+    foreach ($row as $item) {
+        echo "  <td>".($item!==null?htmlentities($item, ENT_QUOTES|ENT_SUBSTITUTE):"&nbsp;")."</td>\n";
+    }
+    echo "</tr>\n";
+}
+echo "</table>\n";
+
+oci_free_statement($stid);
+oci_close($conn);
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+
+  <para>
+   <example>
+    <title>Exemplo de conjunto de resultados implícitos sem usar <function>oci_get_implicit_resultset</function></title>
+    <para>
+     Todos os resultados de todas as consultas são retornados consecutivamente.
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$conn = oci_connect('hr', 'welcome', 'localhost/pdborcl');
+if (!$conn) {
+    $e = oci_error();
+    trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+}
+
+$sql = 'DECLARE
+            c1 SYS_REFCURSOR;
+        BEGIN
+           OPEN c1 FOR SELECT city, postal_code FROM locations WHERE ROWNUM < 4 ORDER BY city;
+           DBMS_SQL.RETURN_RESULT(c1);
+           OPEN c1 FOR SELECT country_id FROM locations WHERE ROWNUM < 4 ORDER BY city;
+           DBMS_SQL.RETURN_RESULT(c1);
+        END;';
+
+$stid = oci_parse($conn, $sql);
+oci_execute($stid);
+
+// Nota: oci_fetch_all e oci_fetch() não podem ser usados ​​desta maneira
+echo "<table>\n";
+while (($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) != false) {
+    echo "<tr>\n";
+    foreach ($row as $item) {
+        echo "  <td>".($item!==null?htmlentities($item, ENT_QUOTES|ENT_SUBSTITUTE):"&nbsp;")."</td>\n";
+    }
+    echo "</tr>\n";
+}
+echo "</table>\n";
+
+// Resultado:
+//    Beijing 190518
+//    Bern 3095
+//    Bombay 490231
+//    CN
+//    CH
+//    IN
+
+oci_free_statement($stid);
+oci_close($conn);
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   &oci.use.setprefetch;
+  </note>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

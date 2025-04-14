@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 5e41012cfdf8f2eff5fa56de446c7656afac536c Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.oci-new-cursor" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>oci_new_cursor</refname>
+  <refpurpose>Aloca e retorna um novo cursor (identificador de instrução)</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type class="union"><type>resource</type><type>false</type></type><methodname>oci_new_cursor</methodname>
+   <methodparam><type>resource</type><parameter>connection</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Aloca um novo identificador de instrução na conexão especificada.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>connection</parameter></term>
+     <listitem>
+      <para>
+       Um identificador de conexão Oracle, retornado por
+       <function>oci_connect</function> ou <function>oci_pconnect</function>.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna um novo identificador de instrução ou &false; em caso de erro.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Vinculando um CURSOR REF em uma chamada de procedimento armazenado Oracle</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+// Pré-criação:
+//   create or replace procedure myproc(myrc out sys_refcursor) as
+//   begin
+//     open myrc for select first_name from employees;
+//   end;
+
+$conn = oci_connect("hr", "hrpwd", "localhost/XE");
+if (!$conn) {
+    $m = oci_error();
+    trigger_error(htmlentities($m['message']), E_USER_ERROR);
+}
+
+$curs = oci_new_cursor($conn);
+$stid = oci_parse($conn, "begin myproc(:cursbv); end;");
+oci_bind_by_name($stid, ":cursbv", $curs, -1, OCI_B_CURSOR);
+oci_execute($stid);
+
+oci_execute($curs);  // Execute o CURSOR REF como um ID de instrução normal
+while (($row = oci_fetch_array($curs, OCI_ASSOC+OCI_RETURN_NULLS)) != false) {
+    echo $row['FIRST_NAME'] . "<br />\n";
+}
+
+oci_free_statement($stid);
+oci_free_statement($curs);
+oci_close($conn);
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
