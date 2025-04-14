@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: ed6de1ae20ce16c0c7be0b3fef282b6065bebfac Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.oci-set-client-identifier" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>oci_set_client_identifier</refname>
+  <refpurpose>Define o identificador do cliente</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>bool</type><methodname>oci_set_client_identifier</methodname>
+   <methodparam><type>resource</type><parameter>connection</parameter></methodparam>
+   <methodparam><type>string</type><parameter>client_id</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Define o identificador de cliente usado por vários componentes de banco de dados para
+   identificar usuários de aplicações leves que se autenticam como o mesmo
+   usuário de banco de dados.
+  </para>
+  <para>
+   O identificador do cliente é registrado no banco de dados quando ocorre a próxima
+   'viagem de ida e volta' do PHP para o banco de dados, normalmente quando uma
+   instrução SQL é executada.
+  </para>
+  <para>
+   O identificador pode ser consultado posteriormente, por exemplo,
+   com <literal>SELECT SYS_CONTEXT('USERENV','CLIENT_IDENTIFIER')
+   FROM DUAL</literal>. Visualizações de administração de banco de dados, como
+   <literal>V$SESSION</literal>, também conterão o valor. Ele
+   pode ser usado com <literal>DBMS_MONITOR.CLIENT_ID_TRACE_ENABLE</literal>
+   para rastreamento e também para auditoria.
+  </para>
+  <para>
+   O valor pode ser retido em solicitações de página que usam a mesma conexão persistente.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>connection</parameter></term>
+     <listitem>
+      &oci.parameter.connection;
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>client_id</parameter></term>
+     <listitem>
+      <para>
+       String escolhida pelo usuário com até 64 bytes de comprimento.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.success;
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Definindo o identificador do cliente para o usuário da aplicação</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+// Encontra o nome de login do usuário do aplicativo
+session_start();
+$un = my_validate_session($_SESSION['username']);
+$c = oci_connect('myschema', 'welcome', 'localhost/XE');
+
+// Informa ao Oracle quem é esse usuário
+oci_set_client_identifier($c, $un);
+
+// A próxima viagem de ida e volta ao banco de dados trará o identificador
+$s = oci_parse($c, 'select mydata from mytable');
+oci_execute($s);
+
+// ...
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  &oci.roundtrip.caution;
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>oci_set_module_name</function></member>
+    <member><function>oci_set_action</function></member>
+    <member><function>oci_set_client_info</function></member>
+    <member><function>oci_set_db_operation</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
