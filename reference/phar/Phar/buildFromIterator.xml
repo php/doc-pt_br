@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: f03806fcd8fe03a0501bd40b6e3939ff6589a1d2 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xml:id="phar.buildfromiterator" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>Phar::buildFromIterator</refname>
+  <refpurpose>Constrói um arquivo phar a partir de um iterador</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis role="Phar">
+   <modifier>public</modifier> <type>array</type><methodname>Phar::buildFromIterator</methodname>
+   <methodparam><type>Traversable</type><parameter>iterator</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>string</type><type>null</type></type><parameter>baseDirectory</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  &phar.write;
+  <para>
+   Preenche um arquivo phar a partir de um iterador. Dois estilos de iteradores são suportados:
+   iteradores que mapeiam o nome do arquivo dentro do phar para o nome de um arquivo em disco,
+   e iteradores como DirectoryIterator, que retornam
+   objetos SplFileInfo. Para iteradores que retornam objetos SplFileInfo, o segundo
+   parâmetro é obrigatório.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>iterator</parameter></term>
+     <listitem>
+      <para>
+       Qualquer iterador que mapeia associativamente o arquivo phar para um local ou
+       que retorna objetos SplFileInfo.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>baseDirectory</parameter></term>
+     <listitem>
+      <para>
+       Para iteradores que retornam objetos SplFileInfo, a parte do caminho completo de cada
+       arquivo a ser removida ao adicionar ao arquivo phar.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   <function>Phar::buildFromIterator</function> retorna um array associativo
+   mapeando o caminho interno do arquivo para o caminho completo do arquivo no
+   sistema de arquivos.
+  </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <para>
+   Este método retorna <classname>UnexpectedValueException</classname> quando o
+   iterador retorna valores incorretos, como uma chave inteira em vez de uma
+   string, uma <classname>BadMethodCallException</classname> quando um
+   iterador baseado em SplFileInfo é passado sem um parâmetro <parameter>baseDirectory</parameter>
+   ou uma <classname>PharException</classname> se houver erros
+   ao salvar o arquivo phar.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.1.0</entry>
+      <entry>
+       <methodname>Phar::buildFromIterator</methodname> não retorna mais &false;.
+      </entry>
+     </row>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       <parameter>baseDirectory</parameter> agora é anulável.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+   <example>
+    <title>Um exemplo de <function>Phar::buildFromIterator</function> com SplFileInfo</title>
+    <para>
+     Para a maioria dos arquivos phar, o arquivo refletirá uma organização de diretório real, e
+     o segundo estilo é o mais útil. Por exemplo, para criar um arquivo phar
+     contendo os arquivos nesta organização de diretório de exemplo:
+    </para>
+    <para>
+     <screen>
+    <![CDATA[
+/caminho/para/projeto/
+                 config/
+                        dist.xml
+                        debug.xml
+                 lib/
+                     file1.php
+                     file2.php
+                 src/
+                     processthing.php
+                 www/
+                     index.php
+                 cli/
+                     index.php
+]]>
+   </screen>
+  </para>
+  <para>
+   Este código poderia ser usado para adicionar esses arquivos ao arquivo phar &quot;project.phar&quot;:
+  </para>
+  <para>
+   <programlisting role="php">
+    <![CDATA[
+<?php
+// cria com apelido "project.phar"
+$phar = new Phar('project.phar', 0, 'project.phar');
+$phar->buildFromIterator(
+    new RecursiveIteratorIterator(
+     new RecursiveDirectoryIterator('/caminho/para/projeto')),
+    '/caminho/para/projeto');
+$phar->setStub($phar->createDefaultStub('cli/index.php', 'www/index.php'));
+?>
+    ]]>
+   </programlisting>
+  </para>
+  <para>
+   O arquivo project.phar pode então ser usado imediatamente. <function>Phar::buildFromIterator</function> não
+  define valores como compressão, metadados, e isso pode ser feito após a criação do
+  arquivo phar.
+  </para>
+  <para>
+   Como observação interessante, <function>Phar::buildFromIterator</function> também pode ser usado para
+   copiar o conteúdo de um arquivo phar existente, já que o objeto Phar descende
+   de <classname>DirectoryIterator</classname>:
+  </para>
+  <para>
+   <programlisting role="php">
+    <![CDATA[
+<?php
+// cria com apelido "project.phar"
+$phar = new Phar('project.phar', 0, 'project.phar');
+$phar->buildFromIterator(
+    new RecursiveIteratorIterator(
+     new Phar('/caminho/para/outro_phar.phar')),
+    'phar:///caminho/para/outro_phar.phar/caminho/para/projeto');
+$phar->setStub($phar->createDefaultStub('cli/index.php', 'www/index.php'));
+?>
+    ]]>
+   </programlisting>
+  </para>
+  </example>
+  <example>
+    <title>Um exemplo de <function>Phar::buildFromIterator</function> com outros iteradores</title>
+  <para>
+   A segunda forma do iterador pode ser usada com qualquer iterador que retorne
+   um mapeamento chave =&gt; valor, como um <classname>ArrayIterator</classname>:
+  </para>
+  <para>
+   <programlisting role="php">
+    <![CDATA[
+<?php
+// cria com apelido "project.phar"
+$phar = new Phar('project.phar', 0, 'project.phar');
+$phar->buildFromIterator(
+    new ArrayIterator(
+     array(
+        'internos/arquivo.php' => dirname(__FILE__) . '/algum_arquivo.php',
+        'outros/arquivo.jpg' => fopen('/caminho/para/arquivo_grande.jpg', 'rb'),
+     )));
+$phar->setStub($phar->createDefaultStub('cli/index.php', 'www/index.php'));
+?>
+    ]]>
+   </programlisting>
+  </para>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>Phar::buildFromDirectory</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
