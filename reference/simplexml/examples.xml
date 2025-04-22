@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: c1f37a6c270aadbbb3da56a3973ffd62197adf2b Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 8ac065774e87c73919ee3508fc957adebe1c4408 Maintainer: leonardolara Status: ready -->
 
 <chapter xml:id="simplexml.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  &reftitle.examples;
@@ -410,6 +410,49 @@ echo $livros->livro[0]->titulo;
 Blá
 ]]>
     </screen>
+   </example>
+  </para>
+  <para>
+   <example>
+    <title>Trabalhando com namespaces</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$data = <<<XML
+<movies xmlns="http://default" xmlns:a="http://a">
+ <movie xml:id="movie1" a:link="IMDB">
+  <a:actor>Onlivia Actora</a:actor>
+ </movie>
+</movies>
+XML;
+
+$movies = simplexml_load_string($data);
+
+// Namespace http://www.w3.org/XML/1998/namespace está disponível como "xml".
+echo $movies->movie->attributes("xml", true)["id"] . "\n";
+
+// Atributos com namespace podem ser acessados com attributes().
+echo $movies->movie->attributes("a", true)["link"] . "\n";
+
+// Usar URI com namespace permite ao documento usar qualquer sinônimo de namespace.
+echo $movies->movie->attributes("http://a")["link"] . "\n";
+
+// Filhos podem ser acessados com children().
+echo $movies->movie->children("http://a")->actor . "\n";
+
+// Usar xpath() com namespace requer que ele seja registrado primeiro.
+$movies->registerXPathNamespace("a", "http://a");
+echo count($movies->xpath("//a:actor")) . "\n";
+
+// Mesmo o namespace padrão precisa ser registrado.
+$movies->registerXPathNamespace("default", "http://default");
+echo count($movies->xpath("//default:movie")) . "\n";
+
+// Isto é vazio.
+echo count($movies->xpath("//movie")) . "\n";
+?>
+]]>
+    </programlisting>
    </example>
   </para>
  </section>
