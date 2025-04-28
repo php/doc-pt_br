@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: f03806fcd8fe03a0501bd40b6e3939ff6589a1d2 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xml:id="phar.mount" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>Phar::mount</refname>
+  <refpurpose>Monta um caminho externo ou arquivo em um local virtual dentro do arquivo phar</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis role="Phar">
+   <modifier>final</modifier> <modifier>public</modifier> <modifier>static</modifier> <type>void</type><methodname>Phar::mount</methodname>
+   <methodparam><type>string</type><parameter>pharPath</parameter></methodparam>
+   <methodparam><type>string</type><parameter>externalPath</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Assim como o conceito do sistema de arquivos Unix de montar dispositivos externos em caminhos dentro da
+   árvore de diretórios, <function>Phar::mount</function> permite referenciar arquivos
+   e diretórios externos como se estivessem dentro de um arquivo. Isso permite uma abstração
+   poderosa como, por exemplo, referenciar arquivos de configuração externos como se estivessem
+   dentro do arquivo.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>pharPath</parameter></term>
+     <listitem>
+      <para>
+       O caminho interno dentro do arquivo phar a ser usado como local do caminho montado.
+       Este deve ser um caminho relativo dentro do arquivo phar e não deve existir ainda.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>externalPath</parameter></term>
+     <listitem>
+      <para>
+       Um caminho ou URL para um arquivo ou diretório externo para montar dentro do arquivo phar
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+
+ </refsect1>
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Sem retorno. <classname>PharException</classname> é lançada em caso de falha.
+  </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <para>
+   Lança <classname>PharException</classname> se ocorrer algum problema ao montar o caminho.
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Um exemplo de <function>Phar::mount</function></title>
+    <para>
+     O exemplo a seguir mostra o acesso a um arquivo de configuração externo como se fosse
+     um caminho dentro de um arquivo phar.
+    </para>
+    <para>
+     Primeiro, o código dentro de um arquivo phar:
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$configuration = simplexml_load_string(file_get_contents(
+    Phar::running(false) . '/config.xml'));
+?>
+]]>
+    </programlisting>
+    <para>
+     A seguir, o código externo usado para montar o arquivo de configuração:
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// primeiro configura a associação entre o config.xml abstrato
+// e o real no disco
+Phar::mount('phar://config.xml', '/etc/exemplo/config.xml');
+// agora executa a aplicação
+include '/caminho/para/arquivo.phar';
+?>
+]]>
+    </programlisting>
+    <para>
+     Outro método é colocar o código de montagem dentro do stub do arquivo phar.
+     Aqui está um exemplo de configuração de um arquivo de configuração
+     padrão caso nenhuma configuração de usuário seja especificada:
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+// primeiro configura a associação entre o config.xml abstrato
+// e o real no disco
+if (defined('EXTERNAL_CONFIG')) {
+    Phar::mount('config.xml', EXTERNAL_CONFIG);
+    if (file_exists(__DIR__ . '/extra_config.xml')) {
+        Phar::mount('extra.xml', __DIR__ . '/extra_config.xml');
+    }
+} else {
+    Phar::mount('config.xml', 'phar://' . __FILE__ . '/config_padrao.xml');
+    Phar::mount('extra.xml', 'phar://' . __FILE__ . '/extra_padrao.xml');
+}
+// agora executa a aplicação
+include 'phar://' . __FILE__ . '/index.php';
+__HALT_COMPILER();
+?>
+]]>
+    </programlisting>
+    <para>
+     ...e o código externo para carregar este arquivo phar:
+    </para>
+    <programlisting role="php">
+<![CDATA[
+<?php
+define('EXTERNAL_CONFIG', '/etc/exemplo/config.xml');
+// agora executa a aplicação
+include '/caminho/para/arquivo.phar';
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
