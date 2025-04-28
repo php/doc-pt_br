@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: f9c4a68ef4f89e51e6d9b905ad3ddb6492386dd3 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<chapter xml:id="phar.fileformat" xmlns="http://docbook.org/ns/docbook">
+ <title>O que faz um phar ser um phar e não um tar ou um zip?</title>
+ <section xml:id="phar.fileformat.ingredients" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Ingredientes de todos os arquivos Phar, independentemente do formato do arquivo</title>
+  <para>
+   Todos os arquivos Phar contêm de três a quatro seções:
+   <orderedlist>
+    <listitem>
+     <para>um stub</para>
+    </listitem>
+    <listitem>
+     <para>um manifesto descrevendo o conteúdo</para>
+    </listitem>
+    <listitem>
+     <para>o conteúdo do arquivo</para>
+    </listitem>
+    <listitem>
+     <para>[opcional] uma assinatura para verificar a integridade do Phar (somente formato de arquivo phar)</para>
+    </listitem>
+   </orderedlist>
+  </para>
+ </section>
+<section xml:id="phar.fileformat.stub" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Stub de arquivo Phar</title>
+ <para>
+  Um stub de Phar é um arquivo PHP simples. O menor stub possível é o seguinte:
+ </para>
+ <para>
+  <programlisting role="php">
+   <![CDATA[<?php __HALT_COMPILER();]]>
+  </programlisting>
+ </para>
+ <para>
+  Um stub deve conter, no mínimo, o token <literal>__HALT_COMPILER();</literal>
+  em sua conclusão. Normalmente, um stub conterá a funcionalidade do carregador
+  como a seguir:
+ </para>
+ <para>
+  <programlisting role="php">
+<![CDATA[
+<?php
+Phar::mapPhar();
+include 'phar://meuphar.phar/index.php';
+__HALT_COMPILER();
+]]>
+  </programlisting>
+ </para>
+ <para>
+  Não há restrições quanto ao conteúdo de um stub Phar, exceto pelo requisito
+  de que ele termine com <literal>__HALT_COMPILER();</literal>. A tag PHP de fechamento
+  <literal><![CDATA[?>]]></literal> pode ser incluída ou omitida, mas não pode haver
+  mais de 1 espaço entre <literal>;</literal> e a tag de fechamento
+  <literal><![CDATA[?>]]></literal> ou a extensão phar não conseguirá
+  processar o manifesto do arquivo Phar.
+ </para>
+ <para>
+  Em um arquivo Phar baseado em tar ou zip, o stub é armazenado no arquivo
+  <literal>.phar/stub.php</literal>. O stub padrão para arquivos Phar
+  baseados em Phar contém aproximadamente 7k de código para extrair o conteúdo
+  do Phar e executá-lo. Consulte <function>Phar::createDefaultStub</function>
+  para mais detalhes.
+ </para>
+ <para>
+  O apelido phar é armazenado em um arquivo phar tar ou zip no arquivo
+  <literal>.phar/alias.txt</literal> como texto simples.
+ </para>
+ </section>
+ <section xml:id="phar.fileformat.comparison" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Comparação direta de Phar, Tar e Zip</title>
+  <para>
+   Quais são os pontos positivos e negativos dos três formatos de arquivo suportados
+   na extensão phar? Esta tabela tenta responder a essa pergunta.
+  <table>
+   <title>Matriz de Características: Phar vs. Tar vs. Zip</title>
+   <tgroup cols="4">
+    <thead>
+     <row>
+      <entry>Característica</entry>
+      <entry>Phar</entry>
+      <entry>Tar</entry>
+      <entry>Zip</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>Formato de arquivo padrão</entry>
+      <entry>Não</entry>
+      <entry>Sim</entry>
+      <entry>Sim</entry>
+     </row>
+     <row>
+      <entry>Pode ser executado sem a extensão Phar
+       <link linkend="phar.fileformat.phartip">[1]</link>
+      </entry>
+      <entry>Sim</entry>
+      <entry>Não</entry>
+      <entry>Não</entry>
+     </row>
+     <row>
+      <entry>Compactação por arquivo</entry>
+      <entry>Sim</entry>
+      <entry>Não</entry>
+      <entry>Sim</entry>
+     </row>
+     <row>
+      <entry>Compactação de arquivo inteiro</entry>
+      <entry>Sim</entry>
+      <entry>Sim</entry>
+      <entry>Não</entry>
+     </row>
+     <row>
+      <entry>Validação de assinatura de arquivo inteiro</entry>
+      <entry>Sim</entry>
+      <entry>Sim</entry>
+      <entry>Sim</entry>
+     </row>
+     <row>
+      <entry>Suporte a aplicativos específicos da Web</entry>
+      <entry>Sim</entry>
+      <entry>Sim</entry>
+      <entry>Sim</entry>
+     </row>
+     <row>
+      <entry>Metadados por arquivo</entry>
+      <entry>Sim</entry>
+      <entry>Sim</entry>
+      <entry>Sim</entry>
+     </row>
+     <row>
+      <entry>Metadados de arquivo inteiro</entry>
+      <entry>Sim</entry>
+      <entry>Sim</entry>
+      <entry>Sim</entry>
+     </row>
+     <row>
+      <entry>Criação/modificação de arquivo
+       <link linkend="phar.fileformat.phartip2">[2]</link>
+      </entry>
+      <entry>Sim</entry>
+      <entry>Sim</entry>
+      <entry>Sim</entry>
+     </row>
+     <row>
+      <entry>Suporte total para todas as funções do empacotador de fluxo</entry>
+      <entry>Sim</entry>
+      <entry>Sim</entry>
+      <entry>Sim</entry>
+     </row>
+     <row>
+      <entry>Pode ser criado/modificado mesmo que phar.readonly=1
+       <link linkend="phar.fileformat.phartip3">[3]</link>
+      </entry>
+      <entry>Não</entry>
+      <entry>Sim</entry>
+      <entry>Sim</entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </table>
+  </para>
+  <para xml:id="phar.fileformat.phartip">
+   <tip>
+    <para>
+     [1] O PHP só pode acessar diretamente o conteúdo de um arquivo Phar
+     sem a extensão Phar se estiver usando um <literal>stub</literal>
+     que extrai o conteúdo do arquivo Phar. O stub
+     criado por <function>Phar::createDefaultStub</function> extrai
+     o arquivo Phar e executa seu conteúdo a partir de um diretório temporário
+     se nenhuma extensão Phar for encontrada.
+    </para>
+   </tip>
+  </para>
+  <para xml:id="phar.fileformat.phartip2">
+   <tip>
+    <para>
+     [2] Todo acesso de gravação requer que <literal>phar.readonly</literal>
+     seja desabilitado no php.ini ou diretamente na linha de comando.
+    </para>
+   </tip>
+  </para>
+  <para xml:id="phar.fileformat.phartip3">
+   <tip>
+    <para>
+     [3] Somente arquivos tar e zip sem <literal>.phar</literal> em seu
+     nome de arquivo e sem um stub executável <literal>.phar/stub.php</literal>
+     podem ser criados se phar.readonly=1.
+    </para>
+   </tip>
+  </para>
+ </section>
+ <section xml:id="phar.fileformat.tar" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Phars baseados em Tar</title>
+  <para>
+   Arquivos baseados no formato tar seguem o formato de arquivo USTAR
+   mais moderno. O design do cabeçalho do arquivo tar os torna mais eficientes
+   de acessar do que o formato zip e quase tão eficientes quanto o formato phar.
+   Os nomes de arquivo são limitados a 255 bytes, incluindo
+   o caminho completo dentro do arquivo phar. Não há limite para o número de arquivos
+   dentro de um arquivo phar baseado em tar. Esses arquivos podem ser totalmente compactados
+   no formato gzip ou bzip2 e ainda serem executados pela extensão Phar.
+  </para>
+  <para>
+   Há suporte limitado para leitura de tarballs no formato de intercâmbio pax,
+   mas todos os cabeçalhos pax reconhecidos (atualmente, typeflag <literal>x</literal> e
+   <literal>g</literal>) são ignorados silenciosamente.
+   Também há suporte limitado para Arquivos GNU Tar;
+   atualmente, os cabeçalhos <literal>././@LongLink</literal> são resolvidos.
+  </para>
+  <para>
+   Para compactar um arquivo inteiro, use <function>Phar::compress</function>.
+   Para descompactar um arquivo inteiro, use <function>Phar::decompress</function>.
+  </para>
+ </section>
+ <section xml:id="phar.fileformat.zip" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Phars baseados em Zip</title>
+  <para>
+   Arquivos baseados no formato de arquivo zip suportam diversos recursos incorporados
+   ao formato de arquivo zip. Metadados por arquivo e de todo o arquivo são armazenados
+   no comentário do arquivo zip como uma string serializada. Comentários
+   zip pré-existentes serão lidos com sucesso como uma string. A leitura/gravação de compactação
+   por arquivo é suportada com a compactação DEFLATE do zlib, e o acesso de leitura é suportado
+   com a compactação bzip2. Não há limite para o número de arquivos
+   dentro de um arquivo phar baseado em zip. Diretórios vazios são armazenados no arquivo zip
+   como arquivos com uma barra final, como <literal>meu/diretorio/</literal>.
+  </para>
+ </section>
+ <section xml:id="phar.fileformat.phar" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Formato de arquivo phar</title>
+ <para>
+  O formato do arquivo phar é literalmente definido como stub/manifesto/conteúdo/assinatura e
+  armazena as informações cruciais do que está incluído no arquivo phar em seu
+  <literal>manifest</literal>o.
+ </para>
+ <para>
+  O manifesto Phar é um formato altamente otimizado que permite a especificação por arquivo
+  da compactação, das permissões e até mesmo dos metadados
+  definidos pelo usuário, como usuário ou grupo do arquivo. Todos os valores maiores que 1 byte são armazenados
+  na ordem little-endian, com exceção da versão da API, que
+  por razões históricas é armazenada como 3 nibbles na ordem big-endian.
+ </para>
+ <para>
+  Todos os sinalizadores não utilizados são reservados para uso futuro e não devem ser usados
+  para armazenar informações personalizadas. Use o recurso de metadados por arquivo
+  para armazenar informações personalizadas sobre arquivos específicos.
+ </para>
+ <para>
+  O formato básico de arquivo de um manifesto de arquivo Phar é o seguinte:
+ </para>
+ <para>
+ <table>
+  <title>Formato global de manifesto Phar</title>
+  <tgroup cols="2">
+   <thead>
+    <row>
+     <entry>Tamanho em bytes</entry>
+     <entry>Descrição</entry>
+    </row>
+   </thead>
+   <tbody>
+    <row>
+     <entry>4 bytes</entry>
+     <entry>Comprimento do manifesto em bytes (limite de 1 MB)</entry>
+    </row>
+    <row>
+     <entry>4 bytes</entry>
+     <entry>Número de arquivos no Phar</entry>
+    </row>
+    <row>
+     <entry>2 bytes</entry>
+     <entry>Versão da API do manifesto Phar (atualmente 1.0.0)</entry>
+    </row>
+    <row>
+     <entry>4 bytes</entry>
+     <entry>Sinalizadores globais Phar em mapa de bits</entry>
+    </row>
+    <row>
+     <entry>4 bytes</entry>
+     <entry>Comprimento do apelido Phar</entry>
+    </row>
+    <row>
+     <entry>??</entry>
+     <entry>Apelido Phar (comprimento com base no anterior)</entry>
+    </row>
+    <row>
+     <entry>4 bytes</entry>
+     <entry>Comprimento dos metadados Phar (<literal>0</literal> para nenhum)</entry>
+    </row>
+    <row>
+     <entry>??</entry>
+     <entry>Metadados Phar serializados, armazenados no formato <function>serialize</function></entry>
+    </row>
+    <row>
+     <entry>pelo menos 24 * número de bytes de entradas</entry>
+     <entry>entradas para cada arquivo</entry>
+    </row>
+   </tbody>
+  </tgroup>
+ </table>
+ </para>
+</section>
+<section xml:id="phar.fileformat.flags" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Sinalizadores globais Phar em mapa de bits</title>
+ <para>
+  Aqui estão os sinalizadores de mapa de bits atualmente reconhecidos pela extensão Phar
+  para o mapa de bits global Phar:
+ </para>
+ <para>
+  <table>
+   <title>Valores de mapa de bits reconhecidos</title>
+   <tgroup cols="2">
+   <thead>
+    <row>
+     <entry>Valor</entry>
+     <entry>Descrição</entry>
+    </row>
+    </thead>
+    <tbody>
+    <row>
+     <entry><literal>0x00010000</literal></entry>
+      <entry>Se definido, este Phar contém uma assinatura de verificação</entry>
+     </row>
+     <row>
+      <entry><literal>0x00001000</literal></entry>
+      <entry>
+       Se definido, este Phar contém pelo menos 1 arquivo
+       compactado com DEFLATE do zlib
+      </entry>
+     </row>
+     <row>
+      <entry><literal>0x00002000</literal></entry>
+      <entry>
+       Se definido, este Phar contém pelo menos 1 arquivo
+       compactado com bzip2
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </table>
+ </para>
+</section>
+<section xml:id="phar.fileformat.manifestfile" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Definição de entrada do arquivo de manifesto Phar</title>
+ <para>
+  Cada arquivo no manifesto contém as seguintes informações:
+ </para>
+ <para>
+  <table>
+   <title>Entrada no arquivo Phar Manifest</title>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>Tamanho em bytes</entry>
+      <entry>Descrição</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>4 bytes</entry>
+      <entry>Comprimento do nome do arquivo em bytes</entry>
+     </row>
+     <row>
+      <entry>??</entry>
+      <entry>Nome do arquivo (comprimento especificado anteriormente)</entry>
+     </row>
+     <row>
+      <entry>4 bytes</entry>
+      <entry>Tamanho do arquivo não compactado em bytes</entry>
+     </row>
+     <row>
+      <entry>4 bytes</entry>
+      <entry>Timestamp Unix do arquivo</entry>
+     </row>
+     <row>
+      <entry>4 bytes</entry>
+      <entry>Tamanho do arquivo compactado em bytes</entry>
+     </row>
+     <row>
+      <entry>4 bytes</entry>
+      <entry>Soma de verificação CRC32 do conteúdo do arquivo não compactado</entry>
+     </row>
+     <row>
+      <entry>4 bytes</entry>
+      <entry>Sinalizadores específicos de arquivo mapeados em bits</entry>
+     </row>
+     <row>
+      <entry>4 bytes</entry>
+      <entry>Comprimento de metadados de arquivo serializado (<literal>0</literal> para nenhum)</entry>
+     </row>
+     <row>
+      <entry>??</entry>
+      <entry>Metadados de arquivo serializados, armazenados no formato <function>serialize</function></entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </table>
+ </para>
+ <para>
+  Observe que, a partir da versão 1.1.1 da API, diretórios vazios são armazenados como nomes de arquivos
+  com uma barra final como <literal>meu/diretorio/</literal>.
+ </para>
+ <para>
+  Os valores reconhecidos de mapa de bits específicos para arquivo são:
+ </para>
+ <para>
+  <table>
+   <title>Valores reconhecidos de mapa de bits</title>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>Valor</entry>
+      <entry>Descrição</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry><literal>0x000001FF</literal></entry>
+      <entry>
+       Esses bits são reservados para definir permissões específicas
+       de um arquivo. As permissões são usadas para <function>fstat</function>
+       e podem ser usadas para recriar as permissões desejadas na extração.
+      </entry>
+     </row>
+     <row>
+      <entry><literal>0x00001000</literal></entry>
+      <entry>
+       Se definido, este arquivo será compactado com DEFLATE zlib.
+      </entry>
+     </row>
+     <row>
+      <entry><literal>0x00002000</literal></entry>
+      <entry>
+       Se definido, este arquivo será compactado com bzip2.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </table>
+ </para>
+</section>
+<section xml:id="phar.fileformat.signature" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Formato de assinatura Phar</title>
+ <para>
+  Phars que contêm uma assinatura sempre têm a assinatura anexada ao
+  final do arquivo Phar, após o carregador, o manifesto e o conteúdo do arquivo.
+  Os formatos de assinatura suportados no momento são MD5, SHA1, SHA256, SHA512
+  e OPENSSL.
+ </para>
+ <para>
+  <table>
+   <title>Formato de assinatura</title>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>Comprimento em bytes</entry>
+      <entry>Descrição</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>variável</entry>
+      <entry>
+       A assinatura real: 20 bytes para uma assinatura SHA1,
+       16 bytes para uma assinatura MD5, 32 bytes para uma assinatura SHA256
+       e 64 bytes para uma assinatura SHA512. O comprimento de uma assinatura OPENSSL
+       depende do tamanho da chave privada.
+      </entry>
+     </row>
+     <row>
+      <entry>4 bytes</entry>
+      <entry>
+       Sinalizadores de assinatura. <literal>0x0001</literal> é usado para
+       definir uma assinatura MD5, <literal>0x0002</literal> é usado
+       para definir uma assinatura SHA1, <literal>0x0003</literal> é usado
+       para definir uma assinatura SHA256 e <literal>0x0004</literal> é
+       usado para definir uma assinatura SHA512. O suporte às assinaturas SHA256 e SHA512
+       está disponível a partir da versão 1.1.0 da API.
+       <literal>0x0010</literal> é usado para definir uma assinatura OPENSSL,
+       que está disponível a partir da versão 1.1.1 da API, se o OpenSSL estiver disponível.
+      </entry>
+     </row>
+     <row>
+      <entry>4 bytes</entry>
+      <entry>
+       Palavra mágica <literal>GBMB</literal> usada para definir a presença de uma assinatura.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </table>
+ </para>
+</section>
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
