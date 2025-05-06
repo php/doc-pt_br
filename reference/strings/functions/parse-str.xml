@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 45042fef652f1b4e904e809fcbfcf31f6c60670b Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandoc,ae,leonardolara -->
+<!-- EN-Revision: da15b6674ac1900c7d065bd746a04b53d7e963bf Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandoc,ae,leonardolara -->
 <refentry xml:id="function.parse-str" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>parse_str</refname>
-  <refpurpose>Converte a string em variáveis</refpurpose>
+  <refpurpose>Interpreta uma string como uma requisição URL</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
@@ -15,8 +15,9 @@
   </methodsynopsis>
   <para>
    Interpreta <parameter>string</parameter> como se ela fosse uma string de consulta
-   passada via URL e cria variáveis no escopo atual ou no array se
-   informado em <parameter>result</parameter>.
+   passada via URL e define chaves no array informado em <parameter>result</parameter>.
+   Se nenhum parâmetro <parameter>result</parameter> for passado, os valores são
+   definidos como variáveis no escopo atual.
   </para>
  </refsect1>
 
@@ -36,8 +37,10 @@
      <term><parameter>result</parameter></term>
      <listitem>
       <para>
-       Se o segundo parâmetro <parameter>result</parameter> for informado,
-       as variáveis serão gravadas como elementos de array.
+       Uma variável passada por referência, que será definida como um array
+       contendo os pares chave-valor extraídos de <parameter>string</parameter>.
+       Se o parâmetro <parameter>result</parameter> não for passado,
+       uma variável separada será definida no escopo local para cada chave.
       </para>
 
       <warning>
@@ -112,12 +115,13 @@ echo $output['arr'][1], PHP_EOL; // baz
    </example>
   </para>
   <para>
-   Como variáveis no PHP não podem conter pontos ou espaços em seus nomes,
-   estes são convertidos em sublinhados. O mesmo se aplica aos nomes de
-   chaves de array no caso de utilizar esta função com o parâmetro
-   <parameter>result</parameter>.
+   Quaisquer espaços e pontos em nomes de parâmetros são convertidos em sublinhados
+   ao criar chaves de array ou variáveis ​​locais.
+   Isso ocorre porque nomes de variáveis ​​em PHP não podem conter espaços
+   ou pontos, e se aplica mesmo ao usar esta função com o parâmetro
+   <parameter>result</parameter> recomendado.
    <example>
-    <title>Confusão de nomes em <function>parse_str</function></title>
+    <title>Codificação de nomes em <function>parse_str</function></title>
     <programlisting role="php">
 <![CDATA[
 <?php
@@ -135,7 +139,7 @@ echo $output['Meu_Valor']; // Algo
 
   <note>
    <para>
-    <function>parse_str()</function> é afetado pela diretiva <link linkend="ini.max-input-vars">max_input_vars</link>.
+    <function>parse_str</function> é afetada pela diretiva <link linkend="ini.max-input-vars">max_input_vars</link>.
     Exceder esse limite emite um <constant>E_WARNING</constant>,
     e quaisquer variáveis ​​além do limite não são adicionadas ao array de resultados.
     O padrão é 1000; ajuste <link linkend="ini.max-input-vars">max_input_vars</link> conforme necessário.
@@ -144,13 +148,14 @@ echo $output['Meu_Valor']; // Algo
 
   <note>
    <para>
-    Todas as variáveis criadas ou os valores informados no array do segundo parâmetro,
-    já estarão automaticamente convertidos por<function>urldecode</function>.
+    Todos os valores preenchidos no array <parameter>result</parameter>
+    (ou variáveis ​​criadas se o segundo parâmetro não estiver definido)
+    já são decodificados por URL usando as mesmas regras de <function>urldecode</function>.
    </para>
   </note>
   <note>
    <para>
-    Para obter a string de consulta (<literal>QUERY_STRING</literal>) em si, vocẽ pode utilizar a variável
+    Para obter a string de consulta da solicitação atual, pode ser usada a variável
     <varname>$_SERVER['QUERY_STRING']</varname>.
     Além disso, leia a seção sobre
     <link linkend="language.variables.external">variáveis de fontes
