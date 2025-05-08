@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 05579435b4bc64657f0b8313a71b34a504fcb3a4 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xml:id="random-randomizer.nextfloat" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>Random\Randomizer::nextFloat</refname>
+  <refpurpose>Obtém um float do intervalo aberto à direita [0,0, 1,0)</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis role="Random\\Randomizer">
+   <modifier>public</modifier> <type>float</type><methodname>Random\Randomizer::nextFloat</methodname>
+   <void/>
+  </methodsynopsis>
+  <para>
+   Retorna um float uniformemente selecionado e equidistribuído do intervalo aberto à direita
+   de <literal>0.0</literal> até, mas não incluindo,
+   <literal>1.0</literal>.
+  </para>
+
+  <para>
+   A chance de um float retornado estar dentro de um determinado subintervalo aberto à direita
+   é proporcional ao tamanho do subintervalo.
+
+   Isso significa que a chance de um float ser <emphasis>menor que</emphasis> <literal>0.5</literal>
+   é de 50%, o que é igual à chance de um float ser <emphasis>pelo menos</emphasis> <literal>0.5</literal>.
+
+   Da mesma forma, a chance de um float estar dentro do intervalo aberto à direita de
+   <literal>0.2</literal> até, mas não incluindo, <literal>0.25</literal> é
+   exatamente 5%.
+  </para>
+
+  <para>
+   Esta propriedade facilita o uso de <methodname>Random\Randomizer::nextFloat</methodname>
+   para gerar um booleano aleatório com uma determinada chance, verificando se o float retornado é
+   <emphasis>menor que</emphasis> uma determinada chance.
+  </para>
+
+  <note>
+   <para>
+    O domínio dos floats retornáveis ​​de <methodname>Random\Randomizer::nextFloat</methodname>
+    é idêntico ao de <code>Randomizer::getFloat(0.0, 1.0, IntervalBoundary::ClosedOpen)</code>.
+   </para>
+
+   <para>
+    A implementação interna de <methodname>Random\Randomizer::nextFloat</methodname> é mais
+    eficiente.
+   </para>
+  </note>
+
+  <caution>
+   <para>
+    Escalar o valor de retorno para um intervalo diferente usando multiplicação
+    ou adição (a chamada transformação afim) pode resultar em um viés
+    no valor resultante, já que os floats não são igualmente densos na reta numérica.
+    Como nem todos os valores podem ser representados exatamente por um float, o
+    resultado da transformação afim também pode resultar em valores fora
+    do intervalo solicitado devido ao arredondamento implícito.
+
+    Uma <link linkend="random-randomizer.getfloat.affine-transformation">explicação detalhada</link>
+    dos problemas com a transformação afim é fornecida na documentação
+    de <methodname>Random\Randomizer::getFloat</methodname>.
+   </para>
+   <para>
+    Use <methodname>Random\Randomizer::getFloat</methodname> para gerar um
+    float aleatório dentro de um intervalo arbitrário. Use <methodname>Random\Randomizer::getInt</methodname>
+    para gerar um inteiro aleatório dentro de um intervalo arbitrário.
+   </para>
+  </caution>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  &no.function.parameters;
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Um float uniformemente selecionado e equidistribuído do intervalo aberto à direita (<literal>IntervalBoundary::ClosedOpen</literal>)
+   [0,0, 1,0).
+
+   <literal>0.0</literal> é um possível valor de retorno, <literal>1.0</literal> não é.
+  </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <itemizedlist>
+   &random.engineErrors;
+  </itemizedlist>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>Random\Randomizer::nextFloat</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$r = new \Random\Randomizer();
+
+// O booleano resultante será verdadeiro com a chance fornecida.
+$chance = 0.5;
+
+$bool = $r->nextFloat() < $chance;
+
+echo ($bool ? "Você ganhou" : "Você perdeu"), "\n";
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+Você ganhou
+]]>
+   </screen>
+  </example>
+
+  <example>
+   <title>Escala incorreta usando uma transformação afim</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+final class MaxEngine implements Random\Engine {
+    public function generate(): string {
+        return "\xff";
+    }
+}
+
+$randomizer = new \Random\Randomizer(new MaxEngine);
+
+$min = 3.5;
+$max = 4.5;
+
+// NÃO FAÇA ISTO:
+//
+// Isso retornará 4.5, apesar da amostragem nextFloat() de
+// um intervalo aberto à direita, que nunca retornará 1.
+printf("Escala errada: %.17g", $randomizer->nextFloat() * ($max - $min) + $min);
+
+// Correto:
+// $randomizer->getFloat($min, $max, \Random\IntervalBoundary::ClosedOpen);
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+Escala errada: 4.5
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><methodname>Random\Randomizer::getFloat</methodname></member>
+  </simplelist>
+ </refsect1>
+
+</refentry>
+<!--Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

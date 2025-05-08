@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 07b8fdd1f2f54178f57094c12015f0f66a295901 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xml:id="random-randomizer.getfloat" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>Random\Randomizer::getFloat</refname>
+  <refpurpose>Obtém um float selecionado uniformemente</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis role="Random\\Randomizer">
+   <modifier>public</modifier> <type>float</type><methodname>Random\Randomizer::getFloat</methodname>
+   <methodparam><type>float</type><parameter>min</parameter></methodparam>
+   <methodparam><type>float</type><parameter>max</parameter></methodparam>
+   <methodparam choice="opt"><type>Random\IntervalBoundary</type><parameter>boundary</parameter><initializer>Random\IntervalBoundary::ClosedOpen</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   Retorna um float uniformemente selecionado e equidistribuído de um intervalo solicitado.
+  </para>
+  <para>
+   Devido à precisão limitada, nem todos os números reais podem ser representados exatamente como
+   um número de ponto flutuante.
+
+   Se um número não puder ser representado exatamente, ele será arredondado para o
+   valor exato representável mais próximo.
+
+   Além disso, números flutuantes não são igualmente densos em toda a reta numérica.
+
+   Como números flutuantes usam um expoente binário, a distância entre dois números flutuantes vizinhos
+   dobra a cada potência de dois.
+
+   Em outras palavras: há o mesmo número de floats representáveis ​​entre
+   <literal>1.0</literal> e <literal>2.0</literal>
+   como entre
+   <literal>2.0</literal> e <literal>4.0</literal>,
+   <literal>4.0</literal> e <literal>8.0</literal>,
+   <literal>8.0</literal> e <literal>16.0</literal>,
+   e assim por diante.
+  </para>
+  <para>
+   A amostragem aleatória de um número arbitrário dentro do intervalo solicitado, por exemplo,
+   dividindo dois números inteiros, pode resultar em uma distribuição enviesada por esse motivo.
+
+   O arredondamento necessário fará com que alguns números flutuantes sejam retornados com mais frequência do que
+   outros, especialmente em torno de potências de dois quando a densidade de números flutuantes muda.
+  </para>
+  <para>
+   <methodname>Random\Randomizer::getFloat</methodname> implementa um algoritmo que
+   retornará um ponto flutuante selecionado uniformemente do maior conjunto possível de
+   pontos flutuantes exatamente representáveis ​​e equidistribuídos dentro do intervalo solicitado.
+
+   A distância entre os pontos flutuantes selecionáveis ​​("tamanho do passo") corresponde à distância
+   entre os pontos flutuantes com a menor densidade, ou seja, a distância entre os pontos flutuantes
+   no limite do intervalo com o maior valor absoluto.
+
+   Isso significa que nem todos os pontos flutuantes representáveis ​​dentro de um determinado intervalo podem ser
+   retornados se o intervalo cruzar uma ou mais potências de dois.
+
+   O passo a passo começará a partir do limite do intervalo com o maior valor absoluto
+   para garantir que os passos se alinhem com os pontos flutuantes exatamente representáveis.
+  </para>
+  <para>
+   Limites de intervalos fechados sempre serão incluídos no conjunto de floats
+   selecionáveis.
+
+   Portanto, se o tamanho do intervalo não for um múltiplo exato do tamanho do passo e
+   o limite com o menor valor absoluto for um limite fechado, a distância
+   entre esse limite e seu float selecionável mais próximo será menor que o
+   tamanho do passo.
+  </para>
+  <caution>
+   <para>
+    O pós-processamento dos floats retornados provavelmente quebrará a equidistribuição uniforme,
+    porque os floats intermediários dentro de uma operação matemática
+    estão passando por arredondamento implícito.
+
+    O intervalo solicitado deve corresponder o mais próximo possível ao intervalo desejado
+    e o arredondamento só deve ser realizado como uma operação explícita antes
+    de exibir o número selecionado para um usuário.
+   </para>
+  </caution>
+  <refsect2>
+   <title>Explicação do algoritmo usando valores de exemplo</title>
+   <para>
+    Para exemplificar o funcionamento do algoritmo, considere uma representação de ponto flutuante
+    que utiliza uma mantissa de 3 bits.
+
+    Esta representação é capaz de representar 8 valores de ponto flutuante
+    diferentes entre potências de dois consecutivas.
+
+    Isso significa que entre
+    <literal>1.0</literal> e <literal>2.0</literal> todos os passos de tamanho <literal>0.125</literal>
+    são exatamente representáveis ​​e entre <literal>2.0</literal> e <literal>4.0</literal>
+    todos os passos de tamanho <literal>0.25</literal> são exatamente representáveis.
+
+    Na realidade, os floats do PHP utilizam uma mantissa de 52 bits e podem representar 2<superscript>52</superscript>
+    valores diferentes entre cada potência de dois.
+
+    Isso significa que
+    <simplelist><!-- This would benefit from type="inline" -->
+     <member><literal>1.0</literal></member>
+     <member><literal>1.125</literal></member>
+     <member><literal>1.25</literal></member>
+     <member><literal>1.375</literal></member>
+     <member><literal>1.5</literal></member>
+     <member><literal>1.625</literal></member>
+     <member><literal>1.75</literal></member>
+     <member><literal>1.875</literal></member>
+     <member><literal>2.0</literal></member>
+     <member><literal>2.25</literal></member>
+     <member><literal>2.5</literal></member>
+     <member><literal>2.75</literal></member>
+     <member><literal>3.0</literal></member>
+     <member><literal>3.25</literal></member>
+     <member><literal>3.5</literal></member>
+     <member><literal>3.75</literal></member>
+     <member><literal>4.0</literal></member>
+    </simplelist>
+    são os floats exatamente representáveis ​​entre <literal>1.0</literal>
+    e <literal>4.0</literal>.
+   </para>
+   <para>
+    Agora, considere que <code>$randomizer-&gt;getFloat(1.625, 2.5, IntervalBoundary::ClosedOpen)</code>
+    é chamado, ou seja, um float aleatório começando em <literal>1.625</literal> até, mas não incluindo,
+    <literal>2.5</literal> ser solicitado.
+
+    O algoritmo primeiro determina o tamanho do passo na fronteira com o maior valor absoluto
+    (<literal>2.5</literal>). O tamanho do passo nessa fronteira é <literal>0.25</literal>.
+   </para>
+   <para>
+    Observe que o tamanho do intervalo solicitado é <literal>0.875</literal>, que
+    não é um múltiplo exato de <literal>0.25</literal>.
+
+    Se o algoritmo começasse a avançar no limite inferior <literal>1.625</literal>,
+    encontraria <literal>2.125</literal>, que não é exatamente representável e
+    sofreria arredondamento implícito.
+
+    Portanto, o algoritmo começa a avançar no limite superior <literal>2.5</literal>.
+
+    Os valores selecionáveis ​​são:
+    <simplelist>
+     <member><literal>2.25</literal></member>
+     <member><literal>2.0</literal></member>
+     <member><literal>1.75</literal></member>
+     <member><literal>1.625</literal></member>
+    </simplelist>
+
+    <literal>2.5</literal> não está incluído, pois o limite superior do intervalo solicitado
+    é um limite aberto.
+
+    <literal>1.625</literal> está incluído, embora sua distância até o valor mais próximo
+    <literal>1.75</literal> seja <literal>0.125</literal>, que é menor que o
+    tamanho do passo previamente determinado de <literal>0.25</literal>.
+
+    O motivo para isso é que o intervalo solicitado é fechado no limite inferior
+    (<literal>1.625</literal>) e limites fechados são sempre incluídos.
+   </para>
+   <para>
+    Por fim, o algoritmo seleciona uniformemente um dos quatro valores selecionáveis ​​aleatoriamente
+    e o retorna.
+   </para>
+   <refsect3 xml:id="random-randomizer.getfloat.affine-transformation">
+    <title>Por que dividir dois números inteiros não funciona</title>
+    <para>
+     No exemplo anterior, há oito números de ponto flutuante representáveis
+     entre cada subintervalo delimitado por uma potência de dois.
+
+     Para exemplificar por que dividir dois inteiros não funcionaria bem para gerar
+     um número flutuante aleatório, considere que há 16 números de ponto flutuante equidistribuídos
+     no intervalo aberto à direita de <literal>0.0</literal> até, mas não incluindo,
+     <literal>1.0</literal>. Metade deles são os oito valores exatamente representáveis
+     entre <literal>0.5</literal> e <literal>1.0</literal>, a outra metade são os
+     valores entre <literal>0.0</literal> e <literal>1.0</literal> cujo passo
+     é de <literal>0.0625</literal>.
+
+     Eles podem ser facilmente gerados dividindo um número inteiro aleatório entre <literal>0</literal>
+     e <literal>15</literal> por <literal>16</literal> para obter um dos seguintes:
+
+     <simplelist>
+      <member><literal>0.0</literal></member>
+      <member><literal>0.0625</literal></member>
+      <member><literal>0.125</literal></member>
+      <member><literal>0.1875</literal></member>
+      <member><literal>0.25</literal></member>
+      <member><literal>0.3125</literal></member>
+      <member><literal>0.375</literal></member>
+      <member><literal>0.4375</literal></member>
+      <member><literal>0.5</literal></member>
+      <member><literal>0.5625</literal></member>
+      <member><literal>0.625</literal></member>
+      <member><literal>0.6875</literal></member>
+      <member><literal>0.75</literal></member>
+      <member><literal>0.8125</literal></member>
+      <member><literal>0.875</literal></member>
+      <member><literal>0.9375</literal></member>
+     </simplelist>
+    </para>
+    <para>
+     Este float aleatório poderia ser escalado para o intervalo aberto à direita de <literal>1.625</literal>
+     até, mas não incluindo, <literal>2.75</literal>, multiplicando-o pelo tamanho
+     do intervalo (<literal>0.875</literal>) e adicionando o mínimo <literal>1.625</literal>.
+     Essa chamada transformação afim resultaria nos valores:
+
+     <simplelist>
+      <member><literal>1.625</literal> arredondado para <literal>1.625</literal></member>
+      <member><literal>1.679</literal> arredondado para <literal>1.625</literal></member>
+      <member><literal>1.734</literal> arredondado para <literal>1.75</literal></member>
+      <member><literal>1.789</literal> arredondado para <literal>1.75</literal></member>
+      <member><literal>1.843</literal> arredondado para <literal>1.875</literal></member>
+      <member><literal>1.898</literal> arredondado para <literal>1.875</literal></member>
+      <member><literal>1.953</literal> arredondado para <literal>2.0</literal></member>
+      <member><literal>2.007</literal> arredondado para <literal>2.0</literal></member>
+      <member><literal>2.062</literal> arredondado para <literal>2.0</literal></member>
+      <member><literal>2.117</literal> arredondado para <literal>2.0</literal></member>
+      <member><literal>2.171</literal> arredondado para <literal>2.25</literal></member>
+      <member><literal>2.226</literal> arredondado para <literal>2.25</literal></member>
+      <member><literal>2.281</literal> arredondado para <literal>2.25</literal></member>
+      <member><literal>2.335</literal> arredondado para <literal>2.25</literal></member>
+      <member><literal>2.390</literal> arredondado para <literal>2.5</literal></member>
+      <member><literal>2.445</literal> arredondado para <literal>2.5</literal></member>
+     </simplelist>
+
+     Observe como o limite superior de <literal>2.5</literal> seria retornado, apesar de
+     ser um limite aberto e, portanto, excluído.
+
+     Observe também como <literal>2.0</literal> e <literal>2.25</literal> têm o dobro
+     de probabilidade de serem retornados em comparação com os outros valores.
+    </para>
+   </refsect3>
+  </refsect2>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>min</parameter></term>
+     <listitem>
+      <para>
+       O limite inferior do intervalo.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>max</parameter></term>
+     <listitem>
+      <para>
+       O limite superior do intervalo.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>boundary</parameter></term>
+     <listitem>
+      <para>
+       Especifica se os limites do intervalo são valores de retorno possíveis.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Um float uniformemente selecionado e equidistribuído do intervalo especificado por <parameter>min</parameter>,
+   <parameter>max</parameter> e <parameter>boundary</parameter>.
+
+   Se <parameter>min</parameter> e <parameter>max</parameter> são valores de retorno possíveis depende
+   do valor de <parameter>boundary</parameter>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <itemizedlist>
+   <listitem>
+    <simpara>
+     Se o valor de <parameter>min</parameter> não for finito (<function>is_finite</function>),
+     um <classname>ValueError</classname> será gerado.
+    </simpara>
+   </listitem>
+   <listitem>
+    <simpara>
+     Se o valor de <parameter>max</parameter> não for finito (<function>is_finite</function>),
+     um <classname>ValueError</classname> será lançado.
+    </simpara>
+   </listitem>
+   <listitem>
+    <simpara>
+     Se o intervalo solicitado não contiver nenhum valor,
+     um <classname>ValueError</classname> será gerado.
+    </simpara>
+   </listitem>
+   &random.engineErrors;
+  </itemizedlist>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>Random\Randomizer::getFloat</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$randomizer = new \Random\Randomizer();
+
+// Observe que a granularidade da latitude é o dobro da
+// granularidade da longitude.
+//
+// Para a latitude, o valor pode ser -90 e 90.
+// Para a longitude, o valor pode ser 180, mas não -180, porque
+// -180 e 180 referem-se à mesma longitude.
+printf(
+    "Lat: %+.6f Lng: %+.6f",
+    $randomizer->getFloat(-90, 90, \Random\IntervalBoundary::ClosedClosed),
+    $randomizer->getFloat(-180, 180, \Random\IntervalBoundary::OpenClosed),
+);
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+Lat: +69.244304 Lng: -53.548951
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <para>
+    Este método implementa o algoritmo de seção γ, conforme publicado em
+    <link xlink:href="&url.random.gamma-section;">
+     Drawing Random Floating-Point Numbers from an Interval.
+     Frédéric Goualard, ACM Trans. Model. Comput. Simul., 32:3, 2022
+    </link>
+    para obter as propriedades comportamentais desejadas.
+   </para>
+  </note>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><methodname>Random\Randomizer::nextFloat</methodname></member>
+   <member><methodname>Random\Randomizer::getInt</methodname></member>
+  </simplelist>
+ </refsect1>
+
+</refentry>
+<!--Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

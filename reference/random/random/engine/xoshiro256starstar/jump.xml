@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 6756cbedb9c2bf280f54e05dbe6fab00db85d248 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xml:id="random-engine-xoshiro256starstar.jump" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>Random\Engine\Xoshiro256StarStar::jump</refname>
+  <refpurpose>Move o mecanismo com eficiência para frente em passos de 2^128</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis role="Random\\Engine\\Xoshiro256StarStar">
+   <modifier>public</modifier> <type>void</type><methodname>Random\Engine\Xoshiro256StarStar::jump</methodname>
+   <void/>
+  </methodsynopsis>
+  <para>
+   Avança o estado do algoritmo em 2<superscript>128</superscript> passos, como se
+   <function>Random\Engine\Xoshiro256StarStar::generate</function> fosse chamado
+   2<superscript>128</superscript> vezes.
+  </para>
+  <para>
+   O objetivo de um salto é facilitar a criação de um novo mecanismo <classname>Random\Engine\Xoshiro256StarStar</classname>
+   a partir de um mecanismo <classname>Random\Engine\Xoshiro256StarStar</classname> já existente.
+   O mecanismo inicial atua como um projeto, que pode ser <link linkend="language.oop5.cloning">clonado</link>
+   e saltado repetidamente para criar 2<superscript>128</superscript> sequências não sobrepostas com
+   2<superscript>128</superscript> valores cada.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  &no.function.parameters;
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.void;
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <function>Random\Engine\Xoshiro256StarStar::jump</function></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+use Random\Engine\Xoshiro256StarStar;
+use Random\Randomizer;
+
+$blueprintRng = new Xoshiro256StarStar(0);
+
+$fibers = [];
+for ($i = 0; $i < 8; $i++) {
+    $fiberRng = clone $blueprintRng;
+    $blueprintRng->jump();
+
+    $fiber = new Fiber(static function () use ($fiberRng, $i): void {
+        $randomizer = new Randomizer($fiberRng);
+
+        while (true) {
+            Fiber::suspend();
+
+            echo "{$i}: ", $randomizer->getInt(0, 100), "\n";
+        }
+    });
+    $fiber->start();
+
+    $fibers[] = $fiber;
+}
+
+// Mesmo que os Fibers sejam executados em ordem aleatória, eles imprimirão o mesmo valor
+// todas as vezes, porque cada um tem sua própria instância única do RNG.
+$randomizer = new Randomizer();
+
+$fibers = $randomizer->shuffleArray($fibers);
+foreach ($fibers as $fiber) {
+    $fiber->resume();
+}
+
+$fibers = $randomizer->shuffleArray($fibers);
+foreach ($fibers as $fiber) {
+    $fiber->resume();
+}
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+4: 89
+3: 10
+2: 63
+1: 75
+6: 41
+5: 56
+0: 16
+7: 60
+7: 34
+6: 58
+1: 74
+4: 63
+3: 3
+5: 42
+2: 45
+0: 86
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><function>Random\Engine\Xoshiro256StarStar::jumpLong</function></member>
+  </simplelist>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
