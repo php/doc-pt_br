@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: f7e33278a909d7f7bf491f77cb10c93581091736 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xml:id="function.msg-receive" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>msg_receive</refname>
+  <refpurpose>Recebe uma mensagem de uma fila de mensagens</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>bool</type><methodname>msg_receive</methodname>
+   <methodparam><type>SysvMessageQueue</type><parameter>queue</parameter></methodparam>
+   <methodparam><type>int</type><parameter>desired_message_type</parameter></methodparam>
+   <methodparam><type>int</type><parameter role="reference">received_message_type</parameter></methodparam>
+   <methodparam><type>int</type><parameter>max_message_size</parameter></methodparam>
+   <methodparam><type>mixed</type><parameter role="reference">message</parameter></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>unserialize</parameter><initializer>&true;</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>flags</parameter><initializer>0</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter role="reference">error_code</parameter><initializer>&null;</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   <function>msg_receive</function> receberá a primeira mensagem da
+   fila <parameter>queue</parameter> especificada, do tipo especificado por
+   <parameter>desired_message_type</parameter>.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>queue</parameter></term>
+     <listitem>
+      <para>
+       A fila de mensagens.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>desired_message_type</parameter></term>
+     <listitem>
+      <para>
+       Se <parameter>desired_message_type</parameter> for 0, a mensagem do início
+       da fila será retornada. Se <parameter>desired_message_type</parameter> for
+       maior que 0, a primeira mensagem desse tipo será retornada.
+       Se <parameter>desired_message_type</parameter> for menor que 0, a primeira
+       mensagem na fila com um tipo menor ou igual ao
+       valor absoluto de <parameter>desired_message_type</parameter> será lida.
+       Se nenhuma mensagem corresponder aos critérios, seu script aguardará até que uma
+       mensagem adequada chegue à fila. Pode-se impedir que o script bloqueie
+       especificando <constant>MSG_IPC_NOWAIT</constant> no
+       parâmetro <parameter>flags</parameter>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>received_message_type</parameter></term>
+     <listitem>
+      <para>
+       O tipo de mensagem recebida será armazenado neste
+       parâmetro.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>max_message_size</parameter></term>
+     <listitem>
+      <para>
+       O tamanho máximo da mensagem a ser aceita é especificado pelo
+       <parameter>max_message_size</parameter>; se a mensagem na fila for maior
+       que esse tamanho, a função falhará (a menos que se defina
+       <parameter>flags</parameter> conforme descrito abaixo).
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>message</parameter></term>
+     <listitem>
+      <para>
+       A mensagem recebida será armazenada em <parameter>message</parameter>,
+       a menos que tenham ocorridos erros no recebimento da mensagem.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>unserialize</parameter></term>
+     <listitem>
+      <para>
+       Se definido como
+       &true;, a mensagem será tratada como se tivesse sido serializada usando o
+       mesmo mecanismo do módulo de sessão. A mensagem será desserializada
+       e então retornada ao script. Isso permite que se receba facilmente
+       arrays ou estruturas de objetos complexas de outros scripts PHP, ou se
+       estiver sendo usado o serializador WDDX, de qualquer fonte compatível com WDDX.
+      </para>
+      <para>
+       Se <parameter>unserialize</parameter> for &false;, a mensagem será
+       retornada como uma string binária segura.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>flags</parameter></term>
+     <listitem>
+      <para>
+       O parâmetro opcional <parameter>flags</parameter> permite que sejam passados sinalizadores para a
+       chamada de sistema msgrcv de baixo nível. O padrão é 0, mas pode-se especificar um
+       ou mais dos seguintes valores (adicionando-os ou usando OR).
+       <table>
+        <title>Valores de sinalizadores para msg_receive</title>
+        <tgroup cols="2">
+         <tbody>
+          <row>
+           <entry><constant>MSG_IPC_NOWAIT</constant></entry>
+           <entry>Se não houver mensagens de
+           <parameter>desired_message_type</parameter>, retorna imediatamente e não
+           espera. A função falhará e retornará um valor inteiro
+           correspondente a <constant>MSG_ENOMSG</constant>.
+           </entry>
+          </row>
+          <row>
+           <entry><constant>MSG_EXCEPT</constant></entry>
+           <entry>Usar este sinalizador em combinação com um
+            <parameter>desired_message_type</parameter> maior que 0 fará com que a
+            função receba a primeira mensagem que não seja igual a
+            <parameter>desired_message_type</parameter>.</entry>
+          </row>
+          <row>
+           <entry><constant>MSG_NOERROR</constant></entry>
+           <entry>
+            Se a mensagem for maior que <parameter>max_message_size</parameter>,
+            definir este sinalizador truncará a mensagem para
+            <parameter>max_message_size</parameter> e não sinalizará um erro.
+           </entry>
+          </row>
+         </tbody>
+        </tgroup>
+       </table>
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>error_code</parameter></term>
+     <listitem>
+      <para>
+       Se a função falhar, o parâmetro opcional <parameter>error_code</parameter>
+       será definido como o valor da variável "errno" do sistema.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.success;
+  </para>
+  <para>
+   Após a conclusão bem-sucedida, a estrutura de dados da fila de mensagens é atualizada
+   da seguinte forma: <literal>msg_lrpid</literal> é definido como o ID do
+   processo do processo chamador, <literal>msg_qnum</literal> é decrementado em 1 e
+   <literal>msg_rtime</literal> é definido como a hora atual.
+  </para>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>8.0.0</entry>
+       <entry>
+        <parameter>queue</parameter> espera uma instância de <classname>SysvMessageQueue</classname>
+        agora; anteriormente, um <type>resource</type> era esperado.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>msg_remove_queue</function></member>
+    <member><function>msg_send</function></member>
+    <member><function>msg_stat_queue</function></member>
+    <member><function>msg_set_queue</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
