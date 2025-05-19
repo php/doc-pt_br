@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 888d70d7d21713f7f52d497e627543dfb41fc103 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xml:id="snmp.walk" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>SNMP::walk</refname>
+  <refpurpose>Busca subárvore de objetos <acronym>SNMP</acronym></refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+
+  <methodsynopsis role="SNMP">
+   <modifier>public</modifier> <type class="union"><type>array</type><type>false</type></type><methodname>SNMP::walk</methodname>
+   <methodparam><type class="union"><type>array</type><type>string</type></type><parameter>objectId</parameter></methodparam>
+   <methodparam choice="opt"><type>bool</type><parameter>suffixAsKey</parameter><initializer>&false;</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>maxRepetitions</parameter><initializer>-1</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>nonRepeaters</parameter><initializer>-1</initializer></methodparam>
+  </methodsynopsis>
+  <para>
+   <methodname>SNMP::walk</methodname> é usado para ler a subárvore <acronym>SNMP</acronym> com raiz no <parameter>objectId</parameter> especificado.
+  </para>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <variablelist>
+   <varlistentry>
+    <term><parameter>objectId</parameter></term>
+    <listitem>
+     <para>
+      Raiz da subárvore a ser buscada
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><parameter>suffixAsKey</parameter></term>
+    <listitem>
+     <para>
+      Por padrão, a notação OID completa é usada para chaves no array de saída.
+      Se definido como &true;, o prefixo da subárvore será removido das chaves, deixando apenas o sufixo do object_id.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><parameter>nonRepeaters</parameter></term>
+    <listitem>
+     <para>
+      Especifica o número de variáveis ​​fornecidas que não devem ser iteradas.
+      O padrão é usar este valor a partir do objeto <acronym>SNMP</acronym>.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><parameter>maxRepetitions</parameter></term>
+    <listitem>
+     <para>
+      Especifica o número máximo de iterações sobre as variáveis ​​repetidas.
+      O padrão é usar este valor a partir do objeto <acronym>SNMP</acronym>.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   Retorna um array associativo dos IDs de objetos <acronym>SNMP</acronym> e seus valores em caso de sucesso ou &false; em caso de erro.
+   Quando ocorre um erro <acronym>SNMP</acronym>, <methodname>SNMP::getErrno</methodname> e
+   <methodname>SNMP::getError</methodname> podem ser usados ​​para recuperar o número do erro
+   (específico para a extensão SNMP, consulte as constantes de classe) e a mensagem de erro
+   respectivamente.
+  </para>
+ </refsect1>
+
+ &snmp.methods.exceptions_enable.refsect;
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example xml:id="snmp.walk.example.basic">
+   <title>Exemplo de <methodname>SNMP::walk</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+  $session = new SNMP(SNMP::VERSION_1, "127.0.0.1", "public");
+  $fulltree = $session->walk(".");
+  print_r($fulltree);
+  $session->close();
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+Array
+(
+    [SNMPv2-MIB::sysDescr.0] => STRING: Test server
+    [SNMPv2-MIB::sysObjectID.0] => OID: NET-SNMP-MIB::netSnmpAgentOIDs.8
+    [DISMAN-EVENT-MIB::sysUpTimeInstance] => Timeticks: (1150681750) 133 days, 4:20:17.50
+    [SNMPv2-MIB::sysContact.0] => STRING: Nobody
+    [SNMPv2-MIB::sysName.0] => STRING: server.localdomain
+    ...
+)
+]]>
+   </screen>
+  </example>
+  <example xml:id="snmp.walk.example.suffix-as-key">
+   <title>Exemplo de <parameter>suffixAsKey</parameter></title>
+   <para>
+     <parameter>suffixAsKey</parameter> pode ser usado ao mesclar várias subárvores <acronym>SNMP</acronym> em uma.
+     Este exemplo mapeia nomes de interface para seus tipos.
+   </para>
+   <programlisting role="php">
+<![CDATA[
+<?php
+  $session = new SNMP(SNMP::VERSION_1, "127.0.0.1", "public");
+  $session->valueretrieval = SNMP_VALUE_PLAIN;
+  $ifDescr = $session->walk(".1.3.6.1.2.1.2.2.1.2", TRUE);
+  $session->valueretrieval = SNMP_VALUE_LIBRARY;
+  $ifType = $session->walk(".1.3.6.1.2.1.2.2.1.3", TRUE);
+  print_r($ifDescr);
+  print_r($ifType);
+  $result = array();
+  foreach($ifDescr as $i => $n) {
+    $result[$n] = $ifType[$i];
+  }
+  print_r($result);
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+Array
+(
+    [1] => igb0
+    [2] => igb1
+    [3] => ipfw0
+    [4] => lo0
+    [5] => lagg0
+)
+Array
+(
+    [1] => INTEGER: ieee8023adLag(161)
+    [2] => INTEGER: ieee8023adLag(161)
+    [3] => INTEGER: ethernetCsmacd(6)
+    [4] => INTEGER: softwareLoopback(24)
+    [5] => INTEGER: ethernetCsmacd(6)
+)
+Array
+(
+    [igb0] => INTEGER: ieee8023adLag(161)
+    [igb1] => INTEGER: ieee8023adLag(161)
+    [ipfw0] => INTEGER: ethernetCsmacd(6)
+    [lo0] => INTEGER: softwareLoopback(24)
+    [lagg0] => INTEGER: ethernetCsmacd(6)
+)
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><methodname>SNMP::getErrno</methodname></member>
+   <member><methodname>SNMP::getError</methodname></member>
+  </simplelist>
+ </refsect1>
+
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
