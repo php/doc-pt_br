@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<refentry xml:id="function.yaz-scan" xmlns="http://docbook.org/ns/docbook">
+ <refnamediv>
+  <refname>yaz_scan</refname>
+  <refpurpose>Prepara para uma varredura</refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>void</type><methodname>yaz_scan</methodname>
+   <methodparam><type>resource</type><parameter>id</parameter></methodparam>
+   <methodparam><type>string</type><parameter>type</parameter></methodparam>
+   <methodparam><type>string</type><parameter>startterm</parameter></methodparam>
+   <methodparam choice="opt"><type>array</type><parameter>flags</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+   Esta função prepara para uma Solicitação de Varredura Z39.50 na conexão
+   especificada.
+  </para>
+  <para>
+   Para transferir a Solicitação de Varredura para o servidor e receber a
+   Resposta de Varredura, <function>yaz_wait</function> deve ser chamada. Após
+   a conclusão de <function>yaz_wait</function>, chame
+   <function>yaz_error</function> e <function>yaz_scan_result</function> para
+   manipular a resposta.
+  </para>
+ </refsect1>
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>id</parameter></term>
+     <listitem>
+      <para>
+       O recurso de conexão retornado por <function>yaz_connect</function>.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>type</parameter></term>
+     <listitem>
+      <para>
+       Atualmente, somente o tipo <literal>rpn</literal> é suportado.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>startterm</parameter></term>
+     <listitem>
+      <para>
+       Ponto inicial do termo para a varredura.
+      </para>
+      <para>
+       A forma como o termo inicial é especificado é dada pelo parâmetro
+       <parameter>type</parameter>.
+      </para>
+      <para>
+       A sintaxe deste parâmetro é semelhante à da consulta RPN, conforme descrito em
+       <function>yaz_search</function>. Consiste em zero ou mais especificações do
+       operador <literal>@attr</literal>, seguidas por
+       exatamente um token.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>flags</parameter></term>
+     <listitem>
+      <para>
+       Este parâmetro opcional especifica informações adicionais para controlar
+       o comportamento da solicitação de varredura. Três índices são lidos atualmente
+       deste array de sinalizadores:
+       <literal>number</literal> (número de termos solicitados),
+       <literal>position</literal> (posição preferencial do termo) e
+       <literal>stepSize</literal> (tamanho preferencial do passo).
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+   &return.void;
+  </para>
+ </refsect1>
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Função PHP que verifica títulos</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+function scan_titles($id, $startterm)
+{
+  yaz_scan($id, "rpn", "@attr 1=4 " . $startterm);
+  yaz_wait();
+  $errno = yaz_errno($id);
+  if ($errno == 0) {
+    $ar = yaz_scan_result($id, $options);
+    echo 'Scan ok; ';
+    foreach ($options as $key => $val) {
+      echo "$key = $val &nbsp;";
+    }
+    echo '<br /><table>';
+    while (list($key, list($k, $term, $tcount)) = each($ar)) {
+      if (empty($k)) continue;
+      echo "<tr><td>$term</td><td>$tcount</td></tr>";
+    }
+    echo '</table>';
+  } else {
+    echo "Scan failed. Error: " . yaz_error($id) . "<br />";
+  }
+}
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
