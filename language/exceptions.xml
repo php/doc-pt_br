@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 402a72776804fbb74ec5c4cad72d4c7b6cdd5b2d Maintainer: leonardolara Status: ready --><!-- CREDITS: narigone,felipe,ae,geekcom,leonardolara -->
+<!-- EN-Revision: ed956d714e3fcf42b90c23777b0eb105c681b97c Maintainer: leonardolara Status: ready --><!-- CREDITS: narigone,felipe,ae,geekcom,leonardolara -->
 <chapter xml:id="language.exceptions" xmlns="http://docbook.org/ns/docbook">
  <title>Exceções</title>
  <para>
@@ -78,6 +78,12 @@
     no ponto que é encontrada, mas o resultado só será retornado após o bloco &finally;
     ser executado. Se o bloco &finally; também tiver uma instrução &return;,
     o valor da instrução de &finally; que será retornado.
+   </para>
+   <para>
+    Outra interação notável é entre uma exceção lançada de dentro de um bloco &try;
+    e uma lançada de dentro de um bloco &finally;. Se ambos os blocos lançarem uma exceção,
+    a que for lançada de dentro do bloco &finally; será a propagada,
+    e a lançada de dentro do bloco &try; será usada como sua exceção anterior.
    </para>
   </sect1>
 
@@ -359,6 +365,38 @@ try {
     <screen>
 <![CDATA[
 Não funcionou
+]]>
+    </screen>
+   </example>
+   <example>
+    <title>Exceção em bloco try e bloco finally</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+try {
+    try {
+        throw new Exception(message: 'Terceira', previous: new Exception('Quarta'));
+    } finally {
+        throw new Exception(message: 'Primeira', previous: new Exception('Segunda'));
+    }
+} catch (Exception $e) {
+    var_dump(
+        $e->getMessage(),
+        $e->getPrevious()->getMessage(),
+        $e->getPrevious()->getPrevious()->getMessage(),
+        $e->getPrevious()->getPrevious()->getPrevious()->getMessage(),
+    );
+}
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+string(5) "Primeira"
+string(6) "Segunda"
+string(5) "Terceira"
+string(6) "Quarta"
 ]]>
     </screen>
    </example>
