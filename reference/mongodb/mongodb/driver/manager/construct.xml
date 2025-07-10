@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 4639881688d3faaf0073ad71fe0a4b730aea15a0 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: 7ba4efc7524c06343c6e9f1fc2b10f91cfdfd945 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 
 <refentry xml:id="mongodb-driver-manager.construct" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
@@ -636,7 +636,7 @@ mongodb://[usuário:senha@]servidor1[:porta1][,servidor2[:porta2],...[,servidorN
           <entry>
            <para>
             Fornece opções para ativar a criptografia automática em nível de campo
-            do lado do cliente.
+            do lado do cliente. A lista de opções está descrita na <link linkend="mongodb-driver-manager.construct-autoencryption">tabela abaixo</link>.
            </para>
            <note>
             <para>
@@ -658,142 +658,6 @@ mongodb://[usuário:senha@]servidor1[:porta1][,servidor2[:porta2],...[,servidorN
              recurso da versão Community. O driver ainda pode descriptografar automaticamente quando
              <literal>bypassAutoEncryption</literal> for igual a &true;.
             </para>
-           </note>
-           <para>
-            As seguintes opções são suportadas:
-
-            <table>
-             <title>Opções para criptografia automática</title>
-             <tgroup cols="3">
-              <thead>
-               <row>
-                <entry>Opção</entry>
-                <entry>Tipo</entry>
-                <entry>Descrição</entry>
-               </row>
-              </thead>
-              <tbody>
-               &mongodb.option.encryption.keyVaultClient;
-               &mongodb.option.encryption.keyVaultNamespace;
-               &mongodb.option.encryption.kmsProviders;
-               &mongodb.option.encryption.tlsOptions;
-               <row>
-                <entry>schemaMap</entry>
-                <entry><type class="union"><type>array</type><type>object</type></type></entry>
-                <entry>
-                 <para>
-                  Mapa de espaços de nomes de coleção para um esquema JSON local. Isso é
-                  usado para configurar a criptografia automática. Consulte
-                  <link xlink:href="&url.mongodb.docs;reference/security-client-side-automatic-json-schema/">Regras de criptografia automática</link>
-                  no manual do MongoDB para obter mais informações. É um erro
-                  especificar uma coleção em <literal>schemaMap</literal> e
-                  em <literal>encryptedFieldsMap</literal> ao mesmo tempo.
-                 </para>
-                 <note>
-                  <simpara>
-                   Fornecer um <literal>schemaMap</literal> oferece mais
-                   segurança do que confiar em esquemas JSON obtidos do
-                   servidor. Ele protege contra um servidor malicioso que anuncia um
-                   esquema JSON falso, que poderia induzir o cliente a enviar
-                   dados não criptografados que deveriam estar criptografados.
-                  </simpara>
-                 </note>
-                 <note>
-                  <simpara>
-                   Os esquemas fornecidos no <literal>schemaMap</literal> aplicam-se
-                   apenas à configuração da criptografia automática para criptografia do lado do
-                   cliente. Outras regras de validação no esquema JSON não
-                   serão aplicadas pelo driver e resultarão em erro.
-                  </simpara>
-                 </note>
-                </entry>
-               </row>
-               <row>
-                <entry>bypassAutoEncryption</entry>
-                <entry><type>bool</type></entry>
-                <entry>
-                 Se &true;, <literal>mongocryptd</literal> não será executado
-                 automaticamente. Isso é usado para desativar a criptografia automática.
-                 O padrão é &false;.
-                </entry>
-               </row>
-               <row>
-                <entry>bypassQueryAnalysis</entry>
-                <entry><type>bool</type></entry>
-                <entry>
-                 <para>
-                  Se &true;, a análise automática dos comandos enviados será
-                  desativada e o <literal>mongocryptd</literal> não será
-                  executado automaticamente. Isso permite o caso de uso de criptografia
-                  explícita para consultar campos indexados sem exigir a
-                  biblioteca <literal>crypt_shared</literal> licenciada pela versão Enterprise ou
-                  o processo <literal>mongocryptd</literal>. O padrão é &false;.
-                 </para>
-                </entry>
-               </row>
-               <row>
-                <entry>encryptedFieldsMap</entry>
-                <entry><type class="union"><type>array</type><type>object</type></type></entry>
-                <entry>
-                 <para>
-                  Mapa de espaçoes de nomes de coleção para um
-                  documento <literal>encryptedFields</literal>. Isso é usado para
-                  configurar a criptografia consultável. Consulte
-                  <link xlink:href="&url.mongodb.docs;core/queryable-encryption/fundamentals/encrypt-and-query/">Criptografia de campo e consultabilidade</link>
-                  no manual do MongoDB para obter mais informações. É um erro
-                  especificar uma coleção em
-                  <literal>encryptedFieldsMap</literal> e
-                  em <literal>schemaMap</literal> ao mesmo tempo.
-                 </para>
-                 <note>
-                  <simpara>
-                   Fornecer um <literal>encryptedFieldsMap</literal> fornece
-                   mais segurança do que confiar em um
-                   <literal>encryptedFields</literal> obtido do servidor.
-                   Ele protege contra um servidor malicioso que anuncia um
-                   <literal>encryptedFields</literal> falso.
-                  </simpara>
-                 </note>
-                </entry>
-               </row>
-               <row>
-                <entry>extraOptions</entry>
-                <entry><type>array</type></entry>
-                <entry>
-                 <para>
-                  As <literal>extraOptions</literal> estão relacionadas ao
-                  processo <literal>mongocryptd</literal>. As seguintes opções
-                  são suportadas:
-                 </para>
-                 <simplelist>
-                  <member><literal>mongocryptdURI</literal> (<type>string</type>): URI para conectar-se a um processo <literal>mongocryptd</literal> existente. O padrão é <literal>"mongodb://localhost:27020"</literal>.</member>
-                  <member><literal>mongocryptdBypassSpawn</literal> (<type>bool</type>): Se &true;, evita que o driver execute o <literal>mongocryptd</literal>. O padrão é &false;.</member>
-                  <member><literal>mongocryptdSpawnPath</literal> (<type>string</type>): Caminho absoluto para procurar o binário <literal>mongocryptd</literal>. O padrão é uma string vazia e consulta os caminhos do sistema.</member>
-                  <member><literal>mongocryptdSpawnArgs</literal> (<type>array</type>): Array de argumentos de string para passar para <literal>mongocryptd</literal> durante a execução. O padrão é <literal>["--idleShutdownTimeoutSecs=60"]</literal>.</member>
-                  <member><literal>cryptSharedLibPath</literal> (<type>string</type>): Caminho absoluto para a biblioteca compartilhada <literal>crypt_shared</literal>. O padrão é uma string vazia e consulta os caminhos do sistema.</member>
-                  <member><literal>cryptSharedLibRequired</literal> (<type>bool</type>): Se &true;, exige que o driver carregue <literal>crypt_shared</literal>. O padrão é &false;.</member>
-                 </simplelist>
-                 <para>
-                  Consulte a <link xlink:href="&url.mongodb.specs;/blob/master/source/client-side-encryption/client-side-encryption.rst#extraoptions">Especificação de criptografia do lado do cliente</link> para obter mais informações.
-                 </para>
-                </entry>
-               </row>
-              </tbody>
-             </tgroup>
-            </table>
-           </para>
-
-           <note>
-            <simpara>
-             A criptografia automática é um recurso exclusivamente da versçao "enterprise" que se aplica
-             apenas a operações em uma coleção. A criptografia automática não é
-             suportada para operações em um banco de dados ou visualização, e as operações que
-             não são ignoradas resultarão em erro. Para ignorar a criptografia
-             automática para todas as operações, defina <literal>bypassAutoEncryption=true</literal>
-             em <literal>autoEncryption</literal>. Para obter mais informações sobre
-             operações permitidas, consulte
-             <link xlink:href="&url.mongodb.specs;/blob/master/source/client-side-encryption/client-side-encryption.rst#libmongocrypt-auto-encryption-whitelist">Especificação de criptografia do lado do cliente</link>.
-            </simpara>
            </note>
           </entry>
          </row>
@@ -864,6 +728,140 @@ mongodb://[usuário:senha@]servidor1[:porta1][,servidor2[:porta2],...[,servidorN
         </tbody>
        </tgroup>
       </table>
+     </para>
+     <para xml:id="mongodb-driver-manager.construct-autoencryption">
+      Opções suportadas pela criptografia automática através da opção <literal>autoEncryption</literal> do driver:
+      <table>
+       <title>Opções para criptografia automática</title>
+       <tgroup cols="3">
+        <thead>
+         <row>
+          <entry>Opção</entry>
+          <entry>Tipo</entry>
+          <entry>Descrição</entry>
+         </row>
+        </thead>
+        <tbody>
+         &mongodb.option.encryption.keyVaultClient;
+         &mongodb.option.encryption.keyVaultNamespace;
+         &mongodb.option.encryption.kmsProviders;
+         &mongodb.option.encryption.tlsOptions;
+         <row>
+          <entry>schemaMap</entry>
+          <entry><type class="union"><type>array</type><type>object</type></type></entry>
+          <entry>
+           <para>
+            Mapa de espaços de nomes de coleção para um esquema JSON local. Isso é
+            usado para configurar a criptografia automática. Consulte
+            <link xlink:href="&url.mongodb.docs;reference/security-client-side-automatic-json-schema/">Regras de criptografia automática</link>
+            no manual do MongoDB para obter mais informações. É um erro
+            especificar uma coleção em <literal>schemaMap</literal> e
+            em <literal>encryptedFieldsMap</literal> ao mesmo tempo.
+           </para>
+           <note>
+            <simpara>
+             Fornecer um <literal>schemaMap</literal> oferece mais
+             segurança do que confiar em esquemas JSON obtidos do
+             servidor. Ele protege contra um servidor malicioso que anuncia um
+             esquema JSON falso, que poderia induzir o cliente a enviar
+             dados não criptografados que deveriam estar criptografados.
+            </simpara>
+           </note>
+           <note>
+            <simpara>
+             Os esquemas fornecidos no <literal>schemaMap</literal> aplicam-se
+             apenas à configuração da criptografia automática para criptografia do lado do
+             cliente. Outras regras de validação no esquema JSON não
+             serão aplicadas pelo driver e resultarão em erro.
+            </simpara>
+           </note>
+          </entry>
+         </row>
+         <row>
+          <entry>bypassAutoEncryption</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           Se &true;, <literal>mongocryptd</literal> não será executado
+           automaticamente. Isso é usado para desativar a criptografia automática.
+           O padrão é &false;.
+          </entry>
+         </row>
+         <row>
+          <entry>bypassQueryAnalysis</entry>
+          <entry><type>bool</type></entry>
+          <entry>
+           <para>
+            Se &true;, a análise automática dos comandos enviados será
+            desativada e o <literal>mongocryptd</literal> não será
+            executado automaticamente. Isso permite o caso de uso de criptografia
+            explícita para consultar campos indexados sem exigir a
+            biblioteca <literal>crypt_shared</literal> licenciada pela versão Enterprise ou
+            o processo <literal>mongocryptd</literal>. O padrão é &false;.
+           </para>
+          </entry>
+         </row>
+         <row>
+          <entry>encryptedFieldsMap</entry>
+          <entry><type class="union"><type>array</type><type>object</type></type></entry>
+          <entry>
+           <para>
+            Mapa de espaçoes de nomes de coleção para um
+            documento <literal>encryptedFields</literal>. Isso é usado para
+            configurar a criptografia consultável. Consulte
+            <link xlink:href="&url.mongodb.docs;core/queryable-encryption/fundamentals/encrypt-and-query/">Criptografia de campo e consultabilidade</link>
+            no manual do MongoDB para obter mais informações. É um erro
+            especificar uma coleção em
+            <literal>encryptedFieldsMap</literal> e
+            em <literal>schemaMap</literal> ao mesmo tempo.
+           </para>
+           <note>
+            <simpara>
+             Fornecer um <literal>encryptedFieldsMap</literal> fornece
+             mais segurança do que confiar em um
+             <literal>encryptedFields</literal> obtido do servidor.
+             Ele protege contra um servidor malicioso que anuncia um
+             <literal>encryptedFields</literal> falso.
+            </simpara>
+           </note>
+          </entry>
+         </row>
+         <row>
+          <entry>extraOptions</entry>
+          <entry><type>array</type></entry>
+          <entry>
+           <para>
+            As <literal>extraOptions</literal> estão relacionadas ao
+            processo <literal>mongocryptd</literal>. As seguintes opções
+            são suportadas:
+           </para>
+           <simplelist>
+            <member><literal>mongocryptdURI</literal> (<type>string</type>): URI para conectar-se a um processo <literal>mongocryptd</literal> existente. O padrão é <literal>"mongodb://localhost:27020"</literal>.</member>
+            <member><literal>mongocryptdBypassSpawn</literal> (<type>bool</type>): Se &true;, evita que o driver execute o <literal>mongocryptd</literal>. O padrão é &false;.</member>
+            <member><literal>mongocryptdSpawnPath</literal> (<type>string</type>): Caminho absoluto para procurar o binário <literal>mongocryptd</literal>. O padrão é uma string vazia e consulta os caminhos do sistema.</member>
+            <member><literal>mongocryptdSpawnArgs</literal> (<type>array</type>): Array de argumentos de string para passar para <literal>mongocryptd</literal> durante a execução. O padrão é <literal>["--idleShutdownTimeoutSecs=60"]</literal>.</member>
+            <member><literal>cryptSharedLibPath</literal> (<type>string</type>): Caminho absoluto para a biblioteca compartilhada <literal>crypt_shared</literal>. O padrão é uma string vazia e consulta os caminhos do sistema.</member>
+            <member><literal>cryptSharedLibRequired</literal> (<type>bool</type>): Se &true;, exige que o driver carregue <literal>crypt_shared</literal>. O padrão é &false;.</member>
+           </simplelist>
+           <para>
+            Consulte a <link xlink:href="&url.mongodb.specs;/blob/master/source/client-side-encryption/client-side-encryption.rst#extraoptions">Especificação de criptografia do lado do cliente</link> para obter mais informações.
+           </para>
+          </entry>
+         </row>
+        </tbody>
+       </tgroup>
+      </table>
+      <note>
+       <simpara>
+        A criptografia automática é um recurso exclusivo da versão "enterprise" que se aplica
+        apenas a operações em uma coleção. A criptografia automática não é
+        suportada para operações em um banco de dados ou visualização, e as operações que
+        não são ignoradas resultarão em erro. Para ignorar a criptografia
+        automática para todas as operações, defina <literal>bypassAutoEncryption=true</literal>
+        em <literal>autoEncryption</literal>. Para obter mais informações sobre
+        operações permitidas, consulte
+        <link xlink:href="&url.mongodb.specs;/blob/master/source/client-side-encryption/client-side-encryption.rst#libmongocrypt-auto-encryption-whitelist">Especificação de criptografia do lado do cliente</link>.
+       </simpara>
+      </note>
      </para>
     </listitem>
    </varlistentry>
