@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 2946c8a267734a9e8696e1764f7436e6caa8909c Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<sect1 xml:id="language.operators.functional">
+ <title>Operadores Funcionais</title>
+ <titleabbrev>Funcional</titleabbrev>
+ <para>
+  O PHP 8.5 e versões posteriores suportam um operador que funciona diretamente em chamáveis. O operador <literal>|></literal>,
+  ou "pipe", aceita um chamável de parâmetro único à direita e passa
+  o valor do lado esquerdo para ele, avaliando o resultado do chamável. O chamável
+  à direita pode ser qualquer chamável PHP válido: um <classname>Closure</classname>,
+  um <link linkend="functions.first_class_callable_syntax">chamável de primeira classe</link>,
+  um objeto que implementa <link linkend="object.invoke">__invoke()</link>, etc.
+ </para>
+ <para>
+  Isso significa que as duas linhas seguintes são logicamente equivalentes.
+  <example>
+   <title>Usando <literal>|></literal></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$result = "Hello World" |> strlen(...);
+print $result . PHP_EOL;
+
+$result = strlen("Hello World");
+print $result . PHP_EOL;
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+11
+11
+]]>
+   </screen>
+  </example>
+ </para>
+ <para>
+  Para uma única chamada, isso não é muito útil. Torna-se útil quando várias chamadas são encadeadas.
+  Ou seja, os dois fragmentos de código a seguir são logicamente equivalentes:
+  <example>
+   <title>Encadeando chamadas com |></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$result = "PHP Rocks"
+    |> htmlentities(...)
+    |> str_split(...)
+    |> (fn($x) => array_map(strtoupper(...), $x))
+    |> (fn($x) => array_filter($x, fn($v) => $v != 'O'))
+;
+print $result . PHP_EOL;
+
+$temp = "PHP Rocks";
+$temp = htmlentities($temp);
+$temp = str_split($temp);
+$temp = array_map(strtoupper(...), $temp);
+$temp = array_filter($temp, fn($v) => $v != 'O');
+$result = $temp;
+print $result . PHP_EOL;
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+Array
+(
+    [0] => P
+    [1] => H
+    [2] => P
+    [3] =>
+    [4] => R
+    [6] => C
+    [7] => K
+    [8] => S
+)
+Array
+(
+    [0] => P
+    [1] => H
+    [2] => P
+    [3] =>
+    [4] => R
+    [6] => C
+    [7] => K
+    [8] => S
+)
+]]>
+   </screen>
+  </example>
+ </para>
+ <para>
+  O lado esquerdo do pipe pode ser qualquer valor ou expressão. O lado direito
+  pode ser qualquer chamável PHP válido que receba um único parâmetro, ou qualquer expressão
+  que seja avaliado como tal chamável. Funções com mais de um parâmetro obrigatório
+  não são permitidas e falharão como se fossem chamadas normalmente
+  com argumentos insuficientes. Funções que recebem uma variável por referência não são permitidas.
+  Se o lado direito não for avaliado como um chamável válido, será gerado um erro.
+ </para>
+ <note>
+  <para>
+   Esteja ciente de que, para evitar ambiguidade de sintaxe, <link linkend="functions.arrow">funções de seta</link>
+   PRECISAM ser colocadas entre parênteses quando usadas com um operador de pipe, como nos exemplos acima.
+   Caso contrário, ocorrerá um erro fatal.
+  </para>
+ </note>
+
+ <sect2 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><classname>Closure</classname></member>
+   </simplelist>
+  </para>
+ </sect2>
+</sect1>
