@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 34f90a65914c900173f9a42331acc45bc53d8eee Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandowobeto, leonardolara -->
+<!-- EN-Revision: 7c4b5fb40ac3149a5b931f1e31b1050ab5eaab7e Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandowobeto, leonardolara -->
 <refentry xml:id="function.mb-detect-encoding" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>mb_detect_encoding</refname>
@@ -16,7 +16,11 @@
   </methodsynopsis>
   <para>
    Detecta a codificação de caracteres mais provável para a <type>string</type> <parameter>string</parameter>
-   a partir de uma lista ordenada de candidatos.
+   a partir de uma lista de candidatos.
+  </para>
+  <para>
+   A partir do PHP 8.1, esta função usa heurística para detectar qual das codificações de texto válidas na lista
+   especificada tem maior probabilidade de estar correta e pode não estar na ordem das codificações fornecidas no parâmetro <parameter>encodings</parameter>.
   </para>
   <para>
    A detecção automática da codificação de caracteres pretendida nunca pode ser totalmente confiável;
@@ -27,7 +31,7 @@
   <para>
    Esta função é mais útil com codificações multibyte, onde nem todas as sequências de
    bytes formam uma string válida. Se a string de entrada contiver tal sequência,
-   essa codificação será rejeitada e a próxima codificação será verificada.
+   essa codificação será rejeitada.
   </para>
 
   <warning>
@@ -58,8 +62,8 @@
      <term><parameter>encodings</parameter></term>
      <listitem>
       <para>
-       Uma lista de codificações de caracteres para tentar, em ordem. A lista pode ser especificada como
-            um array de strings ou uma única string separada por vírgulas.
+       Uma lista de codificações de caracteres para tentar. A lista pode ser especificada como
+       um array de strings ou uma única string separada por vírgulas.
       </para>
       <para>
        Se <parameter>encodings</parameter> for omitido ou &null;,
@@ -223,8 +227,9 @@ string(10) "ISO-8859-1"
 <?php
 $str = "\xC4\xA2";
 
-// A string é válida em todas as três codificações, então a primeira listada será retornada
-var_dump(mb_detect_encoding($str, ['UTF-8', 'ISO-8859-1', 'ISO-8859-5']));
+// A string é válida em todas as três codificações, mas a primeira listada pode nem sempre ser a retornada
+var_dump(mb_detect_encoding($str, ['UTF-8']));
+var_dump(mb_detect_encoding($str, ['UTF-8', 'ISO-8859-1', 'ISO-8859-5'])); // a partir do PHP 8.1, retorna ISO-8859-1 em vez de UTF-8
 var_dump(mb_detect_encoding($str, ['ISO-8859-1', 'ISO-8859-5', 'UTF-8']));
 var_dump(mb_detect_encoding($str, ['ISO-8859-5', 'UTF-8', 'ISO-8859-1']));
 ?>
@@ -234,6 +239,7 @@ var_dump(mb_detect_encoding($str, ['ISO-8859-5', 'UTF-8', 'ISO-8859-1']));
     <screen>
 <![CDATA[
 string(5) "UTF-8"
+string(10) "ISO-8859-1"
 string(10) "ISO-8859-1"
 string(10) "ISO-8859-5"
 ]]>
