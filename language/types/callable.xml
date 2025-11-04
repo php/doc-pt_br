@@ -1,77 +1,210 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: eac9eff7b66d8c2b168c25c72de0422126daf8cb Maintainer: leonardolara Status: ready --><!-- CREDITS: lcobucci, fabioluciano, geekcom, lhsazevedo, marcosmarcolin, leonardolara -->
+<!-- EN-Revision: 147b80d1974b969caad1db188a48f4bcd90f5eb8 Maintainer: leonardolara Status: ready --><!-- CREDITS: lcobucci, fabioluciano, geekcom, lhsazevedo, marcosmarcolin, leonardolara -->
 <sect1 xml:id="language.types.callable">
- <title>Funções de Retorno / Chamáveis</title>
+ <title>Chamáveis</title>
 
- <para>
-  Funções de retorno podem ser representadas pela declaração de tipo <type>callable</type>.
- </para>
+<simpara>
+  Um chamável é uma referência a uma função ou a um método que é passada
+  a outra função como um argumento.
+  Chamáveis são representados com a declaração de tipo <type>callable</type>.
+</simpara>
+ <informalexample>
+  <programlisting role="php" annotations="non-interactive">
+<![CDATA[
+<?php
+function foo(callable $callback) {
+    $callback();
+}
+?>
+]]>
+  </programlisting>
+ </informalexample>
 
- <para>
-  Algumas funções como <function>call_user_func</function> ou
-  <function>usort</function> aceitam funções de retorno definidas pelo usuário
-  como parâmetro. Funções de retorno não precisam ser apenas funções simples, mas também
-  métodos de <type>object</type>s, incluindo os estáticos.
- </para>
+ <simpara>
+  Algumas funções aceitam funções como um parâmetro, por exemplo,
+  <function>array_map</function>, <function>usort</function> ou
+  <function>preg_replace_callback</function>.
+ </simpara>
 
  <sect2 xml:id="language.types.callable.passing">
-  <title>Passagem por parâmetro</title>
+  <title>Criação de chamáveis</title>
 
-  <para>
-   Uma função PHP é passada através do seu nome como uma <type>string</type> ou por um
-   <link linkend="functions.first_class_callable_syntax">chamável de primeira classe</link>.
+  <simpara>
+   Um objeto chamável é um tipo que representa algo que pode ser invocado.
+   Os objetos invocáveis ​​podem ser passados ​​como argumentos para funções ou métodos que
+   esperam um parâmetro de função de retorno (callback) ou podem ser invocados diretamente.
+   O tipo <type>callable</type> não pode ser usado como uma declaração de tipo para propriedades de classe.
+   Em vez disso, use uma declaração de tipo <classname>Closure</classname>.
+  </simpara>
+
+  <simpara>
+   Chamáveis podem ser criados de diferentes formas:
+  </simpara>
+
+  <itemizedlist>
+   <listitem>
+    <simpara>Objeto <classname>Closure</classname></simpara>
+   </listitem>
+   <listitem>
+    <simpara>&string; contendo o nome de uma função ou método</simpara>
+   </listitem>
+   <listitem>
+    <simpara>
+     &array; contendo um nome de classe ou um <type>object</type>
+     no índice 0 e o nome do método no índice 1
+    </simpara>
+   </listitem>
+   <listitem>
+    <simpara>
+     &object; implementando a método mágico
+     <link linkend="object.invoke">__invoke()</link>
+    </simpara>
+   </listitem>
+  </itemizedlist>
+
+  <simpara>
+   Um objeto <classname>Closure</classname> pode ser criado usando-se
+   a sintaxe de <link linkend="functions.anonymous">função anônima</link>,
+   de <link linkend="functions.arrow">função seta</link>,
+   de <link linkend="functions.first_class_callable_syntax">chamável de primeira
+   classe</link>, ou com o médoto <methodname>Closure::fromCallable</methodname>.
+  </simpara>
+
+  <note>
+   <simpara>
+    A <link linkend="functions.first_class_callable_syntax">sintaxe de chamável de
+    primeira classe</link> está disponível somente a partir do PHP 8.1.0.
+   </simpara>
+  </note>
+
+  <example>
+   <title>
+    Exemplo de função de retorno usando <classname>Closure</classname>
+   </title>
+  <programlisting role="php">
+<![CDATA[
+<?php
+// Usando a sintaxe de função anônima
+$double1 = function ($a) {
+    return $a * 2;
+};
+
+// Usando a sintaxe de chamável de primeira classe
+function double_function($a) {
+    return $a * 2;
+}
+$double2 = double_function(...);
+
+// Usando a sintaxe de função seta
+$double3 = fn($a) => $a * 2;
+
+// Usando Closure::fromCallable
+$double4 = Closure::fromCallable('double_function');
+
+// Usando o closure como uma função de retorno aqui para
+// duplicar o tamanho de cada elemento no intervalo
+$new_numbers = array_map($double1, range(1, 5));
+print implode(' ', $new_numbers) . PHP_EOL;
+
+$new_numbers = array_map($double2, range(1, 5));
+print implode(' ', $new_numbers) . PHP_EOL;
+
+$new_numbers = array_map($double3, range(1, 5));
+print implode(' ', $new_numbers) . PHP_EOL;
+
+$new_numbers = array_map($double4, range(1, 5));
+print implode(' ', $new_numbers);
+
+?>
+]]>
+   </programlisting>
+   &example.outputs.81;
+   <screen>
+<![CDATA[
+2 4 6 8 10
+2 4 6 8 10
+2 4 6 8 10
+2 4 6 8 10
+]]>
+   </screen>
+  </example>
+
+  <simpara>
+   Um chamável também pode ser uma string contendo o nome de uma função ou
+   de um método estático.
    Qualquer função interna ou definida pelo usuário pode ser utilizada, com exceção dos construtores de linguagem
    como: <function>array</function>, <function>echo</function>,
    <function>empty</function>, <function>eval</function>,
-   <function>exit</function>, <function>isset</function>,
+   <function>isset</function>,
    <function>list</function>, <function>print</function> ou
    <function>unset</function>.
-  </para>
+  </simpara>
 
-  <para>
-   Um método de um <type>object</type> instanciado é passado como um
-   <type>array</type> contendo um <type>object</type> no índice 0 e o
-   nome do método no índice 1. É permitido acessar métodos protegidos e privados
-   de uma classe.
-  </para>
-
-  <para>
+  <simpara>
    Métodos estáticos também podem ser passados sem a instância de um
-   <type>object</type> dessa classe ao passar um nome da classe
-   em vez de um <type>object</type> no índice 0, ou passando
-   <literal>'ClassName::methodName'</literal>.
-  </para>
+   <type>object</type> dessa classe criando um array com
+   o nome da classe no índice 0 e o nome do método no índice 1 ou usando
+   a sintaxe especial com operador de resolução de escopo
+   <literal>::</literal> como em <literal>'ClassName::methodName'</literal>.
+  </simpara>
 
-  <para>
-   Além de funções comuns definidas pelo usuário,
-   <link linkend="functions.anonymous">funções anônimas</link> e
-   <link linkend="functions.arrow">funções de seta</link> também podem ser
-   passadas como um parâmetro de função de retorno.
-  </para>
+  <simpara>
+   Um método de um <type>object</type> instanciado pode ser um chamável
+   quando fornecido como um array com o <type>object</type> no índice 0 e o
+   nome do método no índice 1.
+  </simpara>
+
+  <simpara>
+   A principal diferença entre um objeto <classname>Closure</classname> e o
+   tipo <type>callable</type> é que um objeto <classname>Closure</classname> é
+   independente de escopo e sempre pode ser invocado, enquanto um tipo 'callable' pode ser
+   dependente de escopo e pode não ser invocado diretamente.
+   <classname>Closure</classname> é a maneira preferida de criar objetos chamáveis.
+  </simpara>
 
   <note>
-   <para>
-    A partir do PHP 8.1.0, funções anônimas também podem ser criadas usando a <link linkend="functions.first_class_callable_syntax">sintaxe de chamável de primeira classe</link>.
-   </para>
+   <simpara>
+    Embora os objetos <classname>Closure</classname> estejam vinculados ao escopo
+    onde são criados, os objetos chamáveis ​​que referenciam métodos de classe como strings
+    ou arrays são resolvidos no escopo onde são chamados.
+    Para criar um objeto chamável a partir de um método privado ou protegido, que pode então ser
+    invocado de fora do escopo da classe, use
+    <methodname>Closure::fromCallable</methodname> ou a
+    <link linkend="functions.first_class_callable_syntax">sintaxe de chamável de primeira
+    classe</link>.
+   </simpara>
   </note>
 
-  <para>
-   Geralmente, qualquer objeto implementando <link linkend="object.invoke">__invoke()</link> também pode
-   ser passado para um parâmetro de função de retorno.
-  </para>
+  <simpara>
+   O PHP permite a criação de chamáveis que podem ser usados como argumento de função de retorno
+   mas não podem ser chamadas diretamente.
+   Essas são funções dependentes do contexto que fazem referência a um método de classe na
+   hierarquia de herança de uma classe, por exemplo:
+   <literal>'parent::method'</literal> ou <literal>["static", "method"]</literal>.
+  </simpara>
 
-  <para>
-   <example>
-    <title>
-     Exemplos de funções de retorno
-    </title>
-    <programlisting role="php">
+  <note>
+   <simpara>
+    A partir do PHP 8.2.0, chamáveis dependentes de contexto
+    foram descontinuados. Remova a dependência de contexto substituindo
+    <literal>'parent::method'</literal> por
+    <literal>parent::class . '::method'</literal> ou use a
+    <link linkend="functions.first_class_callable_syntax">sintaxe de chamável
+    de primeira classe</link>.
+   </simpara>
+  </note>
+
+  <example>
+   <title>
+    Invocando vários tipos de chamáveis com <function>call_user_function</function>
+   </title>
+   <programlisting role="php">
 <![CDATA[
 <?php
 
 // Exemplo de função de retorno
 function minha_funcao_retorno() {
-    echo 'Olá mundo!', PHP_EOL;
+    echo 'olá mundo!', PHP_EOL;
 }
 
 // Exemplo de método de retorno
@@ -85,16 +218,19 @@ class MinhaClasse {
 call_user_func('minha_funcao_retorno');
 
 // Tipo 2: Chamada a métodos estáticos
-call_user_func(array('MinhaClasse', 'meuMetodoRetorno'));
+call_user_func(['MinhaClasse', 'meuMetodoRetorno']);
 
 // Tipo 3: Chamada a métodos de objetos
 $obj = new MinhaClasse();
-call_user_func(array($obj, 'meuMetodoRetorno'));
+call_user_func([$obj, 'meuMetodoRetorno']);
 
 // Tipo 4: Chamada a métodos estáticos
 call_user_func('MinhaClasse::meuMetodoRetorno');
 
-// Tipo 5: Chamada relativa a métodos estáticos
+// Tipo 5: Chamada a métodos estáticos usando a palavra-chave ::class
+call_user_func([MyClass::class, 'myCallbackMethod']);
+
+// Type 6: Relative static class method call
 class A {
     public static function quem() {
         echo "A\n", PHP_EOL;
@@ -107,12 +243,12 @@ class B extends A {
     }
 }
 
-call_user_func(array('B', 'parent::quem')); // A, descontinuado a partir do PHP 8.2.0
+call_user_func(['B', 'parent::quem']); // descontinuado a partir do PHP 8.2.0
 
-// Type 6: Objetos que implementam __invoke podem ser utilizados como chamáveis
+// Type 7: Objetos que implementam __invoke podem ser utilizados como chamáveis
 class C {
     public function __invoke($nome) {
-        echo 'Olá ', $nome, PHP_EOL;
+        echo 'Olá ', $nome;
     }
 }
 
@@ -120,42 +256,23 @@ $c = new C();
 call_user_func($c, 'PHP!');
 ?>
 ]]>
-    </programlisting>
-   </example>
-  </para>
-  <para>
-   <example>
-    <title>
-     Exemplo de Função de retorno utilizando um <classname>Closure</classname>
-    </title>
-   <programlisting role="php">
+   </programlisting>
+   &example.outputs;
+   <screen>
 <![CDATA[
-<?php
-// O closure
-$double = function($a) {
-    return $a * 2;
-};
+olá mundo!
+Olá Mundo!
+Olá Mundo!
+Olá Mundo!
+Olá Mundo!
 
-// Esta é a série de números
-$numbers = range(1, 5);
-
-// O uso do closure aqui é para
-// dobrar o valor de cada elemento da
-// série
-$new_numbers = array_map($double, $numbers);
-
-print implode(' ', $new_numbers);
-?>
+Deprecated: Callables of the form ["B", "parent::who"] are deprecated in script on line 41
+A
+Olá, PHP!
 ]]>
-    </programlisting>
-    &example.outputs;
-    <screen>
-<![CDATA[
-2 4 6 8 10
-]]>
-    </screen>
-   </example>
-  </para>
+   </screen>
+  </example>
+
 
   &note.func-callback-exceptions;
  </sect2>
