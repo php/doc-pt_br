@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: be8baf89c0016c1c39ab0b85cafca28c8364e95b Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<!-- EN-Revision: 372350f3bfad45ba01db850a1a3be40c803e196b Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandowobeto, leonardolara -->
 <refentry xml:id="function.session-gc" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>session_gc</refname>
@@ -11,25 +11,34 @@
    <type class="union"><type>int</type><type>false</type></type><methodname>session_gc</methodname>
    <void/>
   </methodsynopsis>
-  <para>
-   <function>session_gc</function> é usado para realizar o GC (coleta de lixo)
-   de dados da sessão. O PHP faz GC de sessão baseado em probabilidade
-   por padrão.
-  </para>
-  <para>
-   A coleta de lixo baseada em probabilidade funciona até certo ponto, mas possui alguns problemas. 1) Os dados
-   de sessão de sites com baixo tráfego podem não ser excluídos dentro do
-   período preferido. 2) A coleta de lixo em sites com alto tráfego pode ser muito frequente. 3) A coleta de lixo é
-   realizada mediante solicitação do usuário, e o usuário pode experimentar um atraso durante o processo de
-   coleta de lixo.
-  </para>
-  <para>
-   Portanto, é recomendado executar a coleta de lixo periodicamente
-   em sistemas de produção, utilizando, por exemplo, o "cron" para sistemas semelhantes ao UNIX.
-   Certifique-se de desativar a coleta de lixo baseada em probabilidade
-   definindo <link linkend="ini.session.gc-probability">session.gc_probability</link>
-   como 0.
-  </para>
+  <simpara>
+   Por padrão, o PHP usa <link linkend="ini.session.gc-probability">session.gc_probability</link>
+   para executar o coletor de lixo da sessão probabilisticamente em cada
+   requisição. Existem algumas limitações com essa abordagem:
+  </simpara>
+  <simplelist>
+   <member>Sites com baixo tráfego podem não ter seus dados de sessão excluídos dentro do período recomendado.</member>
+   <member>Em sites com alto tráfego, o coletor de lixo pode ser acionado com muita frequência, realizando trabalho extra desnecessário.</member>
+   <member>A coleta de lixo é realizada mediante solicitação do usuário, e o usuário pode experimentar um atraso.</member>
+  </simplelist>
+  <simpara>
+   Para sistemas de produção, recomenda-se desativar a
+   coleta de lixo baseada em probabilidade, definindo
+   <link linkend="ini.session.gc-probability">session.gc_probability</link> para <literal>0</literal>
+   e acionar explicitamente o coletor de lixo periodicamente, por exemplo, usando "cron" em
+   sistemas do tipo UNIX para executar um script que chama <function>session_gc</function>.
+  </simpara>
+
+  <note>
+   <simpara>
+    Ao chamar a função <function>session_gc</function> a partir de um script PHP de linha de comando,
+    a diretiva <link linkend="ini.session.save-path">session.save_path</link> deve ser definida
+    para o mesmo valor das requisições web, e o script deve ter permissões de acesso e exclusão
+    para os arquivos de sessão. Isso pode ser afetado pelo usuário que executa o script,
+    e por recursos de contêiner ou "caixa de areia", como a opção <literal>PrivateTmp=</literal>
+    do systemd.
+   </simpara>
+  </note>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -39,23 +48,24 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
+  <simpara>
    <function>session_gc</function> retorna o número de dados de sessão excluídos
-   em caso de sucesso e &false; em caso de falha.
-  </para>
-  <para>
-   Os manipuladores de salvamento antigos não retornam o número de dados de sessão excluídos, apenas
-   um indicativo de sucesso ou falha. Se este for o caso, o número de dados de sessão excluídos
-   se torna 1, independentemente dos dados realmente excluídos.
-  </para>
+   em caso de sucesso, &return.falseforfailure;.
+  </simpara>
+  <note>
+   <simpara>
+    Os manipuladores de salvamento de sessão antigos não retornam o número de dados de sessão excluídos, apenas
+    um indicativo de sucesso ou falha. Se este for o caso, o número de dados de sessão excluídos
+    se torna <literal>1</literal>, independentemente dos dados realmente excluídos.
+   </simpara>
+  </note>
  </refsect1>
 
  <refsect1 role="examples">
   &reftitle.examples;
-  <para>
-   <example>
-    <title>Exemplo de <function>session_gc</function> para gerenciadores de tarefas como o cron</title>
-    <programlisting role="php">
+  <example>
+   <title>Exemplo de <function>session_gc</function> para gerenciadores de tarefas como o cron</title>
+   <programlisting role="php">
 <![CDATA[
 <?php
 // Observação: Este script deve ser executado pelo mesmo usuário do processo do servidor web.
@@ -63,22 +73,22 @@
 // É necessário ter uma sessão ativa para inicializar o acesso ao armazenamento de dados da sessão.
 session_start();
 
-// Execute a coleta de lixo (GC) imediatamente.
+// Executa a coleta de lixo (GC) imediatamente.
 session_gc();
 
-// Limpa o ID da sessão criado pelo
+// Limpa o ID da sessão criado pelo session_start()
 session_destroy();
 ?>
 ]]>
-    </programlisting>
-   </example>
-   <example>
-    <title>Exemplo de <function>session_gc</function> para script acessível pelo usuário</title>
-    <programlisting role="php">
+   </programlisting>
+  </example>
+  <example>
+   <title>Exemplo de <function>session_gc</function> para script acessível pelo usuário</title>
+   <programlisting role="php">
 <![CDATA[
 <?php
 // Observação: session_gc() é recomendado para ser usado por um script de gerenciador de tarefas, mas
-// pode ser utilizado da seguinte forma.
+// pode ser utilizado da forma abaixo.
 
 // Usado para verificar o último horário de coleta de lixo (GC).
 $gc_time = '/tmp/php_session_last_gc';
@@ -97,20 +107,17 @@ if (file_exists($gc_time)) {
 }
 ?>
 ]]>
-    </programlisting>
-   </example>
-  </para>
+   </programlisting>
+  </example>
  </refsect1>
 
  <refsect1 role="seealso">
   &reftitle.seealso;
-  <para>
-   <simplelist>
-    <member><function>session_start</function></member>
-    <member><function>session_destroy</function></member>
-    <member><link linkend="ini.session.gc-probability">session.gc_probability</link></member>
-   </simplelist>
-  </para>
+  <simplelist>
+   <member><function>session_start</function></member>
+   <member><function>session_destroy</function></member>
+   <member><link linkend="ini.session.gc-probability">session.gc_probability</link></member>
+  </simplelist>
  </refsect1>
 </refentry>
 <!-- Keep this comment at the end of the file
