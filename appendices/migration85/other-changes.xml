@@ -1,0 +1,627 @@
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 6b48f364497107ae46f926bfc99a4e3d9d546316 Maintainer: leonardolara Status: ready -->
+<sect1 xml:id="migration85.other-changes">
+ <title>Outras Alterações</title>
+
+ <sect2 xml:id="migration85.other-changes.core">
+  <title>Alterações no Núcleo</title>
+
+  <sect3 xml:id="migration85.other-changes.core.core">
+   <title>Núcleo</title>
+
+   <simpara>
+    O temporizador de alta resolução (<function>hrtime</function>) no macOS agora
+    usa a API recomendada
+    <code>clock_gettime_nsec_np(CLOCK_UPTIME_RAW)</code> em vez de
+    <code>mach_absolute_time()</code>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.core.cgi-cli">
+   <title>CGI/CLI</title>
+
+   <simpara>
+    A opção <option>-z</option> ou <option>--zend-extension</option>
+    foi removida por não estar funcionando.
+    Use <option>-d zend_extension=[caminho]</option> em vez disso.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.core.pdo-odbc">
+   <title>PDO_ODBC</title>
+
+   <simpara>
+    O comportamento de busca para colunas maiores foi alterado. Em vez de
+    buscar blocos de 256 bytes, o PDO_ODBC tentará buscar um tamanho de bloco maior;
+    atualmente, esse tamanho é o tamanho da página menos a sobrecarga de string. Os drivers que
+    retornam SQL_NO_TOTAL em SQLGetData também são tratados de forma mais eficiente.
+    Isso deve melhorar a compatibilidade e o desempenho.
+    <!-- See: GH-10809, GH-10733 -->
+   </simpara>
+
+  </sect3>
+
+ </sect2>
+
+ <sect2 xml:id="migration85.other-changes.sapi">
+  <title>Alterações nos Módulos SAPI</title>
+
+  <sect3 xml:id="migration85.other-changes.sapi.cli">
+   <title>CLI</title>
+
+   <simpara>
+    Tentar definir um título de processo muito longo com
+    <function>cli_set_process_title</function> agora falhará em vez de
+    truncar silenciosamente o título fornecido.
+   </simpara>
+
+   <simpara>
+    Adicionada uma nova opção <option>--ini=diff</option> para imprimir as configurações do arquivo INI
+    alterado em relação ao padrão integrado.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.sapi.fpm">
+   <title>FPM</title>
+
+   <simpara>
+    O FPM com httpd ProxyPass decodifica opcionalmente o caminho completo do script. Adicionada a configuração INI
+    <!-- <link linkend="ini.fastcgi.script_path_encoded"-->fastcgi.script_path_encoded<!-- </link> -->
+    para evitar este novo comportamento.
+   </simpara>
+
+   <simpara>
+    O limite de log de acesso do FPM agora respeita o valor de <link linkend="log-limit">log_limit</link>.
+   </simpara>
+
+  </sect3>
+
+ </sect2>
+
+ <sect2 xml:id="migration85.other-changes.functions">
+  <title>Funções Alteradas</title>
+
+  <sect3 xml:id="migration85.other-changes.functions.intl">
+   <title>Intl</title>
+
+   <simpara>
+    <function>grapheme_extract</function> atribui corretamente o valor de
+    <parameter>$next</parameter> ao ignorar bytes iniciais inválidos.
+    Anteriormente, havia casos em que apontava para o início do
+    limite do grafema em vez do fim.
+   </simpara>
+
+   <simpara>
+    <function>transliterator_get_error_code</function>,
+    <function>transliterator_get_error_message</function>,
+    <methodname>TransLiterator::getErrorCode</methodname>
+    e <methodname>TransLiterator::getErrorMessage</methodname>
+    removeram &false; da união de tipos de retorno. Retornar &false;
+    na verdade nunca foi possível.
+   </simpara>
+
+   <simpara>
+    As seguintes funções agora suportam um argumento <parameter>$locale</parameter>:
+    <function>grapheme_strpos</function>,
+    <function>grapheme_stripos</function>,
+    <function>grapheme_strrpos</function>,
+    <function>grapheme_strripos</function>,
+    <function>grapheme_substr</function>,
+    <function>grapheme_strstr</function> e
+    <function>grapheme_stristr</function>.
+    <!-- RFC: https://wiki.php.net/rfc/grapheme_add_locale_for_case_insensitive -->
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.functions.ldap">
+   <title>LDAP</title>
+
+   <simpara>
+    <function>ldap_get_option</function> agora aceita uma conexão &null;,
+    como <function>ldap_set_option</function>,
+    para permitir a recuperação de opções globais.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.functions.libxml">
+   <title>libxml</title>
+
+   <simpara>
+    <function>libxml_set_external_entity_loader</function> agora tem um tipo de retorno formal
+    de <type>true</type>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.functions.openssl">
+   <title>OpenSSL</title>
+
+   <simpara>
+    <function>openssl_public_encrypt</function> e
+    <function>openssl_private_decrypt</function> têm um novo parâmetro
+    <parameter>$digest_algo</parameter> que permite especificar o algoritmo de hash
+    para o preenchimento OAEP.
+   </simpara>
+
+   <simpara>
+    <function>openssl_sign</function> e <function>openssl_verify</function>
+    possuem um novo parâmetro <parameter>$padding</parameter> para permitir o uso de um
+    preenchimento RSA PSS mais seguro.
+   </simpara>
+
+   <simpara>
+    <function>openssl_cms_encrypt</function> <parameter>$cipher_algo</parameter>
+    O parâmetro pode ser uma string com o nome da cifra.
+    Isso permite usar mais algoritmos, incluindo algoritmos de cifra AES e GCM para
+    dados envelopados de autenticação.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.functions.pcntl">
+   <title>PCNTL</title>
+
+   <simpara>
+    <function>pcntl_exec</function> agora tem um tipo de retorno formal de
+    <type>false</type>.
+   </simpara>
+
+   <simpara>
+    <function>pcntl_waitid</function> recebe um argumento adicional resource_usage
+    para coletar várias métricas específicas da plataforma sobre o processo filho.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.functions.pdo-pgsql">
+   <title>PDO_PGSQL</title>
+
+   <simpara>
+    <methodname>Pdo\Pgsql::copyFromArray</methodname> agora suporta entradas <type>iterable</type>.
+   </simpara>
+
+   <simpara>
+    <methodname>Pdo\Pgsql::setAttribute</methodname> e
+    <methodname>Pdo\Pgsql::prepare</methodname> suportam configurar
+    <constant>PDO::ATTR_PREFETCH</constant> para 0, que entra no modo lento de busca.
+    Neste modo, as instruções não podem ser executadas em paralelo.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.functions.pgsql">
+   <title>PostgreSQL</title>
+
+   <simpara>
+    <function>pg_copy_from</function> agora suporta entradas <type>iterable</type>.
+   </simpara>
+
+   <simpara>
+    <function>pg_connect</function> verifica se o argumento connection_string
+    contém algum byte nulo.
+   </simpara>
+
+   <simpara>
+    <function>pg_close_stmt</function> verifica se o argumento connection_string
+    contém algum byte nulo.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.functions.posix">
+   <title>POSIX</title>
+
+   <simpara>
+    <function>posix_ttyname</function> define last_error como EBADF ao encontrar
+    um descritor de arquivo inválido.
+   </simpara>
+
+   <simpara>
+    <function>posix_isatty</function> gera uma mensagem <constant>E_WARNING</constant>
+    ao encontrar um descritor de arquivo inválido.
+   </simpara>
+
+   <simpara>
+    <function>posix_fpathconf</function> verifica descritores de arquivo inválidos e
+    define last_error como EBADF e gera uma mensagem <constant>E_WARNING</constant>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.functions.reflection">
+   <title>Reflection</title>
+
+   <simpara>
+    <methodname>ReflectionClass::__toString</methodname> para
+    enumerações foi alterada para melhor indicar que a classe é uma enumeração e que
+    os casos de enumeração não são constantes de classe normais.
+   </simpara>
+
+   <simpara>
+    A saída de <methodname>ReflectionProperty::__toString</methodname> para
+    propriedades com ganchos foi alterada para indicar quais ganchos a propriedade possui,
+    se esses ganchos são finais e se a propriedade é virtual.
+    Isso também afeta a saída de <methodname>ReflectionClass::__toString</methodname>
+    quando uma classe contém propriedades com ganchos.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.functions.sockets">
+   <title>Sockets</title>
+
+   <simpara>
+    <function>socket_create</function>/<function>socket_bind</function> podem
+    criar soquetes da família <constant>AF_PACKET</constant>.
+   </simpara>
+
+   <simpara>
+    <function>socket_getsockname</function> obtém o índice da interface e sua
+    representação em string com o soquete <constant>AF_PACKET</constant>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.functions.zlib">
+   <title>Zlib</title>
+
+   <simpara>
+    O argumento <parameter>$use_include_path</parameter> para as funções
+    <function>gzfile</function>, <function>gzopen</function> e
+    <function>readgzfile</function> foi alterado de
+    <type>int</type> para <type>bool</type>.
+   </simpara>
+
+   <simpara>
+    As funções <function>gzfile</function>,
+    <function>gzopen</function> e <function>readgzfile</function>
+    agora respeitam o contexto de fluxo padrão.
+   </simpara>
+
+  </sect3>
+
+ </sect2>
+
+ <sect2 xml:id="migration85.other-changes.extensions">
+  <title>Outras Alterações em Extensões</title>
+
+  <sect3 xml:id="migration85.other-changes.extensions.curl">
+   <title>cURL</title>
+
+   <simpara>
+    <function>curl_setopt</function> com o valor da opção
+    <constant>CURLOPT_FOLLOWLOCATION</constant>
+    não é mais tratada como booleano mas como inteiro, para lidar com
+    <constant>CURLFOLLOW_OBEYCODE</constant> e
+    <constant>CURLFOLLOW_FIRSTONLY</constant>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.extensions.fileinfo">
+   <title>Fileinfo</title>
+
+   <simpara>
+    Biblioteca atualizada da versão 5.45 para a 5.46.
+   </simpara>
+
+   <simpara>
+    O tipo de retorno de <function>finfo_close</function> foi alterado para
+    <type>true</type>, em vez de <type>bool</type>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.extensions.intl">
+   <title>Intl</title>
+
+   <simpara>
+    O mecanismo interno de erros de Intl foi modernizado para que
+    indique com mais precisão qual local de chamada causou qual erro.
+    Além disso, algumas exceções de ext/date agora são encapsuladas em uma
+    <classname>IntlException</classname>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.extensions.lexbor">
+   <title>Lexbor</title>
+
+   <simpara>
+    Uma extensão lexbor sempre habilitada foi adicionada. Ela contém a biblioteca lexbor
+    que foi separada de <link linkend="book.dom">ext/dom</link>
+    para ser reutilizada entre outras extensões.
+    A nova extensão não é exposta diretamente ao espaço do usuário.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.extensions.opcache">
+   <title>Opcache</title>
+
+   <simpara>
+    A extensão <link linkend="book.opcache">Opcache</link> agora está sempre
+    integrada ao binário do PHP e é sempre carregada.
+    As diretivas INI <link linkend="ini.opcache.enable">opcache.enable</link>
+    e <link linkend="ini.opcache.enable-cli">opcache.enable_cli</link>
+    ainda são respeitadas.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.extensions.pcre">
+   <title>PCRE</title>
+
+   <simpara>
+    Atualizada a biblioteca pcre2lib da versão 10.44 para a 10.46.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.extensions.pdo-sqlite">
+   <title>PDO_Sqlite</title>
+
+   <simpara>
+    Alterada a versão mínima suportada de 3.7.7 para 3.7.17.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.extensions.readline">
+   <title>Readline</title>
+
+   <simpara>
+    Os tipos de retorno de <function>readline_add_history</function>,
+    <function>readline_clear_history</function>
+    e <function>readline_callback_handler_install</function> foram
+    alterados para <type>true</type>, em vez de <type>bool</type>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.extensions.reflection">
+   <title>Reflection</title>
+
+   <simpara>
+    <classname>ReflectionConstant</classname> não é mais final.
+   </simpara>
+
+  </sect3>
+
+ </sect2>
+
+ <sect2 xml:id="migration85.other-changes.ini">
+  <title>Alterações na Manipulação de Arquivos INI</title>
+
+  <sect3 xml:id="migration85.other-changes.ini.core">
+   <title>Núcleo</title>
+
+   <simpara>
+    Adicionada a opção 'fatal_error_backtraces' para controlar se os erros fatais devem incluir
+    um rastreamento de pilha.
+    <!-- RFC: https://wiki.php.net/rfc/error_backtraces_v2 -->
+   </simpara>
+
+   <simpara>
+    Adicionada configuração INI 'max_memory_limit' exclusiva da inicialização para controlar o limite
+    máximo de memória que pode ser configurado na inicialização ou em tempo de execução. Exceder
+    esse valor gera um aviso, a menos que seja definido como -1, e define o limite de memória para o valor
+    atual de 'max_memory_limit'.
+    <!-- ML discussion: https://externals.io/message/127108 -->
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.ini.opcache">
+   <title>Opcache</title>
+
+   <simpara>
+    Adicionada a opção 'opcache.file_cache_read_only' para suportar um diretório somente leitura
+    <link linkend="ini.opcache.file-cache">opcache.file_cache</link>,
+    para uso com sistemas de arquivos somente leitura (por exemplo, contêineres Docker somente leitura).
+    Melhor utilizado com <literal>opcache.validate_timestamps=0</literal>,
+    <literal>opcache.enable_file_override=1</literal>
+    e <literal>opcache.file_cache_consistency_checks=0</literal>.
+   </simpara>
+
+   <note>
+    <simpara>
+     Um cache gerado com uma versão diferente do PHP, um caminho de arquivo
+     diferente ou configurações diferentes (incluindo quais extensões estão carregadas) pode
+     ser ignorado.
+    </simpara>
+   </note>
+
+   <simpara>
+    O valor padrão de
+    <link linkend="ini.opcache.jit-hot-loop">opcache.jit_hot_loop</link> é
+    agora 61 (um número primo) para evitar que seja um múltiplo do número de iterações
+    do loop.
+    Recomenda-se que este parâmetro seja definido como um número primo.
+   </simpara>
+
+   <simpara>
+    Alterar <link
+    linkend="ini.opcache.memory-consumption">opcache.memory_consumption</link>
+    quando o OPcache SHM já estiver configurado agora reportará corretamente uma falha
+    em vez de não fazer nada silenciosamente e mostrar valores enganosos no PHPInfo.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.ini.openssl">
+   <title>OpenSSL</title>
+
+   <simpara>
+    Adicionada a opção <!-- <link linkend="ini.openssl.libctx"-->'openssl.libctx'<!-- </link> -->
+    para selecionar o tipo de contexto da biblioteca OpenSSL.
+    É possível usar uma libctx personalizada para cada thread ou uma única
+    libctx global (padrão).
+   </simpara>
+
+  </sect3>
+
+ </sect2>
+
+ <sect2 xml:id="migration85.other-changes.performance">
+  <title>Desempenho</title>
+
+  <sect3 xml:id="migration85.other-changes.performance.core">
+   <title>Núcleo</title>
+
+   <simpara>
+    Removidos os OPcodes para comparações de identidade com valores booleanos, especialmente
+    para o padrão <code>match(true)</code>.
+   </simpara>
+
+   <simpara>
+    Adicionada a especialização de OPcode para comparações <code>=== []</code> e
+    <code>!== []</code>.
+   </simpara>
+
+   <simpara>
+    A criação de objetos de exceção agora é muito mais rápida.
+   </simpara>
+
+   <simpara>
+    As partes do código que utilizavam SSE2 foram adaptadas para usar SIMD
+    com ARM NEON também.
+   </simpara>
+
+   <simpara>
+    Introduzida a máquina virtual TAILCALL, habilitada por padrão ao compilar com Clang>=19
+    em x86_64 ou aarch64. A máquina virtual TAILCALL é tão rápida quanto a máquina virtual HYBRID usada ao
+    compilar com GCC. Isso faz com que os binários PHP compilados com Clang>=19 sejam tão rápidos quanto
+    os binários compilados com GCC. O desempenho da máquina virtual CALL, usada com outros
+    compiladores, também melhorou consideravelmente.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.performance.intl">
+   <title>Intl</title>
+
+   <simpara>
+    Agora evita a criação de cópias extras de strings ao converter strings
+    para uso no compilador.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.performance.mbstring">
+   <title>MBString</title>
+
+   <simpara>
+    As partes do código que utilizavam SSE2 foram adaptadas para usar SIMD
+    com ARM NEON também.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.performance.opcache">
+   <title>Opcache</title>
+
+   <simpara>
+    Melhoria no desempenho da obtenção de variáveis ​​TLS em código compilado
+    JIT em builds que não utilizam Glibc.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.performance.reflection">
+   <title>Reflection</title>
+
+   <para>
+    Melhoria do desempenho dos seguintes métodos:
+    <simplelist>
+     <member><methodname>ReflectionProperty::getValue</methodname></member>
+     <member><methodname>ReflectionProperty::getRawValue</methodname></member>
+     <member><methodname>ReflectionProperty::isInitialized</methodname></member>
+     <member><methodname>ReflectionProperty::isInitialized</methodname></member>
+     <member><methodname>ReflectionProperty::setValue</methodname></member>
+     <member><methodname>ReflectionProperty::setRawValue</methodname></member>
+    </simplelist>
+   </para>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.performance.spl">
+   <title>SPL</title>
+
+   <simpara>
+    Melhoria no desempenho dos acessadores de dimensão e dos métodos de
+    <classname>SplFixedArray</classname>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.performance.standard">
+   <title>Standard</title>
+
+   <simpara>
+    Melhoria no desempenho de funções de array com chamadas de retorno
+    (<function>array_find</function>, <function>array_filter</function>,
+    <function>array_map</function>, <function>usort</function>, ...).
+   </simpara>
+
+   <simpara>
+    Desempenho aprimorado de <function>urlencode</function> e
+    <function>rawurlencode</function>.
+   </simpara>
+
+   <simpara>
+    Melhoria no desempenho de <function>unpack</function> com repetições sem nome
+    evitando a criação de strings temporárias e sua reanálise.
+   </simpara>
+
+   <simpara>
+    Melhoria no desempenho de <function>pack</function>.
+   </simpara>
+
+   <simpara>
+    Pequenas melhorias no desempenho de <function>array_chunk</function>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration85.other-changes.performance.xml">
+   <title>XML</title>
+
+   <simpara>
+    Melhoria no desempenho de acesso às propriedades do <classname>XMLReader</classname>.
+   </simpara>
+
+   <simpara>
+    Melhoria no desempenho do <classname>XMLWriter</classname> e redução no
+    consumo de memória.
+   </simpara>
+
+  </sect3>
+
+ </sect2>
+
+</sect1>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
