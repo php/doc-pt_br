@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 7e384b24f7e37c6b4caf735f3601179cc65ef8f9 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 86d3fb841e0206e2588896ad3c21432333535848 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <section xmlns="http://docbook.org/ns/docbook" xml:id="pdo.constants.fetch-modes">
  <title>Modos de Busca</title>
 
@@ -865,12 +865,7 @@ object(TestEntity)#3 (4) {
 
  <section xml:id="pdo.constants.fetch-serialize" annotations="chunk:false">
   <title>PDO::FETCH_SERIALIZE (<type>int</type>)</title>
-  <warning>
-   <simpara>
-    Este recurso foi <emphasis>DESCONTINUADO</emphasis> a partir do PHP 8.1.0.
-    O uso deste recurso é altamente desencorajado.
-   </simpara>
-  </warning>
+  &warn.deprecated.feature-8-1-0;
   <simpara>
    Este modo de busca só pode ser usado em combinação com
    <constant>PDO::FETCH_CLASS</constant> (e
@@ -912,14 +907,16 @@ class TestEntity implements Serializable
             . (isset($this->name) ? 'Sim' : 'Não') . "\n";
     }
 
-    public function serialize() {
+    public function serialize()
+    {
         return join(
             "|",
             [$this->userid, $this->name, $this->country, $this->referred_by_userid]
         );
     }
 
-    public function unserialize(string $data) {
+    public function unserialize(string $data)
+    {
         $parts = explode("|", $data);
         $this->userid = (int) $parts[0];
         $this->name = $parts[1];
@@ -946,7 +943,7 @@ $origObj->referred_by_userid = null;
 $insert = $db->prepare("INSERT INTO serialize (sdata) VALUES (:sdata)");
 $insert->execute(['sdata' => $origObj->serialize()]);
 
-print "\nRecuperando o resultado:\n"
+print "\nRecuperando o resultado:\n";
 $query = "SELECT sdata FROM serialize";
 $stmt = $db->query($query);
 // NOTA: O construtor nunca é chamado!
@@ -1016,7 +1013,6 @@ $stmt->bindColumn('country', $country);
 // Por exemplo: referrer.name AS referrer_name
 $stmt->bindColumn(4, $referrerName);
 
-print "\nbusca:\n";
 while ($stmt->fetch(\PDO::FETCH_BOUND)) {
     print join("\t", [$userId, $name, $country, ($referrerName ?? 'NULL')]) . "\n";
 }
