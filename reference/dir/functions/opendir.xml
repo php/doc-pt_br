@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: b0b19b66183b28cebc1ffbcf1e2b8763f9d9c7b3 Maintainer: ae Status: ready --><!-- CREDITS: rarruda, thiago -->
-<!-- splitted from ./en/functions/dir.xml, last change in rev 1.2 -->
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 5c7e9e1351240b5f9e0858cdeba8f754a366d1b7 Maintainer: leonardolara Status: ready --><!-- CREDITS: rarruda, thiago, leonardolara -->
 <refentry xml:id="function.opendir" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>opendir</refname>
@@ -14,55 +12,53 @@
    <methodparam><type>string</type><parameter>directory</parameter></methodparam>
    <methodparam choice="opt"><type class="union"><type>resource</type><type>null</type></type><parameter>context</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
-  <para>
+  <simpara>
    Abre um manipulador de diretório para ser usado em chamadas subsequentes de
    <function>closedir</function>, <function>readdir</function> e
    <function>rewinddir</function>.
-  </para>
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
   &reftitle.parameters;
-  <para>
-   <variablelist>
-    <varlistentry>
-     <term><parameter>directory</parameter></term>
-     <listitem>
-      <para>
-       O caminho do diretório a ser aberto
-      </para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><parameter>context</parameter></term>
-     <listitem>
-      <para>
-       Para descrição do parâmetro <parameter>context</parameter>,
-       consulte <link linkend="ref.stream">a seção sobre fluxos</link> do
-       manual.
-      </para>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-  </para>
+  <variablelist>
+   <varlistentry>
+    <term><parameter>directory</parameter></term>
+    <listitem>
+     <simpara>
+      O caminho do diretório a ser aberto.
+     </simpara>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><parameter>context</parameter></term>
+    <listitem>
+     <simpara>
+      Para descrição do parâmetro <parameter>context</parameter>,
+      consulte <link linkend="ref.stream">a seção sobre fluxos</link> do
+      manual.
+     </simpara>
+    </listitem>
+   </varlistentry>
+  </variablelist>
  </refsect1>
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-   Retorna um manipulador de diretório do tipo <type>resource</type> em caso de sucesso,
+  <simpara>
+   Retorna um manipulador de diretório em caso de sucesso,
    &return.falseforfailure;
-  </para>
+  </simpara>
  </refsect1>
 
  <refsect1 role="errors">
   &reftitle.errors;
   &fs.emits.warning.on.failure;
-  <para>
+  <simpara>
    Isto pode ocorrer se <parameter>directory</parameter> não for um nome de diretório válido,
    o diretório não puder ser aberto por restrições de permissão,
    ou por erros no sistema de arquivos.
-  </para>
+  </simpara>
  </refsect1>
 
  <refsect1 role="changelog">
@@ -89,49 +85,65 @@
 
  <refsect1 role="examples">
   &reftitle.examples;
-  <para>
-   <example>
-    <title>Exemplo de <function>opendir</function></title>
-    <programlisting role="php">
+  <example>
+   <title>
+    Lista todas as entradas de um diretório, pulando os especiais <literal>.</literal>
+    e <literal>..</literal>
+   </title>
+   <simpara>
+    Como os nomes de diretório e arquivo podem ser strings interpretadas como "falso" pelo PHP
+    (por exemplo um diretório com nome <literal>"0"</literal>) e
+    <function>readdir</function> retorna &false; quando tiver lido todas as entradas
+    em um diretório, deve-se usar o <link linkend="language.operators.comparison">operador de comparação</link>
+    <literal>===</literal>
+    para distinguir adequadamente entre uma entrada de diretório cujo nome seja interpretado como "falso" e
+    a função ter terminado de ler todas as entradas.
+   </simpara>
+   <programlisting role="php">
 <![CDATA[
 <?php
-$dir = "/etc/php5/";
 
-// Abre um diretório existente, e faz a leitura de seu conteúdo
-if (is_dir($dir)) {
-    if ($dh = opendir($dir)) {
-        while (($file = readdir($dh)) !== false) {
-            echo "filename: $file : filetype: " . filetype($dir . $file) . "\n";
+if ($handle = opendir('/path/to/files')) {
+    echo "Entradas:\n";
+
+    /* Lidando corretamente com entradas de diretório que podem ser interpretadas como "falso" */
+    while (false !== ($entry = readdir($handle))) {
+        if ($entry === '.' || $entry === '..') {
+            continue;
         }
-        closedir($dh);
+        echo "$entry\n";
     }
+
+    closedir($handle);
 }
 ?>
 ]]>
-    </programlisting>
-    &example.outputs.similar;
-    <screen>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
 <![CDATA[
-filename: . : filetype: dir
-filename: .. : filetype: dir
-filename: apache : filetype: dir
-filename: cgi : filetype: dir
-filename: cli : filetype: dir
+Entradas:
+base
+en
+fr
+output.md
+test.php
 ]]>
-    </screen>
-   </example>
-  </para>
+   </screen>
+  </example>
  </refsect1>
 
  <refsect1 role="seealso">
   &reftitle.seealso;
-  <para>
-   <simplelist>
-    <member><function>is_dir</function></member>
-    <member><function>readdir</function></member>
-    <member><function>dir</function></member>
-   </simplelist>
-  </para>
+  <simplelist>
+   <member><function>readdir</function></member>
+   <member><function>rewinddir</function></member>
+   <member><function>closedir</function></member>
+   <member><function>dir</function></member>
+   <member><function>is_dir</function></member>
+   <member><function>glob</function></member>
+   <member><function>scandir</function></member>
+  </simplelist>
  </refsect1>
 </refentry>
 <!-- Keep this comment at the end of the file
