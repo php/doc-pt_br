@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 5bc68add3da3cd18c40f851e944b15095d3a26aa Maintainer: marcosmarcolin Status: ready --><!-- CREDITS: marcosmarcolin,leonardolara -->
+<!-- EN-Revision: 71ebfcb54339612efc64861dcb0869e765be8aa3 Maintainer: leonardolara Status: ready --><!-- CREDITS: marcosmarcolin,leonardolara -->
 <refentry xml:id="mysqli.real-connect" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>mysqli::real_connect</refname>
   <refname>mysqli_real_connect</refname>
-  <refpurpose>Abre uma conexão com um servidor mysql</refpurpose>
+  <refpurpose>Abre uma conexão a um servidor MySQL</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
@@ -33,7 +33,8 @@
    <methodparam choice="opt"><type>int</type><parameter>flags</parameter><initializer>0</initializer></methodparam>
   </methodsynopsis>
   <para>
-   Estabeleça uma conexão com um mecanismo de banco de dados MySQL.
+   Abre uma conexão a um servidor de banco de dados MySQL
+   com várias opções de conexão.
   </para>
   <para>
    Esta função difere de <function>mysqli_connect</function>:
@@ -41,14 +42,8 @@
   <itemizedlist>
    <listitem>
     <para>
-     <function>mysqli_real_connect</function> precisa de um objeto válido
-     que deve ser criado pela função <function>mysqli_init</function>.
-    </para>
-   </listitem>
-   <listitem>
-    <para>
-     Com a função <function>mysqli_options</function> pode-se definir várias
-     opções de conexão.
+     <function>mysqli_real_connect</function> precisa de um objeto válido que deve
+     ser criado por <function>mysqli_init</function>.
     </para>
    </listitem>
    <listitem>
@@ -236,28 +231,15 @@
 <![CDATA[
 <?php
 
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $mysqli = mysqli_init();
-if (!$mysqli) {
-    die('mysqli_init falhou');
-}
 
-if (!$mysqli->options(MYSQLI_INIT_COMMAND, 'SET AUTOCOMMIT = 0')) {
-    die('Configuração de MYSQLI_INIT_COMMAND falhou');
-}
+$mysqli->options(MYSQLI_INIT_COMMAND, 'SET AUTOCOMMIT = 0');
+$mysqli->options(MYSQLI_OPT_CONNECT_TIMEOUT, 5);
 
-if (!$mysqli->options(MYSQLI_OPT_CONNECT_TIMEOUT, 5)) {
-    die('Configuração de MYSQLI_OPT_CONNECT_TIMEOUT falhou');
-}
-
-if (!$mysqli->real_connect('localhost', 'my_user', 'my_password', 'my_db')) {
-    die('Erro de conexão (' . mysqli_connect_errno() . ') '
-            . mysqli_connect_error());
-}
+$mysqli->real_connect('localhost', 'my_user', 'my_password', 'my_db', null, null, MYSQLI_CLIENT_COMPRESS|MYSQLI_CLIENT_FOUND_ROWS);
 
 echo 'Sucesso... ' . $mysqli->host_info . "\n";
-
-$mysqli->close();
-?>
 ]]>
    </programlisting>
    <para>&style.oop; ao estender a classe mysqli</para>
@@ -266,30 +248,20 @@ $mysqli->close();
 <?php
 
 class foo_mysqli extends mysqli {
-    public function __construct($host, $user, $pass, $db) {
+    public function __construct($host, $user, $pass, $db)
+    {
         parent::__construct();
 
-        if (!parent::options(MYSQLI_INIT_COMMAND, 'SET AUTOCOMMIT = 0')) {
-            die('Configuração de MYSQLI_INIT_COMMAND falhou');
-        }
+        parent::options(MYSQLI_INIT_COMMAND, 'SET AUTOCOMMIT = 0');
+        parent::options(MYSQLI_OPT_CONNECT_TIMEOUT, 5);
 
-        if (!parent::options(MYSQLI_OPT_CONNECT_TIMEOUT, 5)) {
-            die('Configuração de MYSQLI_OPT_CONNECT_TIMEOUT falhou');
-        }
-
-        if (!parent::real_connect($host, $user, $pass, $db)) {
-            die('Erro de conexão Error (' . mysqli_connect_errno() . ') '
-                    . mysqli_connect_error());
-        }
+        parent::real_connect($host, $user, $pass, $db, null, null, MYSQLI_CLIENT_COMPRESS|MYSQLI_CLIENT_FOUND_ROWS);
     }
 }
 
 $db = new foo_mysqli('localhost', 'my_user', 'my_password', 'my_db');
 
 echo 'Sucesso... ' . $db->host_info . "\n";
-
-$db->close();
-?>
 ]]>
    </programlisting>
    <para>&style.procedural;</para>
@@ -297,28 +269,15 @@ $db->close();
 <![CDATA[
 <?php
 
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $link = mysqli_init();
-if (!$link) {
-    die('mysqli_init falhou');
-}
 
-if (!mysqli_options($link, MYSQLI_INIT_COMMAND, 'SET AUTOCOMMIT = 0')) {
-    die('A configuração MYSQLI_INIT_COMMAND falhou');
-}
+mysqli_options($link, MYSQLI_INIT_COMMAND, 'SET AUTOCOMMIT = 0');
+mysqli_options($link, MYSQLI_OPT_CONNECT_TIMEOUT, 5);
 
-if (!mysqli_options($link, MYSQLI_OPT_CONNECT_TIMEOUT, 5)) {
-    die('A configuração MYSQLI_OPT_CONNECT_TIMEOUT falhou');
-}
-
-if (!mysqli_real_connect($link, 'localhost', 'my_user', 'my_password', 'my_db')) {
-    die('Erro de conexão (' . mysqli_connect_errno() . ') '
-            . mysqli_connect_error());
-}
+mysqli_real_connect($link, 'localhost', 'my_user', 'my_password', 'my_db', null, null, MYSQLI_CLIENT_COMPRESS|MYSQLI_CLIENT_FOUND_ROWS);
 
 echo 'Sucesso... ' . mysqli_get_host_info($link) . "\n";
-
-mysqli_close($link);
-?>
 ]]>
    </programlisting>
    &examples.outputs;
