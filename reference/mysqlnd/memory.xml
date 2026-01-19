@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: e016fe67d1f58dc26592e50a244584fcfcf2604d Maintainer: leonardolara Status: ready -->
-<chapter xml:id="mysqlnd.memory" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+<!-- EN-Revision: 9598935f21bc472f22383fb989625f0b22785331 Maintainer: leonardolara Status: ready -->
+<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="mysqlnd.memory">
  <title>Gerenciamento de Memória</title>
- <para>
+ <simpara>
   <emphasis role="bold">Introdução</emphasis>
- </para>
- <para>
+ </simpara>
+ <simpara>
   O Driver Nativo MySQL gerencia memória diferente da Biblioteca Cliente MySQL.
   As bibliotecas diferem na forma como a memória é alocada e liberada,
   como a memória é alocada em pedaços durante a leitura dos resultados do MySQL, quais opções
   de depuração e desenvolvimento existem e como os resultados lidos do MySQL são vinculados
   às variáveis ​​de usuário do PHP.
- </para>
- <para>
+ </simpara>
+ <simpara>
   As notas a seguir pretendem ser uma introdução e um resumo aos usuários
   interessados ​​em compreender o Driver Nativo MySQL em nível de código C.
- </para>
- <para>
+ </simpara>
+ <simpara>
   <emphasis role="bold">Funções de gerenciamento de memória usadas</emphasis>
- </para>
- <para>
+ </simpara>
+ <simpara>
   Toda a alocação e desalocação de memória é feita usando as funções de gerenciamento
   de memória do PHP. Portanto, o consumo de memória do mysqlnd pode ser rastreado
   usando chamadas de API PHP, como <function>memory_get_usage</function>. Como a memória
@@ -30,8 +30,8 @@
   e da Biblioteca Cliente MySQL. A Biblioteca Cliente MySQL
   está usando as chamadas de gerenciamento de memória do sistema operacional diretamente, portanto, os
   efeitos podem ser observados imediatamente no nível do sistema operacional.
- </para>
- <para>
+ </simpara>
+ <simpara>
   Qualquer limite de memória imposto pelo PHP também afeta o Driver Nativo MySQL. Isso
   pode causar erros de falta de memória ao buscar conjuntos de resultados grandes que excedem
   o tamanho da memória restante disponibilizada pelo PHP. Como a Biblioteca Cliente MySQL
@@ -41,30 +41,30 @@
   além do limite de memória do PHP. Mas também os scripts PHP podem processar conjuntos
   de resultados maiores, pois partes da memória alocada para armazenar os conjuntos de resultados estão além
   do controle do mecanismo PHP.
- </para>
- <para>
+ </simpara>
+ <simpara>
    As funções de gerenciamento de memória do PHP são invocadas pelo Driver Nativo MySQL através
    de um encapsulador leve. Entre outros, o encapsulador facilita a depuração.
- </para>
- <para>
+ </simpara>
+ <simpara>
    <emphasis role="bold">Lidando com conjuntos de resultados</emphasis>
- </para>
- <para>
+ </simpara>
+ <simpara>
   Os vários servidores MySQL e as diversas APIs do cliente diferenciam
   entre conjuntos de resultados <link linkend="mysqli.quickstart.statements">com buffer e sem buffer</link>.
   Conjuntos de resultados sem buffer são transferidos linha por linha do MySQL para o cliente
   à medida que o cliente itera sobre os resultados. Os resultados armazenados em buffer são buscados
   integralmente pela biblioteca cliente antes de serem repassados ​​ao cliente.
- </para>
- <para>
+ </simpara>
+ <simpara>
   O Driver Nativo MySQL está utilizando fluxos PHP para a comunicação da rede
   com o Servidor MySQL. Os resultados enviados pelo MySQL são buscados dos buffers da
   rede de fluxos do PHP para o buffer de resultados do mysqlnd. O buffer resultante é
   composto de zvals. Numa segunda etapa os resultados são disponibilizados para o script PHP.
   Esta transferência final do buffer de resultados para variáveis ​​PHP impacta o consumo de memória
   e é principalmente perceptível ao usar conjuntos de resultados armazenados em buffer.
- </para>
- <para>
+ </simpara>
+ <simpara>
   Por padrão o Driver Nativo MySQL tenta evitar armazenar
   resultados em buffer duas vezes na memória. Os resultados são mantidos apenas uma vez nos buffers
   de resultados internos e seus zvals. Quando os resultados são buscados em variáveis ​​PHP
@@ -78,8 +78,8 @@
   adicional e o uso de contadores de referência zval padrão.
   A cópia na gravação também deve ser feita se o usuário ler um conjunto de resultados em variáveis ​​PHP
   e liberar um conjunto de resultados antes que as variáveis ​​sejam desdefinidas.
- </para>
- <para>
+ </simpara>
+ <simpara>
   De modo geral, esse padrão funciona bem para scripts que leem um conjunto
   de resultados uma vez e não modificam variáveis ​​que contêm resultados. Sua principal desvantagem
   é a sobrecarga de memória causada pelo gerenciamento de referência adicional que
@@ -92,8 +92,8 @@
   se um script libera conjuntos de resultados explicitamente ou se o driver faz liberações
   implícitas e, portanto, a memória é usada por um tempo maior que o necessário. As estatísticas
   também ajudam a ver quantas operações de cópia na gravação ocorreram.
- </para>
- <para>
+ </simpara>
+ <simpara>
   Um script PHP lendo muitas linhas pequenas de um conjunto de resultados em buffer usando um trecho de código
   igual ou equivalente a <literal>while ($row = $res-&gt;fetch_assoc()) { ... }</literal>
   pode otimizar o consumo de memória solicitando cópias em vez de referências.
@@ -103,30 +103,30 @@
   a otimização do uso máximo de memória pode ajudar a melhorar o desempenho geral do sistema,
   embora para um script individual a abordagem de cópia possa ser mais lenta devido a
   alocações adicionais e operações de cópia de memória.
- </para>
- <para>
+ </simpara>
+ <simpara>
    <emphasis role="bold">Monitoramento e depuração</emphasis>
- </para>
- <para>
+ </simpara>
+ <simpara>
   Existem diversas formas de rastrear o uso de memória do Driver Nativo MySQL.
   Se o objetivo é obter uma visão geral rápida de alto nível ou verificar a eficiência da memória
   dos scripts PHP, então verifique as <link linkend="mysqlnd.stats">estatísticas</link>
   coletadas pela biblioteca. As estatísticas permitem, por exemplo, capturar
   instruções SQL que geram mais resultados do que são processados ​​por um script PHP.
- </para>
- <para>
+ </simpara>
+ <simpara>
   O log de rastreamento <link linkend="ini.mysqlnd.debug">debug</link> pode ser configurado para
   registrar chamadas de gerenciamento de memória. Isso ajuda a ver quando a memória está alocada
   ou liberada. No entanto, o tamanho dos blocos de memória solicitados pode não estar listado.
- </para>
- <para>
+ </simpara>
+ <simpara>
   Algumas versões recentes do Driver Nativo MySQL apresentam a emulação de
   situações aleatórias de falta de memória. Este recurso deve ser usado apenas pelos
   desenvolvedores C da biblioteca ou pelos autores do <link linkend="mysqlnd.plugin">plugin</link>
   do mysqlnd. Por favor, pesquise no código-fonte as configurações correspondentes do PHP
   e mais detalhes. O recurso é considerado privado e pode ser
   modificado a qualquer momento sem aviso prévio.
- </para>
+ </simpara>
 
 </chapter>
 <!-- Keep this comment at the end of the file
