@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 87d6bb1bbd5f118f5b0cf0160438f06c0f91ea45 Maintainer: leonardolara Status: ready --><!-- CREDITS: marcosmarcolin, leonardolara -->
+<!-- EN-Revision: 8ea24dc32374bf4f6b04005e317101e4c65a0214 Maintainer: leonardolara Status: ready --><!-- CREDITS: marcosmarcolin, leonardolara -->
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="opcache.configuration">
  &reftitle.runtime;
  &extension.runtime;
@@ -590,10 +590,169 @@
    <listitem>
     <simpara>
      Uma máscara de bits que controla quais passos de otimização são executados.
-     O padrão é aplicar todas as otimizações seguras.
-     Alterar o padrão é mais útil para depurar/desenvolver o otimizador
-     (consulte também <link linkend="ini.opcache.opt_debug_level">opcache.opt_debug_level</link>).
+     O valor padrão é <literal>0x7FFEBFFF</literal>, que habilita todas as
+     otimizações seguras. Desabilitar otimizações ou habilitar otimizações inseguras
+     é útil na maioria das vezes para depurar/desenvolver o otimizador.
     </simpara>
+    <simpara>
+     Cada bit da máscara habilita um passo específico da otimização:
+    </simpara>
+    <table>
+     <title>Máscara de Bits de Passos da Otimização</title>
+     <tgroup cols="4">
+      <thead>
+       <row>
+        <entry>Bit</entry>
+        <entry>Nome do Passo</entry>
+        <entry>&Description;</entry>
+        <entry>Padrão</entry>
+       </row>
+      </thead>
+      <tbody>
+       <row>
+        <entry>0</entry>
+        <entry>PASS_1</entry>
+        <entry>Otimizações simples de olho mágico</entry>
+        <entry>Ligado</entry>
+       </row>
+       <row>
+        <entry>1</entry>
+        <entry>PASS_2</entry>
+        <entry>Não utilizado (mesclado ao PASS_1)</entry>
+        <entry>Ligado</entry>
+       </row>
+       <row>
+        <entry>2</entry>
+        <entry>PASS_3</entry>
+        <entry>Otimização de salto simples</entry>
+        <entry>Ligado</entry>
+       </row>
+       <row>
+        <entry>3</entry>
+        <entry>PASS_4</entry>
+        <entry>Otimização de chamadas</entry>
+        <entry>Ligado</entry>
+       </row>
+       <row>
+        <entry>4</entry>
+        <entry>PASS_5</entry>
+        <entry>Otimização baseada em grafo de fluxo de controle</entry>
+        <entry>Ligado</entry>
+       </row>
+       <row>
+        <entry>5</entry>
+        <entry>PASS_6</entry>
+        <entry>Otimização baseada em análise de fluxo de dados</entry>
+        <entry>Ligado</entry>
+       </row>
+       <row>
+        <entry>6</entry>
+        <entry>PASS_7</entry>
+        <entry>Se o grafo de chamadas deve ser usado para otimizações baseadas em SSA.</entry>
+        <entry>Ligado</entry>
+       </row>
+       <row>
+        <entry>7</entry>
+        <entry>PASS_8</entry>
+        <entry>Propagação esparsa de constantes condicionais</entry>
+        <entry>Ligado</entry>
+       </row>
+       <row>
+        <entry>8</entry>
+        <entry>PASS_9</entry>
+        <entry>Otimização de variáveis ​​temporárias</entry>
+        <entry>Ligado</entry>
+       </row>
+       <row>
+        <entry>9</entry>
+        <entry>PASS_10</entry>
+        <entry>Remoção de opcodes NOP</entry>
+        <entry>Ligado</entry>
+       </row>
+       <row>
+        <entry>10</entry>
+        <entry>PASS_11</entry>
+        <entry>Compactação literal</entry>
+        <entry>Ligado</entry>
+       </row>
+       <row>
+        <entry>11</entry>
+        <entry>PASS_12</entry>
+        <entry>Pré-calcular o tamanho da pilha de chamadas</entry>
+        <entry>Ligado</entry>
+       </row>
+       <row>
+        <entry>12</entry>
+        <entry>PASS_13</entry>
+        <entry>Remoção de variáveis ​​não utilizadas</entry>
+        <entry>Ligado</entry>
+       </row>
+       <row>
+        <entry>13</entry>
+        <entry>PASS_14</entry>
+        <entry>Eliminação de código morto</entry>
+        <entry>Ligado</entry>
+       </row>
+       <row>
+        <entry>14</entry>
+        <entry>PASS_15</entry>
+        <entry>Coletar e substituir declarações constantes (inseguro)</entry>
+        <entry><emphasis>Desligado</emphasis></entry>
+       </row>
+       <row>
+        <entry>15</entry>
+        <entry>PASS_16</entry>
+        <entry>Inlining de função trivial (parte da otimização de chamadas)</entry>
+        <entry>Ligado</entry>
+       </row>
+       <row>
+        <entry>16</entry>
+        <entry>(Flag)</entry>
+        <entry>Ignorar a possibilidade de sobrecarga do operador (inseguro)</entry>
+        <entry><emphasis>Desligado</emphasis></entry>
+       </row>
+      </tbody>
+     </tgroup>
+    </table>
+    <note>
+     <title>Otimizações Seguras versus Inseguras</title>
+     <simpara>
+      <emphasis>Otimizações Seguras</emphasis> (habilitadas por padrão) preservam o comportamento
+      exato do código PHP enquanto melhora o desempenho. Elas incluem eliminação de código morto,
+      a redução de constantes e a otimização de saltos.
+     </simpara>
+     <simpara>
+      <emphasis>Otimizações Inseguras</emphasis> (desabilitadas por padrão) podem alterar o comportamento
+      em casos extremos:
+     </simpara>
+     <itemizedlist>
+      <listitem>
+       <simpara>
+        <emphasis>Bit 14</emphasis>: Coletando constantes. As constantes são substituídas
+        no momento da compilação, ignorando a ordem de declaração do momento da execução:
+       </simpara>
+       <informalexample>
+        <programlisting role="php">
+<![CDATA[
+<?php
+echo getA();         // Resultado: "hello" em vez de lançar um Error
+const A = "hello";
+function getA() { return A; }
+]]>
+        </programlisting>
+       </informalexample>
+      </listitem>
+      <listitem>
+       <simpara>
+        <emphasis>Bit 16</emphasis>: Ignorando a sobrecarga do operador.
+        Inseguro ao usar classes com <literal>do_operation</literal>
+        (ex.: <link linkend="book.gmp">GMP</link>,
+        <link linkend="book.bc">BCMath</link>) em operações aritméticas.
+        Com declarações de tipo, o otimizador pode aplicar as mesmas otimizações de forma segura.
+       </simpara>
+      </listitem>
+     </itemizedlist>
+    </note>
    </listitem>
   </varlistentry>
   <varlistentry xml:id="ini.opcache.inherited-hack">
@@ -626,13 +785,13 @@
    </term>
    <listitem>
     <simpara>
-     A localização do arquivo de blacklist do OPcache. Um arquivo de blacklist
+     A localização do arquivo de eliminação do OPcache. Um arquivo de eliminação
      é um arquivo de texto contendo os nomes dos arquivos que não devem ser acelerados, um por
      linha. Curingas(*) são permitidos e prefixos também podem ser fornecidos.
      As linhas iniciadas com ponto e vírgula são ignoradas como comentários.
     </simpara>
     <simpara>
-     Um arquivo de blacklist simples pode ter a seguinte aparência:
+     Um arquivo de eliminação simples pode ter a seguinte aparência:
     </simpara>
     <informalexample>
      <programlisting>
