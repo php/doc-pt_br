@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 02bee41067ab2822cbffcb4b3b2387f79488dffd Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<reference xml:id="class.nodiscard" role="class" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
+ <title>O atributo NoDiscard</title>
+ <titleabbrev>NoDiscard</titleabbrev>
+
+ <partintro>
+
+  <section xml:id="nodiscard.intro">
+   &reftitle.intro;
+   <simpara>
+    Este atributo pode ser usado para indicar que o valor de retorno de uma função
+    ou método não deve ser descartado. Se o valor de retorno não for usado de
+    nenhuma forma, um aviso será emitido.
+   </simpara>
+   <simpara>
+    Isso é útil para funções onde não verificar o valor de retorno provavelmente
+    é um bug.
+   </simpara>
+   <simpara>
+    Para descartar intencionalmente o valor de retorno de tal função, use a conversão
+    (void) para suprimir o aviso.
+   </simpara>
+   <note>
+    <simpara>
+     Como os atributos são projetados para serem retrocompatíveis,
+     <code>#[\NoDiscard]</code> pode ser adicionado a funções e métodos
+     mesmo quando o PHP 8.4 ou versões anteriores são suportados, ele simplesmente não fará nada.
+     No PHP 8.5 e versões posteriores, um aviso será emitido se o resultado não for usado.
+     Para suprimir o aviso sem usar <code>(void)</code>,
+     que não é suportado antes do PHP 8.5,
+     considere usar uma variável como <code>$_</code>.
+    </simpara>
+   </note>
+  </section>
+
+  <section xml:id="nodiscard.synopsis">
+   &reftitle.classsynopsis;
+
+   <classsynopsis class="class">
+    <ooclass>
+     <modifier>final</modifier>
+     <classname>NoDiscard</classname>
+    </ooclass>
+
+    <classsynopsisinfo role="comment">&Properties;</classsynopsisinfo>
+    <fieldsynopsis>
+     <modifier>public</modifier>
+     <modifier>readonly</modifier>
+     <type class="union"><type>string</type><type>null</type></type>
+     <varname linkend="nodiscard.props.message">message</varname>
+    </fieldsynopsis>
+
+    <classsynopsisinfo role="comment">&Methods;</classsynopsisinfo>
+    <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.nodiscard')/db:refentry/db:refsect1[@role='description']/descendant::db:constructorsynopsis[@role='NoDiscard'])">
+     <xi:fallback/>
+    </xi:include>
+   </classsynopsis>
+
+  </section>
+
+  <section xml:id="nodiscard.props">
+   &reftitle.properties;
+   <variablelist>
+    <varlistentry xml:id="nodiscard.props.message">
+     <term><varname>message</varname></term>
+     <listitem>
+      <simpara>
+       Uma mensagem opcional explicando por que o valor retornado não deve ser descartado.
+      </simpara>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </section>
+
+  <section>
+   &reftitle.examples;
+   <example>
+    <title>Uso básico</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+/**
+ * Processa todos os itens fornecidos e retorna um array com os resultados da
+ * operação para cada item. `null` indica sucesso e uma exceção indica
+ * um erro. As chaves do array de resultados correspondem às chaves do array $items.
+ *
+ * @param array<string> $items
+ * @return array<null|Exception>
+ */
+#[\NoDiscard("pois o processamento pode falhar para itens individuais")]
+function bulk_process(array $items): array {
+	$results = [];
+
+	foreach ($items as $key => $item) {
+		if (\random_int(0, 9999) < 9999) {
+   // Finge fazer algo útil com $item,
+   // o que terá sucesso em 99,99% dos casos.
+			echo "Processando {$item}", PHP_EOL;
+			$error = null;
+		} else {
+			$error = new \Exception("Falha ao processar {$item}.");
+		}
+
+		$results[$key] = $error;
+	}
+
+	return $results;
+}
+
+bulk_process($items);
+
+?>
+]]>
+    </programlisting>
+    &example.outputs.85.similar;
+    <screen>
+<![CDATA[
+Warning: The return value of function bulk_process() should either be used or intentionally ignored by casting it as (void), pois o processamento pode falhar para itens individuais
+]]>
+    </screen>
+   </example>
+   <example>
+    <title>Descartar intencionalmente o valor de retorno</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+#[\NoDiscard]
+function some_command(): int {
+    return 1;
+}
+
+// Suprimir o aviso usando (void) - PHP 8.5+
+(void) some_command();
+
+// Para compatibilidade com versões do PHP anteriores à 8.5, utilize uma variável temporária
+$_ = some_command();
+
+?>
+]]>
+    </programlisting>
+   </example>
+  </section>
+
+  <section xml:id="nodiscard.seealso">
+   &reftitle.seealso;
+   <simplelist>
+    <member><link linkend="language.attributes">Visão geral dos atributos</link></member>
+   </simplelist>
+  </section>
+
+ </partintro>
+
+ &language.predefined.attributes.nodiscard.construct;
+
+</reference>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
