@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- EN-Revision: 74ef2355c59e814d14f75a0792d22727be72f137 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
-<refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.ssh2-auth-pubkey-file">
+<refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.ssh2-auth-pubkey">
  <refnamediv>
-  <refname>ssh2_auth_pubkey_file</refname>
-  <refpurpose>Autentica usando uma chave pública lida de um arquivo</refpurpose>
+  <refname>ssh2_auth_pubkey</refname>
+  <refpurpose>Autentica usando uma chave pública em uma variável</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <type>bool</type><methodname>ssh2_auth_pubkey_file</methodname>
+   <type>bool</type><methodname>ssh2_auth_pubkey</methodname>
    <methodparam><type>resource</type><parameter>session</parameter></methodparam>
    <methodparam><type>string</type><parameter>username</parameter></methodparam>
-   <methodparam><type>string</type><parameter>pubkeyfile</parameter></methodparam>
-   <methodparam><type>string</type><parameter>privkeyfile</parameter></methodparam>
+   <methodparam><type>string</type><parameter>pubkey</parameter></methodparam>
+   <methodparam><type>string</type><parameter>privkey</parameter></methodparam>
    <methodparam choice="opt"><type>string</type><parameter>passphrase</parameter></methodparam>
   </methodsynopsis>
   <simpara>
-   Autentica usando uma chave pública lida de um arquivo.
+   Autentica usando uma chave pública em uma variável.
   </simpara>
  </refsect1>
 
@@ -37,25 +37,25 @@
     <term><parameter>username</parameter></term>
     <listitem>
      <simpara>
-      Nome do usuário para autenticação no servidor remoto.
+       Nome do usuário para autenticação no servidor remoto.
      </simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><parameter>pubkeyfile</parameter></term>
+    <term><parameter>pubkey</parameter></term>
     <listitem>
      <simpara>
-      O arquivo de chave pública precisa estar no formato OpenSSH. Deve ser algo como:
-     </simpara>
-     <simpara>
-      ssh-rsa AAAAB3NzaC1yc2EAAA....NX6sqSnHA8= rsa-key-20121110
+      Chave pública no formato do OpenSSH. Deve ser algo como:
+      <literal>ssh-rsa AAAAB3NzaC1yc2EAAA....NX6sqSnHA8= rsa-key-20121110</literal>
      </simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><parameter>privkeyfile</parameter></term>
+    <term><parameter>privkey</parameter></term>
     <listitem>
      <simpara>
+      Chave público OpenSSH. Deve começar com:
+      <literal>-----BEGIN RSA PRIVATE KEY-----</literal>
      </simpara>
     </listitem>
    </varlistentry>
@@ -63,8 +63,8 @@
     <term><parameter>passphrase</parameter></term>
     <listitem>
      <simpara>
-      Se <parameter>privkeyfile</parameter> estiver criptografado (o que deveria
-      estar), a senha <parameter>passphrase</parameter> deverá ser fornecida.
+      Se <parameter>privkey</parameter> for criptografada (e deveria
+      ser), o parâmetro <parameter>passphrase</parameter> precisa ser fornecido.
      </simpara>
     </listitem>
    </varlistentry>
@@ -86,13 +86,15 @@
 <![CDATA[
 <?php
 $connection = ssh2_connect('shell.example.com', 22, array('hostkey'=>'ssh-rsa'));
+$publicKey = file_get_contents('/home/username/.ssh/id_rsa.pub');
+$privateKey = file_get_contents('/home/username/.ssh/id_rsa');
 
-if (ssh2_auth_pubkey_file($connection, 'username',
-                          '/home/username/.ssh/id_rsa.pub',
-                          '/home/username/.ssh/id_rsa', 'secret')) {
-  echo "Autenticação de chave pública bem-sucedida\n";
+if (ssh2_auth_pubkey($connection, 'username',
+                     $publicKey,
+                     $privateKey, 'secret')) {
+  echo "Sucesso na autenticação com chave pública\n";
 } else {
-  die('Falha na autenticação da chave pública');
+  die('Falha na autenticação com chave pública');
 }
 ?>
 ]]>
@@ -118,7 +120,7 @@ if (ssh2_auth_pubkey_file($connection, 'username',
  <refsect1 role="seealso">
   &reftitle.seealso;
   <simplelist>
-   <member><function>ssh2_auth_pubkey</function></member>
+   <member><function>ssh2_auth_pubkey_file</function></member>
   </simplelist>
  </refsect1>
 
