@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: bdf9a4e40204c805f2c2a5c94c2f2f8f5556195a Maintainer: ae Status: ready --><!-- CREDITS: rfoliveira,ae,leonardolara -->
+<!-- EN-Revision: cd4180557a185469a64a7eb26f7be98d0a5f1ebb Maintainer: leonardolara Status: ready --><!-- CREDITS: rfoliveira,ae,leonardolara -->
  <chapter xml:id="features.http-auth" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Autenticação HTTP com PHP</title>
 
@@ -29,8 +29,8 @@
 <![CDATA[
 <?php
 if (!isset($_SERVER['PHP_AUTH_USER'])) {
+    header('HTTP/1.1 401 Unauthorized');
     header('WWW-Authenticate: Basic realm="My Realm"');
-    header('HTTP/1.0 401 Unauthorized');
     echo 'Texto enviado caso o usuário clique no botão Cancelar';
     exit;
 } else {
@@ -44,13 +44,13 @@ if (!isset($_SERVER['PHP_AUTH_USER'])) {
   </para>
 
   <note>
-   <title>Nota sobre compatibilidade</title>
+   <title>Compatibilidade</title>
    <para>
     Por favor, seja cauteloso ao codificar as linhas do cabeçalho HTTP. Para garantir máxima
     compatibilidade com todos os clientes, a palavra-chave "Basic" deve ser escrita com um
     "B" maiúsculo, a string realm deve ser envolvida por aspas duplas (nunca por aspas simples),
     e apenas um espaço deve preceder o código <emphasis>401</emphasis> na linha do cabeçalho
-    <emphasis>HTTP/1.0 401</emphasis>. Parâmetros de autenticação precisam ser separados por
+    <emphasis>HTTP/1.1 401</emphasis>. Parâmetros de autenticação precisam ser separados por
     vírgula.
    </para>
   </note>
@@ -63,16 +63,8 @@ if (!isset($_SERVER['PHP_AUTH_USER'])) {
    o usuário em um arquivo dbm.
   </para>
 
-  <para>
-   Cuidado com navegadores Internet Explorer bugados por aí. Eles
-   parecem muito minuciosos sobre a ordem dos cabeçalhos. Enviar
-   o cabeçalho <emphasis>WWW-Authenticate</emphasis> antes do
-   cabeçalho <literal>HTTP/1.0 401</literal> parece resolver isso
-   por enquanto.
-  </para>
-
   <note>
-   <title>Nota de configuração</title>
+   <title>Configuração do Apache</title>
    <para>
     O PHP usa uma diretiva chamada <literal>AuthType</literal>
     para determinar se a autenticação externa está em efeito.
@@ -84,68 +76,34 @@ if (!isset($_SERVER['PHP_AUTH_USER'])) {
    controle uma URL não autenticada roube senhas de
    URLs autenticadas no mesmo servidor.
   </simpara>
-  <simpara>
-   Tanto o Netscape Navigator quanto o Internet Explorer apagarão o cache de
-   autenticação da janela local do navegador para o realm após receber uma
-   resposta 401 do servidor. Isso pode efetivamente "deslogar" um usuário,
-   forçando o mesmo a re-entrar seu nome de usuário e senha. Algumas pessoas
-   usam isso para delimitar o tempo de um login, ou prover um botão de "log-out".
-  </simpara>
-  <para>
-   <example>
-    <title>Exemplo de Autenticação HTTP forçando um novo nome/senha</title>
-    <programlisting role="php">
-<![CDATA[
-<?php
-function authenticate() {
-    header('WWW-Authenticate: Basic realm="Test Authentication System"');
-    header('HTTP/1.0 401 Unauthorized');
-    echo "Você deve digitar um login e senha válidos para acessar este recurso\n";
-    exit;
-}
 
-if (!isset($_SERVER['PHP_AUTH_USER']) ||
-    ($_POST['SeenBefore'] == 1 && $_POST['OldAuth'] == $_SERVER['PHP_AUTH_USER'])) {
-    authenticate();
-} else {
-    echo "<p>Bem-vindo: " . htmlspecialchars($_SERVER['PHP_AUTH_USER']) . "<br />";
-    echo "Antigo: " . htmlspecialchars($_REQUEST['OldAuth']);
-    echo "<form action='' method='post'>\n";
-    echo "<input type='hidden' name='SeenBefore' value='1' />\n";
-    echo "<input type='hidden' name='OldAuth' value=\"" . htmlspecialchars($_SERVER['PHP_AUTH_USER']) . "\" />\n";
-    echo "<input type='submit' value='Re-autenticar' />\n";
-    echo "</form></p>\n";
-}
-?>
-]]>
-    </programlisting>
-   </example>
-  </para>
-  <simpara>
-   Este comportamento não é requerido pelo padrão de autenticação <literal>HTTP Basic</literal>,
-   então nunca se deve depender dele. Testes com
-   <literal>Lynx</literal> tem mostrado que <literal>Lynx</literal> não apaga
-   as credenciais de autenticação com uma resposta 401 do servidor, assim, ao pressionar "Voltar"
-   e então "Ir" novamente abrirá o recurso contanto que os requerimento de credenciais
-   não tenha mudado. Contudo, o usuário pode pressionar a tecla
-   <literal>'_'</literal> para apagar suas informações de autenticação.
-  </simpara>
-  <simpara>
-   Para fazer com que a autenticação HTTP funcione utilizando um servidor IIS com a versão CGI
-   do PHP é necessário editar a configuração "<literal>Directory Security</literal>" do IIS.
-   Clique em "<literal>Edit</literal>" e marque somente
-   "<literal>Anonymous Access</literal>",
-   deixe todos os outros campos desmarcados.
-  </simpara>
   <note>
-   <title>Nota sobre IIS:</title>
+   <title>Comportamento do navegador</title>
    <simpara>
-    Para que a autenticação HTTP funcione com IIS, a diretiva do PHP
-    <link linkend="ini.cgi.rfc2616-headers">cgi.rfc2616_headers</link> deve
-    ser definida como <literal>0</literal> (o valor default).
+    A autenticação básica HTTP é realmente básica e não foi projetada para suportar
+    logouts. Como o HTTP é um protocolo sem estado, a maioria dos navegadores armazena em cache as
+    credenciais fornecidas assim que um código de status <literal>2xx</literal> é detectado,
+    e as envia em todas as requisições, até que o navegador seja fechado. Não há
+    uma maneira definida para um servidor solicitar uma nova solicitação de credenciais.
+
+    Ao longo dos anos, várias soluções alternativas para isso se espalharam como conselhos na internet,
+    mas todas dependem de como diferentes navegadores optaram por lidar com casos extremos indefinidos
+    (ou mesmo violações do padrão HTTP). É melhor evitar essas
+    soluções alternativas e não usar a autenticação básica para nada sério.
    </simpara>
   </note>
 
+  <note>
+   <title>Configuração do IIS</title>
+   <simpara>
+    Para que a autenticação HTTP funcione no servidor IIS com a versão CGI do
+    PHP, a diretiva php.ini <link linkend="ini.cgi.rfc2616-headers">cgi.rfc2616_headers</link>
+    deve ser definida como <literal>0</literal> (o valor padrão) e a configuração do IIS
+    em "<literal>Directory Security</literal>" (ou "Segurança do Diretório" / "Autenticação") deve ser editada.
+    Clique em "<literal>Edit</literal>" (ou "Editar") e marque apenas "<literal>Anonymous Access</literal>" (ou "Acesso Anônimo"),
+    deixando todos os outros campos desmarcados.
+   </simpara>
+  </note>
  </chapter>
 
 <!-- Keep this comment at the end of the file
