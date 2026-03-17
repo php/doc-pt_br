@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 5e15a6c3e4d5819102361ae78e73c90a06238c8a Maintainer: ae Status: ready --><!-- CREDITS: narigone,felipe,lcobucci,fabioluciano,ae,github:GabrielGabriel197 -->
+<!-- EN-Revision: 8f51247cb4631b29686f867bd904dfe5b2678074 Maintainer: leonardolara Status: ready --><!-- CREDITS: narigone,felipe,lcobucci,fabioluciano,ae,leonardolara -->
  <sect1 xml:id="language.oop5.magic" xmlns="http://docbook.org/ns/docbook">
   <title>Métodos Mágicos</title>
   <para>
@@ -24,10 +24,10 @@
    <link linkend="object.set">__set()</link>,
    <link linkend="object.isset">__isset()</link>,
    <link linkend="object.unset">__unset()</link>,
-   <link linkend="object.sleep">__sleep()</link>,
-   <link linkend="object.wakeup">__wakeup()</link>,
    <link linkend="object.serialize">__serialize()</link>,
    <link linkend="object.unserialize">__unserialize()</link>,
+   <link linkend="object.sleep">__sleep()</link>,
+   <link linkend="object.wakeup">__wakeup()</link>,
    <link linkend="object.tostring">__toString()</link>,
    <link linkend="object.invoke">__invoke()</link>,
    <link linkend="object.set-state">__set_state()</link>,
@@ -63,98 +63,6 @@
     senão um erro fatal é lançado.
    </para>
   </warning>
-
-  <sect2 xml:id="language.oop5.magic.sleep">
-   <title>
-    <link linkend="object.sleep">__sleep()</link> e
-    <link linkend="object.wakeup">__wakeup()</link>
-   </title>
-
-   <methodsynopsis xml:id="object.sleep">
-    <modifier>public</modifier> <type>array</type><methodname>__sleep</methodname>
-    <void/>
-   </methodsynopsis>
-   <methodsynopsis xml:id="object.wakeup">
-    <modifier>public</modifier> <type>void</type><methodname>__wakeup</methodname>
-    <void/>
-   </methodsynopsis>
-
-   <para>
-    <function>serialize</function> checa se sua classe tem uma função com
-    o nome mágico <link linkend="object.sleep">__sleep()</link>. Se houver, a função é
-    executada antes de qualquer serialização. Ela pode limpar o objeto
-    e deve retornar um array com os nomes de todas as variáveis
-    do objeto que devem ser serializadas. Se o método não retornar nada,
-    então &null; é serializado e um
-    <constant>E_NOTICE</constant> disparado.
-   </para>
-   <note>
-    <para>
-     Não é possível que <link linkend="object.sleep">__sleep()</link> retorne nomes de
-     propriedades privadas da classe pai. Fazer isso causará um erro de nível
-     <constant>E_NOTICE</constant>.
-     Como alternativa, utilize <link linkend="object.serialize">__serialize()</link>.
-    </para>
-   </note>
-   <note>
-    <para>
-     Desde o PHP 8.0.0, retornar um valor que não seja um array de <link linkend="object.sleep">__sleep()</link> gera um warning. Anteriormente gerava um aviso.
-    </para>
-   </note>
-   <para>
-    O intuito do método <link linkend="object.sleep">__sleep()</link> é enviar dados
-    pendentes ou realizar tarefas de limpeza. Além disso, a função é
-    útil se tiver objetos muito grandes que não precisem ser completamente salvos.
-   </para>
-   <para>
-    Ao mesmo tempo, <function>unserialize</function> checa pela
-    presença da função com o nome mágico
-    <link linkend="object.wakeup">__wakeup()</link>. Se presente, essa função pode
-    reconstruir qualquer recurso que o objeto possa ter.
-   </para>
-   <para>
-    O intuito do método <link linkend="object.wakeup">__wakeup()</link> é
-    restabelecer qualquer conexão com banco de dados que podem ter sido perdidas
-    durante a serialização, e realizar outras tarefas de
-    reinicialização.
-   </para>
-   <example>
-    <title>Sleep e wakeup</title>
-    <programlisting role="php">
-<![CDATA[
-<?php
-class Connection
-{
-    protected $link;
-    private $dsn, $username, $password;
-
-    public function __construct($dsn, $username, $password)
-    {
-        $this->dsn = $dsn;
-        $this->username = $username;
-        $this->password = $password;
-        $this->connect();
-    }
-
-    private function connect()
-    {
-        $this->link = new PDO($this->dsn, $this->username, $this->password);
-    }
-
-    public function __sleep()
-    {
-        return array('dsn', 'username', 'password');
-    }
-
-    public function __wakeup()
-    {
-        $this->connect();
-    }
-}?>
-]]>
-    </programlisting>
-   </example>
-  </sect2>
 
   <sect2 xml:id="language.oop5.magic.serialize">
    <title>
@@ -249,6 +157,109 @@ class Connection
         $this->username = $data['user'];
         $this->password = $data['pass'];
 
+        $this->connect();
+    }
+}?>
+]]>
+    </programlisting>
+   </example>
+  </sect2>
+
+  <sect2 xml:id="language.oop5.magic.sleep">
+   <title>
+    <link linkend="object.sleep">__sleep()</link> e
+    <link linkend="object.wakeup">__wakeup()</link>
+   </title>
+
+  <warning>
+   <simpara>
+    Este mecanismo de serialização está praticamente descontinuado a partir do PHP 8.5.0.
+    Foi mantido para compatibilidade com versões anteriores.
+    Entretanto, código novo ou existente deve ser atualizado para uso dos métodos mágicos
+    <link linkend="object.serialize">__serialize()</link> e
+    <link linkend="object.unserialize">__unserialize()</link>
+    em seu lugar.
+   </simpara>
+  </warning>
+
+   <methodsynopsis xml:id="object.sleep">
+    <modifier>public</modifier> <type>array</type><methodname>__sleep</methodname>
+    <void/>
+   </methodsynopsis>
+   <methodsynopsis xml:id="object.wakeup">
+    <modifier>public</modifier> <type>void</type><methodname>__wakeup</methodname>
+    <void/>
+   </methodsynopsis>
+
+   <para>
+    <function>serialize</function> verifica se a classe tem uma função com
+    o nome mágico <link linkend="object.sleep">__sleep()</link>. Se tiver, a função é
+    executada antes de qualquer serialização. Ela pode limpar o objeto
+    e deve retornar um array com os nomes de todas as variáveis
+    do objeto que devem ser serializadas.
+    Se o método não retornar nada, então &null; é serializado e um
+    <constant>E_NOTICE</constant> é emitido.
+   </para>
+   <note>
+    <para>
+     Não é possível que <link linkend="object.sleep">__sleep()</link> retorne nomes de
+     propriedades privadas da classe superior. Fazer isso causará um erro de nível
+     <constant>E_NOTICE</constant>.
+     Como alternativa, utilize <link linkend="object.serialize">__serialize()</link>.
+    </para>
+   </note>
+   <note>
+    <para>
+     A partir do PHP 8.0.0, retornar um valor que não seja um array originado de <link linkend="object.sleep">__sleep()</link> gera um alerta. Anteriormente gerava um aviso.
+    </para>
+   </note>
+   <para>
+    O intuito do método <link linkend="object.sleep">__sleep()</link> é enviar dados
+    pendentes ou realizar tarefas de limpeza similares. Além disso, a função é
+    útil se um objeto muito grande não precisar ser completamente salvo.
+   </para>
+   <para>
+    Ao mesmo tempo, <function>unserialize</function> verifica a
+    presença da função com o nome mágico
+    <link linkend="object.wakeup">__wakeup()</link>. Se presente, essa função pode
+    reconstruir quaisquer recursos que o objeto possa ter.
+   </para>
+   <para>
+    O intuito do método <link linkend="object.wakeup">__wakeup()</link> é
+    restabelecer quaisquer conexões com bancos de dados que possam ter sido perdidas
+    durante a serialização e realizar outras tarefas de
+    reinicialização.
+   </para>
+   <example>
+    <title>Sleep e wakeup</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+class Connection
+{
+    protected $link;
+    private $dsn, $username, $password;
+
+    public function __construct($dsn, $username, $password)
+    {
+        $this->dsn = $dsn;
+        $this->username = $username;
+        $this->password = $password;
+        $this->connect();
+    }
+
+    private function connect()
+    {
+        $this->link = new PDO($this->dsn, $this->username, $this->password);
+    }
+
+    public function __sleep()
+    {
+        return array('dsn', 'username', 'password');
+    }
+
+    public function __wakeup()
+    {
         $this->connect();
     }
 }?>
