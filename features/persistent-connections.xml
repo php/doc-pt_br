@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: cd8b964b8566801265f0d287db6eb651f93be950 Maintainer: leonardolara Status: ready --><!-- CREDITS: williancarminato,narigone,ae,leonardolara -->
+<!-- EN-Revision: ee5ee84013f11aaaf01b09484bc9aa3225379748 Maintainer: leonardolara Status: ready --><!-- CREDITS: williancarminato,narigone,ae,leonardolara -->
 <chapter xml:id="features.persistent-connections" xmlns="http://docbook.org/ns/docbook">
  <title>Conexões Persistentes com o Banco de Dados</title>
 
@@ -7,21 +7,21 @@
   <title>O que são Conexões Persistentes?</title>
   <simpara>
    Conexões persistentes são conexões que não fecham quando a
-   execução do seu script termina. Quando uma conexão persistente é
-   requisitada, o PHP verifica se já existe uma conexão persistente
-   idêntica (que foi mantida aberta anteriormente) - e, se ela existir, ele
-   a usa. Se ela não existir, ele cria a conexão. Uma conexão
-   'idêntica' é uma conexão que foi aberta para o mesmo host, com o
+   execução do script termina. Quando uma conexão persistente é
+   requisitada, o PHP verifica se uma conexão persistente
+   idêntica (que foi mantida aberta anteriormente) já existe; se existir,
+   ela é reutilizada, senão, uma nova conexão é criada. Uma conexão
+   'idêntica' é uma aberta para o mesmo host com o
    mesmo nome de usuário e a mesma senha (onde for aplicável).
   </simpara>
   <simpara>
-   Não há nenhum método para solicitar uma conexão específica ou garantir
-   se será obtida uma conexão existente ou uma nova (se todas as conexões existentes
-   estiverem em uso ou se a solicitação estiver sendo atendida por um trabalhador diferente,
-   que tenha um conjunto separado de conexões).
+   Não há nenhuma maneira de solicitar uma conexão específica ou de garantir
+   que a conexão retornada sera uma existente ou uma
+   nova (se todas as conexões existentes estiverem em uso ou se a solicitação estiver sendo
+   atendida por um trabalhador diferente, que tem um conjunto separado de conexões).
   </simpara>
   <simpara>
-   Isso significa que não se pode usar conexões persistentes do PHP para, por exemplo:
+   Portanto, conexões persistentes do PHP não podem ser usadas para, por exemplo:
   </simpara>
   <simplelist>
    <member>atribuir uma sessão de banco de dados específica a um usuário da web específico</member>
@@ -29,7 +29,7 @@
    <member>iniciar uma consulta em uma solicitação e coletar os resultados em outra</member>
   </simplelist>
   <simpara>
-   Conexões persistentes não oferecem <emphasis>nenhuma</emphasis>
+   Conexões persistentes não fornecem <emphasis>nenhuma</emphasis>
    funcionalidade que não seria possível com conexões não persistentes.
   </simpara>
  </simplesect>
@@ -43,28 +43,28 @@
   <simpara>
    O primeiro método é usar o PHP como um CGI "wrapper". Quando executado dessa
    maneira, uma instância do interpretador do PHP é criada e destruída
-   para cada requisição de página (para uma página PHP) para o seu servidor web.
+   para cada requisição de página (para uma página PHP) para o servidor web.
    Como ela é destruída após cada requisição, quaisquer recursos que ela
    adquirir (como uma conexão para um servidor de banco de dados SQL) são fechados quando
-   ela é destruída. Nesse caso, você não ganha nada por tentar
+   ela é destruída. Nesse caso, não há ganho em
    usar conexões persistentes - elas simplesmente não persistem.
   </simpara>
   <simpara>
    O segundo método, e o mais popular, é rodar o PHP-FPM ou o PHP como um módulo
-   em um servidor web com multi-processos, que atualmente só inclui o Apache.
+   em um servidor web com multi-processos (atualmente somente o Apache).
    Essas configurações têm tipicamnente um processo (o pai) que
    coordena uma série de processos (seus filhos) que realmente fazem
    o trabalho de servir as páginas web. Quando uma requisição chega de um
    cliente, ela é entregue à um dos filhos que já não estiver
    servindo outro cliente. Isso significa que quando o mesmo cliente
    faz uma segunda requisição para o servidor, ele pode ser atendido por um processo
-   filho diferente do que da primeira vez. Ao abrir uma conexão persistente,
-   cada página que requisitar serviços de SQL pode reutilizar a mesma
-   conexão estabelecida ao servidor SQL.
+   filho diferente do que da primeira vez. Uma vez que uma conexão persistente tenha sido
+   aberta, cada página subsequente servida pelo mesmo processo filho pode reutilizar a
+   conexão já estabelecida ao servidor SQL.
   </simpara>
   <note>
    <para>
-    Pode-se verificar qual método as solicitações web usam verificando o valor de
+    O método em uso pode ser consultado verificando o valor de
     "Server API" na saída de <function>phpinfo</function> ou o valor de
     <constant>PHP_SAPI</constant>, executado a partir de uma solicitação web.
    </para>
@@ -82,8 +82,8 @@
    Como a linha de comando PHP usa um novo processo para cada script, conexões persistentes
    não são compartilhadas entre scripts de linha de comando, portanto, não há
    nenhum valor em usá-las em scripts transitórios, como crons ou comandos.
-   No entanto, elas podem ser úteis se, por exemplo, você estiver escrevendo um servidor de aplicativos
-   de longa duração que atende a muitas solicitações ou tarefas e cada uma pode precisar
+   No entanto, elas podem ser úteis, por exemplo, em um servidor de aplicação de longa
+   duração que atende a muitas solicitações ou tarefas, onde cada uma pode precisar
    de sua própria conexão com o banco de dados.
   </simpara>
  </simplesect>
@@ -91,42 +91,39 @@
  <simplesect xml:id="persistent-connections.why">
   <title>Por que usá-las?</title>
   <simpara>
-   Conexões persistentes são boas se a sobrecarga para criar uma conexão ao
-   servidor SQL for alta. Se essa sobrecarga é realmente alta ou não depende
-   de vários fatores: o tipo de banco de dados, se está ou não
-   na mesma máquina do servidor web, o quão carregada
-   está a máquina do servidor SQL e assim por diante. O
-   ponto é que se a sobrecarga de conexão for alta, conexões
-   persistentes ajudam consideravelmente. Elas fazem com que os processos filhos
-   simplesmente se conectem uma vez só durante toda sua duração, ao invés de
-   cada vez que eles processam uma página que requer uma conexão ao servidor
-   SQL. Isso significa que cada filho que abriu uma conexão
-   persistente terá sua própria conexão persistente para o
-   servidor. Por exemplo, se você tivesse 20 processos filhos diferentes que
-   rodassem um script que fizesse uma conexão persistente à um servidor SQL,
-   você teria 20 conexões diferentes servidor SQL, uma para
-   cada filho.
+   Conexões persistentes são benéficas quando a sobrecarga para criar uma conexão ao
+   servidor SQL é alta. Se essa sobrecarga é realmente significativa depende
+   de vários fatores como o tipo de banco de dados, se reside na mesma
+   máquina do servidor web e o quão carregada está a máquina. Quando
+   a sobrecarga de conexão é alta, conexões persistentes podem ajudar consideravelmente:
+   cada processo filho se conecta uma vez só durante toda sua duração, e não
+   a cada vez que ele processa uma página que requer uma conexão ao servidor
+   SQL. Isso significa que cada filho que abre uma conexão persistente
+   manterá sua própria conexão persistente ao servidor. Por exemplo, se cada um de 20 processos
+   filhos diferentes rodarem um script que faz uma conexão persistente ao servidor
+   SQL, haverá 20 conexões separadas a esse servidor,
+   uma de cada filho.
   </simpara>
  </simplesect>
 
  <simplesect xml:id="persistent-connections.drawbacks.conn-limits">
   <title>Possíveis desvantagens: limites de conexão</title>
   <simpara>
-   Perceba, no entanto, que isso pode ter algumas desvantagens se você estiver
-   usando um banco de dados com limite de conexões que são excedidas pela conexões
-   persistentes dos filhos. Se o seu banco de dados tem um limite de 16 conexões
-   simultâneas, e durante um momento de pico de acessos, 17 processos
-   filhos tentarem se conectar, um deles não será capaz. Se houver
-   bugs no seus scripts que não permitem que as conexões se fechem
-   (como loops infinitos) o banco de dados com apenas 16 conexões
-   pode rapidamente ficar sobrecarregado.
+   Perceba, no entanto, que isso pode ter desvantagens ao
+   usar um banco de dados com limite de conexões que são excedidas pela conexões
+   persistentes dos filhos. Se o banco de dados tem um limite de 16 conexões
+   simultâneas e durante uma sessão movimentada do servidor 17 processos
+   filhos tentarem se conectar, um deles falhará. Se houver
+   bugs nos scripts que não permitem que as conexões se fechem
+   (como loops infinitos), um banco de dados com apenas 16 conexões
+   pode rapidamente ficar atolado.
   </simpara>
   <simpara>
    Conexões persistentes geralmente aumentam o número de conexões abertas
    a qualquer momento, pois os trabalhadores ociosos ainda manterão as conexões
-   para as solicitações anteriores que atenderam. Se um grande número de trabalhadores for criado para
-   lidar com um fluxo de solicitações, as conexões que eles abriram permanecerão até
-   que o trabalhador seja encerrado ou o servidor de banco de dados feche a conexão.
+   para as solicitações anteriores. Se um grande número de trabalhadores for criado para
+   lidar com um pico de solicitações, as conexões que eles abriram permanecerão até
+   que o trabalhador seja encerrado ou que o servidor de banco de dados feche a conexão.
   </simpara>
   <simpara>
    Certifique-se de que o número máximo de conexões permitidas pelo servidor de banco de dados
@@ -183,7 +180,7 @@
   <simpara>
    Considerando seu comportamento e as potenciais desvantagens descritas acima, não se deve
    usar conexões persistentes sem uma análise cuidadosa. Elas não devem ser
-   usadas sem implementar alterações adicionais em sua aplicação ou sem um configuração cuidadosa
+   usadas sem implementar alterações adicionais na aplicação ou sem um configuração cuidadosa
    do servidor de banco de dados e servidor web e/ou PHP-FPM.
   </simpara>
   <simpara>
