@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: e80ef2394f0c64be66917a5d4335736ae05b774f Maintainer: leonardolara Status: ready --><!-- CREDITS: narigone, fernandowobeto, leonardolara -->
+<!-- EN-Revision: f72c6031982a6f8152ef351d20f8e0d90e8f1612 Maintainer: leonardolara Status: ready --><!-- CREDITS: narigone, fernandowobeto, leonardolara -->
 <refentry xml:id="function.http-build-query" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>http_build_query</refname>
@@ -40,6 +40,14 @@
        Se <parameter>data</parameter> é um objeto, então somente propriedades
        públicas serão incorporadas ao resultado.
       </para>
+      <note>
+       <simpara>
+        O método mágico <link linkend="object.tostring">__toString()</link>
+        não é chamado quando um objeto é avaliado. Para usar a representação em
+        string de um objeto na query string, o objeto precisa ser explicitamente
+        convertido para string.
+       </simpara>
+      </note>
      </listitem>
     </varlistentry>
     <varlistentry>
@@ -260,6 +268,44 @@ echo http_build_query($parent);
    <screen>
 <![CDATA[
 pub=publicParent&pub_bar%5Bpub%5D=publicChild
+]]>
+   </screen>
+  </example>
+
+  <example>
+   <title>Usando <function>http_build_query</function> com objetos contendo
+    <link linkend="object.tostring">__toString()</link>
+   </title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class Foo {
+    public $publicProperty = 'visible';
+
+    public function __toString() {
+        return "bar";
+    }
+}
+
+$params = array(
+    'a' => 'b',
+    'foo' => new Foo()
+);
+
+// Sem conversão, http_build_query lê as propriedades públicas
+echo http_build_query($params) . "\n";
+
+// Com conversão explícita, http_build_query usa o output de __toString()
+$params['foo'] = (string) new Foo();
+echo http_build_query($params) . "\n";
+?>
+]]>
+   </programlisting>
+ &example.outputs;
+   <screen>
+<![CDATA[
+a=b&foo%5BpublicProperty%5D=visible
+a=b&foo=bar
 ]]>
    </screen>
   </example>
