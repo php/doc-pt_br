@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: e2f2172bf114599926878017ab2dce356956fa9e Maintainer: leonardolara Status: ready --><!-- CREDITS: fabioluciano,ae,geekcom,lhsazevedo,leonardolara -->
- <chapter xml:id="language.functions" xmlns="http://docbook.org/ns/docbook">
+<!-- EN-Revision: e290572f2599305beb62b13988024b5da187979d Maintainer: leonardolara Status: ready --><!-- CREDITS: fabioluciano,ae,geekcom,lhsazevedo,leonardolara -->
+ <chapter xml:id="language.functions" xmlns="http://docbook.org/ns/docbook" annotations="interactive">
   <title>Funções</title>
 
   <sect1 xml:id="functions.user-defined">
@@ -14,7 +14,7 @@
    </para>
    <example>
     <title>Declarando uma nova função chamada <literal>foo</literal></title>
-    <programlisting role="php">
+    <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 function foo($arg_1, $arg_2, /* ..., */ $arg_n)
@@ -22,7 +22,6 @@ function foo($arg_1, $arg_2, /* ..., */ $arg_n)
     echo "Exemplo de função.\n";
     return $valor_retornado;
 }
-?>
 ]]>
     </programlisting>
    </example>
@@ -30,11 +29,10 @@ function foo($arg_1, $arg_2, /* ..., */ $arg_n)
     <para>
      A partir do PHP 8.0.0, a lista de parâmetros pode ter uma vírgula no final:
      <informalexample>
-      <programlisting role="php">
+      <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 function foo($arg_1, $arg_2,) { }
-?>
 ]]>
       </programlisting>
      </informalexample>
@@ -70,12 +68,16 @@ function foo($arg_1, $arg_2,) { }
      <programlisting role="php">
 <![CDATA[
 <?php
-
 $makefoo = true;
 
 /* Não podemos chamar foo() daqui
    porque ela ainda não existe,
    mas podemos chamar bar() */
+if (function_exists('foo')) {
+    foo();
+} else {
+    echo "Função foo não existe (ainda).\n";
+}
 
 bar();
 
@@ -95,8 +97,6 @@ function bar()
 {
   echo "Eu existo imediatamente desde o programa começar.\n";
 }
-
-?>
 ]]>
      </programlisting>
     </example>
@@ -117,6 +117,9 @@ function foo()
 
 /* Nós não podemos chamar bar() ainda
    porque ela ainda não foi definida. */
+if (function_exists('bar')) {
+    bar();
+}
 
 foo();
 
@@ -125,8 +128,6 @@ foo();
    tornou a primeira acessível */
 
 bar();
-
-?>
 ]]>
      </programlisting>
     </example>
@@ -169,7 +170,8 @@ function recursion($a)
         recursion($a + 1);
     }
 }
-?>
+
+recursion(17);
 ]]>
      </programlisting>
     </example>
@@ -211,14 +213,13 @@ function recursion($a)
      A partir do PHP 7.3.0, é possível ter uma vírgula no final da lista de
      argumentos para chamadas de função:
      <informalexample>
-      <programlisting role="php">
+      <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 $v = foo(
     $arg_1,
     $arg_2,
 );
-?>
 ]]>
       </programlisting>
      </informalexample>
@@ -232,7 +233,7 @@ $v = foo(
    </para>
    <example>
     <title>Parâmetros de função com uma vírgula final</title>
-    <programlisting role="php">
+    <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 function takes_many_args(
@@ -245,7 +246,6 @@ function takes_many_args(
 {
     // ...
 }
-?>
 ]]>
     </programlisting>
    </example>
@@ -275,8 +275,7 @@ function add_some_extra(&$string)
 }
 $str = 'Isto é uma string,';
 add_some_extra($str);
-echo $str;    // imprime 'Isto é uma string, e alguma coisa mais.'
-?>
+echo $str;    // exibe 'Isto é uma string, e alguma coisa mais.'
 ]]>
       </programlisting>
      </example>
@@ -308,7 +307,6 @@ function makecoffee($type = "cappuccino")
 echo makecoffee();
 echo makecoffee(null);
 echo makecoffee("espresso");
-?>
 ]]>
       </programlisting>
       &example.outputs;
@@ -338,7 +336,7 @@ function fazercafe($tipos = array("cappuccino"), $cafeteira = NULL)
     return "Fazendo uma xícara de ".join(", ", $tipos)." com $dispositivo.\n";
 }
 echo fazercafe();
-echo fazercafe(array("cappuccino", "lavazza"), "chaleira");?>
+echo fazercafe(array("cappuccino", "lavazza"), "chaleira");
 ]]>
       </programlisting>
       &example.outputs;
@@ -372,7 +370,6 @@ function fazercafe($cafeteira = new CafeteiraPadrao)
 }
 echo fazercafe();
 echo fazercafe(new CafeteiraChique);
-?>
 ]]>
       </programlisting>
 
@@ -406,14 +403,18 @@ function fazeriogurte($recipiente = "tigela", $sabor)
 }
 
 echo fazeriogurte("framboesa"); // "framboesa" é $recipiente, não $sabor
-?>
 ]]>
       </programlisting>
       &example.outputs;
       <screen>
 <![CDATA[
-Fatal error: Uncaught ArgumentCountError: Too few arguments
- to function fazeriogurte(), 1 passed in example.php on line 42
+Deprecated: fazeriogurte(): Optional parameter $recipiente declared before required parameter $sabor is implicitly treated as a required parameter in script on line 2
+
+Fatal error: Uncaught ArgumentCountError: Too few arguments to function fazeriogurte(), 1 passed in script on line 7 and exactly 2 expected in script:2
+Stack trace:
+#0 script(7): fazeriogurte('framboesa')
+#1 {main}
+  thrown in script on line 2
 ]]>
       </screen>
      </example>
@@ -433,7 +434,6 @@ function fazeriogurte($sabor, $recipiente = "tigela")
 }
 
 echo fazeriogurte("framboesa"); // "framboesa" é $sabor
-?>
 ]]>
       </programlisting>
       &example.outputs;
@@ -460,7 +460,6 @@ function fazeriogurte($recipiente = "tigela", $sabor = "framboesa", $estilo = "G
 }
 
 echo fazeriogurte(estilo: "natural");
-?>
 ]]>
       </programlisting>
       &example.outputs;
@@ -482,10 +481,9 @@ Fazendo um(a) tigela de iogurte natural de framboesa.
      deve ser usado.
      <example>
       <title>Declarando parâmetros opcionais após parâmetros obrigatórios</title>
-      <programlisting role="php">
+      <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
-
 function foo($a = [], $b) {}     // Padrão não utilizado; descontinuado a partir do PHP 8.0.0
 function foo($a, $b) {}          // Funcionalmente equivalente, sem aviso de descontinuação
 
@@ -494,8 +492,6 @@ function bar(A $a = null, $b) {} // A partir do PHP 8.1.0, $a é implicitamente 
                                  // porém implicitamente anulável (descontinuado a partir do PHP 8.4.0),
                                  // porque o valor padrão do parâmetro é null
 function bar(?A $a, $b) {}       // Recomendado
-
-?>
 ]]>
       </programlisting>
      </example>
@@ -543,7 +539,6 @@ function sum(...$numbers) {
 }
 
 echo sum(1, 2, 3, 4);
-?>
 ]]>
       </programlisting>
       &example.outputs;
@@ -573,7 +568,6 @@ echo add(...[1, 2])."\n";
 
 $a = [1, 2];
 echo add(...$a);
-?>
 ]]>
       </programlisting>
       &example.outputs;
@@ -618,14 +612,17 @@ echo total_intervals('d', $a, $b).' days';
 
 // Isto falhará, já que null não é um objeto DateInterval.
 echo total_intervals('d', null);
-?>
 ]]>
       </programlisting>
       &example.outputs;
       <screen>
 <![CDATA[
 3 days
-Catchable fatal error: Argument 2 passed to total_intervals() must be an instance of DateInterval, null given, called in - on line 14 and defined in - on line 2
+Fatal error: Uncaught TypeError: total_intervals(): Argument #2 must be of type DateInterval, null given, called in script on line 15 and defined in script:2
+Stack trace:
+#0 script(15): total_intervals('d', NULL)
+#1 {main}
+  thrown in script on line 2
 ]]>
       </screen>
      </example>
@@ -660,7 +657,7 @@ Catchable fatal error: Argument 2 passed to total_intervals() must be an instanc
 
     <example>
      <title>Sintaxe dos argumentos nomeados</title>
-     <programlisting role="php">
+     <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 minhaFuncao(nomeParametro: $valor);
@@ -668,14 +665,13 @@ array_foobar(array: $value);
 
 // NÃO suportado
 nome_funcao($variavelQueGuardaNomeDoParametro: $valor);
-?>
 ]]>
      </programlisting>
     </example>
 
     <example>
      <title>Comparando argumentos posicionais e nomeados</title>
-     <programlisting role="php">
+     <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 // Utilizando argumentos posicionais:
@@ -683,7 +679,6 @@ array_fill(0, 100, 50);
 
 // Utilizando argumetos nomeados:
 array_fill(start_index: 0, count: 100, value: 50);
-?>
 ]]>
      </programlisting>
     </example>
@@ -694,11 +689,10 @@ array_fill(start_index: 0, count: 100, value: 50);
 
     <example>
      <title>Mesmo exemplo com argumentos em ordem diferente</title>
-     <programlisting role="php">
+     <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 array_fill(value: 50, count: 100, start_index: 0);
-?>
 ]]>
      </programlisting>
     </example>
@@ -712,13 +706,12 @@ array_fill(value: 50, count: 100, start_index: 0);
 
     <example>
      <title>Combinando argumentos posicionais e nomeados</title>
-     <programlisting role="php">
+     <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 htmlspecialchars($string, double_encode: false);
 // Mesmo que
 htmlspecialchars($string, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8', false);
-?>
 ]]>
      </programlisting>
     </example>
@@ -730,10 +723,9 @@ htmlspecialchars($string, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8', fa
 
     <example>
      <title>Erro lançado ao passar um argumento ao mesmo parâmetro nomeado múltiplas vezes</title>
-     <programlisting role="php">
+     <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
-
 function foo($param) { ... }
 
 foo(param: 1, param: 2);
@@ -741,8 +733,6 @@ foo(param: 1, param: 2);
 
 foo(1, param: 2);
 // Error: Named parameter $param overwrites previous argument
-
-?>
 ]]>
      </programlisting>
     </example>
@@ -765,7 +755,6 @@ var_dump(foo(...[1, 2], d: 40)); // 46
 var_dump(foo(...['b' => 2, 'a' => 1], d: 40)); // 46
 
 var_dump(foo(...[1, 2], b: 20)); // Fatal error. Named parameter $b overwrites previous argument
-?>
 ]]>
      </programlisting>
     </example>
@@ -803,8 +792,7 @@ function quadrado($num)
 {
     return $num * $num;
 }
-echo quadrado(4); // imprime '16'.
-?>
+echo quadrado(4); // exibe '16'.
 ]]>
       </programlisting>
      </example>
@@ -826,11 +814,10 @@ function primeiros_numeros()
 }
 // Desconstruir o array coleta cada item individualmente
 [$zero, $one, $two] = primeiros_numeros();
+var_dump($zero, $one, $two);
 
 // Anteriormente ao 7.1.0 a única alternativa era usar list()
 list($zero, $one, $two) = primeiros_numeros();
-
-?>
 ]]>
       </programlisting>
      </example>
@@ -843,7 +830,7 @@ list($zero, $one, $two) = primeiros_numeros();
     <para>
      <example>
       <title>Retornando uma referência de uma função</title>
-      <programlisting role="php">
+      <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 function &retorna_referencia()
@@ -852,7 +839,6 @@ function &retorna_referencia()
 }
 
 $nova_referencia =& retorna_referencia();
-?>
 ]]>
       </programlisting>
      </example>
@@ -889,12 +875,12 @@ $nova_referencia =& retorna_referencia();
 <![CDATA[
 <?php
 function foo() {
-    echo "Chamou foo()<br>\n";
+    echo "Chamou foo()\n";
 }
 
 function bar($arg = '')
 {
-    echo "Chamou bar(); com argumento '$arg'.<br />\n";
+    echo "Chamou bar(); com argumento '$arg'.\n";
 }
 
 // Essa é uma função encapsuladora para echo()
@@ -911,7 +897,6 @@ $func('test');  // Chama bar()
 
 $func = 'echoit';
 $func('test');  // Chama echoit()
-?>
 ]]>
      </programlisting>
     </example>
@@ -940,8 +925,6 @@ class Foo
 $foo = new Foo();
 $funcname = "MetodoVariavel";
 $foo->$funcname();  // Isto chama $foo->MetodoVariavel()
-
-?>
 ]]>
      </programlisting>
     </example>
@@ -958,17 +941,22 @@ class Foo
     static $variable = 'propriedade estática';
     static function Variable()
     {
-        echo 'Método chamado';
+        echo "Método Variable chamado\n";
     }
 }
 
-echo Foo::$variable; // Isto imprime 'propriedade estática'. Ele busca $variable no escopo da classe.
+echo Foo::$variable . "\n"; // Isto exibe 'static property'. Ele busca $variable no escopo da classe.
 $variable = "Variable";
 Foo::$variable();  // Isto chama $foo->Variable(), lendo a $variable no escopo da chamada.
-
-?>
 ]]>
      </programlisting>
+     &example.outputs;
+     <screen>
+<![CDATA[
+static property
+Método Variable chamado
+]]>
+     </screen>
     </example>
    </para>
    <para>
@@ -990,12 +978,11 @@ class Foo
 }
 
 $func = array("Foo", "bar");
-$func(); // prints "bar"
+$func(); // exibe "bar"
 $func = array(new Foo, "baz");
-$func(); // prints "baz"
+$func(); // exibe "baz"
 $func = "Foo::bar";
-$func(); // prints "bar"
-?>
+$func(); // exibe "bar"
 ]]>
      </programlisting>
     </example>
@@ -1088,7 +1075,6 @@ var_dump(strlen(null));
 var_dump(str_contains("foobar", null));
 // "Deprecated: Passing null to parameter #2 ($needle) of type string is deprecated" as of PHP 8.1.0
 // bool(true)
-?>
 ]]>
      </programlisting>
     </informalexample>
@@ -1129,8 +1115,7 @@ var_dump(str_contains("foobar", null));
 echo preg_replace_callback('~-([a-z])~', function ($match) {
     return strtoupper($match[1]);
 }, 'hello-world');
-// outputs helloWorld
-?>
+// exibe helloWorld
 ]]>
     </programlisting>
    </example>
@@ -1154,7 +1139,6 @@ $greet = function($name) {
 
 $greet('World');
 $greet('PHP');
-?>
 ]]>
     </programlisting>
    </example>
@@ -1217,7 +1201,6 @@ $example = function () use ($message): string {
     return "hello $message";
 };
 var_dump($example());
-?>
 ]]>
     </programlisting>
     &example.outputs.similar;
@@ -1303,7 +1286,6 @@ $my_cart->add('eggs', 6);
 // Exibe o total com uma taxa de venda de 5%.
 print $my_cart->getTotal(0.05) . "\n";
 // O resultado é 54.29
-?>
 ]]>
     </programlisting>
    </example>
@@ -1313,7 +1295,6 @@ print $my_cart->getTotal(0.05) . "\n";
     <programlisting role="php">
 <![CDATA[
 <?php
-
 class Test
 {
     public function testing()
@@ -1327,8 +1308,6 @@ class Test
 $object = new Test;
 $function = $object->testing();
 $function();
-
-?>
 ]]>
     </programlisting>
     &example.outputs;
@@ -1362,7 +1341,6 @@ object(Test)#1 (0) {
       <programlisting role="php">
 <![CDATA[
 <?php
-
 class Foo
 {
     function __construct()
@@ -1374,15 +1352,17 @@ class Foo
     }
 };
 new Foo();
-
-?>
 ]]>
       </programlisting>
       &example.outputs;
       <screen>
 <![CDATA[
-Notice: Undefined variable: this in %s on line %d
-NULL
+Fatal error: Uncaught Error: Using $this when not in object context in script:7
+Stack trace:
+#0 script(9): Foo::{closure:Foo::__construct():6}()
+#1 script(12): Foo->__construct()
+#2 {main}
+  thrown in script on line 7
 ]]>
       </screen>
      </example>
@@ -1394,20 +1374,22 @@ NULL
       <programlisting role="php">
 <![CDATA[
 <?php
-
 $func = static function() {
     // corpo da função
 };
 $func = $func->bindTo(new stdClass);
 $func();
-
-?>
 ]]>
       </programlisting>
       &example.outputs;
       <screen>
 <![CDATA[
-Warning: Cannot bind an instance to a static closure in %s on line %d
+Warning: Cannot bind an instance to a static closure, this will be an error in PHP 9 in script on line 5
+
+Fatal error: Uncaught Error: Value of type null is not callable in script:6
+Stack trace:
+#0 {main}
+  thrown in script on line 6
 ]]>
       </screen>
      </example>
@@ -1468,7 +1450,7 @@ Warning: Cannot bind an instance to a static closure in %s on line %d
    </simpara>
    <simpara>
     Funções anônimas e funções de seta são implementadas usando a classe
-    <link linkend="class.closure"><classname>Closure</classname></link>.
+    <classname>Closure</classname>.
    </simpara>
 
    <simpara>
@@ -1495,7 +1477,6 @@ Warning: Cannot bind an instance to a static closure in %s on line %d
      <programlisting role="php">
 <![CDATA[
 <?php
-
 $y = 1;
 
 $fn1 = fn($x) => $x + $y;
@@ -1505,7 +1486,6 @@ $fn2 = function ($x) use ($y) {
 };
 
 var_export($fn1(3));
-?>
 ]]>
      </programlisting>
      &example.outputs;
@@ -1525,12 +1505,10 @@ var_export($fn1(3));
      <programlisting role="php">
 <![CDATA[
 <?php
-
 $z = 1;
 $fn = fn($x) => fn($y) => $x * $y + $z;
 // Outputs 51
 var_export($fn(5)(10));
-?>
 ]]>
      </programlisting>
     </example>
@@ -1545,18 +1523,15 @@ var_export($fn(5)(10));
    <para>
     <example>
      <title>Exemplos de funções de seta</title>
-     <programlisting role="php">
+     <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
-
 fn(array $x) => $x;
 static fn($x): int => $x;
 fn($x = 42) => $x;
 fn(&$x) => $x;
 fn&($x) => $x;
 fn($x, ...$rest) => $rest;
-
-?>
 ]]>
      </programlisting>
     </example>
@@ -1576,13 +1551,10 @@ fn($x, ...$rest) => $rest;
      <programlisting role="php">
 <![CDATA[
 <?php
-
 $x = 1;
 $fn = fn() => $x++; // Não tem efeito
 $fn();
-var_export($x);  // Imprime 1
-
-?>
+var_export($x);  // Exibe 1
 ]]>
      </programlisting>
     </example>
@@ -1637,10 +1609,9 @@ var_export($x);  // Imprime 1
     A sintaxe <code>CallableExpr(...)</code> é usada para criar um objeto <classname>Closure</classname> a partir de um chamável. <code>CallableExpr</code> aceita qualquer expressão que possa ser diretamente chamada na gramática do PHP:
     <example>
      <title>Sintaxe de chamável de primeira classe simples</title>
-     <programlisting role="php">
+     <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
-
 class Foo {
    public function metodo() {}
    public static function metodoestatico() {}
@@ -1664,7 +1635,6 @@ $f6 = $strClasse::$strMetodoestatico(...);
 $f7 = 'strlen'(...);
 $f8 = [$obj, 'metodo'](...);
 $f9 = [Foo::class, 'metodoestatico'](...);
-?>
 ]]>
      </programlisting>
     </example>
@@ -1684,7 +1654,6 @@ $f9 = [Foo::class, 'metodoestatico'](...);
      <programlisting role="php">
 <![CDATA[
 <?php
-
 class Foo {
     public function obterMetodoPrivado() {
         return [$this, 'metodoPrivado'];
@@ -1700,7 +1669,14 @@ $metodoPrivado = $foo->obterMetodoPrivado();
 $metodoPrivado();
 // Fatal error: Call to private method Foo::metodoPrivado() from global scope
 // Isso acontece porque a chamada é realizada fora de Foo e a visibilidade será verificada a partir desse ponto.
-
+]]>
+     </programlisting>
+    </example>
+   </para>
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
 class Foo1 {
     public function obterMetodoPrivado() {
         // Usa o escopo onde o chamável é adquirido.
@@ -1715,12 +1691,9 @@ class Foo1 {
 $foo1 = new Foo1;
 $metodoPrivado = $foo1->obterMetodoPrivado();
 $metodoPrivado();  // Foo1::metodoPrivado
-?>
 ]]>
-     </programlisting>
-    </example>
-
-   </para>
+    </programlisting>
+   </informalexample>
 
    <note>
     <para>
@@ -1732,12 +1705,11 @@ $metodoPrivado();  // Foo1::metodoPrivado
     <para>
      A sintaxe de chamável de primeira classe não pode ser combinada com o <link linkend="language.oop5.basic.nullsafe">operador nullsafe</link>. Ambos os resultados a seguir resultam em um erro de tempo de compilação:
      <informalexample>
-      <programlisting role="php">
+      <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 $obj?->metodo(...);
 $obj?->prop->metodo(...);
-?>
 ]]>
       </programlisting>
      </informalexample>

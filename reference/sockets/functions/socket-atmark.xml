@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: eef7fb60d16864b253aa3aa95a57f8b1cfd41451 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: 2c357a0dd6cc195bce10fa974ea14a2e30eb4b5b Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <refentry xml:id="function.socket-atmark" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>socket_atmark</refname>
@@ -44,18 +44,54 @@
   &reftitle.examples;
   <para>
    <example>
-    <title>Usando <function>socket_atmark</function> para definir o endereço de origem</title>
+    <title>Usando <function>socket_atmark</function> para verificar se o soquete está pronto para ler dados fora-de-banda</title>
     <programlisting role="php">
 <![CDATA[
 <?php
-// Cria um novo soquete
-$sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-var_dump(socket_atmark($sock));
-// Fecha
-socket_close($sock);
+$socketServer = socket_create( AF_INET, SOCK_STREAM, SOL_TCP );
+socket_set_option( $socketServer, SOL_SOCKET, SO_REUSEADDR, 1 );
+socket_bind( $socketServer, '127.0.0.1' );
+socket_listen( $socketServer );
+
+$socketClient = socket_create( AF_INET, SOCK_STREAM, SOL_TCP );
+socket_getsockname( $socketServer, $stAddr, $uPort );
+socket_connect( $socketClient, $stAddr, $uPort );
+
+$socket = socket_accept( $socketServer );
+socket_shutdown( $socket, 1 );
+
+$st = 'Estes são dados normais.';
+socket_send( $socketClient, $st, strlen( $st ), 0 );
+$st = '!'; # TCP permite somente um byte de dados urgentes.
+socket_send( $socketClient, $st, strlen( $st ), MSG_OOB );
+$st = 'Não tão urgente.';
+socket_send( $socketClient, $st, strlen( $st ), 0 );
+socket_shutdown( $socketClient );
+
+do {
+    if ( socket_atmark( $socket ) ) {
+        $rc = socket_recv( $socket, $st, 65536, MSG_OOB );
+        echo "Dados urgentes recebidos: ({$rc}) {$st}\n";
+    } else {
+        $rc = socket_recv( $socket, $st, 1024, 0 );
+        echo "Dados normais recebidos: ({$rc}) {$st}\n";
+    }
+} while ( $rc > 0 );
+socket_close( $socketServer );
+socket_close( $socketClient );
+socket_close( $socket );
 ?>
 ]]>
     </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Received normal data: (20) Estes são dados normais.
+Received urgent data: (1) !
+Received normal data: (14) Não tão urgente.
+Received normal data: (0)
+]]>
+    </screen>
    </example>
   </para>
  </refsect1>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 22583751fbfdaa3eaa41aeb6470d1343f5cb2c78 Maintainer: leonardolara Status: ready --><!-- CREDITS: ae,felipe,fabioluciano,adiel,gabrielsanva,leonardolara -->
- <chapter xml:id="language.variables" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+<!-- EN-Revision: 64007e9f6b23f70d8874be11c4eb9d45556b742f Maintainer: leonardolara Status: ready --><!-- CREDITS: ae,felipe,fabioluciano,adiel,gabrielsanva,leonardolara -->
+ <chapter xml:id="language.variables" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink"
+ annotations="interactive">
   <title>Variáveis</title>
 
   <sect1 xml:id="language.variables.basics">
@@ -43,7 +44,7 @@
 
    <example>
     <title>Nomes de variáveis válidos</title>
-    <programlisting role="php">
+    <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 $var = 'Bob';
@@ -52,7 +53,6 @@ echo "$var, $Var";      // exibe "Bob, Joe"
 
 $_4site = 'not yet';    // válido; começa com um sublinhado
 $täyte = 'mansikka';    // válido; 'ä' é um caracter ASCII (estendido) 228
-?>
 ]]>
     </programlisting>
    </example>
@@ -83,7 +83,6 @@ $4site = 'not yet';     // inválido; começa com um número
 ${'invalid-name'} = 'bar';
 $name = 'invalid-name';
 echo ${'invalid-name'}, " ", $$name;
-?>
 ]]>
     </programlisting>
     &example.outputs;
@@ -124,9 +123,8 @@ bar bar
 $foo = 'Bob';              // Atribui o valor 'Bob' a variável $foo
 $bar = &$foo;              // Referencia $foo através de $bar.
 $bar = "My name is $bar";  // Altera $bar...
-echo $bar;
-echo $foo;                 // $foo é alterada também.
-?>
+echo $bar . PHP_EOL;
+echo $foo . PHP_EOL;       // $foo é alterada também.
 ]]>
      </programlisting>
     </informalexample>
@@ -139,17 +137,37 @@ echo $foo;                 // $foo é alterada também.
      <programlisting role="php">
 <![CDATA[
 <?php
-$foo = 25;
-$bar = &$foo;      // Esta atribuição é válida.
-$bar = &(24 * 7);  // Inválido; referencia uma expressão sem nome.
-
+$original = 25;
+$ref1 = &$original;      // Esta atribuição é válida.
+$ref2 = &(24 * 7);       // Inválida; referencia uma expressão sem nome.
+]]>
+     </programlisting>
+    </informalexample>
+    <informalexample>
+     <programlisting role="php">
+<![CDATA[
+<?php
+// Observe a falta de & indicando uma referência retornada na declaração da função,
+// ou seja, a função não retorna uma referência, portanto o resultado não pode ser atribuído por referência
 function test()
 {
-   return 25;
+   $original = 25;
+   return $original;
 }
 
-$bar = &test();    // Inválido porque test() não retorna uma variável por referência.
-?>
+// Nota: Um aviso é emitido mas o valor de não-referência é atribuído
+$result1 = &test();   // Inválido porque test() não retorna uma variável por referência.
+var_dump($result1);
+
+// A definição desta função mostra que ela retorna uma referência mas não retorna uma variável
+function &test2()
+{
+    return 26;        // Inválido porque o valor de retorno não é uma referência a uma variável.
+}
+
+// Nota: o valor de não-referência é atribuído
+$result2 = &test2();
+var_dump($result2);
 ]]>
      </programlisting>
     </informalexample>
@@ -171,7 +189,6 @@ $bar = &test();    // Inválido porque test() não retorna uma variável por ref
 <?php
 // Variável não definida E não referenciada (sem contexto de uso);
 var_dump($unset_var);
-?>
 ]]>
      </programlisting>
      &example.outputs;
@@ -196,7 +213,7 @@ NULL
 <![CDATA[
 <?php
 $unset_array[] = 'value'; // Não gera um alerta.
-?>
+var_dump($unset_array);
 ]]>
     </programlisting>
    </example>
@@ -265,12 +282,11 @@ $unset_array[] = 'value'; // Não gera um alerta.
    </simpara>
    <example>
     <title>Exemplo de escopo global de variável</title>
-    <programlisting role="php">
+    <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 $a = 1;
 include 'b.inc'; // Variável $a estará disponível dentro de b.inc
-?>
 ]]>
     </programlisting>
    </example>
@@ -295,9 +311,10 @@ $a = 1; // escopo global
 
 function test()
 {
-    echo $a; // Variável $a é indefinida já que refere-se a uma versão local de $a
+    var_dump($a); // Variável $a é indefinida já que refere-se a uma versão local de $a
 }
-?>
+
+test();
 ]]>
     </programlisting>
    </example>
@@ -345,7 +362,6 @@ function Soma()
 
 Soma();
 echo $b;
-?>
 ]]>
       </programlisting>
       &example.outputs;
@@ -386,7 +402,6 @@ function Soma()
 
 Soma();
 echo $b;
-?>
 ]]>
      </programlisting>
     </example>
@@ -404,14 +419,13 @@ echo $b;
    <para>
     <example>
      <title>Exemplo demonstrando superglobals e escopos</title>
-     <programlisting role="php">
+     <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 function test_superglobal()
 {
     echo $_POST['name'];
 }
-?>
 ]]>
      </programlisting>
     </example>
@@ -442,10 +456,13 @@ function test_superglobal()
 function Teste()
 {
     $a = 0;
-    echo $a;
+    echo $a . PHP_EOL;
     $a++;
 }
-?>
+
+test();
+test();
+test();
 ]]>
      </programlisting>
     </example>
@@ -468,10 +485,13 @@ function Teste()
 function Teste()
 {
     static $a = 0;
-    echo $a;
+    echo $a . PHP_EOL;
     $a++;
 }
-?>
+
+test();
+test();
+test();
 ]]>
      </programlisting>
     </example>
@@ -499,13 +519,14 @@ function Teste()
     static $count = 0;
 
     $count++;
-    echo $count;
+    echo $count . PHP_EOL;
     if ($count < 10) {
         Teste();
     }
     $count--;
 }
-?>
+
+test();
 ]]>
      </programlisting>
     </example>
@@ -519,7 +540,7 @@ function Teste()
    <para>
     <example>
      <title>Declarando variáveis estáticas</title>
-     <programlisting role="php">
+     <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 function foo(){
@@ -530,7 +551,6 @@ function foo(){
     $int++;
     echo $int;
 }
-?>
 ]]>
      </programlisting>
     </example>
@@ -560,7 +580,6 @@ function funcaoExemplo($input) {
 // que a variável estática não reterá seu valor.
 echo funcaoExemplo('A'); // Exibe: Entrada: A, Contador: 1
 echo funcaoExemplo('B'); // Exibe: Entrada: B, Contador: 1
-?>
 ]]>
     </programlisting>
    </example>
@@ -593,7 +612,6 @@ var_dump(Foo::counter()); // int(1)
 var_dump(Foo::counter()); // int(2)
 var_dump(Bar::counter()); // int(3), e antes do PHP 8.1.0 int(1)
 var_dump(Bar::counter()); // int(4), e antes do PHP 8.1.0 int(2)
-?>
 ]]>
     </programlisting>
    </example>
@@ -632,20 +650,19 @@ test_global_ref();
 var_dump($obj);
 test_global_noref();
 var_dump($obj);
-?>
 ]]>
     </programlisting>
-   </informalexample>
 
-   &example.outputs;
+    &example.outputs;
 
-   <screen>
+    <screen>
 <![CDATA[
 NULL
 object(stdClass)#1 (0) {
 }
 ]]>
-   </screen>
+    </screen>
+   </informalexample>
 
    <simpara>
     Um comportamento similar se aplica à declaração <literal>static</literal>.
@@ -697,12 +714,10 @@ $still_obj1 = get_instance_ref();
 echo "\n";
 $obj2 = get_instance_noref();
 $still_obj2 = get_instance_noref();
-?>
 ]]>
     </programlisting>
-   </informalexample>
-   &example.outputs;
-   <screen>
+    &example.outputs;
+    <screen>
 <![CDATA[
 Objeto estático: NULL
 Objeto estático: NULL
@@ -713,7 +728,8 @@ Objeto estático: object(stdClass)#3 (1) {
   int(1)
 }
 ]]>
-   </screen>
+    </screen>
+   </informalexample>
 
    <simpara>
     Este exemplo demonstra que ao atribuir uma referência a uma variável
@@ -737,7 +753,7 @@ Objeto estático: object(stdClass)#3 (1) {
 <![CDATA[
 <?php
 $a = 'hello';
-?>
+var_dump($a);
 ]]>
     </programlisting>
    </informalexample>
@@ -753,8 +769,9 @@ $a = 'hello';
     <programlisting role="php">
 <![CDATA[
 <?php
+$a = 'hello';
 $$a = "world";
-?>
+var_dump($hello);
 ]]>
     </programlisting>
    </informalexample>
@@ -770,8 +787,9 @@ $$a = "world";
     <programlisting role="php">
 <![CDATA[
 <?php
+$a = 'hello';
+$$a = 'world';
 echo "$a {$$a}";
-?>
 ]]>
     </programlisting>
    </informalexample>
@@ -784,8 +802,9 @@ echo "$a {$$a}";
     <programlisting role="php">
 <![CDATA[
 <?php
+$a = 'hello';
+$$a = 'world';
 echo "$a $hello";
-?>
 ]]>
     </programlisting>
    </informalexample>
@@ -849,8 +868,6 @@ echo $foo->{$start . $end} . "\n";
 $arr = 'arr';
 echo $foo->{$arr[1]} . "\n";
 echo $foo->{$arr}[1] . "\n";
-
-?>
 ]]>
      </programlisting>
      &example.outputs;
@@ -912,12 +929,11 @@ Eu sou B.
     <para>
      <example>
       <title>Acessando dados de um formulário HTML via POST</title>
-      <programlisting role="php">
+      <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 echo $_POST['username'];
 echo $_REQUEST['username'];
-?>
 ]]>
       </programlisting>
      </example>
@@ -952,7 +968,7 @@ echo $_REQUEST['username'];
     <para>
      <example>
       <title>Variáveis de formulários mais complexos</title>
-      <programlisting role="php">
+      <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 if ($_POST) {
@@ -1046,12 +1062,11 @@ if ($_POST) {
     </simpara>
 
     <informalexample>
-     <programlisting role="php">
+     <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
-  setcookie("MyCookie[foo]", 'Testing 1', time()+3600);
-  setcookie("MyCookie[bar]", 'Testing 2', time()+3600);
-?>
+setcookie("MyCookie[foo]", 'Testing 1', time()+3600);
+setcookie("MyCookie[bar]", 'Testing 2', time()+3600);
 ]]>
      </programlisting>
     </informalexample>
@@ -1072,7 +1087,7 @@ if ($_POST) {
 
     <example>
      <title>Um exemplo de <function>setcookie</function></title>
-     <programlisting role="php">
+     <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 if (isset($_COOKIE['count'])) {
@@ -1082,7 +1097,6 @@ if (isset($_COOKIE['count'])) {
 }
 setcookie('count', $count, time()+3600);
 setcookie("Cart[$count]", $item, time()+3600);
-?>
 ]]>
      </programlisting>
     </example>
@@ -1097,11 +1111,10 @@ setcookie("Cart[$count]", $item, time()+3600);
      são passadas para um script. Entretanto, deve ser notado que o
      ponto (ponto final) não é um caractere válido em nome de
      variável do PHP. Para ilustrar o motivo, veja o seguinte exemplo:
-     <programlisting role="php">
+     <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 $varname.ext;  /* nome de variável inválido */
-?>
 ]]>
      </programlisting>
      Dessa forma, o interpretador entende isso como uma variável com nome de
