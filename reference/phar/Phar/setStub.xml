@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 9c828621cbce488cf6306b21c39e208f847eabd5 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: d7056bd0948e3dd9316708247933026bd3d560b1 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <refentry xmlns="http://docbook.org/ns/docbook" xml:id="phar.setstub">
  <refnamediv>
   <refname>Phar::setStub</refname>
@@ -8,12 +8,11 @@
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis role="Phar">
-   <modifier>public</modifier> <type>bool</type><methodname>Phar::setStub</methodname>
+   <modifier>public</modifier> <type>true</type><methodname>Phar::setStub</methodname>
    <methodparam><type class="union"><type>resource</type><type>string</type></type><parameter>stub</parameter></methodparam>
    <methodparam choice="opt"><type>int</type><parameter>length</parameter><initializer>-1</initializer></methodparam>
   </methodsynopsis>
   &phar.write;
-
 
   <para>
    Este método é usado para adicionar um stub de carregador de inicialização PHP a um novo arquivo Phar, ou
@@ -22,14 +21,20 @@
   <para>
    O stub do carregador para um arquivo Phar é usado sempre que um arquivo é incluído diretamente
    como neste exemplo:
-  </para>
-  <programlisting role="php">
+   <programlisting role="php">
 <![CDATA[
 <?php
 include 'meuphar.phar';
 ?>
 ]]>
-  </programlisting>
+   </programlisting>
+   ou por execução simples:
+   <screen>
+<![CDATA[
+php meuphar.phar
+]]>
+   </screen>
+  </para>
   <para>
    O carregador não é acessado ao incluir um arquivo por meio do empacotador de fluxo <literal>phar</literal>
    como a seguir:
@@ -60,9 +65,16 @@ include 'phar://meuphar.phar/algumarquivo.php';
     <varlistentry>
      <term><parameter>length</parameter></term>
      <listitem>
-      <para>
-
-      </para>
+      <simpara>
+       Comprimento de <parameter>stub</parameter> em bytes.
+      </simpara>
+      <warning>
+       <simpara>
+        Passar o argumento <parameter>length</parameter> com um &resource; no
+        primeiro argumento está <emphasis>DESCONTINUADO</emphasis> a partir do PHP 8.3.0.
+        Em vez disso, use <literal>$phar->setStub(stream_get_contents($resource))</literal>.
+       </simpara>
+      </warning>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -71,9 +83,9 @@ include 'phar://meuphar.phar/algumarquivo.php';
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-   &return.success;
-  </para>
+  <simpara>
+   &return.true.always;
+  </simpara>
  </refsect1>
 
  <refsect1 role="errors">
@@ -99,11 +111,17 @@ include 'phar://meuphar.phar/algumarquivo.php';
     </thead>
     <tbody>
      <row>
+      <entry>8.4.0</entry>
+      <entry>
+       O tipo do retorno agora é &true;; anteriormente, era <type>bool</type>.
+      </entry>
+     </row>
+     <row>
       <entry>8.3.0</entry>
       <entry>
        Chamar <methodname>Phar::setStub</methodname> com um
        <type>resource</type> e um <parameter>length</parameter>
-       foi descontinuado. Tais chamadas devem ser substituídas por:
+       agora está descontinuado. Tais chamadas devem ser substituídas por:
        <code>$phar->setStub(stream_get_contents($resource));</code>
       </entry>
      </row>
@@ -122,12 +140,14 @@ include 'phar://meuphar.phar/algumarquivo.php';
     <programlisting role="php">
 <![CDATA[
 <?php
+
 try {
     $p = new Phar(dirname(__FILE__) . '/novophar.phar', 0, 'novophar.phar');
     $p['a.php'] = '<?php var_dump("Olá");';
     $p->setStub('<?php var_dump("Primeiro"); Phar::mapPhar("novophar.phar"); __HALT_COMPILER(); ?>');
     include 'phar://novophar.phar/a.php';
     var_dump($p->getStub());
+
     $p['b.php'] = '<?php var_dump("Mundo");';
     $p->setStub('<?php var_dump("Segundo"); Phar::mapPhar("novophar.phar"); __HALT_COMPILER(); ?>');
     include 'phar://novophar.phar/b.php';
