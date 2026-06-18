@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: d35d7d811ccf7662eefe4f23ff1cabc727a917ca Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: 939350f9b52be4b91e04ec1a5d41995e63aa5150 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <chapter xml:id="features.dtrace" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>Instrumentação dinâmica DTrace</title>
 
@@ -550,6 +550,197 @@ probe process("sapi/cli/php").provider("php").mark("request__startup") {
      </programlisting>
     </informalexample>
    </para>
+  </sect2>
+ </sect1>
+ <sect1 xml:id="features.dtrace.bpftrace">
+  <title>Usando bpftrace com Sondas Estáticas DTrace do PHP</title>
+  <simpara>
+   Em distribuições Linux com um kernel que suporta eBPF, o
+   utilitário bpftrace pode se conectar diretamente às sondas USDT DTrace do PHP,
+   sem precisar do SystemTap.
+  </simpara>
+  <sect2 xml:id="features.dtrace.bpftrace-install">
+   <title>Instalando o bpftrace</title>
+   <para>
+    Instale o bpftrace usando o gerenciador de pacotes da distribuição. Por
+    exemplo, no Oracle Linux, RHEL ou Fedora:
+    <informalexample>
+     <programlisting role="shell">
+<![CDATA[
+# dnf install bpftrace
+]]>
+     </programlisting>
+    </informalexample>
+    Ou, no Debian ou Ubuntu:
+    <informalexample>
+     <programlisting role="shell">
+<![CDATA[
+# apt install bpftrace
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+   <simpara>
+    Os exemplos abaixo assumem que o binário PHP alvo está instalado em
+    <filename>/usr/bin/php</filename>.
+   </simpara>
+   <simpara>
+    As mesmas sondas USDT também são expostas por outras SAPIs construídas a partir da mesma árvore de fontes, então o
+    alvo da sonda pode ser, ao invés disso, o módulo do Apache
+    (<filename>libphp.so</filename>) ou o binário do FastCGI Process Manager
+    (<filename>php-fpm</filename>); substitua o caminho
+    apropriado ou conecte-se pelo PID com <literal>-p</literal> conforme necessário.
+   </simpara>
+   <simpara>
+    Certifique-se de que o binário alvo foi construído com o DTrace e que o ambiente está configurado corretamente.
+    Veja <link linkend="features.dtrace.install">Configurando o PHP para Sondas Estáticas DTrace</link> para detalhes.
+   </simpara>
+   <para>
+    As sondas estáticas do PHP podem ser listadas usando
+    <command>bpftrace</command>:
+    <informalexample>
+     <programlisting>
+<![CDATA[
+# bpftrace -l 'usdt:/usr/bin/php:php:*'
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+
+   <para>
+    A saída é:
+    <informalexample>
+     <programlisting>
+<![CDATA[
+usdt:/usr/bin/php:php:compile__file__entry
+usdt:/usr/bin/php:php:compile__file__return
+usdt:/usr/bin/php:php:error
+usdt:/usr/bin/php:php:exception__caught
+usdt:/usr/bin/php:php:exception__thrown
+usdt:/usr/bin/php:php:execute__entry
+usdt:/usr/bin/php:php:execute__return
+usdt:/usr/bin/php:php:function__entry
+usdt:/usr/bin/php:php:function__return
+usdt:/usr/bin/php:php:request__shutdown
+usdt:/usr/bin/php:php:request__startup
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+
+   <para>
+    <example>
+     <title><filename>all_probes.bt</filename> para instrumentação de todas as Sondas Estáticas do PHP com bpftrace</title>
+     <programlisting role="shell">
+<![CDATA[
+#!/usr/bin/env bpftrace
+
+usdt:/usr/bin/php:php:compile__file__entry
+{
+    printf("Probe compile__file__entry\n");
+    printf("  compile_file %s\n", str(arg0));
+    printf("  compile_file_translated %s\n", str(arg1));
+}
+usdt:/usr/bin/php:php:compile__file__return
+{
+    printf("Probe compile__file__return\n");
+    printf("  compile_file %s\n", str(arg0));
+    printf("  compile_file_translated %s\n", str(arg1));
+}
+usdt:/usr/bin/php:php:error
+{
+    printf("Probe error\n");
+    printf("  errormsg %s\n", str(arg0));
+    printf("  request_file %s\n", str(arg1));
+    printf("  lineno %d\n", (int32)arg2);
+}
+usdt:/usr/bin/php:php:exception__caught
+{
+    printf("Probe exception__caught\n");
+    printf("  classname %s\n", str(arg0));
+}
+usdt:/usr/bin/php:php:exception__thrown
+{
+    printf("Probe exception__thrown\n");
+    printf("  classname %s\n", str(arg0));
+}
+usdt:/usr/bin/php:php:execute__entry
+{
+    printf("Probe execute__entry\n");
+    printf("  request_file %s\n", str(arg0));
+    printf("  lineno %d\n", (int32)arg1);
+}
+usdt:/usr/bin/php:php:execute__return
+{
+    printf("Probe execute__return\n");
+    printf("  request_file %s\n", str(arg0));
+    printf("  lineno %d\n", (int32)arg1);
+}
+usdt:/usr/bin/php:php:function__entry
+{
+    printf("Probe function__entry\n");
+    printf("  function_name %s\n", str(arg0));
+    printf("  request_file %s\n", str(arg1));
+    printf("  lineno %d\n", (int32)arg2);
+    printf("  classname %s\n", str(arg3));
+    printf("  scope %s\n", str(arg4));
+}
+usdt:/usr/bin/php:php:function__return
+{
+    printf("Probe function__return\n");
+    printf("  function_name %s\n", str(arg0));
+    printf("  request_file %s\n", str(arg1));
+    printf("  lineno %d\n", (int32)arg2);
+    printf("  classname %s\n", str(arg3));
+    printf("  scope %s\n", str(arg4));
+}
+usdt:/usr/bin/php:php:request__shutdown
+{
+    printf("Probe request__shutdown\n");
+    printf("  file %s\n", str(arg0));
+    printf("  request_uri %s\n", str(arg1));
+    printf("  request_method %s\n", str(arg2));
+}
+usdt:/usr/bin/php:php:request__startup
+{
+    printf("Probe request__startup\n");
+    printf("  file %s\n", str(arg0));
+    printf("  request_uri %s\n", str(arg1));
+    printf("  request_method %s\n", str(arg2));
+}
+]]>
+     </programlisting>
+    </example>
+   </para>
+
+   <para>
+    O script acima irá instrumentar todos os pontos de sondas estáticas do núcleo do PHP
+    durante toda a duração de um script PHP em execução. O bpftrace requer
+    privilégios de root:
+    <informalexample>
+     <programlisting>
+<![CDATA[
+# USE_ZEND_DTRACE=1 bpftrace -c '/usr/bin/php test.php' all_probes.bt
+]]>
+     </programlisting>
+    </informalexample>
+   </para>
+
+   <para>
+    Para instrumentar um processo PHP já em execução (por exemplo, um
+    worker do <filename>php-fpm</filename> ou um processo Apache carregando
+    <filename>libphp.so</filename>), conecte-se pelo PID:
+    <informalexample>
+     <programlisting>
+<![CDATA[
+# bpftrace -p $PID all_probes.bt
+]]>
+     </programlisting>
+    </informalexample>
+    O caminho alvo <literal>usdt:</literal> no script deve corresponder ao binário do
+    processo em execução; ajuste <literal>usdt:/usr/bin/php</literal> para o
+    binário do <filename>php-fpm</filename> ou para <filename>libphp.so</filename> conforme apropriado.
+  </para>
   </sect2>
  </sect1>
 </chapter>
