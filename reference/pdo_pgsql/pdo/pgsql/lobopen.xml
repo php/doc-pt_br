@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 4bf27edcd6c317ea311e68117bb2fa20dacb8e57 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 858400b07586b88dcb1e17a95e7a178b54b89d86 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <refentry xml:id="pdo-pgsql.lobopen" xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude">
  <refnamediv>
   <refname>Pdo\Pgsql::lobOpen</refname>
@@ -39,8 +39,11 @@
     <term><parameter>mode</parameter></term>
     <listitem>
      <simpara>
-      Se mode for <literal>r</literal>, abre o fluxo para leitura.
-      Se mode for <literal>w</literal>, abre o fluxo para escrita.
+      O modo de acesso. Se <parameter>mode</parameter> contiver
+      <literal>w</literal> ou <literal>+</literal>, o fluxo é aberto para
+      leitura e escrita; caso contrário é aberto somente-leitura. Um sinalizador
+      <literal>b</literal> (binário) não tem efeito. O padrão
+      <literal>"rb"</literal> abre o fluxo para leitura.
      </simpara>
     </listitem>
    </varlistentry>
@@ -70,10 +73,10 @@ $db = new Pdo\Pgsql('pgsql:dbname=test host=localhost', $user, $pass);
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $db->beginTransaction();
 $stmt = $db->prepare("SELECT oid FROM BLOBS WHERE ident = ?");
-$stmt->execute(array($some_id));
+$stmt->execute([$some_id]);
 $stmt->bindColumn('oid', $oid, PDO::PARAM_STR);
 $stmt->fetch(PDO::FETCH_BOUND);
-$stream = $db->pgsqlLOBOpen($oid, 'r');
+$stream = $db->lobOpen($oid, 'r');
 header("Content-type: application/octet-stream");
 fpassthru($stream);
 ?>
