@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: e51792efe0f103ec8724ad199524d7543610c978 Maintainer: ae Status: ready --><!-- CREDITS: ernani,narigone,ae,dtgfranca,leonardolara -->
+<!-- EN-Revision: a38e360ae1ce4169b331013958c519d17f19114e Maintainer: leonardolara Status: ready --><!-- CREDITS: ernani,narigone,ae,dtgfranca,leonardolara -->
 <sect1 xml:id="install.unix.apache2" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>Apache 2.0 em sistemas Unix</title>
 
@@ -261,6 +261,34 @@ LoadModule php7_module modules/libphp7.so
 <FilesMatch "\.phps$">
     SetHandler application/x-httpd-php-source
 </FilesMatch>
+]]>
+    </programlisting>
+   </informalexample>
+
+   <simpara>
+    Para permitir o uso de um arquivo PHP como manipulador padrão se nenhum outro for encontrado,
+    por exemplo ao usar um mecanismo de roteamento, a diretiva <literal>FallbackResource</literal> pode ser usada.
+    Isto está disponível no Apache 2.4.4 e posteriores.
+   </simpara>
+
+   <simpara>
+    Como a diretiva <literal>SetHandler</literal> é aplicada se o arquivo existir ou não, e a
+    diretiva <literal>FallbackResource</literal> é aplicada somente se um manipulador ainda não foi definido,
+    pode ser necessário usar a diretiva <literal>If</literal> para garantir que o manipulador seja aplicado
+    somente se o arquivo existir.
+    Isto permite que <literal>FallbackResource</literal> manipule caminhos que terminam em <literal>.php</literal>
+    mas não existem, o que pode ser útil para manipulação de erros e roteamento.
+   </simpara>
+
+   <informalexample>
+    <programlisting role="apache-conf">
+<![CDATA[
+<FilesMatch "\.php$">
+    <If "-f %{REQUEST_FILENAME}">
+        SetHandler application/x-httpd-php
+    </If>
+</FilesMatch>
+FallbackResource /index.php
 ]]>
     </programlisting>
    </informalexample>
