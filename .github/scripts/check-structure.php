@@ -27,7 +27,9 @@
 
 // Attributes that are part of the "structure": they are included in an
 // element's signature (a role= or an xml:id that changes = drift).
-const STRUCTURAL_ATTRIBUTES = ['role', 'choice', 'class', 'xml:id', 'rep'];
+// href and xpointer come from XInclude: a translated target silently selects
+// nothing and breaks the build, so they must mirror doc-en exactly.
+const STRUCTURAL_ATTRIBUTES = ['role', 'choice', 'class', 'xml:id', 'rep', 'href', 'xpointer'];
 
 // Elements whose content is text (inline). We record the element itself but do
 // NOT descend into it: its prose is the translator's business.
