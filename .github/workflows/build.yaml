@@ -30,7 +30,7 @@ jobs:
         # GH actions/checkout, automatically merges, but tends to get stuck in the past.
         # See: https://github.com/php/doc-base/pull/329
 
-      - name: Checkout doc-pt_br (automatic merge)
+      - name: Checkout and merge doc-pt_br
         uses: actions/checkout@v7
         with:
           path: pt_br
@@ -45,7 +45,7 @@ jobs:
       - name: Alternative path, uses userland merge instead
         run:  rm -rf pt_br
 
-      - name: Checkout doc-pt_br (no merge)
+      - name: Checkout doc-pt_br
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
@@ -53,9 +53,9 @@ jobs:
           path: pt_br
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Userland merge
+      - name: Merge doc-pt_br
         run: |
-          # Merge into main/master from current, known names/SHAS.
+          # Merge into main/master from *current* names/SHAS.
           #
           # - github.event.pull_request.base.ref : main/master
           # - github.event.pull_request.head.sha : PR head
@@ -63,13 +63,8 @@ jobs:
           # Does not work:
           # - actions/checkout without fetch-depth / fetch-tags
           # - git fetch by github.event.pull_request.head.ref
-          echo
 
           cd pt_br
-
-          # Fetch history of two points, for merge tree walking (necessary?)
-          # git fetch -q origin ${{ github.event.pull_request.base.ref }}
-          # git fetch -q origin ${{ github.event.pull_request.head.sha }}
           git show-ref -d --head
           echo
 
@@ -77,7 +72,7 @@ jobs:
           git switch -c commit-${{ github.event.pull_request.head.sha }}
           echo
 
-          # Checkout main/master, by name, to reach it's last commit
+          # Checkout main/master, by name, to always reach it's last commit
           git checkout ${{ github.event.pull_request.base.ref }}
           echo
 
