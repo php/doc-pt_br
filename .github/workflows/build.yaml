@@ -56,21 +56,21 @@ jobs:
 
       - name: Merge from main/master (always)
         run: |
+          # Merging from know current, know names/SHAS.
           git --version
-
+          echo " at"
           cd pt_br
-
-          # Give the detached head a name, to avoid warnings
-          git switch -c detached-${{ github.event.pull_request.head.sha }}
+          pwd
           echo
 
           # Fetch history of two points, for rebase tree walking (necessary?)
-          git fetch origin ${{ github.event.pull_request.base.ref }}
-          echo
-          git fetch origin ${{ github.event.pull_request.head.sha }}
-          echo
-          git remote -v
+          git fetch -q origin ${{ github.event.pull_request.base.ref }}
+          git fetch -q origin ${{ github.event.pull_request.head.sha }}
           git show-ref -d --head
+          echo
+
+          # Give the detached head a name, to avoid warnings
+          git switch -c commit-${{ github.event.pull_request.head.sha }}
           echo
 
           # Checkout main/master, by name, to reaach it's last commit
@@ -82,7 +82,6 @@ jobs:
           echo
 
           git status --short
-          echo
           git diff --stat
           echo
 
