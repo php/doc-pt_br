@@ -22,18 +22,6 @@ jobs:
           echo -- ls
           ls
 
-      # Testando checkout sem parâmtros conflita com checkout com parâmetros
-
-      - name: Checkout sem parâmetros
-        uses: actions/checkout@v7
-
-      - name: pwd ls
-        run: |
-          echo -- pwd
-          pwd
-          echo -- ls
-          ls
-
       - name: Checkout doc-base
         uses: actions/checkout@v7
         with:
@@ -60,9 +48,6 @@ jobs:
           echo -- ls
           ls
 
-      # Acima, lista mudou? Documentar.
-
-
       - name: Checkout doc-pt_br (prev)
         uses: actions/checkout@v7
         with:
@@ -75,7 +60,7 @@ jobs:
           echo -- ls
           ls
 
-      # Checkout PR branch, unmerged
+      # Checkout branch, unmerged
 
       - name: Checkout doc-pt_br (next)
         uses: actions/checkout@v7
@@ -97,12 +82,21 @@ jobs:
       - name: Merge from main/master (always)
         run: |
           cd pt_br
+          git remote -v
+          git show-ref -d --head
+          git show-ref -d --branches --tags
+          echo
 
-          # echo --- fetch
-          # git fetch origin  ${{ github.event.pull_request.base.ref }}
+          echo --- fetch
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          echo
+          git fetch origin ${{ github.event.pull_request.head.sha }}
+          echo
+          git fetch origin ${{ github.event.pull_request.head.ref }}
+          echo
 
-          echo --- checkout brach, by name
-          git checkout ${{ github.event.pull_request.head.ref }}
+          echo --- give the detached head a name
+          git switch -c detached-${{ github.event.pull_request.head.sha }}
           git log -3 --oneline
 
           echo --- checkout master, by name
@@ -115,8 +109,9 @@ jobs:
 
           echo --- status
           git status
-          echo ---      diff
+          echo --- diff
           git diff
+          echo ---
 
       # Testando pushd modifica caminho permanentemente
 
