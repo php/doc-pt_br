@@ -1,4 +1,4 @@
-# See https://docs.github.com/en/actions.
+
 name: Build
 
 on:
@@ -15,26 +15,68 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # See https://github.com/actions/checkout.
-      - name: Checkout doc-pt_br
-        uses: actions/checkout@v3
-        with:
-          path: pt_br
-
-      - name: Checkout doc-en
-        uses: actions/checkout@v3
-        with:
-          repository: php/doc-en
-          path: en
 
       - name: Checkout doc-base
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
         with:
           repository: php/doc-base
           path: doc-base
 
-      - name: Quality Assurance scripts
-        run: php doc-base/scripts/qa/extensions.xml.php --check
+      - name: Checkout doc-en
+        uses: actions/checkout@v7
+        with:
+          repository: php/doc-en
+          path: en
+
+      - name: Checkout doc-pt_br (prev)
+        uses: actions/checkout@v7
+        with:
+          path: pt_br_prev
+
+      - name: Checkout doc-pt_br (next, one step)
+        uses: actions/checkout@v7
+        with:
+          path: pt_br_next
+          ref: ${{ github.event.pull_request.head.sha }}
+        run: |
+          pwd
+          ls
+          git status
+          git remote -v
+          git log -1
+          git rebase master
+          git log -1
+
+      - name: Checkout doc-pt_br (next, two step)
+        uses: actions/checkout@v7
+        with:
+          path: pt_br
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Merge from main/master (always)
+        run: |
+          pwd
+          ls
+
+          echo ---
+          echo '${{ toJson(github) }}'
+
+          echo --- one
+          git status
+          git remote -v
+          git log -5
+          gir pull --rebase master
+          git log -1
+
+          echo --- two
+          git -C pt_br status
+          git -C pt_br remote -v
+          git -C pt_br log -5
+          gir -C pt_br pull --rebase master
+          git -C pt_br log -1
+
+      - name: QA scripts
+        run:  php doc-base/scripts/qa/extensions.xml.php --check
 
       - name: Build documentation for pt_br
-        run: php doc-base/configure.php --disable-libxml-check --enable-xml-details --redirect-stderr-to-stdout --with-lang=pt_br
+        run: php doc-base/configure.php --disable-libxml-check --enable-xml-details --redirect-stderr-to-stdout --with-lang=pt_br 2>&1
