@@ -27,43 +27,45 @@ jobs:
           repository: php/doc-en
           path: en
 
-      # GH actions/checkout, automaticaly merges, but tends to get stuck in the past.
-      # See: https://github.com/php/doc-base/pull/329
+        # GH actions/checkout, automatically merges, but tends to get stuck in the past.
+        # See: https://github.com/php/doc-base/pull/329
 
       - name: Checkout doc-pt_br (automatic merge)
         uses: actions/checkout@v7
         with:
-          path: pt_br_prev
+          path: pt_br
 
-      # Naked checkout
+      - name: Build manual.xml
+        run: |
+          php doc-base/configure.php --disable-libxml-check --enable-xml-details --redirect-stderr-to-stdout --with-lang=pt_br 2>&1
+          sha1sum doc-base/temp/manual.xml
+
+
+
+      - name: Alternative path, uses userland merge instead
+        run:  rm -rf pt_br
 
       - name: Checkout doc-pt_br (no merge)
         uses: actions/checkout@v7
         with:
-          fetch-depth: 0
-          fetch-tags: true
           path: pt_br
           ref: ${{ github.event.pull_request.head.sha }}
 
-      # Fetches, checkout, and merge know names.
-      #
-      # - github.event.pull_request.base.ref : main/master
-      # - github.event.pull_request.head.sha : PR head
-      #
-      # Does not work:
-      # - Fetch by github.event.pull_request.head.ref
-      # - ?? without fetch-depth / fetch-tags
-
-      - name: Merge from main/master (always)
+      - name: Userland merge
         run: |
-          # Merging from know current, know names/SHAS.
-          git --version
-          echo " at"
-          cd pt_br
-          pwd
+          # Merge into main/master from current, known names/SHAS.
+          #
+          # - github.event.pull_request.base.ref : main/master
+          # - github.event.pull_request.head.sha : PR head
+          #
+          # Does not work:
+          # - Fetch by github.event.pull_request.head.ref
+          # - ?? without fetch-depth / fetch-tags
           echo
 
-          # Fetch history of two points, for rebase tree walking (necessary?)
+          cd pt_br
+
+          # Fetch history of two points, for merge tree walking (necessary?)
           git fetch -q origin ${{ github.event.pull_request.base.ref }}
           git fetch -q origin ${{ github.event.pull_request.head.sha }}
           git show-ref -d --head
@@ -73,7 +75,7 @@ jobs:
           git switch -c commit-${{ github.event.pull_request.head.sha }}
           echo
 
-          # Checkout main/master, by name, to reaach it's last commit
+          # Checkout main/master, by name, to reach it's last commit
           git checkout ${{ github.event.pull_request.base.ref }}
           echo
 
@@ -85,45 +87,7 @@ jobs:
           git diff --stat
           echo
 
-      # Testando cs modifica caminho permanentemten
-
-      - name: ls doc-base/temp
+      - name: Build manual.xml, again
         run: |
-          pwd
-          echo
-          ls
-          echo
-          ls doc-base/temp
-
-      # Testando pushd modifica caminho permanentemente
-
-      - name: pwd pushd pwd
-        run: |
-          echo ONE
-          pwd
-          ls
-          pushd ..
-          echo ONE
-          pwd
-          ls
-
-      - name: pwd ls
-        run: |
-          pwd
-          ls
-
-      # Testando para onde o cd puro vai
-
-      - name: cd pwd
-        run: |
-          cd
-          pwd
-
-      - name: env
-        run: env
-
-      - name: QA scripts
-        run:  php doc-base/scripts/qa/extensions.xml.php --check
-
-      - name: Build documentation for pt_br
-        run: php doc-base/configure.php --disable-libxml-check --enable-xml-details --redirect-stderr-to-stdout --with-lang=pt_br 2>&1
+          php doc-base/configure.php --disable-libxml-check --enable-xml-details --redirect-stderr-to-stdout --with-lang=pt_br 2>&1
+          sha1sum doc-base/temp/manual.xml
