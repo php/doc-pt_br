@@ -15,17 +15,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: start state
+      - name: pwd ls
         run: |
-          echo -- start pwd
+          echo -- pwd
           pwd
-          echo -- start ls
+          echo -- ls
           ls
-          echo -- parent ls
-          ls ..
 
-      # Testando se a documentação da sintaxe de actions/checkout sequer é valida
-      # https://github.com/actions/checkout#push-a-commit-using-the-built-in-token
+      # Testando checkout sem parâmtros conflita com checkout com parâmetros
+
+      - name: Checkout sem parâmetros
+        uses: actions/checkout@v7
 
       - name: pwd ls
         run: |
@@ -60,6 +60,9 @@ jobs:
           echo -- ls
           ls
 
+      # Acima, lista mudou? Documentar.
+
+
       - name: Checkout doc-pt_br (prev)
         uses: actions/checkout@v7
         with:
@@ -71,6 +74,8 @@ jobs:
           pwd
           echo -- ls
           ls
+
+      # Checkout PR branch, unmerged
 
       - name: Checkout doc-pt_br (next)
         uses: actions/checkout@v7
@@ -85,6 +90,8 @@ jobs:
           echo -- ls
           ls
 
+      # Checkout main/master, and then squash and merge the branch in here
+
       - name: Merge from main/master (always)
         run: |
           echo ---      pwd
@@ -96,10 +103,14 @@ jobs:
           echo ---      remote
           git  -C pt_br remote -v
           echo ---      log
-          git  -C pt_br log -2
-          echo ---      pull/merge
-          git -C pt_br pull --rebase origin master
-          git -C pt_br log -2
+          git  -C pt_br log -10 --oneline
+
+          echo ---      checkout master, by name
+          git  -C pt_br checkout ${{ github.event.pull_request.base.ref }}
+          echo ---      merge squash, by sha
+          git  -C pt_br merge --squash ${{ github.event.pull_request.head.sha }}
+
+          git -C pt_br log -10 --oneline
 
       # Testando pushd modifica caminho permanentemente
 
