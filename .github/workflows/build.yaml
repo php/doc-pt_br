@@ -15,25 +15,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: pwd ls
-        run: |
-          echo -- pwd
-          pwd
-          echo -- ls
-          ls
-
       - name: Checkout doc-base
         uses: actions/checkout@v7
         with:
           repository: php/doc-base
           path: doc-base
-
-      - name: pwd ls
-        run: |
-          echo -- pwd
-          pwd
-          echo -- ls
-          ls
 
       - name: Checkout doc-en
         uses: actions/checkout@v7
@@ -41,42 +27,23 @@ jobs:
           repository: php/doc-en
           path: en
 
-      - name: pwd ls
-        run: |
-          echo -- pwd
-          pwd
-          echo -- ls
-          ls
+      # GH actions/checkout, automaticaly merges, but tends to get stuck in the past.
+      # See: https://github.com/php/doc-base/pull/329
 
-      - name: Checkout doc-pt_br (prev)
+      - name: Checkout doc-pt_br (automatic merge)
         uses: actions/checkout@v7
         with:
           path: pt_br_prev
 
-      - name: pwd ls
-        run: |
-          echo -- pwd
-          pwd
-          echo -- ls
-          ls
+      # Naked checkout
 
-      # Checkout branch, unmerged
-
-      - name: Checkout doc-pt_br (next)
+      - name: Checkout doc-pt_br (no merge)
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
           fetch-tags: true
           path: pt_br
           ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: pwd ls
-        run: |
-          echo -- pwd
-          pwd
-          echo -- ls
-          ls
-
 
       # Fetches, checkout, and merge know names.
       #
@@ -85,50 +52,49 @@ jobs:
       #
       # Does not work:
       # - Fetch by github.event.pull_request.head.ref
-      #
+      # - ?? without fetch-depth / fetch-tags
 
       - name: Merge from main/master (always)
         run: |
           git --version
 
+          cd pt_br
+
           # Give the detached head a name, to avoid warnings
-          git -C pt_br switch -c detached-${{ github.event.pull_request.head.sha }}
+          git switch -c detached-${{ github.event.pull_request.head.sha }}
           echo
 
-          # Fetch history of two points to be rebased (necessary?)
-          git -C pt_br remote -v
-          git -C pt_br show-ref -d --head
+          # Fetch history of two points, for rebase tree walking (necessary?)
+          git fetch origin ${{ github.event.pull_request.base.ref }}
           echo
-          git -C pt_br fetch origin ${{ github.event.pull_request.base.ref }}
+          git fetch origin ${{ github.event.pull_request.head.sha }}
           echo
-          git -C pt_br fetch origin ${{ github.event.pull_request.head.sha }}
-          echo
-          git -C pt_br remote -v
-          git -C pt_br show-ref -d --head
+          git remote -v
+          git show-ref -d --head
           echo
 
           # Checkout main/master, by name, to reaach it's last commit
-          git -C pt_br checkout ${{ github.event.pull_request.base.ref }}
+          git checkout ${{ github.event.pull_request.base.ref }}
           echo
 
           # Squash and merge, from the branch SHA
-          git -C pt_br merge --squash ${{ github.event.pull_request.head.sha }}
-          git -C pt_br log -3 --oneline
+          git merge --squash ${{ github.event.pull_request.head.sha }}
           echo
 
-          git -C pt_br status
+          git status --short
           echo
-          git -C pt_br diff
-          echo ---
-
-          cd pt_br
+          git diff --stat
+          echo
 
       # Testando cs modifica caminho permanentemten
 
       - name: ls doc-base/temp
         run: |
           pwd
-          ls pt_br/doc-base/temp
+          echo
+          ls
+          echo
+          ls doc-base/temp
 
       # Testando pushd modifica caminho permanentemente
 
