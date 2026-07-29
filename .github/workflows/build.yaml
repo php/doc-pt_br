@@ -78,54 +78,59 @@ jobs:
           ls
 
 
-      # Fetches, checkout, and merge know SHAs
+      # Fetches, checkout, and merge know names.
       #
-      # Master/main is: refs/remotes/origin/master, FETCH_HEAD (after fetch)
-      # PR branch is:   HEAD
+      # - github.event.pull_request.base.ref : main/master
+      # - github.event.pull_request.head.sha : PR head
       #
-      # Fetch by github.event.pull_request.head.ref does not work.
+      # Does not work:
+      # - Fetch by github.event.pull_request.head.ref
+      #
 
       - name: Merge from main/master (always)
         run: |
           git --version
-          cd  pt_br
 
-          echo -- before
-          git remote -v
-          git show-ref -d --head
-          echo --- fetch
-          git fetch origin ${{ github.event.pull_request.base.ref }}
-          echo
-          git fetch origin ${{ github.event.pull_request.head.sha }}
-          echo -- after
-          git remote -v
-          git show-ref -d --head
+          # Give the detached head a name, to avoid warnings
+          git -C pt_br switch -c detached-${{ github.event.pull_request.head.sha }}
           echo
 
-          set -x
+          # Fetch history of two points to be rebased (necessary?)
+          git -C pt_br remote -v
+          git -C pt_br show-ref -d --head
+          echo
+          git -C pt_br fetch origin ${{ github.event.pull_request.base.ref }}
+          echo
+          git -C pt_br fetch origin ${{ github.event.pull_request.head.sha }}
+          echo
+          git -C pt_br remote -v
+          git -C pt_br show-ref -d --head
+          echo
 
-          echo --- give the detached head a name
-          git switch -c detached-${{ github.event.pull_request.head.sha }}
-          git log -3 --oneline
+          # Checkout main/master, by name, to reaach it's last commit
+          git -C pt_br checkout ${{ github.event.pull_request.base.ref }}
+          echo
 
-          echo --- checkout master, by name
-          git checkout ${{ github.event.pull_request.base.ref }}
-          git log -3 --oneline
+          # Squash and merge, from the branch SHA
+          git -C pt_br merge --squash ${{ github.event.pull_request.head.sha }}
+          git -C pt_br log -3 --oneline
+          echo
 
-          echo --- merge squash, by sha
-          git merge --squash ${{ github.event.pull_request.head.sha }}
-          git log -3 --oneline
-
-          echo --- status
-          git status
-          echo --- diff
-          git diff
+          git -C pt_br status
+          echo
+          git -C pt_br diff
           echo ---
 
-      # Testando pushd modifica caminho permanentemente
+          cd pt_br
+
+      # Testando cs modifica caminho permanentemten
 
       - name: ls doc-base/temp
-        run:  ls pt_br/doc-base/temp
+        run: |
+          pwd
+          ls pt_br/doc-base/temp
+
+      # Testando pushd modifica caminho permanentemente
 
       - name: pwd pushd pwd
         run: |
