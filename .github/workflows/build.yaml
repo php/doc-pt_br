@@ -77,25 +77,32 @@ jobs:
           echo -- ls
           ls
 
-      # Checkout main/master, and then squash and merge the branch in here
+
+      # Fetches, checkout, and merge know SHAs
+      #
+      # Master/main is: refs/remotes/origin/master, FETCH_HEAD (after fetch)
+      # PR branch is:   HEAD
+      #
+      # Fetch by github.event.pull_request.head.ref does not work.
 
       - name: Merge from main/master (always)
         run: |
-          set -x
+          git --version
           cd  pt_br
 
-          git --version
+          echo -- before
           git remote -v
           git show-ref -d --head
-          echo
-
           echo --- fetch
           git fetch origin ${{ github.event.pull_request.base.ref }}
           echo
           git fetch origin ${{ github.event.pull_request.head.sha }}
+          echo -- after
+          git remote -v
+          git show-ref -d --head
           echo
-          git fetch origin ${{ github.event.pull_request.head.ref }}
-          echo
+
+          set -x
 
           echo --- give the detached head a name
           git switch -c detached-${{ github.event.pull_request.head.sha }}
