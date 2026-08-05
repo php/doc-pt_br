@@ -62,7 +62,7 @@ jobs:
           path: pt_br
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Squash and merge doc-pt_br
+      - name: Squash merge doc-pt_br
         run: |
 
           cd pt_br
@@ -77,7 +77,7 @@ jobs:
           git checkout ${{ github.event.pull_request.base.ref }}
           echo
 
-          # Squash and merge, from the PR branch head SHA
+          # Squash merge, from the PR branch head SHA
           git -c user.name="nobody" -c user.email="nobody@example.com" merge --squash ${{ github.event.pull_request.head.sha }}
           echo
 
@@ -89,3 +89,43 @@ jobs:
         run: |
           php doc-base/configure.php --disable-libxml-check --enable-xml-details --redirect-stderr-to-stdout --with-lang=pt_br 2>&1
           sha1sum doc-base/temp/manual.xml
+
+
+
+
+
+
+      - name: Extra alternative, --no-commit avoids ident error?
+        run:  rm -rf pt_br
+
+      - name: Checkout doc-pt_br
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          path: pt_br
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Squash merge doc-pt_br
+        run: |
+
+          cd pt_br
+          git show-ref -d --head
+          echo
+
+          # Give the detached head a name, to avoid warnings
+          git switch -c head-${{ github.event.pull_request.head.sha }}
+          echo
+
+          # Checkout default branch by name, to always get the current head
+          git checkout ${{ github.event.pull_request.base.ref }}
+          echo
+
+          # Squash merge, from the PR branch head SHA
+          git merge --squash --no-commit ${{ github.event.pull_request.head.sha }}
+          git -c user.name="none" -c user.email="none@example.com" commit -m "Squash merge"
+          echo
+
+          git status --short
+          git diff --stat
+          echo
