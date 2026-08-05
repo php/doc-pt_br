@@ -45,6 +45,15 @@ jobs:
       - name: Alternative path, uses userland merge instead
         run:  rm -rf pt_br
 
+        # Merge into main/master from *current* names/SHAS.
+        #
+        # - github.event.pull_request.base.ref : main/master
+        # - github.event.pull_request.head.sha : PR head
+        #
+        # Does not work:
+        # - actions/checkout without fetch-depth / fetch-tags
+        # - git fetch by github.event.pull_request.head.ref
+
       - name: Checkout doc-pt_br
         uses: actions/checkout@v7
         with:
@@ -53,31 +62,23 @@ jobs:
           path: pt_br
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Merge doc-pt_br
+      - name: Squash and merge doc-pt_br
         run: |
-          # Merge into main/master from *current* names/SHAS.
-          #
-          # - github.event.pull_request.base.ref : main/master
-          # - github.event.pull_request.head.sha : PR head
-          #
-          # Does not work:
-          # - actions/checkout without fetch-depth / fetch-tags
-          # - git fetch by github.event.pull_request.head.ref
 
           cd pt_br
           git show-ref -d --head
           echo
 
           # Give the detached head a name, to avoid warnings
-          git switch -c commit-${{ github.event.pull_request.head.sha }}
+          git switch -c head-${{ github.event.pull_request.head.sha }}
           echo
 
-          # Checkout main/master, by name, to always reach it's last commit
+          # Checkout default branch by name, to always get the current head
           git checkout ${{ github.event.pull_request.base.ref }}
           echo
 
-          # Squash and merge, from the branch SHA
-          git merge --squash ${{ github.event.pull_request.head.sha }}
+          # Squash and merge, from the PR branch head SHA
+          git -c user.name="nobody" -c user.email="nobody@example.com" merge --squash ${{ github.event.pull_request.head.sha }}
           echo
 
           git status --short
