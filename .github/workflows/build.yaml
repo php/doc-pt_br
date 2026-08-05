@@ -113,15 +113,23 @@ jobs:
           git show-ref -d --head
           echo
 
-          # Give the detached head a name, to avoid warnings
-          git switch -c head-${{ github.event.pull_request.head.sha }}
+          # Give the PR detached head a name, to avoid warnings
+          git branch -c head-${{ github.event.pull_request.head.sha }}
           echo
 
           # Checkout default branch by name, to always get the current head
           git checkout ${{ github.event.pull_request.base.ref }}
           echo
 
-          # Squash merge, from the PR branch head SHA
+          # Squash and "merge" changes from the PR branch, v1, -c
+          git -c user.name="none" -c user.email="none@example.com" merge -q --squash ${{ github.event.pull_request.head.sha }}
+          git -c user.name="none" -c user.email="none@example.com" commit -m "Squash merge"
+          echo
+
+          git reset --hard HEAD~1
+          echo
+
+          # Squash and "merge" changes from the PR branch, v2, --no-commit
           git merge --squash --no-commit ${{ github.event.pull_request.head.sha }}
           git -c user.name="none" -c user.email="none@example.com" commit -m "Squash merge"
           echo
