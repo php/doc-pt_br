@@ -53,6 +53,13 @@ jobs:
         # Does not work:
         # - actions/checkout without fetch-depth / fetch-tags
         # - git fetch by github.event.pull_request.head.ref
+        # - git merge --squash --no-commit fails with no ident
+        #
+        # TODO:
+        # - In case of conflict, GH's 'Squash and merge' uses
+        #   --strategy-option=theirs or ours? Probably theirs
+        #   in this case, as we position into master ("here")
+        #   and pulls from feature ("there").
 
       - name: Checkout doc-pt_br
         uses: actions/checkout@v7
@@ -64,21 +71,23 @@ jobs:
 
       - name: Squash merge doc-pt_br
         run: |
+          # Squash merge
 
           cd pt_br
           git show-ref -d --head
           echo
 
-          # Give the detached head a name, to avoid warnings
-          git switch -c head-${{ github.event.pull_request.head.sha }}
-          echo
+          # Give the PR detached head a name, to avoid warnings
+          git branch head-${{ github.event.pull_request.head.sha }}
 
           # Checkout default branch by name, to always get the current head
           git checkout ${{ github.event.pull_request.base.ref }}
           echo
 
-          # Squash merge, from the PR branch head SHA
-          git -c user.name="nobody" -c user.email="nobody@example.com" merge --squash ${{ github.event.pull_request.head.sha }}
+          # Squash changes from the PR branch into here (default branch)
+          # TODO: missing a --strategy-option=theirs on merge --squash ?
+          git -c user.name="none" -c user.email="none@example.com" merge -q --squash ${{ github.event.pull_request.head.sha }}
+          git -c user.name="none" -c user.email="none@example.com" commit -m "Squash merge"
           echo
 
           git status --short
@@ -89,51 +98,3 @@ jobs:
         run: |
           php doc-base/configure.php --disable-libxml-check --enable-xml-details --redirect-stderr-to-stdout --with-lang=pt_br 2>&1
           sha1sum doc-base/temp/manual.xml
-
-
-
-
-
-
-      - name: Extra alternative, --no-commit avoids ident error?
-        run:  rm -rf pt_br
-
-      - name: Checkout doc-pt_br
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          fetch-tags: true
-          path: pt_br
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Squash merge doc-pt_br
-        run: |
-
-          cd pt_br
-          git show-ref -d --head
-          echo
-
-          # Give the PR detached head a name, to avoid warnings
-          git branch head-${{ github.event.pull_request.head.sha }}
-          echo
-
-          # Checkout default branch by name, to always get the current head
-          git checkout ${{ github.event.pull_request.base.ref }}
-          echo
-
-          # Squash and "merge" changes from the PR branch, v1, -c
-          git -c user.name="none" -c user.email="none@example.com" merge -q --squash ${{ github.event.pull_request.head.sha }}
-          git -c user.name="none" -c user.email="none@example.com" commit -m "Squash merge"
-          echo
-
-          git reset --hard HEAD~1
-          echo
-
-          # Squash and "merge" changes from the PR branch, v2, --no-commit
-          git merge --squash --no-commit ${{ github.event.pull_request.head.sha }}
-          git -c user.name="none" -c user.email="none@example.com" commit -m "Squash merge"
-          echo
-
-          git status --short
-          git diff --stat
-          echo
