@@ -35,8 +35,8 @@ jobs:
       - name: Set up files
         run: |
           # Checkout repositories
-          git --version
           set -x
+          git --version
           git clone -q --single-branch --depth=1 https://github.com/php/doc-base.git  doc-base
           git clone -q --single-branch --depth=1 https://github.com/php/doc-en.git    en
           git clone -q --single-branch           https://github.com/php/doc-pt_br.git pt_br
@@ -46,11 +46,15 @@ jobs:
           # Plain git merge
           set -x
           cd  pt_br
+
           git config user.name  "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+          headsha=$(git rev-parse HEAD)
+          message="Merge ${{ github.event.pull_request.head.sha }} into ${headsha}"
+
           git fetch -q --no-tags --prune --no-recurse-submodules origin ${{ github.event.pull_request.head.sha }}
-          #git merge -q --message "Merge" ${{ github.event.pull_request.head.sha }}
-          git merge -q --no-edit ${{ github.event.pull_request.head.sha }}
+          git merge -q --message "$message" ${{ github.event.pull_request.head.sha }}
 
           git show
 
