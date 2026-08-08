@@ -30,7 +30,7 @@ jobs:
         # GH actions/checkout automatically merges, but tends to get stuck in the past.
         # See: https://github.com/php/doc-base/pull/329
 
-      - name: Checkout doc-pt_br
+      - name: Checkout doc-pt_br (actions/checkout)
         uses: actions/checkout@v7
         with:
           path: pt_br
@@ -40,88 +40,27 @@ jobs:
           php doc-base/configure.php --disable-libxml-check --enable-xml-details --redirect-stderr-to-stdout --with-lang=pt_br 2>&1
           sha1sum doc-base/temp/manual.xml
 
-
-
-
-        # Merge PR brahcn into default branch using *current* branch heads:
-        # - github.event.pull_request.base.ref : main/master
-        # - github.event.pull_request.head.sha : PR head
-        #
-        # Does not work:
-        # - actions/checkout without fetch-depth / fetch-tags
-        # - git fetch by github.event.pull_request.head.ref
-        # - git merge --squash --no-commit fails with no ident
-        #
-        # TODO:
-        # - In case of conflict, GH's 'Squash and merge' uses
-        #   --strategy-option=theirs or ours? Probably theirs
-        #   in this case, as we position into master ("here")
-        #   and pulls from feature ("there").
-
-
-
-
-      - name: Alternative 1, uses plain git commands
+      - name: Alternative
         run:  rm -rf pt_br
+
+        # Clone default branch and merge PR using only plain git:
+        # - clone --single-branch selects the default branch;
+        # - github.event.pull_request.head.sha maps to PR tip, unmerged.
 
       - name: Checkout doc-pt_br (plain git)
         run: |
           # Plain git merge
-          git --version
 
           path=pt_br
 
-          git clone --single-branch ${{ github.event.pull_request.base.repo.clone_url }} "$path"
+          set -x
+          git --version
+          git clone -q --single-branch ${{ github.event.pull_request.base.repo.clone_url }} "$path"
           cd "$path"
-          echo
           git config user.name  "nobody"
           git config user.email "nobody@example.com"
-          git fetch --no-tags --prune --no-recurse-submodules origin ${{ github.event.pull_request.head.sha }}
-          echo
-          git merge -m "Merge" ${{ github.event.pull_request.head.sha }}
-
-      - name: Build manual.xml, again
-        run: |
-          php doc-base/configure.php --disable-libxml-check --enable-xml-details --redirect-stderr-to-stdout --with-lang=pt_br 2>&1
-          sha1sum doc-base/temp/manual.xml
-
-
-
-      - name: Alternative 2, uses actions/checkout@v7 + userland merge
-        run:  rm -rf pt_br
-
-      - name: Checkout doc-pt_br (actions/checkout no merge)
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          fetch-tags: true
-          path: pt_br
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Squash merge doc-pt_br
-        run: |
-          # Squash merge
-
-          cd pt_br
-          git show-ref -d --head
-          echo
-
-          # Give the PR detached head a name, to avoid warnings
-          git branch head-${{ github.event.pull_request.head.sha }}
-
-          # Checkout default branch by name, to always get the current head
-          git checkout ${{ github.event.pull_request.base.ref }}
-          echo
-
-          # Squash changes from the PR branch into here (default branch)
-          # TODO: missing a --strategy-option=theirs on merge --squash ?
-          git -c user.name="none" -c user.email="none@example.com" merge -q --squash ${{ github.event.pull_request.head.sha }}
-          git -c user.name="none" -c user.email="none@example.com" commit -m "Squash merge"
-          echo
-
-          git status --short
-          git diff --stat
-          echo
+          git fetch -q --no-tags --prune --no-recurse-submodules origin ${{ github.event.pull_request.head.sha }}
+          git merge -q -m "Merge" ${{ github.event.pull_request.head.sha }}
 
       - name: Build manual.xml, again
         run: |
