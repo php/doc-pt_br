@@ -67,9 +67,10 @@ jobs:
       - name: Checkout and merge doc-pt_br (plain git)
         run: |
           # Plain git merge
+          git --version
 
           path=pt_br
-          repo=${{ event.repository.ssh_url }}
+          repo=${{ github.event.repository.ssh_url }}
           hash=${{ github.event.pull_request.head.sha }}
 
           git clone -q --single-branch $repo $path
@@ -96,22 +97,6 @@ jobs:
 
       - name: Alternative 2, uses actions/checkout@v7 + userland merge
         run:  rm -rf pt_br
-
-        # Merge into main/master from *current* names/SHAS.
-        #
-        # - github.event.pull_request.base.ref : main/master
-        # - github.event.pull_request.head.sha : PR head
-        #
-        # Does not work:
-        # - actions/checkout without fetch-depth / fetch-tags
-        # - git fetch by github.event.pull_request.head.ref
-        # - git merge --squash --no-commit fails with no ident
-        #
-        # TODO:
-        # - In case of conflict, GH's 'Squash and merge' uses
-        #   --strategy-option=theirs or ours? Probably theirs
-        #   in this case, as we position into master ("here")
-        #   and pulls from feature ("there").
 
       - name: Checkout and merge doc-pt_br (actions/checkout+userland)
         uses: actions/checkout@v7
