@@ -15,16 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      # Clone default branches and merge PR using only plain git:
+      # Shallow clone default branches and merge PR using only plain git:
       #
       # - clone --single-branch selects the default branch;
       # - clone --depth=1 downloads the same data as actions/checkout;
-      # - clone --filter=blob:none downloads less data than a full clone,
-      #   but the sufficient information for tree navigation.
       # - github.event.pull_request.head.sha maps to the not merged PR tip.
       #
       # Avoids getting stuck in the past, like GH actions/checkout does, and
-      # we do not need any auth stuff for building the manual. So the results
+      # we do not need any other stuff for building the manual. The results
       # of workflow re-runs always match with results of normal or squash
       # merging the pull requests, immediately after a workflow re-run.
       #
@@ -33,14 +31,19 @@ jobs:
       # busy repositories, the results of CI checks are almost always outdated
       # and invalid, not representing the future state of the default branch
       # after the pull request is merged, even after workflows re-runs.
+      #
+      # In theory, --filter=blob:none on clone of to be merged repository
+      # would be faster, and avoid an extra git fetch on PR tip. But cause
+      # subsequent piecewise downloads of blob data, both on default and
+      # feature branches, that is slow.
 
       - name: Set up files
         run: |
           # Checkout repositories
           set -x
-          git clone -q --depth=1          --single-branch https://github.com/php/doc-base.git  doc-base
-          git clone -q --depth=1          --single-branch https://github.com/php/doc-en.git    en
-          git clone -q --filter=blob:none --single-branch https://github.com/php/doc-pt_br.git pt_br
+          git clone -q --depth=1 --single-branch https://github.com/php/doc-base.git  doc-base
+          git clone -q --depth=1 --single-branch https://github.com/php/doc-en.git    en
+          git clone -q           --single-branch https://github.com/php/doc-pt_br.git pt_br
 
       - name: Merge pull request
         run: |
@@ -54,7 +57,7 @@ jobs:
           echo $message
 
           set -x
-          #git fetch -q --no-tags --prune --no-recurse-submodules origin ${{ github.event.pull_request.head.sha }}
+          git fetch -q --no-tags --prune --no-recurse-submodules origin ${{ github.event.pull_request.head.sha }}
           git merge -q --no-edit ${{ github.event.pull_request.head.sha }}
 
       - name: Build manual.xml
