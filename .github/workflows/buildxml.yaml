@@ -36,7 +36,6 @@ jobs:
         run: |
           # Checkout repositories
           set -x
-          git --version
           git clone -q --single-branch --depth=1 https://github.com/php/doc-base.git  doc-base
           git clone -q --single-branch --depth=1 https://github.com/php/doc-en.git    en
           git clone -q --single-branch           https://github.com/php/doc-pt_br.git pt_br
@@ -44,19 +43,17 @@ jobs:
       - name: Merge pull request
         run: |
           # Plain git merge
-          set -x
           cd  pt_br
 
           git config user.name  "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          mainsha=$(git rev-parse HEAD)
+          message="Merge ${{ github.event.pull_request.head.sha }} into ${mainsha}"
 
-          headsha=$(git rev-parse HEAD)
-          message="Merge ${{ github.event.pull_request.head.sha }} into ${headsha}"
-
+          set -x
+          pwd
           git fetch -q --no-tags --prune --no-recurse-submodules origin ${{ github.event.pull_request.head.sha }}
           git merge -q --message "$message" ${{ github.event.pull_request.head.sha }}
-
-          git show
 
       - name: Build manual.xml
         run: |
