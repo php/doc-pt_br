@@ -21,29 +21,38 @@ jobs:
       # - clone --depth=1 downloads the same data as actions/checkout;
       # - github.event.pull_request.head.sha maps to PR tip, unmerged.
       #
-      # Avoids getting stuck in the past, like actions/checkout does, and
+      # Avoids getting stuck in the past, like GH actions/checkout does, and
       # we do not need any auth stuff for building the manual. So the results
       # of workflow re-runs always match with results of normal or squash
-      # merging the pull requests.
+      # merging the pull requests, immediately after a workflow re-run.
+      #
+      # To be pedantic clear, Github's pull requests only merge the PRs on the
+      # "synchronize" event. That does *not* include workflows re-runs. So in
+      # busy repositories, the results of CI checks are almost always outdated
+      # and invalid, not representing the future state of the default branch
+      # after the pull request is merged, even after workflows re-runs.
 
       - name: Set up files
         run: |
           # Checkout repositories
           git --version
           set -x
-          git -q clone --single-branch --depth=1 https://github.com/php/doc-base.git  doc-base
-          git -q clone --single-branch --depth=1 https://github.com/php/doc-en.git    en
-          git -q clone --single-branch           https://github.com/php/doc-pt_br.git pt_br
+          git clone -q --single-branch --depth=1 https://github.com/php/doc-base.git  doc-base
+          git clone -q --single-branch --depth=1 https://github.com/php/doc-en.git    en
+          git clone -q --single-branch           https://github.com/php/doc-pt_br.git pt_br
 
       - name: Merge pull request
         run: |
           # Plain git merge
           set -x
           cd  pt_br
-          git config user.name  "nobody"
-          git config user.email "nobody@example.com"
+          git config user.name  "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git fetch -q --no-tags --prune --no-recurse-submodules origin ${{ github.event.pull_request.head.sha }}
-          git merge -q -m "Merge" ${{ github.event.pull_request.head.sha }}
+          #git merge -q --message "Merge" ${{ github.event.pull_request.head.sha }}
+          git merge -q --no-edit ${{ github.event.pull_request.head.sha }}
+
+          git show
 
       - name: Build manual.xml
         run: |
