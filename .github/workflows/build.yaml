@@ -27,7 +27,7 @@ jobs:
           repository: php/doc-en
           path: en
 
-        # GH actions/checkout, automatically merges, but tends to get stuck in the past.
+        # GH actions/checkout automatically merges, but tends to get stuck in the past.
         # See: https://github.com/php/doc-base/pull/329
 
       - name: Checkout and merge doc-pt_br
@@ -42,7 +42,59 @@ jobs:
 
 
 
-      - name: Alternative path, uses userland merge instead
+
+        # Merge PR brahcn into default branch using *current* branch heads:
+        # - github.event.pull_request.base.ref : main/master
+        # - github.event.pull_request.head.sha : PR head
+        #
+        # Does not work:
+        # - actions/checkout without fetch-depth / fetch-tags
+        # - git fetch by github.event.pull_request.head.ref
+        # - git merge --squash --no-commit fails with no ident
+        #
+        # TODO:
+        # - In case of conflict, GH's 'Squash and merge' uses
+        #   --strategy-option=theirs or ours? Probably theirs
+        #   in this case, as we position into master ("here")
+        #   and pulls from feature ("there").
+
+
+
+
+      - name: Alternative 1, uses plain git commands
+        run:  rm -rf pt_br
+
+      - name: Checkout and merge doc-pt_br (plain git)
+        run: |
+          # Plain git merge
+
+          path=pt_br
+          repo=${{ event.repository.ssh_url }}
+          hash=${{ github.event.pull_request.head.sha }}
+
+          git clone -q --single-branch $repo $path
+          cd $path
+
+          git fetch -q --no-tags --prune --no-recurse-submodules origin $hash
+          echo
+          git remote -v
+          echo
+          git show-ref -d --head
+          echo
+
+          git config user.name  "nobody"
+          git config user.email "nobody@example.com"
+
+          git merge -m "Merge" $hash
+
+      - name: Build manual.xml, again
+        run: |
+          php doc-base/configure.php --disable-libxml-check --enable-xml-details --redirect-stderr-to-stdout --with-lang=pt_br 2>&1
+          sha1sum doc-base/temp/manual.xml
+
+
+
+      - name: Alternative 2, uses actions/checkout@v7 + userland merge
         run:  rm -rf pt_br
 
         # Merge into main/master from *current* names/SHAS.
@@ -61,7 +113,7 @@ jobs:
         #   in this case, as we position into master ("here")
         #   and pulls from feature ("there").
 
-      - name: Checkout doc-pt_br
+      - name: Checkout and merge doc-pt_br (actions/checkout+userland)
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
