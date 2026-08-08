@@ -30,7 +30,7 @@ jobs:
         # GH actions/checkout automatically merges, but tends to get stuck in the past.
         # See: https://github.com/php/doc-base/pull/329
 
-      - name: Checkout and merge doc-pt_br
+      - name: Checkout doc-pt_br
         uses: actions/checkout@v7
         with:
           path: pt_br
@@ -64,29 +64,21 @@ jobs:
       - name: Alternative 1, uses plain git commands
         run:  rm -rf pt_br
 
-      - name: Checkout and merge doc-pt_br (plain git)
+      - name: Checkout doc-pt_br (plain git)
         run: |
           # Plain git merge
           git --version
 
           path=pt_br
-          repo=${{ github.event.pull_request.base.repo.clone_url }}
-          hash=${{ github.event.pull_request.head.sha }}
 
-          git clone -q --single-branch $repo $path
-          cd $path
-
-          git fetch -q --no-tags --prune --no-recurse-submodules origin $hash
+          git clone --single-branch ${{ github.event.pull_request.base.repo.clone_url }} "$path"
+          cd "$path"
           echo
-          git remote -v
-          echo
-          git show-ref -d --head
-          echo
-
           git config user.name  "nobody"
           git config user.email "nobody@example.com"
-
-          git merge -m "Merge" $hash
+          git fetch --no-tags --prune --no-recurse-submodules origin ${{ github.event.pull_request.head.sha }}
+          echo
+          git merge -m "Merge" ${{ github.event.pull_request.head.sha }}
 
       - name: Build manual.xml, again
         run: |
@@ -98,7 +90,7 @@ jobs:
       - name: Alternative 2, uses actions/checkout@v7 + userland merge
         run:  rm -rf pt_br
 
-      - name: Checkout and merge doc-pt_br (actions/checkout+userland)
+      - name: Checkout doc-pt_br (actions/checkout no merge)
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
