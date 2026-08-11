@@ -15,9 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      # Shallow clone default branches and merge PR using only plain git,
+      # Shallow clone default branches and merge PR using only plain git
       #
-      # - clone --single-branch filtes the default branch;
+      # - clone --single-branch filter the default branch;
       # - clone --depth=1 downloads the same data as actions/checkout;
       # - github.event.pull_request.head.sha maps to the PR tip, not merged.
       #
@@ -38,10 +38,10 @@ jobs:
       #   with or without fetch SHA;
       # - clone --single-branch and merge from SHA, without fetch SHA.
       #
-      # In theory, replacing --filter=tree:0 or --filter=blob:none on clone
-      # or PR repository would be faster, and avoid an extra git fetch on PR tip.
+      # In theory, filtering by --filter=tree:0 or --filter=blob:none on clone
+      # of PR repository would be faster, and avoid an extra git fetch on PR tip.
       # But they cause subsequent piecewise downloads of blob data, both on
-      # default and feature branches, that appaer to be slower in sub-gigabyte
+      # default and feature branches, that appear to be slower in sub-gigabyte
       # repositories than simply cloning with --single-branch and fetching the
       # PR branch in one go.
 
@@ -67,78 +67,6 @@ jobs:
 
           set -x
           git fetch -q --no-tags --prune --no-recurse-submodules origin ${{ github.event.pull_request.head.sha }}
-          git merge -q --no-edit ${{ github.event.pull_request.head.sha }}
-
-      # In theory, replacing --filter=tree:0 or --filter=blob:none on clone
-      # or PR repository would be faster, and avoid an extra git fetch on PR tip.
-      # But they cause subsequent piecewise downloads of blob data, both on
-      # default and feature branches, that appaer to be slower in sub-gigabyte
-      # repositories than simply cloning with --single-branch and fetching the
-      # PR branch in one go.
-
-      - name: Alternative --filter=tree:0
-        run: |
-          rm -rf doc-base
-          rm -rf en
-          rm -rf pt_br
-
-      - name: Set up files
-        run: |
-          # Checkout repositories
-          set -x
-          git clone -q --depth=1 --single-branch https://github.com/php/doc-base.git  doc-base
-          git clone -q --depth=1 --single-branch https://github.com/php/doc-en.git    en
-          git clone -q --filter=tree:0           https://github.com/php/doc-pt_br.git pt_br
-
-      - name: Merge pull request
-        run: |
-          # Plain git merge
-          cd  pt_br
-
-          git config user.name  "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          mainsha=$(git rev-parse HEAD)
-          message="Merge ${{ github.event.pull_request.head.sha }} into ${mainsha}"
-          echo $message
-          echo
-
-          set -x
-          git merge -q --no-edit ${{ github.event.pull_request.head.sha }}
-
-      # In theory, replacing --filter=tree:0 or --filter=blob:none on clone
-      # or PR repository would be faster, and avoid an extra git fetch on PR tip.
-      # But they cause subsequent piecewise downloads of blob data, both on
-      # default and feature branches, that appaer to be slower in sub-gigabyte
-      # repositories than simply cloning with --single-branch and fetching the
-      # PR branch in one go.
-
-      - name: Alternative --filter=blob:none
-        run: |
-          rm -rf doc-base
-          rm -rf en
-          rm -rf pt_br
-
-      - name: Set up files
-        run: |
-          # Checkout repositories
-          set -x
-          git clone -q --depth=1 --single-branch https://github.com/php/doc-base.git  doc-base
-          git clone -q --depth=1 --single-branch https://github.com/php/doc-en.git    en
-          git clone -q --filter=blob:none        https://github.com/php/doc-pt_br.git pt_br
-
-      - name: Merge pull request
-        run: |
-          # Plain git merge
-          cd  pt_br
-
-          git config user.name  "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          mainsha=$(git rev-parse HEAD)
-          message="Merge ${{ github.event.pull_request.head.sha }} into ${mainsha}"
-          echo $message
-          echo
-
-          set -x
           git merge -q --no-edit ${{ github.event.pull_request.head.sha }}
 
       - name: Build manual.xml
