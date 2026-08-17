@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: a0434e05111acabf2b9b2c7847e7e733f8dab0dc Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: c083c88c8e7ed7eb0d14662c0471693dcac42daf Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <!-- splitted from ./en/functions/pcre.xml, last change in rev 1.2 -->
 <chapter xml:id="reference.pcre.pattern.syntax" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>Sintaxe de Expressões</title>
@@ -1510,6 +1510,10 @@
    também pelo nome. Há duas sintaxes alternativas:
    <literal>(?&lt;nome&gt;expressão)</literal> e <literal>(?'nome'expressão)</literal>.
   </para>
+  <simpara>
+   A partir do PHP 8.4.0, que inclui o PCRE2 10.44, o comprimento máximo de um
+   nome de sub-expressão é 128 caracteres; anteriormente era 32 caracteres.
+  </simpara>
 
   <para>
    Algumas vezes é necessário ter correspondências múltiplas, mas não ter
@@ -1874,37 +1878,24 @@
    quando os três próximos caracteres são "bar". Uma afirmação que
    olha para trás é necessária para conseguir este efeito.
   </para>
-  <para>
+  <simpara>
    Afirmações que olham <emphasis>para trás</emphasis> iniciam com (?&lt;= para afirmações positivas
    e (?&lt;! para afirmações negativas. Por exemplo,
 
    <literal>(?&lt;!foo)bar</literal>
 
    encontra uma ocorrência de "bar" que não seja precedida por
-   "foo". O conteúdo de uma afirmação que olha para trás é restrito
-   de modo que todas as strings às quais ela corresponde precisam ter um comprimento
-   fixo. No entanto, se houver várias alternativas elas não
-   precisam ter todas o mesmo comprimento fixo. Assim,
-
-   <literal>(?&lt;=bullock|donkey)</literal>
-
-   é permitido, mas
+   "foo". Uma afirmação que olha para trás pode corresponder a strings de tamanhos
+   variáveis, até um limite definido pela implementação.
+   Alternativas de tamanhos diferentes como
 
    <literal>(?&lt;!dogs?|cats?)</literal>
 
-   causa um erro no momento da compilação. Ramos que correspondem a strings
-   de comprimento diferente são permitidas somente no nível mais alto de
-   uma afirmação que olha para trás. Isto é uma extensão quando comparado com
-   o Perl 5.005, que requer que todos os ramos correspondam ao mesmo
-   comprimento de string. Uma afirmação como
+   e ramos de nível superior que podem corresponder a mais que um comprimento como
 
    <literal>(?&lt;=ab(c|de))</literal>
 
-   não é permitida, porque seu ramo único no nível mais alto pode
-   corresponder a dois comprimentos diferentes, mas é aceitável se for re-escrita
-   para usar dois ramos no nível mais alto:
-
-   <literal>(?&lt;=abc|abde)</literal>
+  são permitidos.
 
    A implementação de afirmações que olham para trás é, para cada
    alternativa, mover temporariamente a posição atual para trás
@@ -1914,7 +1905,33 @@
    sub-expressões de ocorrência única podem ser particularmente úteis para ter correspondência
    nos finais de strings; um exemplo é mostrado no final
    da seção sobre sub-expressões de ocorrência única.
-  </para>
+  </simpara>
+  <simpara>
+   Antes do PHP 8.4.0, que inclui o PCRE2 10.44, o conteúdo de uma afirmação
+   que olha para trás era restrito de forma que todas as strings que ela correspondia tinham que ter um
+   comprimento fixo. Se houvessem várias alternativas, nem todas elas precisavam ter
+   o mesmo comprimento fixo, então
+
+   <literal>(?&lt;=bullock|donkey)</literal>
+
+   era permitido, mas
+
+   <literal>(?&lt;!dogs?|cats?)</literal>
+
+   causava um erro no momento da compilação. Ramos que correspondiam a strings
+   de diferentes comprimentos eram permitidas somente no nível superior de
+   uma afirmação que olha para trás. Isto era uma extensão comparado com o
+   Perl 5.005, que requeria que todos os ramos correspondessem o mesmo
+   comprimento de string. Um afirmação como
+
+   <literal>(?&lt;=ab(c|de))</literal>
+
+   não era permitida porque seu ramo superior único poderia
+   corresponder a dois comprimentos diferentes mas era aceita se fosse reescrita
+   para usar dois ramos de nível superior:
+
+   <literal>(?&lt;=abc|abde)</literal>
+  </simpara>
   <para>
    Várias afirmações (de qualquer tipo) podem ocorrer sucessivamente.
    Por exemplo,
