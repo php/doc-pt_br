@@ -1,23 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 322606e4f1742a6f959e952c63fb1f8bcd6d6ba0 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
-
+<!-- EN-Revision: 282797eedc7c7bca6a6f55a9aad32b135feb3320 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
 <refentry xml:id="swoole-event.write" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>Swoole\Event::write</refname>
-  <refpurpose>Escreve dados no socket.</refpurpose>
+  <refpurpose>Escreve dados no socket de forma assíncrona</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <modifier>public</modifier> <modifier>static</modifier> <type>void</type><methodname>Swoole\Event::write</methodname>
-   <methodparam><type>string</type><parameter>fd</parameter></methodparam>
-   <methodparam><type>string</type><parameter>data</parameter></methodparam>
+   <modifier>public</modifier> <modifier>static</modifier> <type>bool</type><methodname>Swoole\Event::write</methodname>
+   <methodparam><type>mixed</type><parameter>fd</parameter></methodparam>
+   <methodparam><type>mixed</type><parameter>data</parameter></methodparam>
   </methodsynopsis>
-  <para>
-
-  </para>
-
+  <simpara>
+   Torna o envio de dados assíncrono para recursos de stream/sockets.
+  </simpara>
+  <note>
+   <simpara>
+    Se dados forem gravados continuamente em um socket, mas a outra ponta não conseguir lê-los com rapidez suficiente, o buffer do socket
+    acabará ficando cheio. Nesse caso, a camada subjacente do Swoole armazenará os dados excedentes
+    em um buffer na memória e aguardará o disparo do evento de disponibilidade de escrita antes de tentar gravar
+    novamente no socket. No entanto, se o buffer na memória também ficar cheio, o Swoole emitirá um
+    erro do tipo "pipe buffer overflow, reactor will block" e alternará para o modo bloqueante, pausando novas
+    operações de escrita até que haja espaço disponível.
+   </simpara>
+  </note>
+  <note>
+   <simpara>
+    O retorno de false devido ao buffer cheio é uma operação atômica — garante
+    sucesso completo (todos os dados escritos) ou falha total (nenhum dado escrito).
+   </simpara>
+  </note>
+  <warning>
+   <simpara>
+    Event::write não pode ser usado com streams ou sockets criptografados com SSL/TLS (conexões tuneladas).
+   </simpara>
+  </warning>
+  <warning>
+   <simpara>
+    Após a execução bem-sucedida, Event::write alternará automaticamente o $socket para o modo não bloqueante.
+   </simpara>
+  </warning>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -26,17 +50,17 @@
    <varlistentry>
     <term><parameter>fd</parameter></term>
     <listitem>
-     <para>
-
-     </para>
+     <simpara>
+      Descritor de arquivo (recurso de fluxo/socket, inteiro ou objeto).
+     </simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><parameter>data</parameter></term>
     <listitem>
-     <para>
-
-     </para>
+     <simpara>
+      Dados a serem enviados (o comprimento não deve exceder o tamanho do buffer do socket).
+     </simpara>
     </listitem>
    </varlistentry>
   </variablelist>
@@ -44,12 +68,33 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-
-  </para>
+  <simpara>
+   &return.success;
+  </simpara>
  </refsect1>
 
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title>Exemplo de <function>Swoole\Event::write</function></title>
+    <programlisting role="php">
+     <![CDATA[
+<?php
+use Swoole\Event;
 
+$fp = stream_socket_client('tcp://127.0.0.1:9501');
+$data = str_repeat('A', 1024 * 1024*2);
+Event::add($fp, function($fp) {
+     echo fread($fp);
+});
+Event::write($fp, $data);
+?>
+]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
 </refentry>
 
 <!-- Keep this comment at the end of the file

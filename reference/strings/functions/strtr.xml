@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 45042fef652f1b4e904e809fcbfcf31f6c60670b Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: 1ed119182ad4629064b13301d0e427de47736bfe Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <refentry xml:id="function.strtr" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>strtr</refname>
@@ -114,15 +114,20 @@
     <programlisting role="php">
 <![CDATA[
 <?php
-$addr = "The river å";
 
-// Nesta forma, strtr() faz uma tradução byte a byte.
-// Portanto, aqui é assumida uma codificação de um byte:
-$addr = strtr($addr, "äåö", "aao");
-echo $addr, PHP_EOL;
-?>
+$original = "He1Lo, w0rld!";
+
+// Com 3 argumentos, strtr() faz uma tradução byte a byte.
+$result = strtr($original, "1L0", "llo");
+echo $result;
 ]]>
     </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+Hello, world!
+]]>
+    </screen>
    </example>
   </para>
   <para>
@@ -136,9 +141,9 @@ echo $addr, PHP_EOL;
     <programlisting role="php">
 <![CDATA[
 <?php
-$trans = array("h" => "-", "hello" => "hi", "hi" => "hello");
-echo strtr("hi all, I said hello", $trans);
-?>
+
+$replace_pairs = ["h" => "-", "hello" => "hi", "hi" => "hello"];
+echo strtr("hi all, I said hello", $replace_pairs);
 ]]>
     </programlisting>
     &example.outputs;
@@ -158,11 +163,22 @@ hello all, I said hi
     <programlisting role="php">
 <![CDATA[
 <?php
-echo strtr("baab", "ab", "01"),"\n";
 
-$trans = array("ab" => "01");
-echo strtr("baab", $trans);
-?>
+// Caracteres de um só byte
+$singlebyte_string = "baab";
+echo strtr($singlebyte_string, "ab", "01"), "\n"; // Tradução byte por byte
+
+$replace_pairs = ["ab" => "01"];
+echo strtr($singlebyte_string, $replace_pairs), "\n"; // Tradução de substring
+
+// Caracteres Multi-byte
+$multibyte_string = "Ä"; // Em UTF-8, codificado como dois bytes: "\xC3\x84"
+
+$result = strtr($multibyte_string, 'Ä', 'A');
+echo bin2hex($result), "\n"; // "4184", onde "c3" se torna "41" ("A"), enquanto que "84" é mantido e quebra o UTF-8
+
+$replace_pairs = ['Ä' => 'A'];
+echo strtr($multibyte_string, $replace_pairs); // Uma tradução correta de substring multi-byte
 ]]>
     </programlisting>
     &example.outputs;
@@ -170,6 +186,8 @@ echo strtr("baab", $trans);
 <![CDATA[
 1001
 ba01
+4184
+A
 ]]>
     </screen>
   </example>
