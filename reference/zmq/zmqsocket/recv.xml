@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 976425d4f6eec32448be3cc22ec063015921b753 Maintainer: rafaelbernard Status: ready --><!-- CREDITS: rafaelbernard,leonardolara -->
+<!-- EN-Revision: 976425d4f6eec32448be3cc22ec063015921b753 Maintainer: leonardolara Status: ready --><!-- CREDITS: rafaelbernard,leonardolara -->
 
 <refentry xml:id="zmqsocket.recv" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
@@ -14,7 +14,7 @@
    <methodparam choice="opt"><type>int</type><parameter>mode</parameter><initializer>0</initializer></methodparam>
   </methodsynopsis>
   <para>
-   Recebe uma mensagem a partir de um socket. Por padrão a recepção será bloqueada até que uma mensagem esteja disponível a menos que
+   Recebe uma mensagem a partir de um soquete. Por padrão, a recepção será bloqueada até que uma mensagem esteja disponível, a menos que
    a constante <constant>ZMQ::MODE_DONTWAIT</constant> seja usada. A constante <constant>ZMQ::SOCKOPT_RCVMORE</constant>
    pode ser usada para receber mensagens de múltiplas partes. Consulte <function>ZMQSocket::setSockOpt</function>
    para mais informações.
@@ -29,7 +29,7 @@
      <term><parameter>mode</parameter></term>
      <listitem>
       <para>
-       Passa indicadores para a recepção de mensagens de múltiplas partes ou operações não bloqueantes.
+       Passa opções para a recepção de mensagens de múltiplas partes ou operações não bloqueantes.
        Consulte as constantes <constant>ZMQ::MODE_<replaceable>*</replaceable></constant>.
       </para>
      </listitem>
@@ -49,7 +49,7 @@
  <refsect1 role="errors">
   &reftitle.errors;
   <para>
-   Lança <classname>ZMQSocketException</classname> em erros.
+   Lança <classname>ZMQSocketException</classname> em caso de erros.
   </para>
  </refsect1>
 
@@ -65,11 +65,11 @@
 <![CDATA[
 <?php
 
-/* Cria um novo objeto de enfileiramento, é necessário existir um servidor na outra ponta */
+/* Cria um novo objeto de fila, precisa haver um servidor na outra ponta */
 $fila = new ZMQSocket(new ZMQContext(), ZMQ::SOCKET_REQ);
 $fila->connect("tcp://127.0.0.1:5555");
 
-/* Atribui o socket 1 à fila, envia e recebe */
+/* Atribui o soquete 1 à fila, envia e recebe */
 $tentativas = 5;
 $enviando = true;
 
@@ -79,16 +79,16 @@ do {
         /* Tenta enviar / receber */
         if ($enviando) {
             echo "Enviando mensagem\n";
-            $fila->send("Isso é uma mensagem", ZMQ::MODE_DONTWAIT);
+            $fila->send("Isto é uma mensagem", ZMQ::MODE_DONTWAIT);
             $enviando = false;
         } else {
-            echo "Obteve resposta: " . $fila->recv(ZMQ::MODE_DONTWAIT) . "\n";
+            echo "Obtive resposta: " . $fila->recv(ZMQ::MODE_DONTWAIT) . "\n";
             break;
         }
     } catch (ZMQSocketException $e) {
         /* EAGAIN significa que a operação foi bloqueada, tentar novamente */
         if ($e->getCode() === ZMQ::ERR_EAGAIN) {
-            echo " - Obteve EAGAIN, tentando novamente ($tentativas)\n";
+            echo " - Obtive EAGAIN, tentando novamente ($tentativas)\n";
         } else {
             die(" - Erro: " . $e->getMessage());
         }
@@ -103,8 +103,8 @@ do {
     <screen>
 <![CDATA[
 Enviando mensagem
- - Obteve EAGAIN, tentando novamente (4)
-Obteve resposta: Isso é uma mensagem
+ - Obtive EAGAIN, tentando novamente (4)
+Obtive resposta: Isto é uma mensagem
 ]]>
     </screen>
    </example>

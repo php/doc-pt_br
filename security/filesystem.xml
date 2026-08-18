@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 91570644fbbe4d23e79908e1a04c4c4d003fe587 Maintainer: rafaelbernard Status: ready --><!-- CREDITS: rafaelbernard,narigone,leonardolara -->
+<!-- EN-Revision: 91570644fbbe4d23e79908e1a04c4c4d003fe587 Maintainer: leonardolara Status: ready --><!-- CREDITS: rafaelbernard,narigone,leonardolara -->
 <!-- splitted from ./index.xml, last change in rev 1.66 -->
   <chapter xml:id="security.filesystem" xmlns="http://docbook.org/ns/docbook">
    <title>Segurança do Sistema de Arquivos</title>
    <simpara>
-    O <acronym>PHP</acronym> está sujeito à segurança encontrada na maioria dos sistemas de servidor
-    com respeito às permissões de arquivos e diretórios. Isso permite que
-    seja controlado que arquivos no sistema podem ser lidos e por quem. É preciso
-    ter cuidado com quaisquer arquivos que são lidos por todos para assegurar
-    que eles podem ser lidos por todos os usuários que têm acesso ao
+    O <acronym>PHP</acronym> está sujeito à segurança implementada na maioria dos sistemas de servidor
+    com respeito às permissões de arquivos e diretórios. Isto permite
+    controlar que arquivos no sistema podem ser lidos. É preciso
+    ter cuidado com arquivos que são acessíveis globalmente para garantir
+    que sejam seguros para leitura por todos os usuários que têm acesso ao
     sistema de arquivos.
    </simpara>
    <simpara>
     Já que o <acronym>PHP</acronym> foi projetado para permitir acesso em nível de usuário ao sistema
-    de arquivos, é possível escrever um script <acronym>PHP</acronym> que permitirá
-    ler arquivos do sistema como o <filename>/etc/passwd</filename>, modificar suas conexões
-    de rede, enviar inúmeros trabalhos de impressão, etc. Isso tem
+    de arquivos, é totalmente possível escrever um script <acronym>PHP</acronym> que permitirá
+    ler arquivos de sistema como o <filename>/etc/passwd</filename>, modificar conexões
+    de rede, enviar tarefas massivas de impressão, etc. Isto tem
     algumas implicações óbvias, já que é necessário garantir que os arquivos
-    lidos e gravados são apropriados.
+    lidos e gravados são os apropriados.
    </simpara>
    <simpara>
     Considere o seguinte script, onde um usuário indica que quer
     apagar um arquivo no seu diretório "home". Isso presume uma situação
-    onde uma interface web <acronym>PHP</acronym> é usada regularmente para controle
-    de arquivos, então o usuário do Apache tem permissão de apagar arquivos
+    onde uma interface web <acronym>PHP</acronym> é usada regularmente para gerenciamento
+    de arquivos, de forma que o usuário Apache tem permissão para apagar arquivos
     nos diretórios "home" dos usuários.
    </simpara>
    <para>
@@ -47,9 +47,9 @@ echo "O arquivo foi removido!";
      </programlisting>
     </example>
    Já que o nome do usuário e do arquivo são enviados pelo formulário,
-   um usuário pode enviar um nome de usuário e de arquivo que pertença a outra pessoa,
+   um usuário pode enviar um nome de usuário e de arquivo que pertença a outra pessoa
    e apagá-lo, mesmo que eles não tenham permissão para fazê-lo.
-   Nesse caso, é preciso ter alguma outra forma de autenticação.
+   Neste caso, é preciso ter alguma outra forma de autenticação.
    Considere o que poderia acontecer se as variáveis enviadas forem
    <literal>"../etc/"</literal> e <literal>"passwd"</literal>.
    O código então leria efetivamente:
@@ -59,8 +59,8 @@ echo "O arquivo foi removido!";
 <![CDATA[
 <?php
 
-// Remove um arquivo de qualquer lugar no disco rígido
-// que o usuário do PHP tenha acesso. Se o PHP tiver acesso de administrador (root):
+// Remove um arquivo de qualquer lugar no disco rígido que
+// o usuário do PHP tenha acesso. Se o PHP tiver acesso de administrador:
 $username = $_POST['user_submitted_name']; // "../etc"
 $userfile = $_POST['user_submitted_filename']; // "passwd"
 $homedir  = "/home/$username"; // "/home/../etc"
@@ -73,7 +73,7 @@ echo "O arquivo foi removido!";
 ]]>
      </programlisting>
     </example>
-    Existem duas medidas importantes que você deve tomar para prevenir
+    Existem duas medidas importantes que devem ser tomadas para prevenir
     esses problemas.
     <itemizedlist>
      <listitem>
@@ -83,13 +83,13 @@ echo "O arquivo foi removido!";
      </listitem>
      <listitem>
       <simpara>
-       Checar todas as variáveis que são enviadas.
+       Verificar todas as variáveis que são enviadas.
       </simpara>
      </listitem>
     </itemizedlist>
     Aqui temos um script melhorado:
     <example>
-     <title>Checagem com mais segura do nome do arquivo</title>
+     <title>Verificação mais segura do nome do arquivo</title>
      <programlisting role="php">
 <![CDATA[
 <?php
@@ -118,10 +118,10 @@ echo htmlentities($logstring, ENT_QUOTES);
 ]]>
      </programlisting>
     </example>
-    No entanto, ele ainda possui falhas. Se seu sistema de autenticação
-    permitir que os usuários criem seus próprios logins, e um usuário
+    No entanto, ele ainda possui falhas. Se o sistema de autenticação
+    permitir que os usuários criem seus próprios logins e um usuário
     escolher o login <literal>"../etc/"</literal>, o sistema está novamente exposto. Por
-    essa razão, é preferível escrever uma verificação mais personalizada:
+    este motivo, é preferível escrever uma verificação mais personalizada:
     <example>
      <title>Verificação mais segura do nome do arquivo</title>
      <programlisting role="php">
@@ -147,22 +147,22 @@ if (!ctype_alnum($username) || !preg_match('/^(?:[a-z0-9_-]|\.(?!\.))+$/iD', $us
    </para>
    <para>
     Dependendo do sistema operacional, existe uma variedade enorme de arquivos
-    com os quais se preocupar, incluindo dispositivos (<filename>/dev/</filename>
-    ou <filename>COM1</filename>), arquivos de configuração (arquivos <filename>/etc/</filename>
-    e arquivos <literal>.ini</literal>), áreas de armazenamento de arquivo bem conhecidas (<filename>/home/</filename>,
-    <filename>My Documents</filename>), etc. Por essa
-    razão, normalmente é mais fácil criar uma política onde se proíbe
+    com os quais devemos nos preocupar, incluindo entradas de dispositivos (<filename>/dev/</filename>
+    ou <filename>COM1</filename>), arquivos de configuração (<filename>/etc/</filename>
+    e <literal>.ini</literal>), áreas de armazenamento de arquivo bem conhecidas (<filename>/home/</filename>,
+    <filename>Meus Documentos</filename>), etc. Por este
+    motivo, normalmente é mais fácil criar uma política onde se proíbe
     tudo exceto aquilo que for explicitamente permitido.
    </para>
    <sect1 xml:id="security.filesystem.nullbytes">
-    <title>Problemas relacionados aos bytes nulos (NUL)</title>
+    <title>Problemas relacionados aos bytes nulos</title>
     <simpara>
-     Como o <acronym>PHP</acronym> usa funções em C para operações relacionadas ao
+     Como o <acronym>PHP</acronym> usa funções do C para operações relacionadas ao
      sistema de arquivos, ele pode lidar com bytes nulos de maneira inesperada.
-     Como bytes nulos denotam fim de string em C, strings que os contém
+     Como bytes nulos denotam fim de string em C, as strings que os contêm
      não serão consideradas de forma inteira, mas apenas até que um byte nulo ocorra.
 
-     O seguinte exemplo mostra um código vulnerável que demonstra esse problema:
+     O exemplo a seguir mostra um código vulnerável que demonstra esse problema:
     </simpara>
     <example>
      <title>Script vulnerável a bytes nulos</title>
@@ -188,7 +188,7 @@ if (file_exists('/home/wwwrun/' . $file. '.php')) {
      sempre ser validada corretamente. Aqui está uma versão melhorada do exemplo anterior:
     </para>
     <example>
-     <title>Validando entrada corretamente</title>
+     <title>Validando a entrada corretamente</title>
      <programlisting role="php">
 <![CDATA[
 <?php
