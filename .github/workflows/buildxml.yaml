@@ -17,10 +17,6 @@ jobs:
 
       # Shallow clone default branch and merge the PR using only plain git
       #
-      # - clone --depth=1 downloads the same data as actions/checkout;
-      # - clone --single-branch filter only the default branch;
-      # - github.event.pull_request.head.sha maps to the PR tip, not merged.
-      #
       # Avoids getting stuck in the past, like GH actions/checkout does, and
       # we do not need any other stuff for building the manual. The results
       # of workflow re-runs always match with results of normal or squashed
@@ -34,20 +30,25 @@ jobs:
       # branch after the pull request is merged. Re-running workflows also
       # changes nothing.
       #
+      # Notes:
+      # - clone --depth=1 downloads the same data as actions/checkout;
+      # - clone --single-branch filter only the default branch;
+      # - github.event.pull_request.head.sha maps to the PR tip, not merged.
+      #
       # Does not work:
       # - clone --depth=1 and merge from PR SHA, with or without fetch by SHA;
       # - clone --single-branch and merge from PR SHA, without fetch by SHA.
       #
-      # In theory, using --filter=tree:0 or --filter=blob:none on clone of the
-      # PR branch would be faster, and avoid an extra git fetch on PR tip.
+      # In theory, using --filter=tree:0 or --filter=blob:none on local clone
+      # would be faster, and avoid an extra git fetch on the PR branch.
       # But they cause subsequent piecewise downloads of blob data, both on
       # default and feature branches, that appear to be slower in sub-gigabyte
       # repositories than simply cloning with --single-branch and fetching the
-      # PR tip in one go.
+      # full history on default and feature branchs, in one go.
 
-      - name: Set up files
+      - name: Clone repositories
         run: |
-          # Checkout repositories
+          # Shallow clones
           set -x
           git clone -q --depth=1       https://github.com/php/doc-base.git  doc-base
           git clone -q --depth=1       https://github.com/php/doc-en.git    en
