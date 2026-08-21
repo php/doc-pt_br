@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 4de6272a1f15efc9e3df21d255965fd890da0d6f Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: cdbe6f9826baecd4a6c05f1c95ea47d1d8f32551 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <refentry xml:id="function.preg-match" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>preg_match</refname>
@@ -119,8 +119,12 @@ Array
          <term><constant>PREG_UNMATCHED_AS_NULL</constant></term>
          <listitem>
           <para>
-           Se esta constante for passada, sub-expressões não correspondidas são reportadas como &null;;
-           caso contrário elas são reportadas como <type>string</type>s vazias.
+           Se esta constante for passada, sub-expressões não correspondidas são reportadas como &null;
+           e sempre são incluídas nos resultados (incluindo as finais).
+           Sem esta constante, subpadrões não correspondidos que são seguidos por um
+           subpadrão correspondente são reportados como uma <type>string</type> vazia,
+           enquanto subpadrões não correspondidos finais são omitidos dos resultados
+           completamente.
            <informalexample>
             <programlisting role="php">
 <![CDATA[
@@ -128,6 +132,12 @@ Array
 preg_match('/(a)(b)*(c)/', 'ac', $matches);
 var_dump($matches);
 preg_match('/(a)(b)*(c)/', 'ac', $matches, PREG_UNMATCHED_AS_NULL);
+var_dump($matches);
+
+// Trailing unmatched subpatterns:
+preg_match('/(a)(b)?(c)?/', 'a', $matches);
+var_dump($matches);
+preg_match('/(a)(b)?(c)?/', 'a', $matches, PREG_UNMATCHED_AS_NULL);
 var_dump($matches);
 ?>
 ]]>
@@ -154,6 +164,22 @@ array(4) {
   NULL
   [3]=>
   string(1) "c"
+}
+array(2) {
+  [0]=>
+  string(1) "a"
+  [1]=>
+  string(1) "a"
+}
+array(4) {
+  [0]=>
+  string(1) "a"
+  [1]=>
+  string(1) "a"
+  [2]=>
+  NULL
+  [3]=>
+  NULL
 }
 ]]>
             </screen>
@@ -229,12 +255,12 @@ Array
 )
 ]]>
          </screen>
-         <para>
+         <simpara>
           Alternativamente, para evitar o uso de <function>substr</function>, use a afirmação
-          <literal>\G</literal> ao invés da âncora <literal>^</literal>, ou
-          o modificador <literal>A</literal>, ambos funcionam com o
+          <literal>\G</literal> no lugar da âncora <literal>^</literal>, ou
+          o modificador <literal>A</literal>; ambos não funcionam com o
           parâmetro <parameter>offset</parameter>.
-         </para>
+         </simpara>
         </informalexample>
        </para>
       </note>
@@ -270,6 +296,17 @@ Array
       </row>
      </thead>
      <tbody>
+      <row>
+       <entry>7.4.0</entry>
+       <entry>
+        Quando a constante <constant>PREG_UNMATCHED_AS_NULL</constant> é usada,
+        os grupos de captura finais não correspondidos agora também são incluídos no
+        resultado com o valor &null; (ou <literal>[null, -1]</literal> quando
+        <constant>PREG_OFFSET_CAPTURE</constant> também é usado), de forma que
+        <varname>$matches</varname> sempre tenha o mesmo tamanho. Anteriormente,
+        eles eram omitidos.
+       </entry>
+      </row>
       <row>
        <entry>7.2.0</entry>
        <entry>

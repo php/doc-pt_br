@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 3a8c3e77df070a046c9d5b56b68926ca2d7e5ee3 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: d0a271b7ed3149b465a364fadd3f1212d01efd22 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <refentry xml:id="datetime.unserialize" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>DateTime::__unserialize</refname>
@@ -43,36 +43,64 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-   O objeto <classname>DateTime</classname>.
-  </para>
+  <simpara>
+   &return.void;
+  </simpara>
  </refsect1>
 
  <refsect1 role="examples">
   &reftitle.examples;
   <example>
-   <title>Exemplo de <function>DateTime::unserialize</function></title>
+   <title>Exemplo de <methodname>DateTime::__unserialize</methodname></title>
    <programlisting role="php">
 <![CDATA[
 <?php
-$serializedDate = 'O:8:"DateTime":3:{s:4:"date";s:26:"2025-03-27 00:00:00.000000";s:13:"timezone_type";i:3;s:8:"timezone";s:3:"UTC";}';
-var_dump(unserialize($serializedDate));
+
+class CustomDateTimeImmutable extends DateTimeImmutable
+{
+    #[\Override]
+    public function __unserialize(array $data): void
+    {
+        echo "Hora de `{$data['to']}`:\n\n";
+
+        parent::__construct($data['date'], new DateTimeZone($data['timezone']));
+    }
+}
+
+$serializedData = 'O:23:"CustomDateTimeImmutable":4:{s:4:"date";s:25:"2025-03-27T00:00:00-03:00";s:9:"timestamp";i:1743033600;s:8:"timezone";s:17:"America/Sao_Paulo";s:2:"to";s:26:"tomar uma xícara de café";}';
+
+var_dump(unserialize($serializedData));
+
 ]]>
    </programlisting>
    &example.outputs;
    <screen>
 <![CDATA[
-object(DateTime)#1 (3) {
+Hora de `tomar uma xícara de café`:
+
+object(CustomDateTimeImmutable)#1 (3) {
   ["date"]=>
   string(26) "2025-03-27 00:00:00.000000"
   ["timezone_type"]=>
-  int(3)
+  int(1)
   ["timezone"]=>
-  string(3) "UTC"
+  string(6) "-03:00"
 }
 ]]>
    </screen>
   </example>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <warning>
+   <simpara>
+    Um <exceptionname>Error</exceptionname> é lançado ao tentar
+    desserializar um objeto <classname>DateTime</classname> personalizado se
+    <link linkend="object.serialize">__serialize()</link> estiver definido, mas
+    <link linkend="object.unserialize">__unserialize()</link> estiver ausente.
+   </simpara>
+  </warning>
  </refsect1>
 
  <refsect1 role="seealso">
