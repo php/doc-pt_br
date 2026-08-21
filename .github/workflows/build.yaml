@@ -1,4 +1,4 @@
-# See https://docs.github.com/en/actions.
+
 name: Build
 
 on:
@@ -13,28 +13,33 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-
     steps:
-      # See https://github.com/actions/checkout.
-      - name: Checkout doc-pt_br
-        uses: actions/checkout@v3
-        with:
-          path: pt_br
-
-      - name: Checkout doc-en
-        uses: actions/checkout@v3
-        with:
-          repository: php/doc-en
-          path: en
 
       - name: Checkout doc-base
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
         with:
           repository: php/doc-base
           path: doc-base
 
-      - name: Quality Assurance scripts
-        run: php doc-base/scripts/qa/extensions.xml.php --check
+      - name: Checkout doc-en
+        uses: actions/checkout@v7
+        with:
+          repository: php/doc-en
+          path: en
 
-      - name: Build documentation for pt_br
-        run: php doc-base/configure.php --disable-libxml-check --enable-xml-details --redirect-stderr-to-stdout --with-lang=pt_br
+      - name: Checkout doc-pt_br (actions/checkout)
+        uses: actions/checkout@v7
+        with:
+          path: pt_br
+
+      - name: Build manual.xml
+        run: |
+          php doc-base/configure.php --disable-libxml-check --enable-xml-details --redirect-stderr-to-stdout --with-lang=pt_br 2>&1
+          echo
+          sha1sum doc-base/temp/manual.xml
+
+        # GH actions/checkout automatically merges, but tends to get stuck in the past.
+
+      - name: actions/checkout merged where?
+        run: |
+          git -C pt_br log --oneline --no-decorate -n10

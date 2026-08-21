@@ -1,0 +1,76 @@
+
+name: Build XML
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Run configure
+    runs-on: ubuntu-latest
+    steps:
+
+      # Shallow clone default branch and merge the PR using only plain git
+      #
+      # Avoids getting stuck in the past, like GH actions/checkout does, and
+      # we do not need any other stuff for building the manual. The results
+      # of workflow re-runs always match with results of normal or squashed
+      # merges of pull requests, immediately after a workflow re-run.
+      #
+      # To be pedantic clear, Github's pull requests calculate and *caches*
+      # the merge points of PRs, *only* at the PR's "synchronize" event.
+      # That does *not* include changes on master/main *or* workflows re-runs.
+      # So, in busy repositories, the results of CI checks are almost always
+      # outdated and invalid, not representing the future state of the default
+      # branch after the pull request is merged. Re-running workflows also
+      # changes nothing.
+      #
+      # Notes:
+      # - clone --depth=1 downloads the same data as actions/checkout;
+      # - clone --single-branch filter only the default branch;
+      # - github.event.pull_request.head.sha maps to the PR tip, not merged.
+      #
+      # Does not work:
+      # - clone --depth=1 and merge from PR SHA, with or without fetch by SHA;
+      # - clone --single-branch and merge from PR SHA, without fetch by SHA.
+      #
+      # In theory, using --filter=tree:0 or --filter=blob:none on local clone
+      # would be faster, and avoid an extra git fetch on the PR branch.
+      # But they cause subsequent piecewise downloads of blob data, both on
+      # default and feature branches, that appear to be slower in sub-gigabyte
+      # repositories than simply cloning with --single-branch and fetching the
+      # full history on default and feature branchs, in one go.
+
+      - name: Clone repositories
+        run: |
+          # Shallow clones
+          set -x
+          git clone -q --depth=1       https://github.com/php/doc-base.git  doc-base
+          git clone -q --depth=1       https://github.com/php/doc-en.git    en
+          git clone -q --single-branch https://github.com/php/doc-pt_br.git pt_br
+
+      - name: Merge pull request
+        run: |
+          # Plain git merge
+          cd  pt_br
+
+          git config user.name  "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          mainsha=$(git rev-parse HEAD)
+          message="Merge ${{ github.event.pull_request.head.sha }} into ${mainsha}"
+
+          echo $message
+          set -x
+          git fetch -q --no-tags --prune --no-recurse-submodules origin ${{ github.event.pull_request.head.sha }}
+          git merge -q --no-edit ${{ github.event.pull_request.head.sha }}
+
+      - name: Build manual.xml
+        run: |
+          php doc-base/configure.php --disable-libxml-check --enable-xml-details --redirect-stderr-to-stdout --with-lang=pt_br 2>&1
+          echo
+          sha1sum doc-base/temp/manual.xml
