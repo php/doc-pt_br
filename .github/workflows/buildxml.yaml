@@ -1,0 +1,66 @@
+
+# Shallow clone default branch and merge the PR using only plain git
+#
+# Avoids getting stuck in the past, like GH actions/checkout does, and
+# we do not need any other stuff for building the manual. The results
+# of workflow re-runs always match with results of normal or squashed
+# merges of pull requests, immediately after a workflow re-run.
+#
+# To be pedantic clear, Github's pull requests calculate the merge
+# points of PRs, but only at the PR's "synchronize" event. This
+# does *not* include changes on master/main, *or* workflows re-runs.
+# So, in busy repositories, the results of CI checks are almost always
+# outdated and invalid, not representing the future state of the default
+# branch after the pull request is merged. Re-running workflows also
+# changes nothing.
+#
+# Notes:
+# - clone --depth=1 downloads the same data as actions/checkout;
+# - clone --filter=tree:0 implies --depth=1, and also download the
+#     linear commit history of the branch;
+# - github.event.pull_request.head.sha maps to the PR tip, not merged.
+#
+# Does not work:
+# - clone --depth=1 and merge from PR SHA, with or without fetch by SHA;
+# - clone --single-branch and merge from PR SHA, without fetch by SHA.
+
+name: Build and validate XML
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: Run configure
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Clone repositories
+        run: |
+          # Shallow clones
+          set -x
+          git clone -q --depth=1       https://github.com/php/doc-base.git  doc-base
+          git clone -q --depth=1       https://github.com/php/doc-en.git    en
+          git clone -q --filter=tree:0 https://github.com/php/doc-pt_br.git pt_br
+
+      - name: Merge pull request
+        run: |
+          # Plain git merge
+
+          cd  pt_br
+
+          git config user.name  "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          mainsha=$(git rev-parse HEAD)
+          message="Merge ${{ github.event.pull_request.head.sha }} into ${mainsha}"
+
+          set -x
+          git fetch -q --filter=tree:0 origin ${{ github.event.pull_request.head.sha }}
+          git merge -q -m "$message" ${{ github.event.pull_request.head.sha }}
+
+      - name: Build manual.xml
+        run: |
+          php doc-base/configure.php --disable-libxml-check --enable-xml-details --redirect-stderr-to-stdout --with-lang=pt_br 2>&1
+          echo
+          sha1sum doc-base/temp/manual.xml
