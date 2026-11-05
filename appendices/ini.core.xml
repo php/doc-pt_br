@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: a52e3d27cca786940272d0ae8efc21b5d6739070 Maintainer: leonardolara Status: ready --><!-- CREDITS: ae,fibbarth,fabioluciano,rogeriopradoj,adiel,geekcom,rafaelbernard,leonardolara -->
+<!-- EN-Revision: 8c42bb41c9ecc3b278c4be82e4280f7bc9c36283 Maintainer: leonardolara Status: ready --><!-- CREDITS: ae,fibbarth,fabioluciano,rogeriopradoj,adiel,geekcom,rafaelbernard,leonardolara -->
 
  <section xml:id="ini.core" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Descrição das principais diretivas do &php.ini;</title>
@@ -438,6 +438,18 @@ Fatal error: Maximum execution time of 30+2 seconds exceeded (terminated) in Unk
         <entry><constant>INI_ALL</constant></entry>
         <entry></entry>
        </row>
+       <row>
+        <entry><link linkend="ini.max-memory-limit">max_memory_limit</link></entry>
+        <entry>"-1"</entry>
+        <entry><constant>INI_SYSTEM</constant></entry>
+        <entry>Disponível a partir do PHP 8.5.0</entry>
+       </row>
+       <row>
+        <entry><link linkend="ini.memory-hard-limit-percent">memory_hard_limit_percent</link></entry>
+        <entry>&null;</entry>
+        <entry><constant>INI_ALL</constant></entry>
+        <entry>Disponível a partir do PHP 8.5.12, 8.4.27, 8.3.36 e 8.2.35</entry>
+       </row>
       </tbody>
      </tgroup>
     </table>
@@ -459,9 +471,134 @@ Fatal error: Maximum execution time of 30+2 seconds exceeded (terminated) in Unk
         consumam toda a memória disponível no servidor. Note que
         para que não haja limite de memória, esta diretiva deve ser configurada para <literal>-1</literal>.
        </para>
+       <simpara>
+        A partir do PHP 8.5.12, 8.4.27, 8.3.36 e 8.2.35, este é um limite flexível:
+        uma alocação que o ultrapassa, na maioria dos casos, é permitida para ser concluída
+        antes que o erro fatal seja gerado, de modo que o uso de memória de um processo pode
+        brevemente exceder <parameter>memory_limit</parameter>. Um limite rígido separado,
+        controlado por
+        <link linkend="ini.memory-hard-limit-percent">memory_hard_limit_percent</link>,
+        define o quão longe ele pode ser ultrapassado.
+       </simpara>
 
        &ini.shorthandbytes;
 
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="ini.max-memory-limit">
+      <term>
+       <parameter>max_memory_limit</parameter>
+       <type>int</type>
+      </term>
+      <listitem>
+       <simpara>
+        Disponível a partir do PHP 8.5.0. Esta configuração apenas de inicialização controla o
+        valor máximo que <link linkend="ini.memory-limit">memory_limit</link>
+        pode ser configurado, seja na inicialização ou em tempo de execução (por exemplo, via
+        <function>ini_set</function>). Definir
+        <link linkend="ini.memory-limit">memory_limit</link> para um valor
+        superior a <parameter>max_memory_limit</parameter> resulta em um
+        aviso e o valor sendo limitado. Defina como <literal>-1</literal>
+        (o padrão) para não impor limite superior.
+       </simpara>
+
+       &ini.shorthandbytes;
+
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="ini.memory-hard-limit-percent">
+      <term>
+       <parameter>memory_hard_limit_percent</parameter>
+       <type>int</type>
+      </term>
+      <listitem>
+       <simpara>
+        Disponível a partir do PHP 8.5.12, 8.4.27, 8.3.36 e 8.2.35. Define um limite rígido de
+        memória, expresso como uma porcentagem de
+        <link linkend="ini.memory-limit">memory_limit</link>.
+        Por exemplo, com <literal>memory_limit=128M</literal> e
+        <literal>memory_hard_limit_percent=150</literal>, o limite rígido é
+        <literal>192M</literal>. Diferente de
+        <link linkend="ini.memory-limit">memory_limit</link>, o limite rígido
+        nunca pode ser ultrapassado.
+       </simpara>
+       <warning>
+        <simpara>
+         Esta diretiva foi introduzida nas versões de segurança de
+         21 de outubro de 2026, que corrigem duas vulnerabilidades críticas
+         (CVE-2026-109618, CVE-2026-109619) que podem permitir a execução remota
+         de código não autenticado, uma delas acionada através do tratamento de
+         falta de memória. Se esta diretiva não for reconhecida, a versão do PHP em
+         uso está afetada por essas vulnerabilidades e deve ser atualizada
+         imediatamente. Veja o
+         <link xlink:href="&url.php;archive/2026.php#2026-10-21-5">aviso de segurança</link>
+         para mais detalhes.
+        </simpara>
+       </warning>
+       <simpara>
+        Quando uma alocação excede <link linkend="ini.memory-limit">memory_limit</link>
+        (o limite suave), a memória ainda é alocada, e o erro fatal usual
+        é gerado assim que o mecanismo atinge um ponto seguro.
+        Funções de desligamento registradas com
+        <function>register_shutdown_function</function> ainda são executadas.
+       </simpara>
+       <simpara>
+        Quando uma alocação excederia o limite rígido, o processo é
+        encerrado imediatamente com o status de saída <literal>137</literal>.
+        Uma mensagem é escrita diretamente no fluxo de erro padrão, parecendo
+        algo assim:
+       </simpara>
+       <screen>
+<![CDATA[
+Hard memory limit of 201326592 bytes exhausted
+]]>
+       </screen>
+       <simpara>
+        A mensagem não passa pelo mecanismo de tratamento de erros, portanto
+        não é passada para os manipuladores de erros nem escrita no
+        <link linkend="ini.error-log">error_log</link>. Nenhum código PHP adicional
+        é executado: funções de desligamento, destrutores e manipuladores de buffer de saída são
+        todos ignorados.
+       </simpara>
+       <simpara>
+        O valor deve ser <literal>100</literal> ou maior, ou
+        <literal>-1</literal>.
+       </simpara>
+       <simpara>
+        Quando não definido (o padrão) ou definido como <literal>-1</literal>, o limite
+        rígido é o dobro de <link linkend="ini.memory-limit">memory_limit</link>
+        se <link linkend="ini.memory-limit">memory_limit</link> for
+        <literal>1G</literal> ou menor, e
+        <link linkend="ini.memory-limit">memory_limit</link> mais
+        <literal>1G</literal> caso contrário. Por exemplo, com o padrão
+        <literal>memory_limit=128M</literal>, o limite rígido é
+        <literal>256M</literal>, e com <literal>memory_limit=4G</literal>
+        é <literal>5G</literal>. Se
+        <link linkend="ini.memory-limit">memory_limit</link> for definido como
+        <literal>-1</literal>, não há limite rígido também.
+       </simpara>
+       <caution>
+        <simpara>
+         Um valor de <literal>100</literal> faz com que o limite rígido seja igual a
+         <link linkend="ini.memory-limit">memory_limit</link>, o que transforma
+         a maioria das condições de falta de memória em uma terminação imediata do
+         processo em vez de um erro fatal. Trabalhos em tempo de desligamento, como
+         registro, liberação de bloqueios ou finalização de uma resposta, então nunca
+         serão executados em caso de falta de memória.
+        </simpara>
+       </caution>
+       <note>
+        <simpara>
+         Como o processo é encerrado sem produzir saída, em
+         ambientes de múltiplas requisições, como o PHP-FPM, o trabalhador que atende a
+         requisição é terminado e o cliente não recebe resposta do
+         PHP; o gerenciador de processos inicia um trabalhador substituto. O status de saída
+         <literal>137</literal> também é o status relatado para um processo
+         morto por <literal>SIGKILL</literal>, por exemplo pelo kernel
+         OOM killer ou por um runtime de contêiner, portanto verifique o fluxo de erro padrão
+         para diferenciar os casos.
+        </simpara>
+       </note>
       </listitem>
      </varlistentry>
     </variablelist>
@@ -1311,6 +1448,15 @@ include_path = ".:${USER}/pear/php"
          como <literal>0</literal> e assim <emphasis>desabilitará</emphasis> o cache do caminho real.
         </para>
        </note>
+       <warning>
+        <simpara>
+         <option>open_basedir</option> não restringe o acesso a sockets de domínio Unix.
+         Funções de socket do PHP, como <function>stream_socket_client</function> e
+         <function>fsockopen</function> podem se conectar a um caminho de socket Unix
+         (por exemplo, <filename>unix:///var/run/docker.sock</filename>)
+         independentemente da configuração de <option>open_basedir</option>.
+        </simpara>
+       </warning>
        <caution>
         <para>
          <literal>open_basedir</literal> é rede de segurança extra, mas não é uma proteção

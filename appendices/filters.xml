@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 3f1dbc451b313fb1ec8058f24c1beccf55fce316 Maintainer: leonardolara Status: ready --><!-- CREDITS: narigone,diegopires,adiel,fibbarth,ae,leonardolara -->
+<!-- EN-Revision: 20c2abcc58470191542aaf3235acb7b495d8f359 Maintainer: leonardolara Status: ready --><!-- CREDITS: narigone,diegopires,adiel,fibbarth,ae,leonardolara -->
 <appendix xml:id="filters" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>Lista de Filtros Disponíveis</title>
  <para>
@@ -200,7 +200,7 @@ fclose($fp);
    </example>
   </section>
 
-  <section xml:id="filters.covert.quoted-printable">
+  <section xml:id="filters.convert.quoted-printable">
    <title>convert.quoted-printable-encode e convert.quoted-printable-decode</title>
    <simpara>
     O uso da versão de decodificação desse filtro é equivalente ao processamento de todos os dados
@@ -285,7 +285,7 @@ fclose($fp);
 
   <section xml:id="filters.compression.zlib">
    <title>zlib.deflate e zlib.inflate</title>
-   <simpara>
+   <para>
     <literal>zlib.deflate</literal> (compressão) e
     <literal>zlib.inflate</literal> (descompressão) são implementações dos
     métodos de compressão descritos no <link xlink:href="&url.rfc;1951">RFC 1951</link>.
@@ -302,10 +302,123 @@ fclose($fp);
     enquanto valores menores (até 9 -- 512 bytes) resultam em pior compressão usando menos memória.
     O tamanho padrão de <parameter>window</parameter> atualmente é <literal>15</literal>.
 
+    O filtro <literal>zlib.deflate</literal> implementa os métodos de compressão
+    <literal>DEFLATE</literal>, <literal>ZLIB</literal> e
+    <literal>GZIP</literal> dependendo do valor do
+    parâmetro <parameter>window</parameter>.
+
+    Os 4 bits menos significativos do parâmetro window definem o tamanho do
+    “buffer de histórico” interno usado, sendo o logaritmo na base 2 de seu tamanho em um intervalo
+    de 8 a 15. O significado dos outros bits do parâmetro window
+    pode ser definido conforme descrito abaixo.
+
+    <itemizedlist>
+     <listitem>
+      <simpara>
+       <literal>DEFLATE</literal> (<link xlink:href="&url.rfc;1951">RFC 1951</link>)
+       é um algoritmo de compressão bruto sem cabeçalho, sem soma de verificação. Ele é
+       executado quando o parâmetro window é definido no intervalo de -9 a
+       -15. Este algoritmo de compressão é a base para todos os formatos
+       gerados pelo filtro <literal>zlib.deflate</literal>.
+       As funções correspondentes que operam diretamente em strings são
+       <function>gzdeflate</function> e <function>gzinflate</function>.
+      </simpara>
+     </listitem>
+
+     <listitem>
+      <simpara>
+       <literal>ZLIB</literal> (<link xlink:href="&url.rfc;1950">RFC 1950</link>)
+       aplica o algoritmo <literal>DEFLATE</literal> e adiciona um cabeçalho de 2 bytes
+       e um trailer de 4 bytes contendo a soma de verificação Adler32 dos
+       dados descomprimidos em ordem de bytes big-endian:
+       <literal><![CDATA[ZLIB = ZLIBHEADER(2B)  DEFLATE  ADLER32(4B)]]></literal>
+
+       O cabeçalho de 2 bytes, lido como um número inteiro sem sinal de 16 bits em ordem
+       big-endian, deve ser múltiplo de 31.
+       Este formato é gerado quando o parâmetro window é definido no intervalo
+       de 8 a 15.
+       As funções correspondentes que operam diretamente em strings são
+       <function>gzcompress</function> e <function>gzuncompress</function>.
+      </simpara>
+     </listitem>
+
+     <listitem>
+      <simpara>
+       <literal>GZIP</literal> (<link xlink:href="&url.rfc;1952">RFC 1952</link>)
+       aplica o algoritmo <literal>DEFLATE</literal> adicionando um cabeçalho e um
+       trailer com a soma de verificação <literal>CRC32</literal> dos dados
+       descomprimidos e seu comprimento, ambos em ordem de bytes little-endian:
+       <literal><![CDATA[GZIP = GZIPHEADER(10B)  DEFLATE  CRC32(4B)  LENGTH(4B)]]></literal>
+
+       Este é o formato dos arquivos <literal>.gz</literal>, com o
+       <literal>GZIPHEADER</literal> contendo na ordem a assinatura
+       <literal>GZIP</literal> (<literal>\x1f\x8B</literal>), o método de
+       compressão (<literal>\x08</literal>), um byte de flag zero, um tempo de
+       modificação zero em 4 bytes, um byte de flags extras que depende do
+       nível de compressão, e o sistema operacional definido para o sistema
+       atual (<literal>\x00</literal> = sistema de arquivos FAT,
+       <literal>\x03</literal> = Unix, etc.).
+       Este formato é gerado quando o parâmetro window é definido no intervalo
+       de 9+16=25 até 15+16=31. Note que há um limite de 4GB para o
+       comprimento máximo dos dados descomprimidos; além desse limite, apenas o
+       módulo 2^32 do comprimento real é armazenado na parte <literal>LENGTH</literal>.
+       As funções correspondentes que operam diretamente em strings são
+       <function>gzencode</function> e <function>gzdecode</function>; a
+       função <function>gzopen</function> permite ler e escrever
+       arquivos <literal>.gz</literal>.
+      </simpara>
+     </listitem>
+    </itemizedlist>
+
+    Com o filtro <literal>zlib.inflate</literal>, apenas o
+    parâmetro <parameter>window</parameter> é permitido; qualquer outro parâmetro
+    (<parameter>memory</parameter>, <parameter>level</parameter>) é ignorado.
+    Seja $W o logaritmo de base 2 do tamanho do buffer de histórico, de forma que 2^$W bytes sejam
+    alocados pelo descompressor. Para o formato ZLIB, este valor deve ser
+    maior ou igual ao registrado no cabeçalho, o que é verificado no
+    momento da descompressão; para os outros formatos, ele só precisa ser grande o suficiente
+    para as distâncias de correspondência realmente presentes nos dados.
+    O intervalo é 9 ≤ $W ≤ 15. Se desconhecido, $W=15 é a escolha mais segura.
+
+    <itemizedlist>
+     <listitem>
+      <simpara>
+       <literal>DEFLATE</literal> (<link xlink:href="&url.rfc;1951">RFC 1951</link>):
+        use window=-$W, sendo $W um valor não menor do que o usado para
+        compressão. Se desconhecido, defina window=-15.
+      </simpara>
+     </listitem>
+
+     <listitem>
+      <simpara>
+       <literal>ZLIB</literal> (<link xlink:href="&url.rfc;1950">RFC 1950</link>):
+        use window=$W. O valor de $W está disponível no mesmo cabeçalho ZLIB,
+        caso contrário, defina window=15.
+      </simpara>
+     </listitem>
+
+     <listitem>
+      <simpara>
+       <literal>GZIP</literal> (<link xlink:href="&url.rfc;1952">RFC 1952</link>):
+       use window=$W+16. Um cabeçalho GZIP não carrega o tamanho da janela, então defina
+       window=31 a menos que o valor usado para compressão seja conhecido.
+      </simpara>
+     </listitem>
+
+     <listitem>
+      <simpara>
+       <literal>ZLIB ou GZIP</literal>:
+       use window=$W+32 para detecção automática de cabeçalho, de forma que ambos os
+       formatos possam ser reconhecidos e descomprimidos; window=15+32=47 é a
+       escolha mais segura.
+      </simpara>
+     </listitem>
+    </itemizedlist>
+
     <parameter>memory</parameter> é uma escala indicando quanta memória deve ser alocada para trabalhar.
     Valores válidos vão de 1 (alocação mínima) até 9 (alocação máxima). Essa alocação de memória
     afeta apenas a velocidade e não tem impacto sobre o tamanho do conteúdo gerado.
-   </simpara>
+   </para>
 
    <note>
     <simpara>
