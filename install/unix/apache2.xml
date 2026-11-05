@@ -1,49 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: a38e360ae1ce4169b331013958c519d17f19114e Maintainer: leonardolara Status: ready --><!-- CREDITS: ernani,narigone,ae,dtgfranca,leonardolara -->
+<!-- EN-Revision: ee7185a089f266a9475b069aa199314811fad8a8 Maintainer: leonardolara Status: ready --><!-- CREDITS: ernani,narigone,ae,dtgfranca,leonardolara -->
 <sect1 xml:id="install.unix.apache2" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
- <title>Apache 2.0 em sistemas Unix</title>
+ <title>HTTPD Apache 2.x em sistemas Unix</title>
 
- <para>
-  Esta seção contém notas e dicas específicas para a instalação do PHP no Apache 2.x
-  em sistemas Unix.
- </para>
+ <simpara>
+  Esta seção contém notas e dicas específicas para instalações do PHP com o HTTPD Apache
+  2.x em sistemas Linux e similares a Unix.
+ </simpara>
 
- &warn.apache2.compat;
+ <warning>
+  <title>Use PHP-FPM</title>
+  <simpara>
+   <emphasis role="strong">Não use <literal>mod_php</literal> em novas
+   instalações.</emphasis> As instruções nesta página são mantidas
+   para referência histórica e para os casos raros em que a incorporação do PHP
+   diretamente no processo do HTTPD Apache é especificamente necessária.
+  </simpara>
+  <simpara>
+   Para todas as implantações modernas, use
+   <link linkend="install.fpm">PHP-FPM</link> (FastCGI Process Manager)
+   com o módulo <literal>mod_proxy_fcgi</literal> do HTTPD Apache. O PHP-FPM
+   fornece melhor gerenciamento de recursos, isolamento de processos, reinício
+   independente do PHP sem reiniciar o HTTPD Apache, e compatibilidade com
+   o MPM <literal>event</literal> do HTTPD Apache (o padrão desde o HTTPD Apache 2.4).
+   As principais distribuições Linux fornecem isso como a configuração padrão.
+  </simpara>
+  <simpara>
+   A abordagem <literal>mod_php</literal> incorpora o PHP diretamente em cada
+   processo de trabalho do HTTPD Apache. A menos que o PHP seja compilado com segurança de threads
+   (<literal>--enable-zts</literal>), <literal>mod_php</literal> requer
+   o MPM <literal>prefork</literal>, o que limita significativamente
+   a concorrência. Se você prosseguir com <literal>mod_php</literal>, você
+   deve compreender completamente as implicações de desempenho e segurança.
+  </simpara>
+ </warning>
 
- <para>
+ <simpara>
   A <link xlink:href="&url.apache2.docs;">documentação do Apache</link>
-  é a fonte de informação com maior autoridade sobre o servidor Apache 2.x.
-  Mais informações sobre opções de instalação para o Apache podem ser encontradas
+  é a fonte de informação com maior autoridade sobre o servidor HTTPD Apache 2.x.
+  Mais informações sobre opções de instalação para o Apache HTTPD podem ser encontradas
   lá.
- </para>
+ </simpara>
 
- <para>
-  A versão mais recente do Servidor HTTP do Apache pode ser obtida do
+ <simpara>
+  A versão mais recente do HTTPD Apache pode ser obtida do
   <link xlink:href="&url.apache;">site de download Apache</link>,
   e uma versão correspondente do PHP pode ser obtida dos locais mencionados anteriormente.
-  Esse guia rápido cobre apenas o básico para iniciar o uso do Apache 2.x
+  Esse guia rápido cobre apenas o básico para iniciar o uso do HTTPD Apache 2.x
   e do PHP. Para mais informações, leia a
   <link xlink:href="&url.apache2.docs;">documentação do Apache</link>.
   Os números de versão estão omitidos aqui, para garantir que
   as instruções não fiquem desatualizadas. Nos exemplos abaixo, 'NN' deve
-  ser substituído com a versão específica do Apache utilizado.
- </para>
+  ser substituído com a versão específica do HTTPD Apache utilizado.
+ </simpara>
 
- <para>
-  Atualmente há duas versões do Apache 2.x. - 2.4 e 2.2.
-  Embora haja várias razões para escolher entre elas, 2.4 é a versão mais
-  atual, e aquela recomendada, se essa opção estiver
-  disponível. Entretanto, as instruções aqui funcionarão para
-  ambas as versões, 2.4 ou 2.2. Importante notar que o Apache httpd 2.2 está no final de sua vida,
-  e nenhum novo desenvolvimento ou correções serão realizados nele.
- </para>
+ <simpara>
+  Estas instruções se aplicam ao HTTPD Apache 2.4, que é a única versão suportada
+  do HTTPD Apache. Versões anteriores (2.2 e inferiores) estão no final de sua vida útil
+  e não devem ser usadas.
+ </simpara>
+
+ <note>
+  <simpara>
+   A partir do PHP 8.4.0, a SAPI apache2handler requer pelo menos o HTTPD Apache 2.4;
+   o suporte para o HTTPD Apache 2.0 e 2.2, que estão no final de sua vida útil, foi removido.
+  </simpara>
+ </note>
 
  <orderedlist>
   <listitem>
-   <para>
-    Obtenha o Apache HTTP do endereço acima e
+   <simpara>
+    Obtenha o HTTPD Apache do endereço acima e
     descompacte:
-   </para>
+   </simpara>
 
    <informalexample>
     <screen>
@@ -55,9 +84,9 @@ tar -xzf httpd-2.x.NN.tar.gz
   </listitem>
 
   <listitem>
-   <para>
+   <simpara>
     Da mesma forma, obtenha e descompacte o código-fonte do PHP:
-   </para>
+   </simpara>
 
    <informalexample>
     <screen>
@@ -69,16 +98,21 @@ tar -xzf php-NN.tar.gz
   </listitem>
 
   <listitem>
-   <para>
-    Compile e instale o Apache. Consulte a documentação de instalação do Apache para
-    mais detalhes de compilação.
-   </para>
+   <simpara>
+    Compile e instale o HTTPD Apache. Consulte a documentação de instalação do HTTPD Apache para
+    mais detalhes sobre a compilação do HTTPD Apache. Note que <literal>mod_php</literal>
+    requer o MPM <literal>prefork</literal> a menos que o PHP tenha sido compilado
+    com segurança de threads (<literal>--enable-zts</literal>). Se você pretende
+    usar PHP-FPM em vez disso (recomendado), você pode usar o MPM padrão
+    <literal>event</literal> e pular para as
+    <link linkend="install.fpm">instruções de instalação do PHP-FPM</link>.
+   </simpara>
 
    <informalexample>
     <screen>
 <![CDATA[
 cd httpd-2_x_NN
-./configure --enable-so
+./configure --enable-so --with-mpm=prefork
 make
 make install
 ]]>
@@ -88,10 +122,10 @@ make install
 
   <listitem>
    <para>
-    Agora haverá um Apache 2.x.NN disponível em /usr/local/apache2,
-    configurado com suporte a módulos carregáveis e o MPM prefork padrão.
+    Agora o HTTPD Apache 2.x.NN estará disponível em /usr/local/apache2,
+    configurado com suporte a módulos carregáveis e o prefork MPM.
     Para testar a instalação, utilize o procedimento usual de inicialização
-    do servidor Apache. Por exemplo:
+    do servidor HTTPD Apache. Por exemplo:
 
     <informalexample>
      <screen>
@@ -101,7 +135,7 @@ make install
      </screen>
     </informalexample>
 
-    e depois pare o servidor para configurar o PHP:
+    e depois pare o servidor para continuar com a configuração para o PHP:
 
     <informalexample>
      <screen>
@@ -114,19 +148,19 @@ make install
   </listitem>
 
   <listitem>
-   <para>
+   <simpara>
     Agora configure e compile o PHP. Aqui pode-se personalizar o PHP
     com várias opções como, por exemplo, quais extensões estarão disponíveis. Execute
     <command>'./configure --help'</command> para uma lista de opções disponíveis. Em nosso exemplo,
-    iremos configurar apenas com suporte ao Apache 2 e MySQL.
-   </para>
+    iremos configurar apenas com suporte ao HTTPD Apache e ao MySQL.
+   </simpara>
 
-   <para>
-    Se o Apache foi compilado a partir do código-fonte como descrito acima, os exemplos abaixo terão
+   <simpara>
+    Se o HTTPD Apache foi compilado a partir do código-fonte como descrito acima, os exemplos abaixo terão
     caminhos coincidentes do <command>apxs</command>, mas se foi instalado de outra forma, o caminho
     para o <command>apxs</command> precisará ser ajustado. Observe que algumas distribuições podem renomear
     <command>apxs</command> para <command>apxs2</command>.
-   </para>
+   </simpara>
 
    <informalexample>
     <screen>
@@ -139,13 +173,13 @@ make install
     </screen>
    </informalexample>
 
-   <para>
+   <simpara>
     Se for decidido modificar as configurações depois da instalação,
     os comandos <command>configure</command>, <command>make</command>
     e <command>make install</command> precisarão ser executados novamente.
     Só será necessário reiniciar o Apache para que o novo módulo seja carregado.
-    Uma recompilação do Apache não será necessária.
-   </para>
+    Uma recompilação do HTTPD Apache não será necessária.
+   </simpara>
 
    <para>
     Note que, por padrão, <command>make install</command> também instalará o
@@ -156,9 +190,9 @@ make install
   </listitem>
 
   <listitem>
-   <para>
+   <simpara>
     Configure o <filename>php.ini</filename>:
-   </para>
+   </simpara>
 
    <informalexample>
     <screen>
@@ -168,60 +202,44 @@ cp php.ini-development /usr/local/lib/php.ini
     </screen>
    </informalexample>
 
-   <para>
+   <simpara>
     Pode-se editar o arquivo <literal>.ini</literal> para definir opções do PHP. Se desejar ter
     um <filename>php.ini</filename> em outra localização,
     utilize <literal>--with-config-file-path=/algum/caminho</literal> no passo 5.
-   </para>
+   </simpara>
 
-   <para>
+   <simpara>
     Se for preferível utilizar o <filename>php.ini-production</filename>, leia atentamente
     a lista de modificações desse arquivo, já que ele afeta o comportamento do PHP.
-   </para>
+   </simpara>
   </listitem>
 
   <listitem>
-   <para>
+   <simpara>
     Edite o <filename>httpd.conf</filename> para carregar o módulo do PHP. O caminho à direita
     da instrução <literal>LoadModule</literal> precisa apontar para o caminho do módulo do PHP
     no sistema. O <command>make install</command> acima pode ter feito isso
     automaticamente, mas é bom confirmar.
-   </para>
+   </simpara>
 
    <informalexample>
-    <para>
-     No PHP 8:
-    </para>
-
     <programlisting role="apache-conf">
 <![CDATA[
 LoadModule php_module modules/libphp.so
 ]]>
     </programlisting>
    </informalexample>
-
-   <informalexample>
-    <para>
-     No PHP 7:
-    </para>
-
-    <programlisting role="apache-conf">
-<![CDATA[
-LoadModule php7_module modules/libphp7.so
-]]>
-    </programlisting>
-   </informalexample>
   </listitem>
 
   <listitem>
-   <para>
-    Configure o Apache para interpretar certas extensões de arquivos como PHP. Por exemplo, configurar
-    o Apache para interpretar arquivos <literal>.php</literal> como scripts PHP. Em vez de utilizar apenas a diretiva <literal>AddType</literal>
-    do Apache, é recomendado evitar uploads potencialmente perigosos e nomes de
-    arquivos como <filename>exploit.php.jpg</filename> que possam ser executados como scripts PHP. Nesse
+   <simpara>
+    Configure o HTTPD Apache para interpretar certas extensões de arquivos como PHP. Por exemplo, configurar
+    o HTTPD Apache para interpretar arquivos <literal>.php</literal> como scripts PHP. Em vez de utilizar apenas a diretiva <literal>AddType</literal>,
+    devemos evitar uploads potencialmente perigosos e arquivos criados com
+    nomes como <filename>exploit.php.jpg</filename> que possam ser executados como scripts PHP. Nesse
     exemplo, pode-se ter quaisquer extensões interpretadas como PHP, simplesmente adicionando-as.
     Adicionaremos <literal>.php</literal> como demonstração.
-   </para>
+   </simpara>
 
    <informalexample>
     <programlisting role="apache-conf">
@@ -233,17 +251,17 @@ LoadModule php7_module modules/libphp7.so
     </programlisting>
    </informalexample>
 
-   <para>
+   <simpara>
     Alternativamente, para permitir que arquivos <literal>.php</literal>, <literal>.php2</literal>,
     <literal>.php3</literal>, <literal>.php4</literal>, <literal>.php5</literal>,
     <literal>.php6</literal> e <literal>.phtml</literal> sejam
     executados como PHP, mas nenhum outro, seria desta forma:
-   </para>
+   </simpara>
 
    <informalexample>
     <programlisting role="apache-conf">
 <![CDATA[
-<FilesMatch "\.ph(p[2-6]?|tml)$">
+<FilesMatch "\.(php[2-6]?|phtml)$">
     SetHandler application/x-httpd-php
 </FilesMatch>
 ]]>
@@ -268,7 +286,6 @@ LoadModule php7_module modules/libphp7.so
    <simpara>
     Para permitir o uso de um arquivo PHP como manipulador padrão se nenhum outro for encontrado,
     por exemplo ao usar um mecanismo de roteamento, a diretiva <literal>FallbackResource</literal> pode ser usada.
-    Isto está disponível no Apache 2.4.4 e posteriores.
    </simpara>
 
    <simpara>
@@ -316,9 +333,9 @@ RewriteRule (.*\.php)s$ $1 [H=application/x-httpd-php-source]
   </listitem>
 
   <listitem>
-   <para>
-    Depois, utilize o procedimento normal de iniciar o servidor Apache, por exemplo:
-   </para>
+   <simpara>
+    Depois, utilize o procedimento normal de iniciar o HTTPD Apache, por exemplo:
+   </simpara>
 
    <informalexample>
     <screen>
@@ -340,53 +357,40 @@ service httpd restart
   </listitem>
  </orderedlist>
 
- <para>
-  Seguindo os passos acima, o servidor web Apache2 será executado com
+ <simpara>
+  Seguindo os passos acima, o servidor web HTTPD Apache será executado com
   suporte ao PHP como um módulo <literal>SAPI</literal>. Existem muitas outras
-  opções de configuração disponíveis para o Apache e para o PHP. Para mais
+  opções de configuração disponíveis para o HTTPD Apache e para o PHP. Para mais
   informações execute <command>./configure --help</command> no diretório
   do código-fonte correspondente.
- </para>
-
- <para>
-  O Apache pode ser construído com suporte a multi-tarefas através da seleção
-  do MPM <filename>worker</filename>, em vez do padrão
-  MPM <filename>prefork</filename>. Isso é possível
-  acrescentado-se a seguinte opção ao argumento passado para <command>./configure</command> no
-  passo 3 acima:
- </para>
-
- <informalexample>
-  <screen>
-<![CDATA[
---with-mpm=worker
-]]>
-  </screen>
- </informalexample>
-
- <para>
-  Isto não deve ser feito sem conhecer as consequências
-  desta decisão, ou pelo menos ter uma boa noção de
-  suas implicações. A documentação do Apache
-  sobre <link xlink:href="&url.apache2.mpm;">módulos MPM</link>
-  discute essas questões com muito mais detalhes.
- </para>
+ </simpara>
 
  <note>
-  <para>
-   A seção de <link linkend="faq.installation.apache.multiviews">Perguntas Frequentes
-   do Apache MultiViews</link> discute o uso de MultiViews com o PHP.
-  </para>
+  <title>Compatibilidade com MPM</title>
+  <simpara>
+   A menos que o PHP tenha sido compilado com Zend Thread Safety
+   (<literal>--enable-zts</literal>), <literal>mod_php</literal> requer
+   o MPM <literal>prefork</literal>.
+   Para informações sobre o motivo, leia a seção sobre
+   <link linkend="faq.installation.apache2">HTTPD Apache em um MPM com
+   threads</link>.
+  </simpara>
+
+  <simpara>
+   A maioria dos pacotes de distribuição de
+   <literal>mod_php</literal> não é compilada com ZTS, por isso o
+   <literal>prefork</literal> é normalmente requerido. Se for necessário um
+   MPM com threads (recomendado para melhor desempenho), use
+   <link linkend="install.fpm">PHP-FPM</link> com
+   <literal>mod_proxy_fcgi</literal>.
+  </simpara>
  </note>
 
  <note>
-  <para>
-   Para construir uma versão multi-tarefa do Apache, o sistema de destino precisa suportar threads.
-   Neste caso, o PHP também deve ser construído
-   com o Zend Thread Safety (ZTS). Nesta configuração, nem todas as extensões estarão disponíveis.
-   A configuração recomendada é construir o Apache com o módulo
-   MPM <filename>prefork</filename> padrão.
-  </para>
+  <simpara>
+   A seção <link linkend="faq.installation.apache.multiviews">Perguntas Frequentes sobre
+   Multi-visualizações Apache</link> discute o uso de multi-visualização com o PHP.
+  </simpara>
  </note>
 </sect1>
 
