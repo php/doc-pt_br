@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 7cd12cc82bc0a778241189596022acdda016d857 Maintainer: leonardolara Status: ready --><!-- CREDITS: jeffersonnathan,fabioluciano,ae,leonardolara -->
+<!-- EN-Revision: 5b4bfdfc809de5b31fcce97b2c9ee19a9c518fd8 Maintainer: leonardolara Status: ready --><!-- CREDITS: jeffersonnathan,fabioluciano,ae,leonardolara -->
   <sect1 xml:id="install.fpm.configuration" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
    <title>Configuração</title>
    <para>
@@ -251,6 +251,23 @@
         'en.dere.ço.ip:porta', 'porta', '/caminho/para/soquete/unix'. Esta opção é
         obrigatória para cada conjunto.
        </para>
+       <warning>
+        <simpara>
+         Um endpoint FastCGI exposto permite a execução arbitrária de código.
+         Quando o servidor web é executado no mesmo host, um soquete Unix deve ser
+         preferido; no Linux seu acesso é então controlado por
+         <link linkend="listen-owner">listen.owner</link>,
+         <literal>listen.group</literal> e <literal>listen.mode</literal>,
+         embora muitos sistemas derivados de BSD aceitem conexões independentemente das
+         permissões.
+         Quando um soquete TCP é usado, os endereços permitidos a se conectar devem ser
+         listados em
+         <link linkend="listen-allowed-clients">listen.allowed_clients</link>,
+         que não está definido por padrão e então aceita qualquer endereço.
+         Em configurações de contêiner, o serviço FPM não deve publicar sua porta no
+         host; contêineres na mesma rede se conectam diretamente.
+        </simpara>
+       </warning>
       </listitem>
      </varlistentry>
      <varlistentry xml:id="listen-backlog">
@@ -395,7 +412,9 @@
        <simpara>
         <literal>ondemand</literal> - os processos são criados sob demanda (quando solicitado,
         em oposição a "dynamic", onde <literal>pm.start_servers</literal> são iniciados
-        quando o serviço é iniciado).
+        quando o serviço é iniciado). O número de processos filhos é limitado por
+        <literal>pm.max_children</literal>, e os processos ociosos são encerrados após
+        <literal>pm.process_idle_timeout</literal>.
        </simpara>
        <simpara>
         <literal>dynamic</literal> - o número de processos filhos é definido dinamicamente com base nas
@@ -789,10 +808,32 @@
        <type>string</type>
       </term>
       <listitem>
-       <para>
+       <simpara>
         O arquivo de registro de acessos.
         Valor padrão: não definido.
-       </para>
+       </simpara>
+       <simpara>
+        A partir do PHP 8.5.0, o limite de comprimento da linha do registro de acessos respeita a
+        configuração global <link linkend="log-limit">log_limit</link>.
+       </simpara>
+      </listitem>
+     </varlistentry>
+     <varlistentry xml:id="ini.fastcgi.script-path-encoded">
+      <term>
+       <parameter>fastcgi.script_path_encoded</parameter>
+       <type>bool</type>
+      </term>
+      <listitem>
+       <simpara>
+        Quando ativado (<literal>1</literal>, o padrão a partir do PHP 8.5.0),
+        o FPM não decodifica a URL do <literal>SCRIPT_FILENAME</literal> enviado
+        pelo httpd
+        <link xlink:href="&url.apache.proxy;#proxypass"><literal>ProxyPass</literal></link>,
+        preservando o comportamento anterior.
+        Defina como <literal>0</literal> para optar pelo novo comportamento em que o FPM
+        decodifica a URL do caminho completo do script.
+        Disponível a partir do PHP 8.5.0.
+       </simpara>
       </listitem>
      </varlistentry>
      <varlistentry xml:id="access-format">
