@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 5f0cb2451f24071abbfd5f42d96d9210605966b0 Maintainer: leonardolara Status: ready --><!-- CREDITS: royopa,diegopires,narigone,ae,leonardolara -->
+<!-- EN-Revision: 42b47025176b4d1d6ac6b6ba8d46b317b8206baa Maintainer: leonardolara Status: ready --><!-- CREDITS: royopa,diegopires,narigone,ae,leonardolara -->
 <chapter xml:id="configuration" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
  <title>Configuração em tempo de execução</title>
 
@@ -7,191 +7,263 @@
   <title>O arquivo de configuração</title>
 
   <simpara>
-   O arquivo de configuração (&php.ini;)
-   é lido quando o PHP inicia. Para as versões de módulo de servidor,
-   isso acontece apenas quando o servidor web for iniciado. Para as
-   versões <acronym>CGI</acronym> e <acronym>CLI</acronym>, isso acontece
-   a cada invocação.
+   O arquivo principal de configuração (&php.ini;) é lido quando o PHP é iniciado.
+   Nas versões do PHP como módulo de servidor, isso ocorre apenas uma vez, quando o
+   servidor web é iniciado. Para as versões <acronym>CGI</acronym> e
+   <acronym>CLI</acronym>, isso ocorre a cada invocação.
   </simpara>
   <para>
-   &php.ini; é procurado nesses lugares (na ordem):
-   <itemizedlist>
+   O PHP localiza o arquivo de configuração principal da seguinte maneira:
+   <orderedlist>
     <listitem>
      <simpara>
-      Local específico do módulo SAPI (diretiva <literal>PHPIniDir</literal>
-      no Apache 2, opção de linha de comando <literal>-c</literal> no CGI e CLI)
+      Se o SAPI ativo fornecer uma substituição específica para o caminho do &php.ini;,
+      ela será usada (por exemplo, a diretiva <literal>PHPIniDir</literal> no
+      Apache 2 ou a opção de linha de comando <literal>-c</literal> no
+      <acronym>CGI</acronym> e no <acronym>CLI</acronym>).
      </simpara>
     </listitem>
     <listitem>
      <simpara>
-      A variável de ambiente <varname>PHPRC</varname>.
+      Caso contrário, o PHP cria um caminho de pesquisa a partir dos seguintes locais:
      </simpara>
+     <itemizedlist>
+      <listitem>
+       <simpara>
+        A variável de ambiente <varname>PHPRC</varname>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        No Windows, o caminho configurado no registro
+        (<literal>IniFilePath</literal>).
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        O diretório de trabalho atual, exceto nos SAPIs que desativam isso,
+        como o <acronym>CLI</acronym>.
+       </simpara>
+       <note>
+        <simpara>
+         O servidor web Apache muda o diretório para a raiz durante a inicialização, fazendo
+         com que o PHP tente ler &php.ini; na raiz do sistema de arquivos, se ele existir.
+        </simpara>
+       </note>
+      </listitem>
+      <listitem>
+       <simpara>
+        O diretório do executável PHP ou do módulo SAPI.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        O diretório especificado pela
+        opção de compilação <literal>--with-config-file-path</literal> ou o
+        diretório do Windows (<filename class="directory">C:\windows</filename>
+        ou <filename class="directory">C:\winnt</filename>) no Windows.
+       </simpara>
+      </listitem>
+     </itemizedlist>
     </listitem>
     <listitem>
      <simpara>
-      A localização do arquivo <literal>php.ini</literal>
-      pode ser definida para versões diferentes do PHP. A raiz do registro depende da compilação em 32 ou 64 bits do sistema operacional (SO) e do PHP.
-      Para um PHP 32 bits em um SO de 32 bits ou um PHP de 64 bits em um SO de 64 bits use <literal>[(HKEY_LOCAL_MACHINE\SOFTWARE\PHP]</literal>, Para um PHP 32 bits em um SO de 64 bits use <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\PHP]</literal>].
-      Para sistema onde a compilação em bits coincida, as seguintes chaves
-      são examinadas, nessa ordem:
-      <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\PHP\x.y.z]</literal>,
-      <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\PHP\x.y]</literal> e
-      <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\PHP\x]</literal>, onde
-      x, y e z significam os valores de versão PHP major, minor e release.
-      Para PHP versão 32 bits em um SO de 64 bits, as seguintes chaves são examinadas em ordem:
-      <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6421Node\PHP\x.y.z]</literal>,
-      <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6421Node\PHP\x.y]</literal> e
-      <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6421Node\PHP\x]</literal>, onde
-      x, y e z significam os valores de versão PHP major, minor e release.
-      Se houver um valor
-      para <literal>IniFilePath</literal> nestas chaves, então o primeiro
-      encontrado será utilizado para a localização do <literal>php.ini</literal>
-      (apenas Windows).
+      Em seguida, o PHP procura por <filename>php-SAPI.ini</filename> nesse caminho,
+      e, se não o encontrar, por &php.ini;. O nome do SAPI pode ser
+      determinado com <function>php_sapi_name</function>.
      </simpara>
     </listitem>
-    <listitem>
-     <simpara>
-      <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\PHP]</literal> ou
-      <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\PHP]</literal>, valor de
-      <literal>IniFilePath</literal> (Somente Windows).
-     </simpara>
-    </listitem>
-    <listitem>
-     <simpara>
-      Diretório de trabalho atual (exceto CLI).
-     </simpara>
-    </listitem>
-    <listitem>
-     <simpara>
-      O diretório do servidor web (para módulo SAPI), ou diretório do PHP
-      (caso contrário, no Windows).
-     </simpara>
-    </listitem>
-    <listitem>
-     <simpara>
-      Diretório do Windows (<filename class="directory">C:\windows</filename>
-      ou <filename class="directory">C:\winnt</filename>) (para Windows), ou
-      a opção de tempo de compilação <literal>--with-config-file-path</literal> .
-     </simpara>
-    </listitem>
-   </itemizedlist>
+   </orderedlist>
   </para>
-  <para>
-   Se <filename>php-SAPI.ini</filename> existe (onde SAPI é o SAPI usado, então o
-   nome de arquivo é, por exemplo, <filename>php-cli.ini</filename> ou
-   <filename>php-apache.ini</filename>), é usado ao invés do arquivo &php.ini;.
-   O nome SAPI pode ser determinado pela função <function>php_sapi_name</function>.
-  </para>
-  <note>
-   <para>
-    O servidor web Apache muda o diretório para raiz durante a inicialização, causando com
-    que o PHP tente ler o arquivo &php.ini; da raiz do arquivo de sistema, se ele existir.
-   </para>
-  </note>
   <simpara>
-   Variáveis de ambiente podem ser referenciadas dentro de valores de configuração
-   no &php.ini; como mostrado abaixo. A partir do PHP 8.3.0, um valor padrão pode ser
-   especificado e será usado quando a variável referenciada não estiver
-   definida.
+   Depois de localizar o arquivo de configuração principal, o PHP também pode procurar
+   arquivos <literal>.ini</literal> no caminho especificado pela variável de ambiente
+   <varname>PHP_INI_SCAN_DIR</varname> ou, se ela não estiver definida,
+   pela opção
+   <option role="configure">--with-config-file-scan-dir</option>
+   de compilação.
   </simpara>
-  <example>
-   <title>Variáveis de ambiente no &php.ini;</title>
-    <programlisting role="ini">
+  <sect2 xml:id="configuration.file.windows">
+   <title>Localização no registro do Windows</title>
+
+   <simpara>
+    No Windows, o PHP pode obter a localização do arquivo de configuração
+    principal no registro, usando o valor <literal>IniFilePath</literal>.
+   </simpara>
+
+   <simpara>
+    As chaves do registro examinadas dependem da versão do PHP e de o
+    PHP e o Windows serem de 32 ou 64 bits.
+   </simpara>
+
+   <para>
+    Para PHP de 32 bits em um sistema operacional de 32 bits, ou PHP de 64 bits em um
+    sistema operacional de 64 bits, as seguintes chaves do registro são examinadas, nesta ordem:
+    <itemizedlist>
+     <listitem>
+      <simpara>
+       <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\PHP\x.y.z]</literal>
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\PHP\x.y]</literal>
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\PHP\x]</literal>
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\PHP]</literal>
+      </simpara>
+     </listitem>
+    </itemizedlist>
+   </para>
+   <simpara>
+    Nestas chaves, <literal>x</literal>, <literal>y</literal> e
+    <literal>z</literal> referem-se às versões principal, secundária e de lançamento do PHP.
+    Se qualquer uma dessas chaves contiver um valor
+    <literal>IniFilePath</literal>, será usada a primeira encontrada.
+   </simpara>
+   <para>
+    Para PHP de 32 bits em um sistema operacional de 64 bits, as seguintes chaves do registro
+    são examinadas nesta ordem:
+    <itemizedlist>
+     <listitem>
+      <simpara>
+       <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\PHP\x.y.z]</literal>
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\PHP\x.y]</literal>
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\PHP\x]</literal>
+      </simpara>
+     </listitem>
+     <listitem>
+      <simpara>
+       <literal>[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\PHP]</literal>
+      </simpara>
+     </listitem>
+    </itemizedlist>
+   </para>
+   <simpara>
+    Se qualquer uma dessas chaves contiver um valor <literal>IniFilePath</literal>,
+    será usada a primeira encontrada.
+   </simpara>
+  </sect2>
+  <sect2 xml:id="configuration.file.syntax">
+   <title>Sintaxe do arquivo de configuração</title>
+   <simpara>
+    É possível referenciar variáveis de ambiente nos valores de configuração
+    do &php.ini;, como mostrado abaixo. A partir do PHP 8.3.0, é possível
+    especificar um valor alternativo, que será usado quando a variável referenciada
+    não estiver definida.
+   </simpara>
+   <example>
+    <title>Variáveis de ambiente no &php.ini;</title>
+     <programlisting role="ini">
 <![CDATA[
-; PHP_MEMORY_LIMIT é lida das variáveis de ambiente
+; PHP_MEMORY_LIMIT é obtido do ambiente
 memory_limit = ${PHP_MEMORY_LIMIT}
-; Se PHP_MAX_EXECUTION_TIME não esitver definida, será usado o padrão de 30
+; Se PHP_MAX_EXECUTION_TIME não estiver definida, será usado o valor 30
 max_execution_time = ${PHP_MAX_EXECUTION_TIME:-30}
 ]]>
     </programlisting>
    </example>
-  <para>
-   As diretivas do arquivo &php.ini; tratadas por extensões são documentadas
-   nas respectivas páginas das próprias extensões. A <link linkend="ini">lista de
-   diretivas principais</link> está disponível no apêndice. Nem todas
-   as diretivas do PHP estão documentadas no manual. Para uma lista completa
-   das diretivas disponíveis na sua versão do PHP, por favor leia seu arquivo
-   &php.ini;. Alternativamente, você pode encontrar
-   <link xlink:href="&url.php.git.phpini;">a última versão do &php.ini;</link> no
-   Git, que também pode ser útil.
-  </para>
-  <para>
+   <simpara>
+    As diretivas do &php.ini; tratadas por extensões estão documentadas
+    nas páginas correspondentes das próprias extensões. Uma <link linkend="ini">lista das
+    diretivas principais</link> está disponível no apêndice. Nem todas as
+    diretivas do PHP necessariamente estão documentadas neste manual: para obter uma lista completa
+    das diretivas disponíveis na sua versão do PHP, consulte o arquivo &php.ini;
+    bem comentado. Como alternativa, você também pode encontrar
+    <link xlink:href="&url.php.git.phpini;">a versão mais recente do &php.ini;</link> no Git,
+    que também pode ser útil.
+   </simpara>
    <example>
-    <title>Exemplo de arquivo &php.ini;</title>
+    <title>Exemplo de &php.ini;</title>
     <programlisting role="ini">
 <![CDATA[
-; qualquer texto após um ponto e vírgula nú (;) é ignorado
-[php] ; marcadores de sessão (textos dentro de colchetes) também são ignorados
-; Valores booleanos podem ser:
+; qualquer texto em uma linha após um ponto e vírgula (;) sem aspas é ignorado
+[php] ; marcadores de seção (texto entre colchetes) também são ignorados
+; Valores booleanos podem ser definidos como:
 ;    true, on, yes
 ; ou false, off, no, none
 register_globals = off
 track_errors = yes
 
-; vocẽ pode organizar strings dentro de aspas
+; você pode colocar strings entre aspas duplas
 include_path = ".:/usr/local/lib/php"
 
-; contrabarra é tratado como um caractere normal
+; barras invertidas são tratadas como qualquer outro caractere
 include_path = ".;c:\php\lib"
 ]]>
     </programlisting>
-    <!-- TODO: add more details about values and expressions -->
+   <!-- TODO: add more details about values and expressions -->
    </example>
-  </para>
-  <para>
-   É possível acessar as variáveis .ini
-   dentro dos arquivos .ini. Exemplo: <literal>open_basedir = ${open_basedir}
-   ":/new/dir"</literal>.
-  </para>
+   <simpara>
+    É possível referenciar variáveis .ini existentes
+    em arquivos .ini. Exemplo: <literal>open_basedir = ${open_basedir}
+    ":/new/dir"</literal>.
+   </simpara>
+  </sect2>
   <sect2 xml:id="configuration.file.scan">
-   <title>Configuração em diretório</title>
+   <title>Diretórios de varredura</title>
 
    <para>
-    É possível configurar o PHP para procurar por arquivos .ini em um diretório
-    após a leitura do &php.ini;. Isto é possível na compilação pela configuração da opção
-    <option role="configure">--with-config-file-scan-dir</option>. No
-    O diretório de configuração pode ser sobrescrito em tempo de execução
-    através da configuração da variável de ambiente <varname>PHP_INI_SCAN_DIR</varname>.
+    É possível configurar o PHP para procurar arquivos .ini em um diretório
+    após ler &php.ini;. Isso pode ser configurado durante a compilação, definindo a
+    opção <option role="configure">--with-config-file-scan-dir</option>.
+    O diretório de varredura pode ser substituído em tempo de execução
+    pela variável de ambiente <varname>PHP_INI_SCAN_DIR</varname>.
    </para>
 
    <para>
-    É possível procurar em vários diretórios os separando com o
-    delimitador específico da plataforma (<literal>;</literal> no Windows, NetWare
-    e RISC OS; <literal>:</literal> em todas as outras plataformas; o PHP
-    utilizará a constante <constant>PATH_SEPARATOR</constant>).
-    Se um diretório em branco estiver informado em <varname>PHP_INI_SCAN_DIR</varname>, o PHP
-    também procurará pelo diretório informado na diretiva de compilação
-    <option role="configure">--with-config-file-scan-dir</option>.
+    É possível procurar em vários diretórios, separando-os pelo
+    separador de caminhos específico da plataforma (<literal>;</literal> no Windows, NetWare
+    e RISC OS; <literal>:</literal> nas demais plataformas; o valor usado pelo PHP
+    está disponível na constante <constant>PATH_SEPARATOR</constant>).
+    Se um diretório vazio for informado em <varname>PHP_INI_SCAN_DIR</varname>, o PHP
+    também procurará no diretório definido durante a compilação por meio da
+    opção <option role="configure">--with-config-file-scan-dir</option>.
    </para>
 
    <para>
-    Dentro de cada diretório o PHP irá pesquisar todos os arquivos terminados em
-    <literal>.ini</literal> em ordem alfabética. A lista de arquivos
-    é carregada, e nessa ordem são interpretados com uma chamada a
-    <function>php_ini_scanned_files</function>, o por rodar o PHP com a opção
+    Em cada diretório, o PHP procura todos os arquivos terminados em
+    <literal>.ini</literal>, em ordem alfabética. A lista dos arquivos que
+    foram carregados e a ordem em que foram carregados pode ser obtida chamando
+    <function>php_ini_scanned_files</function> ou executando o PHP com a opção
     <option>--ini</option>.
    </para>
 
    <informalexample>
     <screen>
 <![CDATA[
-Assumindo que o PHP foi configurado com --with-config-file-scan-dir=/etc/php.d,
-e o separador de caminho é :...
+Supondo que o PHP esteja configurado com --with-config-file-scan-dir=/etc/php.d,
+e que o separador de caminhos seja :...
 
 $ php
-  PHP irá carregar todos os arquivos de configuração em in /etc/php.d/*.ini.
+  O PHP carregará todos os arquivos em /etc/php.d/*.ini como arquivos de configuração.
 
 $ PHP_INI_SCAN_DIR=/usr/local/etc/php.d php
-  PHP irá carregar todos os arquivos de configuração em /usr/local/etc/php.d/*.ini.
-
+  O PHP carregará todos os arquivos em /usr/local/etc/php.d/*.ini como
+  arquivos de configuração.
 
 $ PHP_INI_SCAN_DIR=:/usr/local/etc/php.d php
-  PHP irá carregar todos os arquivos de configuração em /etc/php.d/*.ini, e então em
-  /usr/local/etc/php.d/*.ini.
+  O PHP carregará todos os arquivos em /etc/php.d/*.ini e, em seguida,
+  /usr/local/etc/php.d/*.ini como arquivos de configuração.
 
 $ PHP_INI_SCAN_DIR=/usr/local/etc/php.d: php
-  PHP irá carregar todos os arquivos de configuração em /usr/local/etc/php.d/*.ini, e então em
-  /etc/php.d/*.ini.
+  O PHP carregará todos os arquivos em /usr/local/etc/php.d/*.ini e, em seguida,
+  /etc/php.d/*.ini como arquivos de configuração.
 ]]>
     </screen>
    </informalexample>
@@ -202,69 +274,69 @@ $ PHP_INI_SCAN_DIR=/usr/local/etc/php.d: php
   <title>Arquivos .user.ini</title>
 
   <simpara>
-   O PHP tem suporte para arquivos de configuração INI por
-   cada diretório. Esses arquivos são processados <emphasis>apenas</emphasis> pelo
-   CGI/FastCGI SAPI. Essa funcionalidade torna obsoleta a extensão PECL htscanner.
-   Se você estiver rodando o PHP como um módulo do Apache, use arquivos &htaccess; para obter o mesmo
+   O PHP oferece suporte a arquivos de configuração INI por diretório.
+   Esses arquivos são processados <emphasis>somente</emphasis> pelo SAPI
+   CGI/FastCGI. Essa funcionalidade substitui a extensão PECL htscanner.
+   Se o PHP estiver sendo executado como módulo do Apache, use arquivos &htaccess; para o mesmo
    efeito.
   </simpara>
 
   <simpara>
-   Além do arquivo &php.ini; principal, o PHP procura por arquivos INI em cada
-   diretório, iniciando no diretório do arquivo PHP requisitado e
-   continua o caminho até a raiz do documento atual (conforme definido na variável
-   <varname>$_SERVER['DOCUMENT_ROOT']</varname>). Caso o arquivo PHP esteja fora
-   da raiz do documento, apenas o seu diretório é procurado.
+   Além do arquivo principal &php.ini;, o PHP procura arquivos INI em cada
+   diretório, começando pelo diretório do arquivo PHP solicitado e
+   subindo até a raiz atual dos documentos (conforme definida em
+   <varname>$_SERVER['DOCUMENT_ROOT']</varname>). Se o arquivo PHP estiver
+   fora da raiz dos documentos, somente o diretório dele será examinado.
   </simpara>
   <simpara>
-   Somente configurações INI com
-   os modos <constant>INI_ALL</constant>, <constant>INI_PERDIR</constant> e
-   <constant>INI_USER</constant> serão reconhecidos nos arquivos INI estilo
+   Somente configurações INI com os modos
+   <constant>INI_ALL</constant>, <constant>INI_PERDIR</constant> e
+   <constant>INI_USER</constant> serão reconhecidas nos arquivos INI do tipo
    .user.ini.
   </simpara>
 
   <simpara>
    Duas novas diretivas INI,
-   <link linkend="ini.user-ini.filename">user_ini.filename</link> e
+   <link linkend="ini.user-ini.filename">user_ini.filename</link> and
    <link linkend="ini.user-ini.cache-ttl">user_ini.cache_ttl</link>
    controlam o uso de arquivos INI de usuário.
   </simpara>
 
   <simpara>
-   A diretiva <link linkend="ini.user-ini.filename">user_ini.filename</link> define o nome do arquivo que o PHP
-   procura em cada diretório; se for definido como uma string vazia, o PHP não
-   fará a varredura em tudo. O padrão é <literal>.user.ini</literal>.
+   <link linkend="ini.user-ini.filename">user_ini.filename</link> define o nome do arquivo que o PHP procura
+   em cada diretório; se for definida como uma string vazia, o PHP não fará a varredura. O
+   padrão é <literal>.user.ini</literal>.
   </simpara>
 
   <simpara>
-   A diretiva <link linkend="ini.user-ini.cache-ttl">user_ini.cache_ttl</link> controla a frequência de como os arquivos INI
-   de usuário são relidos. O padrão é de 300 segundos (5 minutos).
+   <link linkend="ini.user-ini.cache-ttl">user_ini.cache_ttl</link> controla a frequência de releitura dos arquivos INI de usuário.
+   O padrão é 300 segundos (5 minutos).
   </simpara>
  </sect1>
 
  <sect1 xml:id="configuration.changes.modes">
-  <title>Onde uma configuração deve ser definida</title>
+  <title>Onde uma configuração pode ser definida</title>
 
   <para>
-   Estes modos determinam quando e onde uma diretiva do PHP pode ou não pode
-   ser definida, e cada diretiva no manual faz referência a um destes modos.
-   Por exemplo, algumas definições podem ser feitas em um script PHP
-   usando <function>ini_set</function>, enquanto outras só podem ser feitas no
+   Esses modos determinam quando e onde uma diretiva do PHP pode ou não
+   ser definida, e cada diretiva no manual faz referência a um desses
+   modos. Por exemplo, algumas configurações podem ser definidas em um script PHP
+   usando <function>ini_set</function>, enquanto outras podem exigir
    &php.ini; ou &httpd.conf;.
   </para>
 
   <para>
    Por exemplo, a configuração
    <link linkend="ini.output-buffering">output_buffering</link>
-   é <constant>INI_PERDIR</constant> portanto não pode ser definida usando
-   <function>ini_set</function>. Entretanto a diretiva
-   <link linkend="ini.display-errors">display_errors</link> é
-   <constant>INI_ALL</constant> portanto pode ser definida em qualquer lugar
-   com <function>ini_set</function>.
+   é <constant>INI_PERDIR</constant>; portanto, não pode ser definida com
+   <function>ini_set</function>. Já a diretiva
+   <link linkend="ini.display-errors">display_errors</link>
+   é <constant>INI_ALL</constant>; portanto, pode ser definida em qualquer lugar,
+   inclusive com <function>ini_set</function>.
   </para>
 
   <para>
-      <variablelist>
+   <variablelist>
 <!--
 Replace everything inside the <variablelist> element with an <xi:include>
 once libxml2 gets XInclude 1.1 attribute copying support.
@@ -281,9 +353,9 @@ but needs all top-level xml:id's removed (see XInclude 1.1 set-xml-id).
      </term>
      <listitem>
       <simpara>
-       A entrada pode ser definida em scripts do usuário (como com <function xmlns="http://docbook.org/ns/docbook">ini_set</function>)
+       A entrada pode ser definida em scripts do usuário (por exemplo, com <function xmlns="http://docbook.org/ns/docbook">ini_set</function>)
        ou no <link xmlns="http://docbook.org/ns/docbook" linkend="configuration.changes.windows">registro do Windows</link>.
-       A entrada pode ser definida no &user-ini;
+       A entrada também pode ser definida em &user-ini;.
       </simpara>
      </listitem>
     </varlistentry>
@@ -294,7 +366,7 @@ but needs all top-level xml:id's removed (see XInclude 1.1 set-xml-id).
      </term>
      <listitem>
       <simpara>
-       A entrada pode ser definida no &php.ini;, &htaccess;, &httpd.conf; ou &user-ini;
+       A entrada pode ser definida em &php.ini;, &htaccess;, &httpd.conf; ou &user-ini;.
       </simpara>
      </listitem>
     </varlistentry>
@@ -305,7 +377,7 @@ but needs all top-level xml:id's removed (see XInclude 1.1 set-xml-id).
      </term>
      <listitem>
       <simpara>
-       A entrada pode ser definida no &php.ini; ou &httpd.conf;
+       A entrada pode ser definida em &php.ini; ou &httpd.conf;.
       </simpara>
      </listitem>
     </varlistentry>
@@ -316,7 +388,7 @@ but needs all top-level xml:id's removed (see XInclude 1.1 set-xml-id).
      </term>
      <listitem>
       <simpara>
-       A entrada pode ser definida em qualquer lugar
+       A entrada pode ser definida em qualquer lugar.
       </simpara>
      </listitem>
     </varlistentry>
@@ -325,24 +397,24 @@ but needs all top-level xml:id's removed (see XInclude 1.1 set-xml-id).
  </sect1>
 
  <sect1 xml:id="configuration.changes">
-  <title>Como mudar as configurações</title>
+  <title>Como alterar as configurações</title>
 
   <sect2 xml:id="configuration.changes.apache">
-   <title>Executando PHP como módulo do Apache</title>
+   <title>Executando o PHP como módulo do Apache</title>
    <simpara>
-    Quando usar o PHP como módulo do Apache, você pode mudar as
-    configurações usando diretivas nos arquivos de configuração
-    do Apache (ex.: &httpd.conf; e &htaccess;). Você precisará dos
-    privilégios "AllowOverride Options" ou "AllowOverride All" para fazer isso.
+    Ao usar o PHP como módulo do Apache, também é possível alterar as
+    configurações usando diretivas nos arquivos de configuração do Apache,
+    como &httpd.conf; e arquivos &htaccess;. Para isso, são necessários os privilégios
+    "AllowOverride Options" ou "AllowOverride All".
    </simpara>
 
    <para>
-    Há várias diretivas do Apache que permitem que você
-    mude a configuração do PHP de dentro dos arquivos de configuração
-    do Apache. Para uma lista de quais diretivas são
+    Há várias diretivas do Apache que permitem
+    alterar a configuração do PHP nos próprios arquivos de configuração do Apache.
+    Para saber quais diretivas são
     <constant>INI_ALL</constant>, <constant>INI_PERDIR</constant>,
-    ou <constant>INI_SYSTEM</constant>, olhe no apêndice
-    <link linkend="ini.list">Lista de diretivas do arquivo php.ini</link>.
+    ou <constant>INI_SYSTEM</constant>, consulte o apêndice
+    <link linkend="ini.list">Lista de diretivas do php.ini</link>.
    </para>
 
    <para>
@@ -356,13 +428,13 @@ but needs all top-level xml:id's removed (see XInclude 1.1 set-xml-id).
       <listitem>
        <para>
         Define o valor da diretiva especificada.
-        Pode ser usado apenas com diretivas do tipo <constant>INI_ALL</constant> e <constant>INI_PERDIR</constant>.
-        Para limpar um valor definido anteriormente, use o valor <literal>none</literal>.
+        Pode ser usada somente com diretivas dos tipos <constant>INI_ALL</constant> e <constant>INI_PERDIR</constant>.
+        Para limpar um valor definido anteriormente, use <literal>none</literal>.
        </para>
        <note>
         <simpara>
          Não use <systemitem role="directive">php_value</systemitem> para definir valores booleanos.
-         A diretiva <systemitem role="directive">php_flag</systemitem> deve ser usada (veja abaixo).
+         Use <systemitem role="directive">php_flag</systemitem> (veja abaixo).
         </simpara>
        </note>
       </listitem>
@@ -375,8 +447,8 @@ but needs all top-level xml:id's removed (see XInclude 1.1 set-xml-id).
       </term>
       <listitem>
        <para>
-        Usado para definir uma diretiva de configuração booleana.
-        Pode ser usada apenas com diretivas dos tipos <constant>INI_ALL</constant> e
+        Usada para definir uma diretiva de configuração booleana.
+        Pode ser usada somente com diretivas dos tipos <constant>INI_ALL</constant> e
         <constant>INI_PERDIR</constant>.
        </para>
       </listitem>
@@ -390,10 +462,10 @@ but needs all top-level xml:id's removed (see XInclude 1.1 set-xml-id).
       <listitem>
        <para>
         Define o valor da diretiva especificada.
-        Essa diretiva <emphasis>não pode ser usada</emphasis> em arquivos &htaccess;.
-        Qualquer tipo de diretiva definido com <systemitem role="directive">php_admin_value</systemitem>
-        não pode ser sobrescrito pelo &htaccess; ou pela função <function>ini_set</function>.
-        Para limpar um valor definido anteriormente, use o valor <literal>none</literal>.
+        Esta diretiva <emphasis>não pode ser usada</emphasis> em arquivos &htaccess;.
+        Nenhuma diretiva definida com <systemitem role="directive">php_admin_value</systemitem>
+        pode ser substituída por &htaccess; ou por <function>ini_set</function>.
+        Para limpar um valor definido anteriormente, use <literal>none</literal>.
        </para>
       </listitem>
      </varlistentry>
@@ -405,10 +477,10 @@ but needs all top-level xml:id's removed (see XInclude 1.1 set-xml-id).
       </term>
       <listitem>
        <para>
-        Usado para definir uma diretiva de configuração booleana.
-        Essa diretiva <emphasis>não pode ser usada</emphasis> em arquivos &htaccess;.
-        Qualquer tipo de diretiva definido com <systemitem role="directive">php_admin_flag</systemitem>
-        não pode ser sobrescrito pelo &htaccess; ou pela função <function>ini_set</function>.
+        Usada para definir uma diretiva de configuração booleana.
+        Esta diretiva <emphasis>não pode ser usada</emphasis> em arquivos &htaccess;.
+        Nenhuma diretiva definida com <systemitem role="directive">php_admin_flag</systemitem>
+        pode ser substituída por &htaccess; ou por <function>ini_set</function>.
        </para>
       </listitem>
      </varlistentry>
@@ -433,53 +505,53 @@ but needs all top-level xml:id's removed (see XInclude 1.1 set-xml-id).
    </para>
    <caution>
     <para>
-     Constantes PHP não existem fora do PHP. Por exemplo, no
-     arquivo &httpd.conf; você não pode usar constantes do PHP
-     como <constant>E_ALL</constant> ou <constant>E_NOTICE</constant>
+     As constantes do PHP não existem fora do PHP. Por exemplo, no
+     &httpd.conf; não é possível usar constantes do PHP,
+     como <constant>E_ALL</constant> ou <constant>E_NOTICE</constant>,
      para definir a diretiva <link linkend="ini.error-reporting">error_reporting</link>,
-     já que elas não terão significado algum e serão avaliadas como
-     <emphasis>0</emphasis>. Ao invés disso, use os valores de máscara de bits associados.
-     Essas constantes podem ser usados no &php.ini;
+     pois elas não terão significado e serão avaliadas como
+     <emphasis>0</emphasis>. Em vez disso, use os valores de máscara de bits correspondentes.
+     Essas constantes podem ser usadas no &php.ini;.
     </para>
    </caution>
   </sect2>
 
   <sect2 xml:id="configuration.changes.windows">
-   <title>Mudando configuração do PHP através do registro do Windows</title>
+   <title>Alteração da configuração do PHP pelo registro do Windows</title>
    <simpara>
-    Quando executar o PHP no Windows, os valores de configuração podem ser
-    modificados para cada diretório, usando o registro do Windows. Os
-    valores de configuração são armazenados na chave de registro
+    Ao executar o PHP no Windows, os valores de configuração podem ser
+    modificados por diretório usando o registro do Windows. Os valores
+    de configuração são armazenados na chave do registro
     <literal>HKLM\SOFTWARE\PHP\Per Directory Values</literal>,
-    nas sub-chaves correspondentes aos caminhos dos diretórios. Por exemplo,
-    valores para o diretório <literal>c:\inetpub\wwwroot</literal> estariam
-    armazenados na chave <literal>HKLM\SOFTWARE\PHP\Per Directory Values\c\inetpub\wwwroot</literal>.
-    As configurações para o
-    diretório estarão ativas para qualquer script rodando neste
-    diretório ou qualquer subdiretório dele. Os valores na chave
-    devem ter o nome da diretiva de configuração do PHP e um
-    valor string. Constantes PHP nos valores não são interpretados.
-    Apenas valores de configuração modificáveis no
+    nas subchaves correspondentes aos caminhos. Por exemplo, os valores de configuração
+    do diretório <literal>c:\inetpub\wwwroot</literal> seriam
+    armazenados na chave <literal>HKLM\SOFTWARE\PHP\Per Directory
+    Values\c\inetpub\wwwroot</literal>. As configurações desse
+    diretório ficam ativas para qualquer script executado nele ou em
+    qualquer subdiretório. Os valores dessa chave
+    devem ter o nome da diretiva de configuração do PHP e o
+    valor em formato de string. Constantes do PHP nos valores não são interpretadas.
+    No entanto, somente valores de configuração que podem ser alterados em
     <constant>INI_USER</constant> podem ser definidos
-    desta forma, e valores do <constant>INI_PERDIR</constant> não podem,
-    pois esses valores são recarregados em cada request.
+    dessa forma; valores <constant>INI_PERDIR</constant> não podem,
+    pois essas configurações são relidas a cada requisição.
    </simpara>
   </sect2>
 
   <sect2 xml:id="configuration.changes.other">
-   <title>Outras interfaces para PHP</title>
+   <title>Outras interfaces do PHP</title>
    <para>
-    Independente de como você execute PHP, você pode mudar certos valores durante
-    a execução de seus scripts através da função <function>ini_set</function>. Veja
-    a documentação na página <function>ini_set</function> para mais informações.
+    Independentemente de como o PHP é executado, é possível alterar certos valores durante a execução
+    dos scripts usando <function>ini_set</function>. Consulte a documentação
+    da página de <function>ini_set</function> para obter mais informações.
    </para>
    <para>
-    Se você estiver interessado na lista completa das configurações
-    definidas no seu sistema com os valores atuais, você pode executar a função
-    <function>phpinfo</function>, e revisar a página resultante.
-    Você pode também acessar os valores de configurações
-    de diretivas individuais em tempo de execução usando as funções
-    <function>ini_get</function> ou <function>get_cfg_var</function>.
+    Para ver uma lista completa das configurações disponíveis
+    no sistema e seus valores atuais, execute a função
+    <function>phpinfo</function> e consulte a página resultante.
+    Também é possível acessar os valores de diretivas de configuração individuais
+    durante a execução usando <function>ini_get</function> ou
+    <function>get_cfg_var</function>.
    </para>
   </sect2>
  </sect1>
