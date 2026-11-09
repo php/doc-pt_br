@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 029f19dbc090e4d249a23c0ab087d47059b37adc Maintainer: leonardolara Status: ready --><!-- CREDITS: fabioluciano,ae,leonardolara -->
+<!-- EN-Revision: 72d861de4970c2dbc84c391c1a4caab4a10a91fa Maintainer: leonardolara Status: ready --><!-- CREDITS: fabioluciano,ae,leonardolara -->
 <reference xml:id="class.serializable" role="class" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
 
  <title>A interface Serializable</title>
@@ -33,6 +33,35 @@
      A partir do PHP 8.1.0, uma classe que implementa <interfacename>Serializable</interfacename> sem implementar <link linkend="object.serialize">__serialize()</link> e <link linkend="object.unserialize">__unserialize()</link> gerará um aviso de descontinuação.
     </para>
    </warning>
+
+   <simpara>
+    Código novo deve usar os métodos mágicos
+    <link linkend="object.serialize">__serialize()</link> e
+    <link linkend="object.unserialize">__unserialize()</link>, disponíveis a
+    partir do PHP 7.4.0.
+     Quando uma classe declara esses métodos e também esta interface,
+     <function>serialize</function> sempre usa
+    <link linkend="object.serialize">__serialize()</link> e nunca chama
+    <methodname>Serializable::serialize</methodname>.
+    A desserialização depende do formato dos dados: um conteúdo serializado
+    pelo PHP 7.4.0 ou posterior é lido por
+    <link linkend="object.unserialize">__unserialize()</link>; um conteúdo
+    anterior continua sendo lido por
+    <methodname>Serializable::unserialize</methodname>.
+    Portanto, implementar <interfacename>Serializable</interfacename> ainda
+    é útil para ler conteúdos antigos e satisfazer declarações de tipo
+    <interfacename>Serializable</interfacename>. Declarar os quatro métodos
+    cobre todos os casos e evita o aviso de descontinuação.
+   </simpara>
+
+   <note>
+    <simpara>
+     Os métodos mágicos não têm uma interface própria, portanto uma classe que
+     os declara sem implementar <interfacename>Serializable</interfacename> não
+     é uma instância dessa interface. Use <function>method_exists</function>
+     para detectá-los.
+    </simpara>
+   </note>
   </section>
 
   <section xml:id="serializable.synopsis">
@@ -52,45 +81,60 @@
   <section xml:id="serializable.examples">
    &reftitle.examples;
    <example xml:id="serializable.example.basic">
-    <title>Uso básico</title>
+    <title>Compatibilidade com PHP 7.1.0 a 7.3.0</title>
+    <simpara>
+     Os métodos mágicos contêm a representação serializada, e os métodos da
+     interface os delegam a eles, para que uma única representação atenda a ambos.
+    </simpara>
     <programlisting role="php">
 <![CDATA[
 <?php
-class obj implements Serializable {
-    private $data;
-    public function __construct() {
-        $this->data = "My private data";
+class Task implements Serializable
+{
+    private $label;
+
+    public function __construct($label)
+    {
+        $this->label = $label;
     }
-    public function serialize() {
-        return serialize($this->data);
+
+    public function __serialize(): array
+    {
+        return ['label' => $this->label];
     }
-    public function unserialize($data) {
-        $this->data = unserialize($data);
+
+    public function __unserialize(array $data): void
+    {
+        $this->label = $data['label'];
     }
-    public function getData() {
-        return $this->data;
+
+    // Não é chamado a partir do PHP 7.4.0
+    public function serialize()
+    {
+        return serialize($this->__serialize());
+    }
+
+    // Continua sendo chamado a partir do PHP 7.4.0 para dados anteriores
+    public function unserialize($data)
+    {
+        $this->__unserialize(unserialize($data));
     }
 }
 
-$obj = new obj;
-$ser = serialize($obj);
-
-var_dump($ser);
-
-$newobj = unserialize($ser);
-
-var_dump($newobj->getData());
+var_dump(serialize(new Task('deploy')));
 ?>
 ]]>
     </programlisting>
-    &example.outputs.similar;
+    &example.outputs;
     <screen>
 <![CDATA[
-Deprecated: obj implements the Serializable interface, which is deprecated. Implement __serialize() and __unserialize() instead (or in addition, if support for old PHP versions is necessary) in script on line 2
-string(38) "C:3:"obj":23:{s:15:"My private data";}"
-string(15) "My private data"
+string(40) "O:4:"Task":1:{s:5:"label";s:6:"deploy";}"
 ]]>
     </screen>
+    <simpara>
+     Antes do PHP 7.4.0, o mesmo código serializa por meio da interface e
+     produz <literal>string(47) "C:4:"Task":31:{a:1:{s:5:"label";s:6:"deploy";}}"</literal>.
+    </simpara>
    </example>
    </section>
 
