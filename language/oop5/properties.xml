@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 62e61e543c2d2b8519952efa246ed708026cfb16 Maintainer: leonardolara Status: ready --><!-- CREDITS: fabioluciano, ae, vinelouzada, leonardolara -->
+<!-- EN-Revision: 822b0828562580aac0327eb2d84e8e6e06e51a98 Maintainer: leonardolara Status: ready --><!-- CREDITS: fabioluciano, ae, vinelouzada, leonardolara -->
  <sect1 xml:id="language.oop5.properties" xmlns="http://docbook.org/ns/docbook">
   <title>Propriedades</title>
 
@@ -259,6 +259,35 @@ $test1->prop = "foobar";
    </para>
    <note>
     <para>
+     Propriedades somente leitura só podem ser inicializadas por atribuição direta.
+     Uma propriedade somente leitura não inicializada não pode ser inicializada por
+     referência, nem mesmo no escopo em que foi declarada: passá-la a um parâmetro
+     de função que espera uma referência ou atribuí-la por referência resulta em
+     uma exceção <exceptionname>Error</exceptionname>.
+     <informalexample>
+      <programlisting role="php" annotations="non-interactive">
+<![CDATA[
+<?php
+
+class Test {
+    public readonly array $matches;
+
+    public function __construct(string $subject) {
+        // Inicialização ilegal por referência.
+        preg_match('/\d+/', $subject, $this->matches);
+        // Error: Cannot indirectly modify readonly property Test::$matches
+    }
+}
+
+new Test('abc 42');
+?>
+]]>
+      </programlisting>
+     </informalexample>
+    </para>
+   </note>
+   <note>
+    <para>
      Especificar um valor default para uma propriedade somente leitura não é permitido, porque uma propriedade com um valor default é essencialmente uma constante, e portanto não tem outro propósito.
      <informalexample>
       <programlisting role="php" annotations="non-interactive">
@@ -379,16 +408,20 @@ var_dump($test2->prop); // NULL
     Essa propriedade criada dinamicamente será disponível <emphasis>apenas</emphasis>
     naquela instância específica.
    </para>
-
+   <simpara>
+    Propriedades dinâmicas são suportadas por <link linkend="stdclass.intro">stdClass</link> e suas subclasses. Outras classes podem habilitar comportamento semelhante com <link linkend="allowdynamicproperties.intro">AllowDynamicProperties</link> ou <link linkend="language.oop5.overloading">sobrecarga de propriedades</link>.
+   </simpara>
    <warning>
     <simpara>
-     Propriedades dinâmicas foram descontinuadas a partir do PHP 8.2.0.
+     A criação de propriedades dinâmicas está obsoleta a partir do PHP 8.2.0,
+     a menos que a classe esteja marcada com o atributo
+     <code>#[\AllowDynamicProperties]</code>.
      É recomendado declarar todas as propriedades previamente.
      Para suportar nomes de propriedades arbitrárias, a classe deve implementar os métodos
      mágicos <link linkend="object.get">__get()</link> e
      <link linkend="object.set">__set()</link>.
-     Como último recurso, a classe pode ser marcada com o atributo
-     <code>#[\AllowDynamicProperties]</code>.
+     Marcar a classe com esse atributo continua sendo uma opção, mas geralmente
+     é considerado um último recurso.
     </simpara>
    </warning>
   </sect2>

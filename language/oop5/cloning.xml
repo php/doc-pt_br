@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: dff848b17dafaabfb7662ffb5fecfcb04e3b771d Maintainer: leonardolara Status: ready --><!-- CREDITS: narigone,ae,fabioluciano,leonardolara -->
+<!-- EN-Revision: 09c650422aec6f59dca08d1c65eaa633d391a525 Maintainer: leonardolara Status: ready --><!-- CREDITS: narigone,ae,fabioluciano,leonardolara -->
  <sect1 xml:id="language.oop5.cloning" xmlns="http://docbook.org/ns/docbook">
   <title>Clonando Objetos</title>
 
@@ -153,6 +153,60 @@ echo (clone $dateTime)->format('Y');
 ]]>
    </screen>
   </example>
+
+  <sect2 xml:id="language.oop5.cloning.with-properties">
+   <title>Clonagem com substituição de propriedades</title>
+
+   <simpara>
+    A partir do PHP 8.5.0, <literal>clone</literal> também está disponível como função.
+    Seu segundo parâmetro, <parameter>withProperties</parameter>, recebe um array
+    que associa nomes de propriedades aos valores que a cópia receberá. Somente as
+    propriedades listadas são substituídas; todas as outras mantêm os valores
+    copiados do objeto original.
+   </simpara>
+
+   <simpara>
+    As substituições são aplicadas depois da execução de
+    <link linkend="object.clone">__clone()</link> e respeitam a visibilidade de
+    todas as propriedades.
+    <link linkend="language.oop5.properties.readonly-properties">Propriedades somente leitura</link>
+    podem ser atualizadas na cópia mesmo que já tenham sido definidas no objeto
+    original, o que torna essa função adequada para métodos que retornam uma cópia
+    modificada.
+   </simpara>
+
+   <example>
+    <title>Clonando um objeto com substituição de propriedades</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+class Point {
+    public function __construct(
+        public readonly int $x,
+        public readonly int $y,
+    ) {}
+
+    public function withX(int $x): static
+    {
+        return clone($this, ['x' => $x]);
+    }
+}
+
+$p = new Point(1, 2);
+$q = $p->withX(10);
+
+echo $q->x, ' ', $q->y;
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+10 2
+]]>
+    </screen>
+   </example>
+  </sect2>
 
  </sect1>
 
