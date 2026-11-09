@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 64007e9f6b23f70d8874be11c4eb9d45556b742f Maintainer: leonardolara Status: ready --><!-- CREDITS: ae,felipe,fabioluciano,adiel,gabrielsanva,leonardolara -->
+<!-- EN-Revision: cc96728a01c9429c0e4cf06c746ec26385ca4e7e Maintainer: leonardolara Status: ready --><!-- CREDITS: ae,felipe,fabioluciano,adiel,gabrielsanva,leonardolara -->
  <chapter xml:id="language.variables" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink"
  annotations="interactive">
   <title>Variáveis</title>
@@ -23,10 +23,22 @@
 
    <note>
     <simpara>
-     O PHP não suporta nomes de variáveis em Unicode, porém, algumas codificações
-     de caracteres (tal como UTF-8) codificam os caracteres de uma forma que todos os bytes
-     de um caractere multibyte fiquem dentro da faixa permitida, fazendo com que
-     o nome da variável seja válido.
+     Nomes de variáveis são comparados como bytes, não como caracteres. PHP não
+     interpreta ou valida a codificação dos bytes de 128 a 255, e
+     dois nomes referem-se à mesma variável apenas quando seus bytes são idênticos.
+    </simpara>
+    <simpara>
+     Uma consequência é que nomes escritos em UTF-8 funcionam, porque cada byte de
+     uma sequência multi-byte UTF-8 está dentro da faixa aceita. O mesmo vale
+     para qualquer codificação cujos bytes não ASCII estejam todos nessa faixa, e para sequências
+     de bytes que não são texto válido em nenhuma codificação. Codificações que usam bytes
+     abaixo de 128 dentro de uma sequência multi-byte, como Shift-JIS ou UTF-16, não funcionam.
+    </simpara>
+    <simpara>
+     Outra é que dois nomes que exibem de forma idêntica podem ser distintos.
+     <literal>ä</literal> codificado como U+00E4 e como <literal>a</literal>
+     seguido pelo diacrítico combinante U+0308 são variáveis diferentes, assim como
+     um nome com e sem um U+00A0 NO-BREAK SPACE no final.
     </simpara>
    </note>
 
@@ -514,21 +526,38 @@ test();
      <programlisting role="php">
 <![CDATA[
 <?php
-function Teste()
+function test()
 {
     static $count = 0;
 
     $count++;
     echo $count . PHP_EOL;
     if ($count < 10) {
-        Teste();
+        test();
     }
+    // Desfaz o incremento, então $count volta para 0 assim que test() termina
+    // e uma chamada posterior para test() contará a partir de 1 novamente
     $count--;
 }
 
 test();
 ]]>
      </programlisting>
+     &example.outputs;
+     <screen>
+<![CDATA[
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+]]>
+     </screen>
     </example>
    </para>
 
