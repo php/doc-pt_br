@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EN-Revision: 6e885e52412ad979aa5fbb620bb84e886fc0ebe8 Maintainer: leonardolara Status: ready --><!-- CREDITS: ae,thiago,lcobucci,fabioluciano,lisaldo,geekcom,gabrielsanva,leonardolara -->
+<!-- EN-Revision: 5dc21d42fd5c1a8d6b0e45869c4fe3c3ac8e9a2c Maintainer: leonardolara Status: ready --><!-- CREDITS: ae,thiago,lcobucci,fabioluciano,lisaldo,geekcom,gabrielsanva,leonardolara -->
  <chapter xml:id="language.constants" xmlns="http://docbook.org/ns/docbook" annotations="interactive">
   <title>Constantes</title>
 
@@ -17,6 +17,12 @@
     Antes do PHP 8.0.0, as constantes definidas usando a função <function>define</function>
     podem não diferenciar maiúsculas de minúsculas.
    </para>
+  </note>
+
+  <note>
+   <simpara>
+    A partir do PHP 8.5.0, redeclarar uma constante já definida foi descontinuado.
+   </simpara>
   </note>
 
   <para>
@@ -222,6 +228,33 @@ echo ANIMAIS_DEF[1] . "\n"; // imprime "gato"
     </para>
    </note>
 
+   <sect2 role="changelog">
+    &reftitle.changelog;
+    <informaltable>
+     <tgroup cols="2">
+      <thead>
+       <row>
+        <entry>&Version;</entry>
+        <entry>&Description;</entry>
+       </row>
+      </thead>
+      <tbody>
+       <row>
+        <entry>8.5.0</entry>
+        <entry>
+         Adicionado suporte para conversões de tipo (por exemplo, <code>(int)</code> e
+         <code>(string)</code>) em expressões constantes.
+         Também foi adicionado suporte para
+         <link linkend="functions.anonymous">Closures</link> e
+         <link linkend="functions.first_class_callable_syntax">chamáveis
+         de primeira classe</link> em expressões constantes.
+        </entry>
+       </row>
+      </tbody>
+     </tgroup>
+    </informaltable>
+   </sect2>
+
    <sect2 role="seealso">
     &reftitle.seealso;
     <para>
@@ -247,110 +280,159 @@ echo ANIMAIS_DEF[1] . "\n"; // imprime "gato"
 
   <sect1 xml:id="language.constants.magic">
    <title>Constantes Mágicas</title>
-   <para>
-    Existem algumas constantes mágicas que mudam dependendo de
-    onde são usadas. Por exemplo, o valor de
-    <constant>__LINE__</constant> depende da linha em que é
-    usada no script. Todas essas constantes "mágicas" são resolvidas
-    em tempo de compilação, ao contrário das constantes regulares, que são resolvidas em tempo de execução.
-    Essas constantes especiais não diferenciam maiúsculas de minúsculas e são as seguintes:
-   </para>
-   <para>
-    <table>
-     <title>Constantes Mágicas do PHP</title>
-     <tgroup cols="2">
-      <thead>
-       <row>
-        <entry>&Name;</entry>
-        <entry>&Description;</entry>
-       </row>
-      </thead>
-      <tbody>
-       <row xml:id="constant.line">
-        <entry><constant>__LINE__</constant></entry>
-        <entry>
-         O número da linha atual do arquivo.
-        </entry>
-       </row>
-       <row xml:id="constant.file">
-        <entry><constant>__FILE__</constant></entry>
-        <entry>
-         O caminho completo e o nome do arquivo com links simbólicos resolvidos. Se usada dentro de um include,
-         o nome do arquivo incluído será retornado.
-        </entry>
-       </row>
-       <row xml:id="constant.dir">
-        <entry><constant>__DIR__</constant></entry>
-        <entry>
-         O diretório do arquivo. Se usada dentro de um include,
-         o diretório do arquivo incluído será retornado. Isso é equivalente
-         a <literal>dirname(__FILE__)</literal>. O nome do diretório
-         não possui barra no final, a menos que seja o diretório raiz.
-        </entry>
-       </row>
-       <row xml:id="constant.function">
-        <entry><constant>__FUNCTION__</constant></entry>
-        <entry>
-         O nome da função ou <literal>{closure}</literal> para funções anônimas.
-        </entry>
-       </row>
-       <row xml:id="constant.class">
-        <entry><constant>__CLASS__</constant></entry>
-        <entry>
-         O nome da classe. O nome da classe inclui o namespace
-         em que foi declarada (por exemplo, <literal>Foo\Bar</literal>).
-         Quando usada dentro de um método de trait,
-         <constant>__CLASS__</constant> é o nome da classe em que o trait
-         for usado.
-        </entry>
-       </row>
-       <row xml:id="constant.trait">
-        <entry><constant>__TRAIT__</constant></entry>
-        <entry>
-         O nome do trait. O nome do trait inclui o namespace em
-         que foi declarado (por exemplo, <literal>Foo\Bar</literal>).
-        </entry>
-       </row>
-       <row xml:id="constant.method">
-        <entry><constant>__METHOD__</constant></entry>
-        <entry>
-         O nome do método da classe.
-        </entry>
-       </row>
-       <row xml:id="constant.property">
-        <entry><constant>__PROPERTY__</constant></entry>
-        <entry>
-         Válido somente dentro de um
-         <link linkend="language.oop5.property-hooks">gancho de propriedade</link>.
-         É igual ao nome da propriedade.
-        </entry>
-       </row>
-       <row xml:id="constant.namespace">
-        <entry><constant>__NAMESPACE__</constant></entry>
-        <entry>
-         O nome do namespace atual.
-        </entry>
-       </row>
-       <row xml:id="constant.coloncolonclass">
-        <entry><constant><replaceable>ClassName</replaceable>::class</constant></entry>
-        <entry>
-         O nome totalmente qualificado da classe.
-        </entry>
-       </row>
-      </tbody>
-     </tgroup>
-    </table>
-   </para>
+   <simpara>
+    Constantes mágicas são palavras-chave que são substituídas por informações sobre
+    sua própria localização no código-fonte: seu arquivo e linha, e a
+    função, classe, trait, namespace ou propriedade que as envolve.
+    Apesar do nome, elas não são constantes reais:
+    <function>defined</function> e <function>constant</function> não as
+    reconhecem, e uma constante com o mesmo nome criada com
+    <function>define</function> não as afeta. Elas não diferenciam maiúsculas de minúsculas.
+    Quando usadas fora do contexto relevante (por exemplo, <constant>__CLASS__</constant>
+    fora de uma classe), elas são substituídas por uma string vazia.
+   </simpara>
+   <table>
+    <title>Constantes mágicas do PHP</title>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Name;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row xml:id="constant.line">
+       <entry><constant>__LINE__</constant></entry>
+       <entry>
+        O número da linha em que está escrita.
+       </entry>
+      </row>
+      <row xml:id="constant.file">
+       <entry><constant>__FILE__</constant></entry>
+       <entry>
+        O caminho completo e o nome do arquivo em que está escrita,
+        com links simbólicos resolvidos.
+       </entry>
+      </row>
+      <row xml:id="constant.dir">
+       <entry><constant>__DIR__</constant></entry>
+       <entry>
+        O diretório do arquivo, equivalente a
+        <literal>dirname(__FILE__)</literal>. Não possui barra final
+        a menos que seja o diretório raiz.
+       </entry>
+      </row>
+      <row xml:id="constant.function">
+       <entry><constant>__FUNCTION__</constant></entry>
+       <entry>
+       <entry><constant>__FUNCTION__</constant></entry>
+       <entry>
+        O nome da função em que está escrita, incluindo seu namespace
+        (por exemplo, <literal>Foo\bar</literal>).
+        Dentro de um método, apenas o nome do método.
+        Para funções anônimas, um nome gerado pelo mecanismo que inclui
+        onde o closure foi definido (a partir do PHP 8.4.0; anteriormente
+        <literal>{closure}</literal>).
+       </entry>
+       <entry><constant>__CLASS__</constant></entry>
+       <entry>
+        O nome da classe em que está escrita, incluindo seu namespace
+        (por exemplo, <literal>Foo\Bar</literal>).
+        Dentro de um trait, o nome da classe que usa o trait.
+        Para <link linkend="language.oop5.anonymous">classes anônimas</link>,
+        um nome gerado pelo mecanismo.
+        Para obter o nome da classe em que um método foi chamado, use
+        <link linkend="language.oop5.late-static-bindings"><literal>static::class</literal></link>.
+       </entry>
+      </row>
+      <row xml:id="constant.trait">
+       <entry><constant>__TRAIT__</constant></entry>
+       <entry>
+        O nome do trait, incluindo seu namespace (por exemplo, <literal>Foo\Bar</literal>).
+       </entry>
+      </row>
+      <row xml:id="constant.method">
+       <entry><constant>__METHOD__</constant></entry>
+       <entry>
+        O nome da classe e do método em que está escrita
+        (por exemplo, <literal>Foo\Bar::baz</literal>).
+        Dentro de um trait, o nome do trait é usado em vez do nome da classe.
+        Fora de um método, o mesmo que <constant>__FUNCTION__</constant>.
+       </entry>
+      </row>
+      <row xml:id="constant.property">
+       <entry><constant>__PROPERTY__</constant></entry>
+       <entry>
+        O nome da propriedade, quando usada dentro de um
+        <link linkend="language.oop5.property-hooks">gancho de propriedade</link>.
+        Disponível a partir do PHP 8.4.0.
+       </entry>
+      </row>
+      <row xml:id="constant.namespace">
+       <entry><constant>__NAMESPACE__</constant></entry>
+       <entry>
+        O nome do namespace atual.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </table>
 
+   <example>
+    <title>Usando constantes mágicas</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+namespace App;
+
+function helper()
+{
+    echo __FUNCTION__, "\n";
+    echo __METHOD__, "\n";
+}
+
+trait Greets
+{
+    public function greet()
+    {
+        echo __CLASS__, "\n";
+        echo __TRAIT__, "\n";
+        echo __METHOD__, "\n";
+        echo __FUNCTION__, "\n";
+    }
+}
+
+class Greeter
+{
+    use Greets;
+}
+
+helper();
+(new Greeter)->greet();
+echo __NAMESPACE__, "\n";
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+App\helper
+App\helper
+App\Greeter
+App\Greets
+App\Greets::greet
+greet
+App
+]]>
+    </screen>
+   </example>
    <sect2 role="seealso">
     &reftitle.seealso;
     <para>
      <simplelist>
       <member><link linkend="language.oop5.basic.class.class">::class</link></member>
       <member><function>get_class</function></member>
-      <member><function>get_object_vars</function></member>
-      <member><function>file_exists</function></member>
-      <member><function>function_exists</function></member>
+      <member><function>get_called_class</function></member>
+      <member><function>dirname</function></member>
      </simplelist>
     </para>
    </sect2>
