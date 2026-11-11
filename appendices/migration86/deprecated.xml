@@ -1,0 +1,619 @@
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 894fa67ba030cd241a56d898869852c7b1a59c0a Maintainer: leonardolara Status: ready -->
+<sect1 xml:id="migration86.deprecated">
+ <title>Recursos descontinuados</title>
+
+ <sect2 xml:id="migration86.deprecated.core">
+  <title>Núcleo do PHP</title>
+
+  <sect3 xml:id="migration86.deprecated.core.namespace-as-class-constant-name">
+   <title>Uso de "namespace" como nome de constante de classe</title>
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_using_namespace_as_a_class_constant_name -->
+
+   <simpara>
+    Agora foi descontinuada a declaração de uma
+    <link linkend="language.oop5.constants">constante de classe</link>
+    chamada <literal>namespace</literal>.
+    <literal>namespace</literal> é uma palavra-chave parcialmente reservada,
+    e esse nome está sendo reservado para possíveis construções futuras,
+    como uma pseudo-constante <literal>::namespace</literal> análoga a
+    <literal>::class</literal>.
+    Métodos e propriedades estáticas chamados
+    <literal>namespace</literal> não são afetados.
+    Renomeie a constante, por exemplo, para <literal>NAMESPACE_NAME</literal>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.deprecated.core.return-in-finally">
+   <title>Retorno em um bloco finally</title>
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_returning_from_a_finally_block -->
+
+   <simpara>
+    O uso da instrução <literal>return</literal> dentro de um bloco
+    &finally; agora foi descontinuado e gera um aviso de descontinuação em tempo
+    de compilação.
+    Esse <literal>return</literal> descarta silenciosamente uma exceção
+    lançada pelo bloco <literal>try</literal> ou <literal>catch</literal>
+    associado, ou substitui o valor retornado por ele, fazendo com que as
+    falhas desapareçam sem deixar vestígios.
+    Em vez disso, mova o <literal>return</literal> para fora do bloco
+    <literal>finally</literal>; sempre é possível obter o mesmo resultado
+    sem ele.
+   </simpara>
+
+   <informalexample>
+    <programlisting role="php">
+<![CDATA[
+<?php
+function getConfig(): array
+{
+    try {
+        return loadConfig(); // lança uma exceção se o arquivo não existir
+    } finally {
+        return []; // descontinuado: a exceção é descartada, e o chamador recebe apenas []
+    }
+}
+]]>
+    </programlisting>
+   </informalexample>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.deprecated.core.nullable-debuginfo-return-type">
+   <title>Tipo de retorno anulável para __debugInfo()</title>
+
+   <simpara>
+    A declaração do tipo de retorno
+    <type class="union"><type>array</type><type>null</type></type> para
+    <link linkend="language.oop5.magic.debuginfo">__debugInfo()</link>
+    agora foi descontinuada.
+    Retornar &null; desse método já estava
+    <link linkend="migration85.deprecated.core.return-null-from-debuginfo">descontinuada
+    no PHP 8.5</link>, portanto o tipo de retorno anulável não
+    descreve mais um comportamento válido.
+    Declare <type>array</type> em seu lugar.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.deprecated.core.return-value-from-constructor">
+   <title>Retorno de valores em __construct() e __destruct()</title>
+   <!-- RFC: https://wiki.php.net/rfc/deprecate-return-value-from-construct -->
+
+   <simpara>
+    Retornar um valor de
+    <link linkend="language.oop5.decon.constructor">__construct()</link> ou
+    <link linkend="language.oop5.decon.destructor">__destruct()</link>
+    agora foi descontinuado e gera um aviso de descontinuação em tempo de
+    compilação.
+    Esses métodos não podem declarar um tipo de retorno, e seus valores de
+    retorno nunca podem ser observados durante o uso normal; por isso,
+    retorná-los era, no mínimo, confuso.
+    Ainda é permitido usar <literal>return;</literal> sem valor para
+    ignorar a lógica restante, assim como chamar esses métodos manualmente.
+   </simpara>
+
+   <simpara>
+    Pelo mesmo motivo, o uso de <literal>yield</literal> para construir
+    (<link linkend="language.oop5.decon.constructor">__construct()</link>) ou
+    destruir (<link linkend="language.oop5.decon.destructor">__destruct()</link>) um
+    <link linkend="language.generators">gerador</link> agora foi descontinuado.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.deprecated.core.function-named-readonly">
+   <title>Uso de readonly como nome de função</title>
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_the_possibility_to_name_a_function_readonly -->
+
+   <simpara>
+    A declaração de uma função chamada <literal>readonly</literal> agora
+    foi descontinuada.
+    <link linkend="language.oop5.properties.readonly-properties">readonly</link>
+    é uma palavra-chave reservada; uma exceção no analisador léxico foi
+    adicionada no PHP 8.1 exclusivamente para manter em funcionamento uma
+    função existente do WordPress com esse nome, e nenhuma outra palavra-chave
+    do PHP recebe esse tratamento especial.
+    Renomeie a função.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.deprecated.core.reserved-identifiers">
+   <title>Uso de let, is ou _ como identificador</title>
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_using_let_as_an_identifier -->
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_using_is_as_an_identifier -->
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_using_as_a_constant_and_compile_time_alias -->
+   <!-- Not listed in UPGRADING; implemented in php-src commits 0beb2a99d3 and 938a3110bf on the PHP-8.6 branch -->
+
+   <simpara>
+    O uso de <literal>let</literal> ou <literal>is</literal> como nome de
+    classe, interface, trait, enum, função ou constante (inclusive por meio
+    de <function>define</function>) agora foi descontinuado, assim como o uso de
+    qualquer um deles como sinônimo em uma chamada a
+    <function>class_alias</function> ou em uma declaração
+    <literal>use</literal>, <literal>use function</literal> ou
+    <literal>use const</literal>.
+    Esses nomes estão sendo reservados como palavras-chave para possíveis
+    recursos futuros: <literal>let</literal> para escopo de bloco e
+    <literal>is</literal> para correspondência de padrões.
+    Renomeie os símbolos afetados.
+   </simpara>
+
+   <simpara>
+    A <link linkend="migration84.deprecated.core.underscore-class-name">descontinuação do
+    uso de <literal>_</literal> como nome de classe no PHP
+    8.4</link> agora também se aplica a constantes: declarar uma constante
+    chamada <literal>_</literal> com <literal>const</literal> ou
+    <function>define</function>, assim como usar <literal>_</literal> como
+    alias de uma classe ou constante em uma declaração <literal>use</literal>,
+    agora foi descontinuado.
+    Funções chamadas <literal>_</literal>, incluindo o alias
+    <function>_</function> de <function>gettext</function>, não são afetadas.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.deprecated.core.define-case-insensitive">
+   <title>Terceiro argumento de define()</title>
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_define_with_case_insensitive_being_specified -->
+
+   <simpara>
+    Passar o argumento <parameter>case_insensitive</parameter> para
+    <function>define</function> agora foi descontinuado.
+    Constantes que não diferenciam maiúsculas de minúsculas foram removidas
+    no PHP 8.0, e desde então o argumento é ignorado.
+    Passar &false; explicitamente agora gera um aviso de descontinuação.
+    Passar &true; continua gerando um aviso, cuja mensagem agora informa que
+    isso se tornará um erro no PHP 9.0.
+    Omita o argumento.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.deprecated.core.is-a-with-string">
+   <title>is_a() e is_subclass_of() com string quando allow_string é false</title>
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_is_a_with_string_when_allow_string_is_false -->
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_is_subclass_of_with_string_when_allow_string_is_false -->
+
+   <simpara>
+    Chamar <function>is_a</function> ou <function>is_subclass_of</function>
+    com uma string como primeiro argumento quando
+    <parameter>allow_string</parameter> é &false; agora foi descontinuado.
+    Nesse caso, as funções sempre retornam &false;, mesmo quando a classe já
+    está carregada, portanto essa chamada indica um erro no código.
+    Para evitar disparar o autoload, primeiro verifique
+    <function>class_exists</function> com o autoload desativado e depois
+    chame a função com <parameter>allow_string</parameter> definido como
+    &true;.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.deprecated.core.metaphone">
+   <title>metaphone()</title>
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_metaphone_function -->
+
+   <simpara>
+    A função <function>metaphone</function> agora foi descontinuada.
+    Ela implementa o algoritmo Metaphone original de 1990, que é limitado às
+    regras de pronúncia do inglês e há muito tempo foi substituído pelo Double
+    Metaphone e Metaphone 3.
+    Algoritmos fonéticos são específicos de cada idioma e frequentemente atualizados, portanto
+    são melhor atendidos por uma biblioteca de usuário; use uma em vez disso.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.deprecated.core.php-filter-max-filter-count">
+   <title>Mais de 16 filtros em uma URL php://filter</title>
+   <!-- RFC: https://wiki.php.net/rfc/limit-maximum-number-of-filter-chains -->
+
+   <simpara>
+    Usar mais de 16 filtros em uma
+    <link linkend="wrappers.php">URL php://filter</link> sem configurar
+    a opção de contexto de fluxo <literal>filter.max_filter_count</literal> agora
+    emite um aviso de descontinuação.
+    Cadeias longas de filtros não têm uso legítimo conhecido, mas são a base de
+    uma classe de ataques que transforma uma inclusão de arquivo local ou um arquivo arbitrário
+    em execução de código remoto.
+    Quando <literal>filter.max_filter_count</literal> é definido explicitamente,
+    excedê-lo já é um erro: abrir o fluxo falha com um
+    aviso.
+   </simpara>
+
+   <simpara>
+    Código que precisa de mais filtros deve adicioná-los com
+    <function>stream_filter_append</function> ou
+    <function>stream_filter_prepend</function>, que não têm limite, ou
+    aumentar o limite através da opção de contexto, por exemplo globalmente com
+    <function>stream_context_set_default</function>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.deprecated.core.passing-objects-as-arrays">
+   <title>Passando objetos para array_walk(), array_walk_recursive() e http_build_query()</title>
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#passing_objects_for_array_parameter_of_array_walk_and_array_walk_recursive -->
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#passing_objects_for_data_parameter_of_http_build_query -->
+
+   <simpara>
+    Passar um objeto como o argumento <parameter>array</parameter> para
+    <function>array_walk</function> ou
+    <function>array_walk_recursive</function> agora foi descontinuado.
+    Um pequeno número de funções interpreta silenciosamente um objeto como o array
+    de suas propriedades visíveis.
+    Modificar tais propriedades através de um callback por referência viola
+    a semântica <link linkend="language.oop5.properties.readonly-properties">readonly</link>
+    e pode corromper casos de enum, e
+    <function>array_walk_recursive</function> não percorre objetos aninhados de qualquer forma.
+    Chame <function>get_object_vars</function> no objeto primeiro e passe
+    o array resultante.
+   </simpara>
+
+   <simpara>
+    Passar um objeto como o argumento <parameter>data</parameter> para
+    <function>http_build_query</function> agora foi descontinuado.
+    Objetos encontrados como valores dentro de <parameter>data</parameter> agora
+    também emitem um aviso de descontinuação quando são interpretados como arrays.
+    Tratar objetos como arrays tem sido uma fonte recorrente de confusão,
+    em particular para objetos <interfacename>Stringable</interfacename>,
+    que os usuários esperam ser convertidos em uma string.
+    Converta objetos em arrays com <function>get_object_vars</function>,
+    recursivamente se necessário, antes de chamar a função.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.deprecated.core.type-function-aliases">
+   <title>is_double(), is_long(), is_integer() e doubleval()</title>
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_is_double -->
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_is_integer -->
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_is_long -->
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_doubleval -->
+
+   <para>
+    Seguindo a
+    <link linkend="migration85.deprecated.core.non-canonical-cast-names">descontinuação
+    dos nomes de cast não canônicos no PHP 8.5</link>, os aliases de função
+    que carregam os mesmos nomes de tipo desatualizados agora foram descontinuados.
+    Eles se comportam de forma idêntica aos seus equivalentes canônicos, que devem
+    ser usados em vez disso:
+
+    <simplelist>
+     <member><function>is_double</function> => <function>is_float</function></member>
+     <member><function>is_long</function> => <function>is_int</function></member>
+     <member><function>is_integer</function> => <function>is_int</function></member>
+     <member><function>doubleval</function> => <function>floatval</function></member>
+    </simplelist>
+   </para>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.deprecated.core.locale-string-comparison">
+   <title>strcoll() e SORT_LOCALE_STRING</title>
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_strcoll -->
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_sort_locale_string_flag_for_sort_functions -->
+
+   <simpara>
+    A função <function>strcoll</function> agora foi descontinuada.
+    Ela compara strings de acordo com a configuração <literal>LC_COLLATE</literal>
+    do locale atual, que é um estado global do processo definido via
+    <function>setlocale</function> que qualquer biblioteca pode alterar, não é
+    segura para binários ao contrário de todas as outras funções de comparação de strings, e alguns
+    locales não implementam regras de collation corretas.
+    Use <methodname>Collator::compare</methodname> da extensão
+    <link linkend="book.intl">intl</link> em vez disso, que é
+    precisa e possui regras de collation atualizadas.
+   </simpara>
+
+   <para>
+    A constante <constant>SORT_LOCALE_STRING</constant> das funções de ordenação
+    agora foi descontinuada pelos mesmos motivos, pois ela ordena usando
+    <function>strcoll</function>.
+    Use um dos seguintes métodos da classe
+    <classname>Collator</classname> em vez disso:
+
+    <simplelist>
+     <member><methodname>Collator::sort</methodname></member>
+     <member><methodname>Collator::asort</methodname></member>
+     <member><methodname>Collator::sortWithSortKeys</methodname></member>
+    </simplelist>
+   </para>
+
+  </sect3>
+
+ </sect2>
+
+ <sect2 xml:id="migration86.deprecated.bzip2">
+  <title>Bzip2</title>
+
+  <simpara>
+   Passar um objeto como parâmetro dos filtros de stream
+   <link linkend="filters.compression">bzip2.compress e
+   bzip2.decompress</link> agora foi descontinuado, pois apenas um
+   array associativo é documentado e suportado.
+   Chame <function>get_object_vars</function> no objeto primeiro e passe
+   o array resultante.
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#passing_objects_as_parameters_to_the_bzip2decompress_and_bzip2compress_stream_filters -->
+  </simpara>
+
+ </sect2>
+
+ <sect2 xml:id="migration86.deprecated.gmp">
+  <title>GMP</title>
+
+  <simpara>
+   Os operadores de deslocamento (<literal>&lt;&lt;</literal>, <literal>&gt;&gt;</literal>) e
+   exponenciação (<literal>**</literal>) em objetos
+   <classname>GMP</classname> agora emitem um aviso de descontinuação quando o
+   operando da direita é um <type>float</type> cuja conversão para
+   <type>int</type> perde precisão, consistente com a descontinuação de
+   conversões implícitas de float para int com perda de precisão em outras partes da linguagem.
+  </simpara>
+
+ </sect2>
+
+ <sect2 xml:id="migration86.deprecated.mbstring">
+  <title>MBString</title>
+
+  <para>
+   As funções mbregex foram descontinuadas, pois a biblioteca subjacente
+   Oniguruma não é mais mantida; sua manutenção terminou em
+   abril de 2025.
+   As funções serão removidas no PHP 9.0.
+   Para a maioria dos casos de uso, as funções <link linkend="book.pcre">PCRE</link>
+   com o modificador <literal>u</literal> são uma substituição adequada.
+   As funções afetadas são:
+   <!-- RFC: https://wiki.php.net/rfc/eol-oniguruma -->
+
+   <simplelist>
+    <member><function>mb_ereg</function></member>
+    <member><function>mb_ereg_match</function></member>
+    <member><function>mb_ereg_replace</function></member>
+    <member><function>mb_ereg_replace_callback</function></member>
+    <member><function>mb_ereg_search</function></member>
+    <member><function>mb_ereg_search_getpos</function></member>
+    <member><function>mb_ereg_search_getregs</function></member>
+    <member><function>mb_ereg_search_init</function></member>
+    <member><function>mb_ereg_search_pos</function></member>
+    <member><function>mb_ereg_search_regs</function></member>
+    <member><function>mb_ereg_search_setpos</function></member>
+    <member><function>mb_eregi</function></member>
+    <member><function>mb_eregi_replace</function></member>
+    <member><function>mb_regex_encoding</function></member>
+    <member><function>mb_regex_set_options</function></member>
+    <member><function>mb_split</function></member>
+   </simplelist>
+  </para>
+
+  <simpara>
+   A constante <constant>MB_ONIGURUMA_VERSION</constant> e as
+   diretivas INI
+   <link linkend="ini.mbstring.regex-retry-limit">mbstring.regex_retry_limit</link>
+   e
+   <link linkend="ini.mbstring.regex-stack-limit">mbstring.regex_stack_limit</link>
+   também foram descontinuadas junto com elas.
+  </simpara>
+
+  <simpara>
+   Passar um objeto como argumento <parameter>vars</parameter> para
+   <function>mb_convert_variables</function> agora foi descontinuado, pois os objetos
+   são interpretados silenciosamente como o array de suas propriedades visíveis.
+   Chame <function>get_object_vars</function> no objeto primeiro, ou use
+   <function>mb_convert_encoding</function>, que converte arrays
+   recursivamente e retorna o resultado em vez de modificar seu argumento
+   no local.
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#passing_objects_for_vars_parameter_of_mb_convert_variables -->
+  </simpara>
+
+ </sect2>
+
+ <sect2 xml:id="migration86.deprecated.mysqli">
+  <title>MySQLi</title>
+
+  <simpara>
+   A função <function>mysqli_get_charset</function> e o
+   método <methodname>mysqli::get_charset</methodname> agora foram descontinuados,
+   sem substituição.
+   Eles expõem detalhes internos de implementação do conjunto de caracteres que
+   são irrelevantes desde a mudança para mysqlnd; em particular, a
+   collation reportada não corresponde à collation definida pelo
+   servidor.
+   Para obter o nome do conjunto de caracteres atual, use
+   <function>mysqli_character_set_name</function> ou
+   <methodname>mysqli::character_set_name</methodname>.
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_mysqli_get_charset -->
+  </simpara>
+
+  <simpara>
+   A função <function>mysqli_stmt_init</function> e o
+   método <methodname>mysqli::stmt_init</methodname> agora foram descontinuados.
+   Eles criam um objeto de declaração vazio que ainda precisa ser preparado
+   antes de ser usado, e são uma fonte de objetos de declaração deixados em um
+   estado inconsistente.
+   Use <function>mysqli_prepare</function> ou
+   <methodname>mysqli::prepare</methodname> em vez disso, que preparam a
+   declaração em um único passo.
+   Pela mesma razão, chamar o
+   construtor <methodname>mysqli_stmt::__construct</methodname> sem o
+   parâmetro <parameter>query</parameter> agora foi descontinuado; passe a consulta
+   para o construtor em vez disso.
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_mysqlistmt_init -->
+  </simpara>
+
+ </sect2>
+
+ <sect2 xml:id="migration86.deprecated.reflection">
+  <title>Reflection</title>
+
+  <simpara>
+   Chamar <methodname>ReflectionProperty::setValue</methodname> ou
+   <methodname>ReflectionProperty::setRawValue</methodname> com um objeto
+   que não é uma instância da classe na qual a propriedade foi declarada
+   agora foi descontinuado.
+   Ao contrário dos outros métodos <classname>ReflectionProperty</classname>, que
+   lançam exceção para tais objetos, esses métodos definem silenciosamente uma propriedade no
+   objeto não relacionado, o que não é melhor do que uma atribuição normal e
+   conceitualmente errado.
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_reflectionpropertysetvalue_and_reflectionpropertysetrawvalue_with_wrong_types -->
+  </simpara>
+
+  <simpara>
+   Passar um objeto para <methodname>ReflectionMethod::invoke</methodname> ou
+   <methodname>ReflectionMethod::invokeArgs</methodname> ao invocar um
+   método estático agora foi descontinuado.
+   Métodos estáticos não têm <varname>$this</varname>, então o objeto era
+   completamente ignorado e nunca validado.
+   Passe &null; em vez disso.
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_reflectionmethodinvoke_and_reflectionmethodinvokeargs_with_objects_for_static_methods -->
+  </simpara>
+
+ </sect2>
+
+ <sect2 xml:id="migration86.deprecated.session">
+  <title>Session</title>
+
+  <simpara>
+   Passar um objeto que não implementa ambos os
+   métodos <methodname>SessionIdInterface::create_sid</methodname> e
+   <methodname>SessionUpdateTimestampHandlerInterface::validateId</methodname>
+   para <function>session_set_save_handler</function> agora foi descontinuado,
+   independentemente das interfaces que o objeto declara.
+   Esses métodos são necessários para que um manipulador de salvamento se comporte corretamente sob
+   <link linkend="ini.session.use-strict-mode">session.use_strict_mode</link>,
+   o que está
+   <link linkend="migration86.incompatible.session">ativado por padrão a partir do
+   PHP 8.6</link> e mitiga a fixação de sessão.
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_passing_a_sessionhandler_object_to_session_set_save_handler_which_does_not_contain_the_create_sid_and_validateid -->
+  </simpara>
+
+  <simpara>
+   Consequentemente, um aviso de descontinuação agora é emitido quando uma classe implementa
+   <interfacename>SessionHandlerInterface</interfacename> sem definir
+   os métodos
+   <methodname>SessionIdInterface::create_sid</methodname> ou
+   <methodname>SessionUpdateTimestampHandlerInterface::validateId</methodname>.
+   No PHP 9.0 esses métodos serão movidos de
+   <interfacename>SessionIdInterface</interfacename> e
+   <interfacename>SessionUpdateTimestampHandlerInterface</interfacename> para
+   <interfacename>SessionHandlerInterface</interfacename>, onde serão
+   obrigatórios.
+   Implemente ambos os métodos em manipuladores de salvamento personalizados agora.
+  </simpara>
+
+ </sect2>
+
+ <sect2 xml:id="migration86.deprecated.spl">
+  <title>SPL</title>
+
+  <simpara>
+   A função <function>spl_classes</function> agora foi descontinuada.
+   Nenhuma outra extensão expõe tal função, e a extensão Reflection
+   está sempre disponível.
+   Use <methodname>ReflectionExtension::getClassNames</methodname> em vez disso.
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_spl_classes -->
+  </simpara>
+
+  <simpara>
+   A função <function>spl_object_hash</function> agora foi descontinuada.
+   Desde o PHP 8.1 seu valor de retorno não é nada mais do que uma versão reformatada de
+   <function>spl_object_id</function>, e o nome é enganoso, pois o
+   valor não é derivado do conteúdo do objeto.
+   A forma de string também é propensa a erros: dois hashes podem comparar-se de forma frouxa como iguais
+   porque ambos são strings numéricas.
+   Use <function>spl_object_id</function> em vez disso.
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_spl_object_hash -->
+  </simpara>
+
+  <para>
+   Os seguintes métodos de <classname>ArrayIterator</classname> agora foram
+   descontinuados.
+   Eles existem apenas porque <classname>ArrayIterator</classname> historicamente
+   compartilhou sua implementação com <classname>ArrayObject</classname>; a maioria
+   deles faz pouco sentido em um iterador e impede a otimização de sua
+   implementação.
+   Os métodos correspondentes de <classname>ArrayObject</classname> não foram
+   descontinuados.
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_arrayiterator_methods_that_inherit_arrayobject_implementation -->
+
+   <simplelist>
+    <member><methodname>ArrayIterator::getFlags</methodname></member>
+    <member><methodname>ArrayIterator::setFlags</methodname></member>
+    <member><methodname>ArrayIterator::asort</methodname></member>
+    <member><methodname>ArrayIterator::ksort</methodname></member>
+    <member><methodname>ArrayIterator::uasort</methodname></member>
+    <member><methodname>ArrayIterator::uksort</methodname></member>
+    <member><methodname>ArrayIterator::natsort</methodname></member>
+    <member><methodname>ArrayIterator::natcasesort</methodname></member>
+    <member><methodname>ArrayIterator::unserialize</methodname></member>
+    <member><methodname>ArrayIterator::serialize</methodname></member>
+   </simplelist>
+  </para>
+
+  <para>
+   Os métodos CSV de <classname>SplFileObject</classname> agora foram
+   descontinuados.
+   Suas inconsistências históricas de design, ainda mais expostas por argumentos nomeados,
+   tornaram-nos cada vez mais difíceis de manter, e o manuseio de CSV
+   não pertence naturalmente a <classname>SplFileObject</classname>.
+   Use <function>fgetcsv</function> e <function>fputcsv</function> em um
+   stream em vez disso.
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#deprecate_splfileobject_csv_methods -->
+
+   <simplelist>
+    <member><methodname>SplFileObject::fgetcsv</methodname></member>
+    <member><methodname>SplFileObject::fputcsv</methodname></member>
+    <member><methodname>SplFileObject::setCsvControl</methodname></member>
+    <member><methodname>SplFileObject::getCsvControl</methodname></member>
+   </simplelist>
+  </para>
+
+ </sect2>
+
+ <sect2 xml:id="migration86.deprecated.zlib">
+  <title>Zlib</title>
+
+  <simpara>
+   Passar um objeto como parâmetros dos filtros de fluxo
+   <link linkend="filters.compression">zlib.deflate and zlib.inflate</link>
+   agora foi descontinuado, já que somente um array associativo é
+   documentado e suportado.
+   Chame <function>get_object_vars</function> no objeto primeiro e passe
+   o array resultante.
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#passing_objects_as_parameters_to_the_zlibinflate_and_zlibdeflate_stream_filters -->
+  </simpara>
+
+  <simpara>
+   Passar um objeto como o argumento <parameter>options</parameter> para
+   <function>deflate_init</function> ou <function>inflate_init</function>
+   agora foi descontinuado, já que objetos são silenciosamente interpretados como o array
+   de suas propriedades visíveis.
+   Chame <function>get_object_vars</function> no objeto primeiro e passe
+   o array resultante.
+   <!-- RFC: https://wiki.php.net/rfc/deprecations_php_8_6#passing_objects_for_options_parameter_of_deflate_init_and_inflate_init -->
+  </simpara>
+
+ </sect2>
+
+</sect1>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

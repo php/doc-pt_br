@@ -1,0 +1,585 @@
+<?xml version="1.0" encoding="utf-8"?><!-- EN-Revision: 894fa67ba030cd241a56d898869852c7b1a59c0a Maintainer: leonardolara Status: ready -->
+<sect1 xml:id="migration86.other-changes">
+ <title>Outras alterações</title>
+
+ <sect2 xml:id="migration86.other-changes.core">
+  <title>Alterações no núcleo</title>
+
+  <sect3 xml:id="migration86.other-changes.core.core">
+   <title>Núcleo</title>
+
+   <simpara>
+    Em uma condição grave de <acronym>OOM</acronym> (falta de memória), o PHP
+    agora chama <literal>abort()</literal> em vez de <literal>exit(1)</literal>,
+    alterando o código de saída para 134 e possivelmente gerando um arquivo
+    de despejo de núcleo.
+   </simpara>
+
+   <simpara>
+    A constante <constant>PHP_OS_FAMILY</constant> agora assume o valor
+    <literal>AIX</literal> ao executar em AIX ou IBM i via PASE.
+   </simpara>
+
+  </sect3>
+
+ </sect2>
+
+ <sect2 xml:id="migration86.other-changes.sapi">
+  <title>Alterações nos módulos SAPI</title>
+
+  <sect3 xml:id="migration86.other-changes.sapi.cli">
+   <title>CLI</title>
+
+   <simpara>
+    O <link linkend="features.commandline.webserver">servidor de
+    desenvolvimento integrado</link> agora aceita requisições com o método
+    <literal>QUERY</literal> do <acronym>HTTP</acronym>, em vez de retornar
+    <literal>501 Not Implemented</literal>.
+   </simpara>
+
+   <simpara>
+    O <link linkend="features.commandline.webserver">servidor de
+    desenvolvimento integrado</link> não reproduz mais o cabeçalho
+    <literal>Host</literal> das requisições.
+   </simpara>
+
+  </sect3>
+
+ </sect2>
+
+ <sect2 xml:id="migration86.other-changes.functions">
+  <title>Funções alteradas</title>
+
+  <sect3 xml:id="migration86.other-changes.functions.core">
+   <title>Núcleo</title>
+
+   <simpara>
+    <function>header_register_callback</function> agora declara
+    <type>true</type> como tipo de retorno.
+    Desde o PHP 8.0.0, ela não pode mais retornar &false;, pois callbacks
+    inválidos passaram a lançar uma <exceptionname>TypeError</exceptionname>.
+   </simpara>
+
+   <simpara>
+    <function>register_tick_function</function> agora declara
+    <type>true</type> como tipo de retorno.
+    Ela sempre retornou &true; em caso de sucesso; uma função de retorno inválida lança
+    uma <exceptionname>TypeError</exceptionname> durante a análise dos
+    argumentos, antes da execução do corpo da função.
+   </simpara>
+
+   <simpara>
+    <function>ini_get_all</function> agora inclui um elemento
+    <literal>"builtin_default_value"</literal> para cada diretiva quando
+    <parameter>details</parameter> é &true;.
+    Ele contém o valor padrão integrado da diretiva (ou &null;, se não houver
+    um), independentemente dos valores definidos em &php.ini;, na linha de
+    comando ou durante a execução.
+   </simpara>
+
+   <simpara>
+    <function>fclose</function>, <function>file_put_contents</function> e
+    <function>copy</function> agora retornam &false; quando ocorre uma falha
+    ao descarregar ou fechar o fluxo.
+    Anteriormente, essas falhas eram ignoradas silenciosamente.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.functions.date">
+   <title>Date</title>
+
+   <para>
+    Os métodos a seguir agora têm o tipo de retorno provisório
+    <type>static</type>:
+
+    <simplelist>
+     <member><methodname>DateTime::createFromInterface</methodname></member>
+     <member><methodname>DateTimeImmutable::__set_state</methodname></member>
+     <member><methodname>DateTimeImmutable::modify</methodname></member>
+     <member><methodname>DateTimeImmutable::add</methodname></member>
+     <member><methodname>DateTimeImmutable::sub</methodname></member>
+     <member><methodname>DateTimeImmutable::setTimezone</methodname></member>
+     <member><methodname>DateTimeImmutable::setTime</methodname></member>
+     <member><methodname>DateTimeImmutable::setDate</methodname></member>
+     <member><methodname>DateTimeImmutable::setISODate</methodname></member>
+     <member><methodname>DateTimeImmutable::setTimestamp</methodname></member>
+     <member><methodname>DateTimeImmutable::createFromInterface</methodname></member>
+     <member><methodname>DateTimeZone::__set_state</methodname></member>
+     <member><methodname>DateInterval::__set_state</methodname></member>
+     <member><methodname>DatePeriod::__set_state</methodname></member>
+    </simplelist>
+   </para>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.functions.filter">
+   <title>Filter</title>
+
+   <simpara>
+    O tipo de retorno de <function>filter_var_array</function> foi
+    restringido de
+    <type class="union"><type>array</type><type>false</type><type>null</type></type>
+    para <type class="union"><type>array</type><type>false</type></type>.
+    A função sempre cria um array antes da filtragem, portanto nunca
+    retornava &null;.
+    <function>filter_input_array</function> não foi afetada: ainda retorna
+    &null; quando a superglobal solicitada não existe.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.functions.ldap">
+   <title>LDAP</title>
+
+   <simpara>
+    O tipo de retorno de <function>ldap_free_result</function> foi
+    restringido de <type>bool</type> para <type>true</type>.
+    A função já retornava &true; em todos os casos.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.functions.mysqli">
+   <title>MySQLi</title>
+
+   <simpara>
+    A estrutura retornada por <function>mysqli_get_charset</function> não
+    contém mais o elemento não documentado <literal>"comment"</literal>.
+    O valor de <literal>"charsetnr"</literal> agora é definido como
+    <literal>0</literal>, pois esse número era um detalhe de implementação
+    que não deveria ter sido exposto publicamente.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.functions.openssl">
+   <title>OpenSSL</title>
+
+   <simpara>
+    A saída de <function>openssl_x509_parse</function> agora contém uma
+    entrada <literal>"criticalExtensions"</literal> que lista todas as
+    extensões críticas do certificado.
+   </simpara>
+
+   <simpara>
+    <function>openssl_sign</function> e <function>openssl_verify</function>
+    agora têm um argumento opcional adicional
+    <parameter>salt_length</parameter>, que permite controlar o tamanho do
+    salt de <acronym>RSA</acronym>-PSS quando
+    <constant>OPENSSL_PKCS1_PSS_PADDING</constant> é usado.
+    Ele aceita um tamanho explícito ou uma das novas constantes
+    <constant>OPENSSL_RSA_PSS_SALTLEN_<replaceable>*</replaceable></constant>
+    constants.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.functions.pdo-dblib">
+   <title>PDO_DBLIB</title>
+
+   <simpara>
+    Ao usar conexões persistentes, agora é feita uma verificação de atividade
+    em <methodname>PDO::__construct</methodname>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.functions.phar">
+   <title>Phar</title>
+
+   <simpara>
+    <methodname>Phar::mungServer</methodname> agora aceita valores por referência.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.functions.readline">
+   <title>Readline</title>
+
+   <simpara>
+    <function>readline_completion_function</function> agora declara
+    <type>true</type> como tipo de retorno.
+    Ela sempre retornou &true; em caso de sucesso; uma função de retorno inválida lança
+    uma <exceptionname>TypeError</exceptionname> durante a análise dos
+    argumentos, antes da execução do corpo da função.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.functions.reflection">
+   <title>Reflection</title>
+
+   <simpara>
+    As saídas de
+    <methodname>ReflectionClassConstant::__toString</methodname> e
+    <methodname>ReflectionConstant::__toString</methodname>
+    agora exibem os valores de constantes do tipo <type>bool</type> como
+    <literal>true</literal> e <literal>false</literal>, em vez de
+    <literal>1</literal> e uma string vazia.
+    Isso também afeta outras formas de exibir constantes de classe, por exemplo:
+    <methodname>ReflectionClass::__toString</methodname>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.functions.sockets">
+   <title>Sockets</title>
+
+   <simpara>
+    <function>socket_addrinfo_lookup</function> agora tem um argumento
+    opcional adicional <parameter>error_code</parameter> que, se não for
+    &null;, recebe o código do erro em caso de falha (uma das constantes
+    <constant>EAI_<replaceable>*</replaceable></constant>).
+   </simpara>
+
+   <simpara>
+    O tipo de retorno de <function>socket_cmsg_space</function> foi
+    restringido de <type class="union"><type>int</type><type>null</type></type>
+    para <type>int</type>.
+    Desde o PHP 8.0.0, todos os caminhos de falha lançam uma
+    <exceptionname>ValueError</exceptionname>, portanto &null; nunca era
+    retornado.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.functions.zip">
+   <title>Zip</title>
+
+   <simpara>
+    O tipo de retorno de <function>zip_entry_close</function> foi
+    restringido de <type>bool</type> para <type>true</type>.
+    A função já retornava &true; em todos os casos.
+   </simpara>
+
+  </sect3>
+
+ </sect2>
+
+ <sect2 xml:id="migration86.other-changes.extensions">
+  <title>Outras alterações em extensões</title>
+
+  <sect3 xml:id="migration86.other-changes.extensions.fileinfo">
+   <title>Fileinfo</title>
+
+   <simpara>
+    Atualizado para o file 5.48.
+    Bancos de dados magic compilados manualmente com versões anteriores do
+    file devem ser gerados novamente.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.extensions.hash">
+   <title>Hash</title>
+
+   <simpara>
+    A versão incluída do xxHash foi atualizada para a 0.8.2.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.extensions.mysqli">
+   <title>MySQLi</title>
+
+   <simpara>
+    Foi adicionada a nova constante <constant>MYSQLI_OPT_COMPRESS</constant>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.extensions.opcache">
+   <title>Opcache</title>
+
+   <simpara>
+    Agora há suporte a <acronym>JIT</acronym> em compilações
+    <acronym>ZTS</acronym> para Apple Silicon.
+   </simpara>
+
+  </sect3>
+
+ </sect2>
+
+ <sect2 xml:id="migration86.other-changes.ini">
+  <title>Alterações no tratamento de arquivos INI</title>
+
+  <sect3 xml:id="migration86.other-changes.ini.core">
+   <title>Core</title>
+
+   <simpara>
+    A opção INI <!-- <link linkend="ini.error-include-args"> -->error_include_args<!-- </link> -->
+    foi adicionada para padronizar a exibição dos argumentos de
+    funções em erros; ela fica desativada por padrão.
+    Antes, a exibição de um parâmetro na mensagem de erro dependia de cada
+    chamada à função interna de erro.
+    Agora, todos os parâmetros são exibidos exatamente como foram passados
+    à função.
+    Esse recurso usa a mesma infraestrutura dos rastreamentos de pilha,
+    portanto parâmetros confidenciais não serão exibidos e as strings serão
+    truncadas de acordo com
+    <link linkend="ini.zend.exception-string-param-max-len">zend.exception_string_param_max_len</link>.
+    <!-- RFC: https://wiki.php.net/rfc/display_error_function_args -->
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.ini.mbstring">
+   <title>MBString</title>
+
+   <simpara>
+    A diretiva INI <link linkend="ini.mbstring.detect-order">mbstring.detect_order</link>
+    agora atualiza a ordem interna de detecção quando alterada durante a
+    execução por meio de <function>ini_set</function>.
+    Anteriormente, as alterações feitas durante a execução com <function>ini_set</function>
+    não tinham efeito em <function>mb_detect_order</function>.
+    Definir a diretiva como &null; ou como uma string vazia durante a
+    execução agora mantém inalterada a ordem de detecção configurada anteriormente.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.ini.mysqli">
+   <title>MySQLi</title>
+
+   <simpara>
+    <link linkend="ini.mysqli.default-port">mysqli.default_port</link> agora
+    verifica se o valor é válido: ele deve estar entre
+    <literal>0</literal> and <literal>65535</literal> inclusive.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.ini.opcache">
+   <title>Opcache</title>
+
+   <simpara>
+    <link linkend="ini.opcache.jit-debug">opcache.jit_debug</link> aceita
+    uma nova opção: <literal>ZEND_JIT_DEBUG_TRACE_EXIT_INFO_SRC</literal>.
+    Quando usada junto com <literal>ZEND_JIT_DEBUG_TRACE_EXIT_INFO</literal>,
+    a origem dos pontos de saída é exibida na saída de informações de saída
+    em compilações de depuração.
+   </simpara>
+
+  </sect3>
+
+ </sect2>
+
+ <sect2 xml:id="migration86.other-changes.performance">
+  <title>Desempenho</title>
+
+  <sect3 xml:id="migration86.other-changes.performance.core">
+   <title>Core</title>
+
+   <simpara>
+    O uso de <function>printf</function> somente com <literal>%s</literal> e
+    <literal>%d</literal> será compilado como a interpolação de string
+    equivalente, evitando o custo de uma chamada de função e da análise
+    repetida da string de formato.
+   </simpara>
+
+   <simpara>
+    Agora os argumentos são passados com mais eficiência a construtores
+    conhecidos (por exemplo, ao usar <code>new self()</code>).
+   </simpara>
+
+   <simpara>
+    O uso de <function>array_map</function> com um callback
+    <link linkend="functions.first_class_callable_syntax">callable de primeira
+    classe</link> ou de
+    <link linkend="migration86.new-features.core.partial-function-application">aplicação
+    parcial de função</link> será compilado como o loop
+    <link linkend="control-structures.foreach">foreach</link> equivalente.
+    Isso evita a criação de <classname>Closure</classname>s intermediárias e
+    o custo de chamar callbacks de código do usuário a partir de funções
+    internas, além de permitir uma análise melhor pelo <acronym>JIT</acronym>.
+   </simpara>
+
+   <simpara>
+    O desempenho da <acronym>VM</acronym> TAILCALL foi aprimorado, e ela
+    agora está ativada no Windows ao compilar para x86_64 com Clang 19 ou
+    posterior.
+   </simpara>
+
+   <simpara>
+    O desempenho das compilações <acronym>ZTS</acronym> foi aprimorado.
+   </simpara>
+
+   <simpara>
+    Foi adicionado um cache de closures sem estado.
+    <!-- RFC: https://wiki.php.net/rfc/closure-optimizations#stateless_closure_caching -->
+   </simpara>
+
+   <simpara>
+    Código com recursão profunda que faz a VM alocar novas páginas de pilha
+    agora deve ser mais rápido.
+   </simpara>
+
+   <simpara>
+    O desempenho da ordenação de arrays com um único elemento foi aprimorado.
+   </simpara>
+
+   <para>
+    O desempenho das funções a seguir foi aprimorado:
+
+    <simplelist>
+     <member><function>addcslashes</function>, ao gerar escapes octais</member>
+     <member><function>array_fill_keys</function></member>
+     <member><function>array_intersect</function></member>
+     <member><function>array_map</function>, quando vários arrays são passados</member>
+     <member><function>array_product</function> e <function>array_sum</function>, para arrays contendo somente inteiros</member>
+     <member><function>array_unshift</function></member>
+     <member><function>array_walk</function></member>
+     <member><function>intval</function>, para <code>intval('0b...', 2)</code> e <code>intval('+0b...', 2)</code></member>
+     <member><function>pathinfo</function>, ao solicitar um único componente</member>
+     <member><function>str_pad</function></member>
+     <member><function>str_repeat</function>, quando o multiplicador é <literal>1</literal></member>
+     <member><function>str_split</function></member>
+    </simplelist>
+   </para>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.performance.dom">
+   <title>DOM</title>
+
+   <simpara>
+    <methodname>DOMText::splitText</methodname> e
+    <methodname>Dom\Text::splitText</methodname> ficaram mais rápidos e
+    passaram a consumir menos memória.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.performance.gd">
+   <title>GD</title>
+
+   <simpara>
+    <function>imagebmp</function>, <function>imagewbmp</function>,
+    <function>imagegd</function> e <function>imagegd2</function> agora
+    armazenam temporariamente a saída ao escrever em fluxos do PHP,
+    melhorando significativamente o desempenho ao gravar imagens em arquivos.
+   </simpara>
+
+   <simpara>
+    O desempenho de <function>imagegrabscreen</function> e
+    <function>imagegrabwindow</function> no Windows foi aprimorado.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.performance.intl">
+   <title>Intl</title>
+
+   <simpara>
+    O desempenho de
+    <methodname>IntlCalendar::getAvailableLocales</methodname> and
+    <methodname>IntlDateFormatter::localtime</methodname>/<function>datefmt_localtime</function>
+    foi aprimorado por meio da pré-alocação dos arrays retornados.
+   </simpara>
+
+   <simpara>
+    O desempenho de <function>transliterator_list_ids</function> e
+    <function>resourcebundle_locales</function> by pre-allocating their
+    foi aprimorado por meio da pré-alocação dos arrays retornados.
+   </simpara>
+
+   <simpara>
+    A chamada de callbacks em
+    <methodname>IntlChar::enumCharTypes</methodname>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.performance.json">
+   <title>JSON</title>
+
+   <simpara>
+    O desempenho da codificação de arrays e objetos foi aprimorado.
+   </simpara>
+
+   <simpara>
+    O desempenho da geração de indentação em
+    <function>json_encode</function> foi aprimorado ao usar
+    <constant>JSON_PRETTY_PRINT</constant>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.performance.mbstring">
+   <title>MBString</title>
+
+   <simpara>
+    O desempenho de <function>mb_str_pad</function> foi aprimorado.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.performance.phar">
+   <title>Phar</title>
+
+   <simpara>
+    As alocações temporárias ao iterar por diretórios Phar foram reduzidas.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.performance.uri">
+   <title>URI</title>
+
+   <simpara>
+    O desempenho de <methodname>Uri\WhatWg\Url::parse</methodname> ao
+    coletar erros de validação foi aprimorado por meio da pré-alocação do array de erros.
+   </simpara>
+
+   <simpara>
+    As alocações ao ler hosts IPv6/IPvFuture e caminhos com
+    <classname>Uri\Rfc3986\Uri</classname>.
+   </simpara>
+
+   <simpara>
+    O desempenho e o consumo de memória ao usar métodos de acesso que
+    normalizam (não brutos) URIs já normalizados com
+    <classname>Uri\Rfc3986\Uri</classname>.
+   </simpara>
+
+  </sect3>
+
+  <sect3 xml:id="migration86.other-changes.performance.zip">
+   <title>Zip</title>
+
+   <simpara>
+    O desempenho de <methodname>ZipArchive::addGlob</methodname> e
+    <methodname>ZipArchive::addPattern</methodname> foi aprimorado por meio
+    da pré-alocação dos arrays retornados.
+   </simpara>
+
+   <simpara>
+    Foram evitadas cópias de strings em <methodname>ZipArchive::addFromString</methodname>.
+   </simpara>
+
+  </sect3>
+
+ </sect2>
+
+</sect1>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

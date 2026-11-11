@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 09e39c586d1fa47d499807f911ff92d69d175db7 Maintainer: leonardolara Status: ready -->
+<reference xml:id="class.time-duration" role="class" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
+ <title>A classe Time\Duration</title>
+ <titleabbrev>Time\Duration</titleabbrev>
+
+ <partintro>
+  <section xml:id="time-duration.intro">
+   &reftitle.intro;
+   <simpara>
+    Representa um intervalo fixo de tempo decorrido, como um tempo limite ou o tempo
+    medido por um cronômetro, com precisão de nanossegundos.
+    Uma duração consiste em um número não negativo de
+    <property>Time\Duration::$seconds</property> inteiros, um valor de
+    <property>Time\Duration::$nanoseconds</property> inferior a um segundo e um
+    sinal armazenado em <property>Time\Duration::$negative</property>.
+   </simpara>
+   <simpara>
+    Diferentemente de <classname>DateInterval</classname>, uma
+    <classname>Time\Duration</classname> não possui unidades de calendário, como
+    dias, meses ou anos, pois elas não correspondem a um número fixo de segundos:
+    um dia pode ter 23 ou 25 horas durante uma transição de <acronym>DST</acronym>,
+    e os meses têm durações diferentes.
+    Portanto, a maior unidade a partir da qual uma duração pode ser criada é a hora.
+    Use <classname>DateInterval</classname> para cálculos de calendário em objetos
+    <classname>DateTimeImmutable</classname> e <classname>Time\Duration</classname>
+    para intervalos de tempo inequívocos, como o <parameter>timeout</parameter> da
+    <acronym>API</acronym> de sondagem de <acronym>I/O</acronym>.
+   </simpara>
+   <simpara>
+    Os objetos desta classe são imutáveis.
+    Eles são criados com um dos métodos de fábrica <literal>Time\Duration::from*()</literal>,
+    e cada operação, como <methodname>Time\Duration::add</methodname> ou
+    <methodname>Time\Duration::multiplyBy</methodname>, retorna um novo objeto
+    em vez de modificar o existente.
+    Uma duração pode ser negativa, geralmente como resultado de
+    <methodname>Time\Duration::sub</methodname> ou
+    <methodname>Time\Duration::negate</methodname>.
+    Uma duração igual a zero nunca é negativa.
+   </simpara>
+   <simpara>
+    Duas durações podem ser comparadas com os
+    <link linkend="language.operators.comparison">operadores de comparação</link>
+    (<literal>&lt;</literal>, <literal>&lt;=</literal>,
+    <literal>==</literal>, <literal>!=</literal>, <literal>&gt;=</literal>,
+    <literal>&gt;</literal> and <literal>&lt;=&gt;</literal>) as well as
+    with <methodname>Time\Duration::compare</methodname>.
+    Os <link linkend="language.operators.arithmetic">operadores aritméticos</link>
+    não são compatíveis; use os métodos desta classe.
+   </simpara>
+   <simpara>
+    O comprimento máximo de uma duração é de <literal>9223372035</literal>
+    segundos, aproximadamente 292 anos, em plataformas de 64 bits, e de
+    <literal>2147483647</literal> segundos, aproximadamente 68 anos, em plataformas
+    de 32 bits.
+    Qualquer operação cujo resultado exceda esse intervalo lança uma
+    <exceptionname>Time\TimeException</exceptionname>.
+   </simpara>
+  </section>
+
+  <section xml:id="time-duration.synopsis">
+   &reftitle.classsynopsis;
+
+   <packagesynopsis>
+    <package>Time</package>
+
+    <classsynopsis class="class">
+     <ooclass>
+      <modifier>final</modifier>
+      <modifier>readonly</modifier>
+      <classname>Duration</classname>
+     </ooclass>
+
+     <classsynopsisinfo role="comment">&Properties;</classsynopsisinfo>
+     <fieldsynopsis>
+      <modifier>public</modifier>
+      <modifier>readonly</modifier>
+      <type>int</type>
+      <varname linkend="time-duration.props.seconds">seconds</varname>
+     </fieldsynopsis>
+     <fieldsynopsis>
+      <modifier>public</modifier>
+      <modifier>readonly</modifier>
+      <type>int</type>
+      <varname linkend="time-duration.props.nanoseconds">nanoseconds</varname>
+     </fieldsynopsis>
+     <fieldsynopsis>
+      <modifier>public</modifier>
+      <modifier>readonly</modifier>
+      <type>bool</type>
+      <varname linkend="time-duration.props.negative">negative</varname>
+     </fieldsynopsis>
+
+     <classsynopsisinfo role="comment">&Methods;</classsynopsisinfo>
+     <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.time-duration')/db:refentry/db:refsect1[@role='description']/descendant::db:constructorsynopsis[@role='Time\\Duration'])"/>
+     <xi:include xpointer="xmlns(db=http://docbook.org/ns/docbook) xpointer(id('class.time-duration')/db:refentry/db:refsect1[@role='description']/descendant::db:methodsynopsis[@role='Time\\Duration'])"/>
+    </classsynopsis>
+   </packagesynopsis>
+  </section>
+
+  <section xml:id="time-duration.props">
+   &reftitle.properties;
+   <variablelist>
+    <varlistentry xml:id="time-duration.props.seconds">
+     <term><varname>seconds</varname></term>
+     <listitem>
+      <simpara>
+       O número de segundos inteiros, sem o sinal.
+       Esse valor é sempre maior ou igual a <literal>0</literal> e, no máximo,
+       <literal>9223372035</literal> em plataformas de 64 bits ou
+       <literal>2147483647</literal> em plataformas de 32 bits.
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry xml:id="time-duration.props.nanoseconds">
+     <term><varname>nanoseconds</varname></term>
+     <listitem>
+      <simpara>
+       A fração de segundo em nanossegundos, sem o sinal.
+       Esse valor está sempre entre <literal>0</literal> e
+       <literal>999999999</literal>, inclusive.
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry xml:id="time-duration.props.negative">
+     <term><varname>negative</varname></term>
+     <listitem>
+      <simpara>
+       Indica se a duração é negativa.
+       O sinal se aplica à duração como um todo. Assim, uma duração negativa de
+       um segundo e meio tem <varname>seconds</varname> definido como
+       <literal>1</literal>, <varname>nanoseconds</varname> set to
+       <literal>500000000</literal>, and <varname>negative</varname> set to
+       &true;.
+       Uma duração igual a zero sempre tem esse valor definido como &false;.
+      </simpara>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </section>
+
+  <section xml:id="time-duration.examples">
+   &reftitle.examples;
+   <example xml:id="time-duration.examples.basic">
+    <title>Criando e combinando durações</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$timeout = \Time\Duration::fromMinutes(1)->add(\Time\Duration::fromMilliseconds(1500));
+
+var_dump($timeout);
+printf("%d.%09d seconds\n", $timeout->seconds, $timeout->nanoseconds);
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+object(Time\Duration)#3 (3) {
+  ["seconds"]=>
+  int(61)
+  ["nanoseconds"]=>
+  int(500000000)
+  ["negative"]=>
+  bool(false)
+}
+61.500000000 seconds
+]]>
+    </screen>
+   </example>
+   <example xml:id="time-duration.examples.compare">
+    <title>Comparando durações</title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+$durations = [
+    \Time\Duration::fromMinutes(2),
+    \Time\Duration::fromMilliseconds(250),
+    \Time\Duration::fromSeconds(5),
+];
+
+usort($durations, \Time\Duration::compare(...));
+
+foreach ($durations as $duration) {
+    printf("%d.%09d\n", $duration->seconds, $duration->nanoseconds);
+}
+
+var_dump(\Time\Duration::fromMinutes(1) > \Time\Duration::fromSeconds(59));
+var_dump(\Time\Duration::fromSeconds(1) == \Time\Duration::fromMilliseconds(1000));
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+0.250000000
+5.000000000
+120.000000000
+bool(true)
+bool(true)
+]]>
+    </screen>
+   </example>
+  </section>
+
+  <section xml:id="time-duration.seealso">
+   &reftitle.seealso;
+   <simplelist>
+    <member><classname>DateInterval</classname></member>
+    <member><function>hrtime</function></member>
+   </simplelist>
+  </section>
+
+ </partintro>
+
+ &reference.datetime.time.entities.duration;
+
+</reference>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->

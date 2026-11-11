@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: c05fbe7250c43b75034ac776ed78f4e67163e4d3 Maintainer: leonardolara Status: ready -->
+
+<chapter xml:id="yac.memory-management" xmlns="http://docbook.org/ns/docbook">
+ <title>Gerenciamento de memória</title>
+
+ <simpara>
+  O Yac mantém seus dados em duas áreas independentes de memória compartilhada, configuradas
+  com
+  <link linkend="ini.yac.keys-memory-size">yac.keys_memory_size</link>
+  e
+  <link linkend="ini.yac.values-memory-size">yac.values_memory_size</link>.
+  Elas são preenchidas e liberadas de maneiras diferentes, portanto é útil saber a qual
+  área um sintoma está relacionado antes de alterar qualquer uma dessas configurações.
+ </simpara>
+
+ <section xml:id="yac.memory-layout" annotations="chunk:false">
+  <title>O que cada área armazena</title>
+  <simpara>
+   As duas áreas armazenam partes diferentes de uma entrada. A área de chaves armazena
+   as chaves: uma posição por chave em cache, contendo a própria chave (até 48
+   bytes) junto com seu hash, TTL, contagem de acertos e instante do último acesso;
+   o valor é referenciado apenas por um ponteiro para a área de valores. A
+   área de valores armazena os valores: cada valor armazenado ocupa um bloco de
+   bytes serializados — na forma comprimida quando a entrada passou por
+   <link linkend="ini.yac.compress-threshold">yac.compress_threshold</link>.
+  </simpara>
+  <simpara>
+   A única exceção são os valores embutidos: escalares pequenos — &null;,
+   &true;, &false;, a maioria dos inteiros (aqueles que cabem em 60 bits com sinal em
+   compilações de 64 bits), strings de até 7 bytes e arrays vazios — são
+   armazenados diretamente na posição, no ponteiro que, de outra forma,
+   referenciaria um bloco. Esses valores não ocupam nenhum espaço na área de
+   valores; apenas sua chave ocupa espaço.
+  </simpara>
+  <para>
+   Como orientação aproximada para o dimensionamento:
+   <itemizedlist>
+    <listitem>
+     <simpara>
+      a área de chaves comporta cerca de 8.000 chaves por MB, portanto dimensione
+      <link linkend="ini.yac.keys-memory-size">yac.keys_memory_size</link>
+      dividindo o número de chaves distintas por 8.000 por MB, arredondando para cima
+      — o padrão <literal>8M</literal> comporta cerca de 64.000 chaves;
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      a área de valores deve comportar todos os valores que ainda possam ser lidos, portanto
+      dimensione
+      <link linkend="ini.yac.values-memory-size">yac.values_memory_size</link>
+      multiplicando o número de valores ativos pelo tamanho médio serializado
+      deles (após a compressão) e reserve aproximadamente o dobro disso: a área é um
+      anel, e um valor só deixa de existir quando o cursor do alocador retorna
+      para sobrescrevê-lo.
+     </simpara>
+    </listitem>
+   </itemizedlist>
+   Valores embutidos ocupam uma posição como qualquer outra entrada, mas não consomem
+   espaço na área de valores, portanto deixe-os de fora do segundo cálculo.
+  </para>
+ </section>
+
+ <section xml:id="yac.memory-keys" annotations="chunk:false">
+  <title>A área de chaves (posições)</title>
+  <simpara>
+   <link linkend="ini.yac.keys-memory-size">yac.keys_memory_size</link>
+   comporta uma tabela de posições de tamanho fixo — o padrão
+   <literal>8M</literal> fornece cerca de 65.536 posições. Cada
+   chave armazenada ocupa exatamente uma posição, portanto esta área limita o número
+   de entradas que podem existir ao mesmo tempo; ao contrário da área de valores, as posições
+   nunca são liberadas individualmente. Uma posição expirada — cujo TTL foi excedido ou que contém o
+   marcador de exclusão deixado por <methodname>Yac::delete</methodname> — é reciclada
+   sem custo quando uma nova chave precisa dela. Somente quando todas as quatro posições candidatas
+   de um caminho de sondagem contêm entradas ativas é que uma delas é removida para abrir
+   espaço — um <literal>kick</literal> (o
+   contador <literal>kicks</literal> de <methodname>Yac::info</methodname>).
+  </simpara>
+  <para>
+   A remoção escolhe apenas entre as quatro candidatas ativas do caminho
+   de sondagem em colisão:
+   <itemizedlist>
+    <listitem>
+     <simpara>
+      a usada há mais tempo (com o
+      <literal>atime</literal> mais antigo) é removida;
+     </simpara>
+    </listitem>
+    <listitem>
+     <simpara>
+      em caso de empate, a entrada com menos acertos e, depois, a primeira posição de sondagem.
+     </simpara>
+    </listitem>
+   </itemizedlist>
+  </para>
+  <simpara>
+   Um ponto comum de confusão: <literal>slots_used</literal> atingir
+   <literal>slots_size</literal> <emphasis>não</emphasis> é uma condição
+   de erro. Um cache cujo conjunto de trabalho de chaves é maior que a tabela de
+   posições simplesmente passa a operar com 100% de ocupação, removendo e
+   reinserindo entradas conforme necessário. A única medida que indica se a área
+   de chaves está dimensionada corretamente é a taxa de acertos
+   (<literal>hits / (hits + miss)</literal>, calculada sobre as diferenças
+   entre duas amostras de <methodname>Yac::info</methodname>, em vez
+   da média desde o início da execução). Uma contagem alta de <literal>kicks</literal>,
+   por si só, não significa que algo esteja errado — a distribuição das chaves simplesmente não é
+   uniforme e alguns caminhos de sondagem colidem mais que outros. Somente quando a
+   taxa de acertos <emphasis>e</emphasis> <literal>kicks</literal> apresentam resultados
+   ruins é que a tabela é pequena demais para o conjunto de chaves, e a solução é
+   aumentar <link linkend="ini.yac.keys-memory-size">yac.keys_memory_size</link>.
+  </simpara>
+  <simpara>
+   Uma segunda consequência de as posições nunca serem liberadas: entradas sem TTL
+   (<literal>ttl = 0</literal>) que nunca mais são lidas continuam ocupando
+   uma posição até serem escolhidas para remoção. Se uma aplicação
+   armazena grandes quantidades desses dados de uso único, atribua um TTL a essas entradas
+   para que expirem e possam ser recicladas sem deslocar entradas ativas,
+   ou dimensione a área de chaves para o conjunto completo de chaves.
+  </simpara>
+ </section>
+
+ <section xml:id="yac.memory-values" annotations="chunk:false">
+  <title>A área de valores (segmentos)</title>
+  <simpara>
+   <link linkend="ini.yac.values-memory-size">yac.values_memory_size</link>
+   é dividida em segmentos de 4M cada, gerenciados como anéis: as escritas avançam um
+   cursor por segmento e o espaço nunca é liberado por entrada. Quando uma
+   alocação não cabe mais, o cursor retorna ao início de um
+   segmento — um <literal>recycle</literal> (o
+   contador <literal>recycles</literal> de
+   <methodname>Yac::info</methodname>). Uma reciclagem não invalida
+   o segmento inteiro de uma vez: os valores que serão sobrescritos continuam legíveis até que o
+   cursor que retornou ao início realmente os sobrescreva, momento em que suas leituras
+   falham na verificação de integridade e passam a ser falhas de cache.
+  </simpara>
+  <simpara>
+   Dois tamanhos importam para esta área: o total de
+   <link linkend="ini.yac.values-memory-size">yac.values_memory_size</link>
+   deve comportar o conjunto de trabalho de valores ativos, e uma única entrada pode
+   conter no máximo 1 MB na forma armazenada
+   (<constant>YAC_MAX_RAW_COMPRESSED_LEN</constant>). Portanto, valores maiores
+   que isso são sempre comprimidos antes do armazenamento; um
+   valor que não pode ser reduzido para menos de 1 MB — geralmente por conter
+   dados aleatórios — é rejeitado e incrementa o
+   contador <literal>fails</literal>. O limite absoluto de tamanho do
+   próprio valor é muito maior: valores serializados acima de 64 MB
+   (<constant>YAC_MAX_VALUE_RAW_LEN</constant>, ou seja,
+   <literal>(1 &lt;&lt; 26) - 1</literal> bytes) são rejeitados
+   imediatamente.
+  </simpara>
+ </section>
+
+ <section xml:id="yac.memory-tuning" annotations="chunk:false">
+  <title>Dimensionamento e o que observar</title>
+  <simpara>
+   Comece com os valores padrão e observe os contadores de
+   <methodname>Yac::info</methodname> — eles se acumulam desde
+   <literal>start_time</literal>, portanto compare duas amostras obtidas com algum
+   intervalo entre elas:
+  </simpara>
+  <itemizedlist>
+   <listitem>
+    <simpara>
+     taxa de acertos saudável (por exemplo, &gt;= 90%): o cache está bem; não há nada a fazer,
+     independentemente do que os outros contadores mostrem;
+    </simpara>
+   </listitem>
+   <listitem>
+    <simpara>
+     taxa de acertos baixa e <literal>kicks</literal> aumentando: a área de chaves é
+     pequena demais para o conjunto de chaves — entradas ativas são removidas antes de serem
+     lidas novamente. Aumente
+     <link linkend="ini.yac.keys-memory-size">yac.keys_memory_size</link>;
+    </simpara>
+   </listitem>
+   <listitem>
+    <para>
+     <literal>recycles</literal> frequentes: este é um problema real, não um
+     contador inofensivo. Uma reciclagem significa que o alocador de valores retornou ao início e está
+     prestes a sobrescrever entradas — tudo o que é sobrescrito deixa de existir antes de poder
+     ser lido novamente, portanto os bytes usados para armazená-lo foram desperdiçados e a taxa de acertos
+     é prejudicada. A área de valores é pequena demais para o volume de dados ativos. Em
+     ordem de impacto:
+     <itemizedlist>
+      <listitem>
+       <simpara>
+        atribua um TTL às entradas. Valores escritos com <literal>ttl = 0</literal>
+        permanecem ativos para sempre, portanto continuam ocupando a área e forçam o
+        cursor a retornar ao início mais cedo. Um TTL limita o tempo de vida de cada entrada,
+        reduzindo o conjunto de trabalho ativo que a área precisa comportar;
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        aumente
+        <link linkend="ini.yac.values-memory-size">yac.values_memory_size</link>
+        para que a área comporte todo o conjunto de valores ativos (lembre-se de reservar
+        aproximadamente o dobro do espaço ocupado pelos valores ativos — um valor só deixa de existir quando o
+        cursor retorna para sobrescrevê-lo);
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        armazene menos por entrada: reduza
+        <link linkend="ini.yac.compress-threshold">yac.compress_threshold</link>
+        se estiver acima do mínimo de <literal>1024</literal>, para que grandes
+        volumes de dados sejam comprimidos, e reduza os valores que não precisam ser
+        armazenados integralmente no cache;
+       </simpara>
+      </listitem>
+     </itemizedlist>
+    </para>
+   </listitem>
+   <listitem>
+    <simpara>
+     <literal>fails</literal> aumentando: valores que não puderam ser armazenados,
+     geralmente um único valor maior que o limite de 1 MB de tamanho armazenado
+     mesmo após a compressão — divida o valor.
+    </simpara>
+   </listitem>
+  </itemizedlist>
+ </section>
+
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
