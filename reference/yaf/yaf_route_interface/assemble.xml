@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 7418592d82d6cde8d052effd3607e5761d6c4e67 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: ddcf673c59d1708557680946fbffeee361d7fca6 Maintainer: leonardolara Status: ready -->
 
 <refentry xml:id="yaf-route-interface.assemble" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
@@ -54,6 +54,85 @@
   </para>
  </refsect1>
 
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>Yaf_Route_Interface::assemble</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class RewriteRoute implements Yaf_Route_Interface {
+
+    private $_match;
+    private $_route;
+
+    public function __construct(string $match, array $route) {
+        $this->_match = $match;
+        $this->_route = $route;
+    }
+
+    public function route(Yaf_Request_Abstract $request): bool {
+        if (!preg_match($this->_match, $request->getRequestUri(), $matches)) {
+            return false;
+        }
+
+        foreach ($this->_route as $key => $value) {
+            if (is_string($value) && ':' === $value[0]) {
+                $value = $matches[substr($value, 1)];
+            }
+            $request->setParam($key, $value);
+        }
+        $request->setRouted();
+
+        return true;
+    }
+
+    /* inverte as regras da rota para montar uma URL */
+    public function assemble(array $info, ?array $query = null): string {
+        $url = "/product";
+        if (isset($info[':name'])) {
+            $url .= "/" . $info[':name'];
+        }
+
+        if (!empty($query)) {
+            $url .= "?" . http_build_query($query);
+        }
+
+        return $url;
+    }
+}
+
+$router = new Yaf_Router();
+$router->addRoute("custom",
+    new RewriteRoute("#^/product#", array("controller" => "product"))
+);
+
+var_dump($router->getRoute("custom")->assemble(
+    array(':name' => 'book'),
+    array('page' => 2)
+));
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+string(20) "/product/book?page=2"
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><methodname>Yaf_Route_Interface::route</methodname></member>
+   <member><methodname>Yaf_Route_Rewrite::assemble</methodname></member>
+   <member><methodname>Yaf_Route_Map::assemble</methodname></member>
+  </simplelist>
+ </refsect1>
 
 </refentry>
 

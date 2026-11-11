@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 49d4fb555745d1981edac87a5a2d8ae53b5f75df Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: ddcf673c59d1708557680946fbffeee361d7fca6 Maintainer: leonardolara Status: ready -->
 
 <refentry xml:id="yaf-dispatcher.seterrorhandler" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
@@ -10,18 +10,19 @@
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <modifier>public</modifier> <type>Yaf_Dispatcher</type><methodname>Yaf_Dispatcher::setErrorHandler</methodname>
-   <methodparam><type>call</type><parameter>callback</parameter></methodparam>
-   <methodparam><type>int</type><parameter>error_types</parameter></methodparam>
+   <modifier>public</modifier> <type class="union"><type>Yaf_Dispatcher</type><type>null</type><type>false</type></type><methodname>Yaf_Dispatcher::setErrorHandler</methodname>
+   <methodparam><type>mixed</type><parameter>callback</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>error_types</parameter><initializer>0</initializer></methodparam>
   </methodsynopsis>
-  <para>
-   Define o manipulador de erros para o Yaf. Quando <link
+  <simpara>
+   Define um manipulador de erros para o Yaf. Quando <link
    linkend="configuration.yaf.dispatcher.throwexception">application.dispatcher.throwException</link>
-   for igual a "off", o Yaf emitirá erros capturáveis quando eles acontecerem.
-  </para>
-  <para>
-   Assim, este manipulador de erros será chamado quando o erro for emitido.
-  </para>
+   está desativado, Yaf emite erros capturáveis quando ocorrem erros inesperados.
+  </simpara>
+  <simpara>
+   Este método encapsula <function>set_error_handler</function>; o manipulador
+   é chamado sempre que um desses erros é emitido.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -30,17 +31,19 @@
    <varlistentry>
     <term><parameter>callback</parameter></term>
     <listitem>
-     <para>
-      Uma chamada de retorno.
-     </para>
+     <simpara>
+      Uma função de retorno chamável, com a mesma semântica da função de retorno passada para <function>set_error_handler</function>.
+      </simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><parameter>error_types</parameter></term>
     <listitem>
-     <para>
-
-     </para>
+     <simpara>
+      Os tipos de erro a tratar, assim como o parâmetro
+      <parameter>error_levels</parameter> de <function>set_error_handler</function>.
+      Por padrão, todos os tipos de erro são tratados.
+     </simpara>
     </listitem>
    </varlistentry>
   </variablelist>
@@ -48,18 +51,45 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
+  <simpara>
+   Retorna o próprio objeto <classname>Yaf_Dispatcher</classname> em caso de
+   sucesso, &false; se a chamada a <function>set_error_handler</function>
+   falhar, ou &null; se a aplicação não estiver inicializada.
+  </simpara>
+ </refsect1>
 
-  </para>
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>Yaf_Dispatcher::setErrorHandler</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$app = new Yaf_Application(dirname(__FILE__) . "/conf/application.ini");
+
+Yaf_Dispatcher::getInstance()->setErrorHandler(function ($errno, $errstr) {
+    // Roteia erros para ErrorController::errorAction
+    $request = Yaf_Dispatcher::getInstance()->getRequest();
+    $request->setControllerName("Error");
+    $request->setActionName("error");
+});
+
+$app->run();
+?>
+]]>
+   </programlisting>
+  </example>
  </refsect1>
 
  <refsect1 role="seealso">
   &reftitle.seealso;
-  <simplelist>
-   <member><methodname>Yaf_Dispatcher::throwException</methodname></member>
-   <member><methodname>Yaf_Application::getLastErrorNo</methodname></member>
-   <member><methodname>Yaf_Application::getLastErrorMsg</methodname></member>
-  </simplelist>
+  <para>
+   <simplelist>
+    <member><methodname>Yaf_Dispatcher::throwException</methodname></member>
+    <member><methodname>Yaf_Application::getLastErrorNo</methodname></member>
+    <member><methodname>Yaf_Application::getLastErrorMsg</methodname></member>
+   </simplelist>
+  </para>
  </refsect1>
 
 </refentry>

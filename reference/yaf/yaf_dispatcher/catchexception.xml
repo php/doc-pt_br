@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 49d4fb555745d1981edac87a5a2d8ae53b5f75df Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: ddcf673c59d1708557680946fbffeee361d7fca6 Maintainer: leonardolara Status: ready -->
 
 <refentry xml:id="yaf-dispatcher.catchexception" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
@@ -10,19 +10,22 @@
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <modifier>public</modifier> <type>Yaf_Dispatcher</type><methodname>Yaf_Dispatcher::catchException</methodname>
-   <methodparam choice="opt"><type>bool</type><parameter>flag</parameter></methodparam>
+   <modifier>public</modifier> <type class="union"><type>Yaf_Dispatcher</type><type>bool</type></type><methodname>Yaf_Dispatcher::catchException</methodname>
+   <methodparam choice="opt"><type class="union"><type>bool</type><type>null</type></type><parameter>flag</parameter><initializer>null</initializer></methodparam>
   </methodsynopsis>
-  <para>
-   Enquanto application.dispatcher.throwException estiver On (pode-se também chamar
-   <methodname>Yaf_Dispatcher::throwException(TRUE)</methodname> para habilitá-lo), Yaf lançará uma Exception quando
-   ocorrer um erro, em vez de emitir um erro.
-  </para>
-  <para>
-   Se <methodname>Yaf_Dispatcher::catchException</methodname> for ativado (também pode ser ativado definindo
-   <link linkend="configuration.yaf.dispatcher.catchexception">application.dispatcher.catchException</link>),
-   todas as exceções não capturadas serão ser capturadas por ErrorController::error se estiver definido.
-  </para>
+  <simpara>
+   Quando <link
+   linkend="configuration.yaf.dispatcher.throwexception">application.dispatcher.throwException</link>
+   está ativado (o que também pode ser habilitado chamando
+   <methodname>Yaf_Dispatcher::throwException</methodname>), Yaf lança exceções
+   quando ocorrem erros, em vez de emitir erros.
+  </simpara>
+  <simpara>
+   Se a captura de exceções também for habilitada por meio deste método (ou de <link
+   linkend="configuration.yaf.dispatcher.catchexception">application.dispatcher.catchException</link>),
+   todas as exceções não capturadas serão capturadas e despachadas para
+   <literal>ErrorController::error</literal>, se houver um definido.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -31,9 +34,16 @@
    <varlistentry>
     <term><parameter>flag</parameter></term>
     <listitem>
-     <para>
-      Booleano.
-     </para>
+     <simpara>
+      Se o Yaf deve capturar exceções não capturadas e despachá-las para
+      <literal>ErrorController::error</literal>.
+     </simpara>
+     <note>
+      <simpara>
+       A partir do Yaf 2.2.0, se este parâmetro não for fornecido, o estado atual
+       será retornado.
+      </simpara>
+     </note>
     </listitem>
    </varlistentry>
   </variablelist>
@@ -41,9 +51,11 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-
-  </para>
+  <simpara>
+   Retorna o próprio objeto <classname>Yaf_Dispatcher</classname> quando
+   <parameter>flag</parameter> é fornecido, ou um &boolean; indicando se a
+   captura de exceções está habilitada quando ele não é fornecido.
+  </simpara>
  </refsect1>
 
  <refsect1 role="examples">
@@ -52,15 +64,15 @@
    <title>Exemplo de <function>Yaf_Dispatcher::catchException</function></title>
    <programlisting role="php">
 <![CDATA[
-/* Definido um ErrorController */
 <?php
+/* se um ErrorController for definido como a seguir */
 class ErrorController extends Yaf_Controller_Abstract {
      /**
-      * Também pode-se chamar Yaf_Request_Abstract::getException para obter a
+      * também é possível chamar Yaf_Request_Abstract::getException para obter a
       * exceção não capturada.
       */
      public function errorAction($exception) {
-        /* ocorre o erro */
+        /* ocorreu um erro */
         switch ($exception->getCode()) {
             case YAF_ERR_NOTFOUND_MODULE:
             case YAF_ERR_NOTFOUND_CONTROLLER:
@@ -81,8 +93,9 @@ class ErrorController extends Yaf_Controller_Abstract {
    &example.outputs.similar;
    <screen>
 <![CDATA[
-/* Agora, se ocorrer algum erro, supondo que um controlador inexistente seja acessado (ou que uma exceção seja lançada pelo usuário): */
-404:Could not find controller script **/aplicacao/controladores/controlador_nao_existente.php
+/* agora, se ocorrer algum erro, supondo o acesso a um controlador inexistente
+   (or you can throw an exception yourself): */
+404:Could not find controller script **/application/controllers/No-exists-controller.php
 ]]>
    </screen>
   </example>
@@ -90,10 +103,12 @@ class ErrorController extends Yaf_Controller_Abstract {
 
  <refsect1 role="seealso">
   &reftitle.seealso;
-  <simplelist>
-   <member><methodname>Yaf_Dispatcher::throwException</methodname></member>
-   <member><methodname>Yaf_Dispatcher::setErrorHandler</methodname></member>
-  </simplelist>
+  <para>
+   <simplelist>
+    <member><methodname>Yaf_Dispatcher::throwException</methodname></member>
+    <member><methodname>Yaf_Dispatcher::setErrorHandler</methodname></member>
+   </simplelist>
+  </para>
  </refsect1>
 
 </refentry>

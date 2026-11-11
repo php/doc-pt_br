@@ -1,25 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: e2f2172bf114599926878017ab2dce356956fa9e Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: ddcf673c59d1708557680946fbffeee361d7fca6 Maintainer: leonardolara Status: ready -->
 
 <refentry xml:id="yaf-view-interface.setscriptpath" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
-  <refname>Yaf_View_Interface::setScriptPath</refname>
-  <refpurpose>Define o diretório base dos modelos</refpurpose>
+<refname>Yaf_View_Interface::setScriptPath</refname>
+<refpurpose>Define o diretório de modelos</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <modifier>abstract</modifier> <modifier>public</modifier> <type>void</type><methodname>Yaf_View_Interface::setScriptPath</methodname>
+   <modifier>abstract</modifier> <modifier>public</modifier> <type>Yaf_View_Interface</type><methodname>Yaf_View_Interface::setScriptPath</methodname>
    <methodparam><type>string</type><parameter>template_dir</parameter></methodparam>
   </methodsynopsis>
-  <para>
-    Define o diretório base dos modelos, normalmente chamado por
-    <classname>Yaf_Dispatcher</classname>
-  </para>
-
-  &warn.undocumented.func;
-
+  <simpara>Define o diretório no qual os modelos são procurados.</simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -28,24 +22,90 @@
    <varlistentry>
     <term><parameter>template_dir</parameter></term>
     <listitem>
-     <para>
-      Um caminho absoluto par ao diretório de modelos. Por padrão,
-      <classname>Yaf_Dispatcher</classname> usa
-      <link linkend="configuration.yaf.directory">application.directory</link> . "/views" como este parâmetro.
-     </para>
+<simpara>O diretório no qual os scripts de modelo são armazenados.</simpara>
     </listitem>
    </varlistentry>
   </variablelist>
  </refsect1>
-
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-
-  </para>
+<simpara>Retorna a instância da visualização, ou &false; se <parameter>template_dir</parameter> não for um caminho absoluto.</simpara>
  </refsect1>
 
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>Yaf_View_Interface::setScriptPath</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class MyView implements Yaf_View_Interface
+{
+    private $tpl_dir;
+    private $vars = array();
 
+    public function __construct($template_dir, $options = null)
+    {
+        $this->tpl_dir = $template_dir;
+    }
+
+    public function assign($name, $value = null)
+    {
+        $this->vars[$name] = $value;
+        return true;
+    }
+
+    public function display($tpl, $tpl_vars = null)
+    {
+        echo $this->render($tpl, $tpl_vars);
+        return true;
+    }
+
+    public function render($tpl, $tpl_vars = null)
+    {
+        extract($this->vars);
+        if ($tpl_vars !== null) {
+            extract($tpl_vars);
+        }
+        ob_start();
+        include $this->tpl_dir . "/" . $tpl;
+        return ob_get_clean();
+    }
+
+    public function setScriptPath($template_dir)
+    {
+        $this->tpl_dir = $template_dir;
+        return $this;
+    }
+
+    public function getScriptPath()
+    {
+        return $this->tpl_dir;
+    }
+}
+
+/* conecta o mecanismo de visualização personalizado ao despachante no bootstrap */
+class Bootstrap extends Yaf_Bootstrap_Abstract
+{
+    public function _initView(Yaf_Dispatcher $dispatcher)
+    {
+        $dispatcher->setView(new MyView(APPLICATION_PATH . "/views"));
+    }
+}
+?>
+]]>
+   </programlisting>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><methodname>Yaf_View_Interface::getScriptPath</methodname></member>
+   <member><methodname>Yaf_View_Interface::render</methodname></member>
+   <member><methodname>Yaf_View_Interface::display</methodname></member>
+  </simplelist>
+ </refsect1>
 </refentry>
 
 <!-- Keep this comment at the end of the file
