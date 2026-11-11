@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 469efd89e78e8d003d7222550f7cdcf4a8f417b1 Maintainer: leonardolara Status: ready -->
+<refentry xml:id="function.grapheme-levenshtein" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>grapheme_levenshtein</refname>
+  <refpurpose>Calcula a distância de Levenshtein entre duas strings em unidades de grafema</refpurpose>
+ </refnamediv>
+ <refsect1 role="description">
+  &reftitle.description;
+  <simpara>&style.procedural;</simpara>
+  <methodsynopsis>
+   <type class="union"><type>int</type><type>false</type></type><methodname>grapheme_levenshtein</methodname>
+   <methodparam><type>string</type><parameter>string1</parameter></methodparam>
+   <methodparam><type>string</type><parameter>string2</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>insertion_cost</parameter><initializer>1</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>replacement_cost</parameter><initializer>1</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>deletion_cost</parameter><initializer>1</initializer></methodparam>
+   <methodparam choice="opt"><type>string</type><parameter>locale</parameter><initializer>""</initializer></methodparam>
+  </methodsynopsis>
+  <simpara>
+   A distância de Levenshtein é definida como o número mínimo de
+   agrupamentos de grafemas que precisam ser substituídos, inseridos ou excluídos para transformar
+   <parameter>string1</parameter> em <parameter>string2</parameter>.
+   A complexidade do algoritmo é <literal>O(m*n)</literal>,
+   em que <literal>n</literal> e <literal>m</literal> são os
+   comprimentos de <parameter>string1</parameter> e
+   <parameter>string2</parameter> em unidades de grafema.
+  </simpara>
+  <simpara>
+   Ao contrário de <function>levenshtein</function>, que opera sobre bytes, esta
+   função conta agrupamentos de grafemas Unicode, de modo que as formas compostas
+   e decompostas do mesmo caractere (por exemplo, <literal>U+00E9</literal> e
+   <literal>U+0065 U+0301</literal>, ambas representando <literal>é</literal>)
+   são tratadas como equivalentes e têm distância zero.
+  </simpara>
+  <simpara>
+   Se <parameter>insertion_cost</parameter>, <parameter>replacement_cost</parameter>
+   e/ou <parameter>deletion_cost</parameter> forem diferentes de <literal>1</literal>,
+   o algoritmo se adapta para escolher as transformações de menor custo.
+   Por exemplo, se <literal>$insertion_cost + $deletion_cost &lt; $replacement_cost</literal>,
+   não serão feitas substituições, mas sim inserções e exclusões.
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><parameter>string1</parameter></term>
+     <listitem>
+      <simpara>
+       Uma das strings cuja distância de Levenshtein será calculada.
+       Deve ser UTF-8 válido.
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>string2</parameter></term>
+     <listitem>
+      <simpara>
+       Uma das strings cuja distância de Levenshtein será calculada.
+       Deve ser UTF-8 válido.
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>insertion_cost</parameter></term>
+     <listitem>
+      <simpara>
+       Define o custo de inserção. Deve ser maior que <literal>0</literal>.
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>replacement_cost</parameter></term>
+     <listitem>
+      <simpara>
+       Define o custo de substituição. Deve ser maior que <literal>0</literal>.
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>deletion_cost</parameter></term>
+     <listitem>
+      <simpara>
+       Define o custo de exclusão. Deve ser maior que <literal>0</literal>.
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><parameter>locale</parameter></term>
+     <listitem>
+      &intl.param.grapheme.locale;
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <simpara>
+   Retorna a distância de Levenshtein entre as duas strings, medida em
+   unidades de grafema, ou &false; em caso de falha. Use
+   <function>intl_get_error_message</function> para obter detalhes sobre
+   a falha.
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <simpara>
+   Lança um <exceptionname>ValueError</exceptionname> se
+   <parameter>insertion_cost</parameter>, <parameter>replacement_cost</parameter>,
+   ou <parameter>deletion_cost</parameter> for menor ou igual a
+   <literal>0</literal>.
+  </simpara>
+  <simpara>
+   Retorna &false; e define um erro intl se alguma das strings de entrada não
+   for UTF-8 válido, se <parameter>locale</parameter> não for um identificador
+   de localidade válido ou se ocorrer um erro interno da ICU.
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.5.0</entry>
+      <entry>
+       Esta função foi adicionada.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <function>grapheme_levenshtein</function></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+// Forma composta (NFC): U+00E9 LETRA LATINA MINÚSCULA E COM ACENTO AGUDO
+$e_composed = "\u{00E9}";
+
+// Forma decomposta (NFD): U+0065 + U+0301 (e + acento agudo combinante)
+$e_decomposed = "\u{0065}\u{0301}";
+
+// grapheme_levenshtein trata ambas como o mesmo agrupamento de grafemas
+var_dump(grapheme_levenshtein($e_composed, $e_decomposed));
+
+// levenshtein() opera sobre bytes e as considera diferentes
+var_dump(levenshtein($e_composed, $e_decomposed));
+
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+int(0)
+int(3)
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>levenshtein</function></member>
+    <member><function>grapheme_strlen</function></member>
+    <member><function>grapheme_substr</function></member>
+    <member><function>similar_text</function></member>
+    <member>
+     <link xlink:href="&uri.unicode.graphemes;">
+      Segmentação de texto Unicode: limites dos agrupamentos de grafemas
+     </link>
+    </member>
+   </simplelist>
+  </para>
+ </refsect1>
+</refentry>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
