@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 53242ee6628dc1ae6989fe002231fddfd8f005c6 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: c05fbe7250c43b75034ac776ed78f4e67163e4d3 Maintainer: leonardolara Status: ready -->
 
 <refentry xml:id="yac.get" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
@@ -12,11 +12,11 @@
   <methodsynopsis>
    <modifier>public</modifier> <type>mixed</type><methodname>Yac::get</methodname>
    <methodparam><type class="union"><type>string</type><type>array</type></type><parameter>key</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter role="reference">cas</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type>mixed</type><parameter>default</parameter><initializer>&null;</initializer></methodparam>
   </methodsynopsis>
-  <para>
+  <simpara>
    Obtém valores do cache.
-  </para>
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -25,17 +25,27 @@
    <varlistentry>
     <term><parameter>key</parameter></term>
     <listitem>
-     <para>
-      Chaves &string; ou &array; de várias chaves.
-     </para>
+     <simpara>
+      Uma chave do tipo <type>string</type> ou um <type>array</type> de chaves.
+     </simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><parameter>cas</parameter></term>
+    <term><parameter>default</parameter></term>
     <listitem>
-     <para>
-      Se não for &null;, será definido para o CAS do item obtido.
-     </para>
+     <simpara>
+      O valor a retornar quando a chave (ou as chaves) solicitada não
+      estiver presente no cache, disponível desde o yac 2.4.0. Se omitido,
+      uma falha de cache retorna &false;.
+     </simpara>
+     <note>
+      <simpara>
+       Antes do yac 2.4.0, este argumento era um token
+       <literal>$cas</literal> passado por referência, e não um valor
+       padrão. O código que passava ou dependia desse token deve ser
+       atualizado ao migrar para a versão 2.4.0.
+      </simpara>
+     </note>
     </listitem>
    </varlistentry>
   </variablelist>
@@ -43,11 +53,83 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-   Retorna o valor em caso de sucesso, false em caso de falha.
-  </para>
+  <simpara>
+   Para uma chave do tipo <type>string</type>, retorna o valor em cache
+   quando há acerto; caso contrário, retorna <parameter>default</parameter>
+   (ou &false; se nenhum valor padrão foi fornecido).
+  </simpara>
+  <simpara>
+   Para um <type>array</type> de chaves, retorna um array com os valores
+   encontrados indexados pelas respectivas chaves. Desde o yac 2.4.0,
+   chaves ausentes no cache são omitidas do resultado ou preenchidas com
+   <parameter>default</parameter>, se fornecido; antes da versão 2.4.0,
+   um marcador &false; era inserido para cada chave ausente.
+  </simpara>
  </refsect1>
 
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>Yac::get</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$yac = new Yac();
+
+$yac->set("foo", "bar");
+var_dump($yac->get("foo"));                 // string(3) "bar"
+var_dump($yac->get("missing"));             // bool(false): falha de cache
+?>
+]]>
+   </programlisting>
+  </example>
+  <example>
+   <title>Distinguindo um false armazenado de uma falha</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$yac = new Yac();
+
+// sem um valor padrão, uma falha e um false armazenado são indistinguíveis;
+// um padrão sentinela (disponível desde o yac 2.4.0) os diferencia
+$yac->set("flag", false);
+var_dump($yac->get("flag"));                // bool(false): valor armazenado
+var_dump($yac->get("missing", false));      // bool(false): falha, mesmo formato
+var_dump($yac->get("flag", "__NONE__"));    // bool(false): valor armazenado
+var_dump($yac->get("missing", "__NONE__")); // string(8) "__NONE__": falha
+?>
+]]>
+   </programlisting>
+  </example>
+  <example>
+   <title>Obtendo várias chaves de uma vez</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$yac = new Yac();
+
+$yac->set("foo", "bar");
+$yac->set("foo2", "bar2");
+
+// com um array de chaves, somente as chaves encontradas estão no resultado
+var_dump($yac->get(array("foo", "foo2", "missing")));
+// array(2) { ["foo"]=> string(3) "bar" ["foo2"]=> string(4) "bar2" }
+?>
+]]>
+   </programlisting>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><methodname>Yac::set</methodname></member>
+    <member><methodname>Yac::__get</methodname></member>
+   </simplelist>
+  </para>
+ </refsect1>
 
 </refentry>
 

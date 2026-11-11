@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 74155fb94bef0d0e0c6edd5994fc33ab40781701 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 1a42637cd40d0f75af1435ff051c7caa9b1c83e0 Maintainer: leonardolara Status: ready -->
 
 <refentry xml:id="yac.construct" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
@@ -13,10 +13,12 @@
    <modifier>public</modifier> <methodname>Yac::__construct</methodname>
    <methodparam choice="opt"><type>string</type><parameter>prefix</parameter><initializer>""</initializer></methodparam>
   </constructorsynopsis>
-  <para>
-   O parâmetro "prefix" é usado para prefixar chaves. Isso pode ser usado para evitar conflitos entre aplicações.
-  </para>
-
+  <simpara>
+   Cria uma nova instância de <classname>Yac</classname>. O
+   <parameter>prefix</parameter> opcional é anexado antes de cada chave
+   armazenada por esta instância, permitindo que vários aplicativos ou
+   caches na mesma máquina usem chaves com nomes iguais sem colidir.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -25,31 +27,50 @@
    <varlistentry>
     <term><parameter>prefix</parameter></term>
     <listitem>
-     <para>
-       &string; de prefixo.
-     </para>
+     <simpara>
+      Um prefixo de chave de até 48 bytes
+      (<constant>YAC_MAX_KEY_LEN</constant>).
+     </simpara>
     </listitem>
    </varlistentry>
   </variablelist>
  </refsect1>
 
- <!-- Return values commented out, as constructors generally don't return a
-      value. Uncomment this if you do need a return values section (for
-      example, because there's also a procedural version of the method).
- <refsect1 role="returnvalues">
-  &reftitle.returnvalues;
-  <para>
-
-  </para>
- </refsect1>
- -->
-
  <refsect1 role="errors">
   &reftitle.errors;
+  <simpara>
+   Lança uma <exceptionname>Exception</exceptionname> se o cache estiver
+   desabilitado (<literal>yac.enable=0</literal>) ou se
+   <parameter>prefix</parameter> tiver mais de 48 bytes.
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>Yac::__construct</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$yac = new Yac();
+$yac->set("foo", "bar");
+
+$other = new Yac("app2_");
+var_dump($other->get("foo"));    // bool(false): namespace diferente
+$other->set("foo", "baz");       // armazenado como "app2_foo"
+?>
+]]>
+   </programlisting>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
   <para>
-   Lança uma <classname>Exception</classname> se o Yac não estiver habilitado. Lança uma
-   <classname>Exception</classname> se <parameter>prefix</parameter> exceder
-   o comprimento máximo de 48 (<constant>YAC_MAX_KEY_LEN</constant>) bytes.
+   <simplelist>
+    <member><methodname>Yac::set</methodname></member>
+    <member><methodname>Yac::get</methodname></member>
+   </simplelist>
   </para>
  </refsect1>
 

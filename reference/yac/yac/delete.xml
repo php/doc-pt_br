@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 53242ee6628dc1ae6989fe002231fddfd8f005c6 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: c05fbe7250c43b75034ac776ed78f4e67163e4d3 Maintainer: leonardolara Status: ready -->
 
 <refentry xml:id="yac.delete" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
@@ -11,31 +11,48 @@
   &reftitle.description;
   <methodsynopsis>
    <modifier>public</modifier> <type>bool</type><methodname>Yac::delete</methodname>
-   <methodparam><type class="union"><type>string</type><type>array</type></type><parameter>keys</parameter></methodparam>
-   <methodparam choice="opt"><type>int</type><parameter>ttl</parameter></methodparam>
+   <methodparam><type class="union"><type>string</type><type>array</type></type><parameter>key</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>delay</parameter><initializer>0</initializer></methodparam>
   </methodsynopsis>
-  <para>
-   Exclui itens do cache.
-  </para>
+  <simpara>
+   Remove um ou mais itens do cache.
+  </simpara>
+  <note>
+   <simpara>
+    A exclusão é implementada marcando a entrada como expirada, em vez de
+    limpar seu slot: a entrada deixa imediatamente de ser legível, mas
+    o slot continua ocupado até que a mesma chave seja armazenada novamente
+    ou uma escrita posterior recupere o slot. Como resultado, a contagem de
+    slots usados informada por <methodname>Yac::info</methodname> não diminui
+    após uma exclusão, e <methodname>Yac::dump</methodname> ainda lista a
+    entrada excluída até que seu slot seja reciclado; um <literal>ttl</literal>
+    não nulo no passado indica uma entrada excluída ou expirada. Portanto,
+    ao inspecionar a saída de <methodname>Yac::dump</methodname>, o chamador
+    deve filtrar essas entradas.
+   </simpara>
+  </note>
  </refsect1>
 
  <refsect1 role="parameters">
   &reftitle.parameters;
   <variablelist>
    <varlistentry>
-    <term><parameter>keys</parameter></term>
+    <term><parameter>key</parameter></term>
     <listitem>
-     <para>
-      Chave string, ou array com múltiplas chaves a serem removidas.
-     </para>
+     <simpara>
+      Uma chave do tipo <type>string</type> ou um <type>array</type> de
+      chaves a serem removidas.
+     </simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><parameter>ttl</parameter></term>
+    <term><parameter>delay</parameter></term>
     <listitem>
-     <para>
-      Tempo em segundos para marcar os itens como inválidos.
-     </para>
+     <simpara>
+      Número de segundos até que o item se torne inválido. Se omitido ou
+      igual a <literal>0</literal>, o item é invalidado imediatamente. Um
+      valor positivo mantém o item legível por esse período antes que expire.
+     </simpara>
     </listitem>
    </varlistentry>
   </variablelist>
@@ -43,11 +60,85 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-
-  </para>
+  <simpara>
+   Retorna &true; em caso de sucesso ou &false; se a chave não estava
+   presente no cache. Como uma exclusão apenas marca a entrada como expirada,
+   uma chave excluída, mas ainda não sobrescrita, continua contando como
+   presente: excluir a mesma chave novamente retorna &true;.
+  </simpara>
+  <simpara>
+   Quando um <type>array</type> de chaves é fornecido, &true; só é retornado
+   se todas as chaves estavam presentes; se alguma estiver ausente, será
+   retornado &false;.
+  </simpara>
  </refsect1>
 
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>Yac::delete</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$yac = new Yac();
+$yac->set("foo", "bar");
+
+var_dump($yac->delete("foo"));      // bool(true): marcada como expirada
+var_dump($yac->get("foo"));         // bool(false): agora resulta em falha
+var_dump($yac->delete("foo"));      // bool(true) novamente: o slot ainda
+                                     // não foi sobrescrito
+var_dump($yac->delete("never"));    // bool(false): nunca foi armazenada
+
+// a exclusão não libera o slot: slots_used não diminui, e a entrada
+// expirada continua aparecendo no dump
+var_dump($yac->info()["slots_used"]); // int(1)
+print_r($yac->dump());                // "foo" continua na lista; seu TTL
+                                       // está no passado
+?>
+]]>
+   </programlisting>
+  </example>
+  <example>
+   <title>Exclusão adiada</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$yac = new Yac();
+
+// mantém a entrada legível por mais 60 segundos antes que expire
+$yac->set("tmp", "value");
+var_dump($yac->delete("tmp", 60));    // bool(true)
+?>
+]]>
+   </programlisting>
+  </example>
+  <example>
+   <title>Excluindo várias chaves de uma vez</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$yac = new Yac();
+$yac->set("tmp", "value");
+
+// retorna true somente se todas as chaves estavam presentes
+var_dump($yac->delete(array("tmp", "nope"))); // bool(false): "nope" ausente
+?>
+]]>
+   </programlisting>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><methodname>Yac::set</methodname></member>
+    <member><methodname>Yac::flush</methodname></member>
+    <member><methodname>Yac::info</methodname></member>
+    <member><methodname>Yac::dump</methodname></member>
+   </simplelist>
+  </para>
+ </refsect1>
 
 </refentry>
 

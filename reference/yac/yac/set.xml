@@ -1,54 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 338bf692d6d24357c4a3b36b098131bc30372378 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: c05fbe7250c43b75034ac776ed78f4e67163e4d3 Maintainer: leonardolara Status: ready -->
 
 <refentry xml:id="yac.set" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>Yac::set</refname>
-  <refpurpose>Armazena no cache</refpurpose>
+  <refpurpose>Armazena um valor no cache</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <modifier>public</modifier> <type>bool</type><methodname>Yac::set</methodname>
-   <methodparam><type>string</type><parameter>keys</parameter></methodparam>
+   <methodparam><type class="union"><type>string</type><type>array</type></type><parameter>key</parameter></methodparam>
    <methodparam><type>mixed</type><parameter>value</parameter></methodparam>
    <methodparam choice="opt"><type>int</type><parameter>ttl</parameter><initializer>0</initializer></methodparam>
   </methodsynopsis>
   <methodsynopsis>
-   <modifier>public</modifier> <type>bool</type><methodname>Yac::add</methodname>
-   <methodparam><type>array</type><parameter>key_vals</parameter></methodparam>
+   <modifier>public</modifier> <type>bool</type><methodname>Yac::set</methodname>
+   <methodparam><type>array</type><parameter>values</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>ttl</parameter><initializer>0</initializer></methodparam>
   </methodsynopsis>
-  <para>
-   Adiciona um item ao cache e, se a chave já existir, substitui o item.
-  </para>
+  <simpara>
+   Armazena um valor no cache. Se a chave já existir, a entrada existente
+   será sobrescrita, independentemente de ter expirado ou não.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
   &reftitle.parameters;
   <variablelist>
    <varlistentry>
-    <term><parameter>keys</parameter></term>
+    <term><parameter>key</parameter></term>
     <listitem>
-     <para>
-       Chave &string;.
-     </para>
+     <simpara>
+      Uma chave do tipo <type>string</type> ou um <type>array</type> de
+      pares <literal>chave =&gt; valor</literal> para armazenar em uma chamada.
+     </simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><parameter>value</parameter></term>
     <listitem>
-     <para>
-      Valor a ser armazenado, de qualquer tipo PHP exceto &resource;.
-     </para>
+     <simpara>
+      O valor a armazenar. Todos os tipos do PHP, exceto
+      <type>resource</type>, podem ser armazenados. Usado apenas na forma
+      de chave única; quando <parameter>key</parameter> é um array, este
+      argumento corresponde ao <parameter>ttl</parameter> opcional.
+     </simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><parameter>ttl</parameter></term>
     <listitem>
-     <para>
-      Tempo de vida.
-     </para>
+     <simpara>
+      Tempo de vida em segundos. <literal>0</literal> significa que a
+      entrada nunca expira por tempo.
+     </simpara>
     </listitem>
    </varlistentry>
   </variablelist>
@@ -56,8 +63,64 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
+  <simpara>
+   Retorna &true; em caso de sucesso ou &false; em caso de falha.
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>Yac::set</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$yac = new Yac();
+
+$yac->set("foo", "bar");                    // armazena um único valor
+$yac->set("foo", "baz");                    // sobrescreve a entrada existente
+?>
+]]>
+   </programlisting>
+  </example>
+  <example>
+   <title>Definindo uma entrada com TTL</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$yac = new Yac();
+
+// TTL em segundos: a entrada expira após 5 segundos
+$yac->set("short-lived", "value", 5);
+sleep(6);
+var_dump($yac->get("short-lived"));        // bool(false): expirada
+?>
+]]>
+   </programlisting>
+  </example>
+  <example>
+   <title>Definindo várias entradas de uma vez</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$yac = new Yac();
+
+// armazena vários pares chave => valor em uma chamada
+$yac->set(array("a" => 1, "b" => 2));
+?>
+]]>
+   </programlisting>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
   <para>
-   O próprio valor.
+   <simplelist>
+    <member><methodname>Yac::add</methodname></member>
+    <member><methodname>Yac::get</methodname></member>
+    <member><methodname>Yac::__set</methodname></member>
+   </simplelist>
   </para>
  </refsect1>
 

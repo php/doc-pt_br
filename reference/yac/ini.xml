@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: d4d5216e7a965ca194f6b1c9dee84cecab2674e5 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: c05fbe7250c43b75034ac776ed78f4e67163e4d3 Maintainer: leonardolara Status: ready -->
 
 <section xml:id="yac.configuration" xmlns="http://docbook.org/ns/docbook">
  &reftitle.runtime;
@@ -19,7 +19,7 @@
     <tbody>
      <row>
       <entry><link linkend="ini.yac.compress-threshold">yac.compress_threshold</link></entry>
-      <entry>-1</entry>
+      <entry>4K</entry>
       <entry><constant>INI_SYSTEM</constant></entry>
       <entry><!-- leave empty, this will be filled by an automatic script --></entry>
      </row>
@@ -43,7 +43,7 @@
      </row>
      <row>
       <entry><link linkend="ini.yac.keys-memory-size">yac.keys_memory_size</link></entry>
-      <entry>4M</entry>
+      <entry>8M</entry>
       <entry><constant>INI_SYSTEM</constant></entry>
       <entry><!-- leave empty, this will be filled by an automatic script --></entry>
      </row>
@@ -74,9 +74,20 @@
       <type>int</type>
      </term>
      <listitem>
-      <para>
-
-      </para>
+      <simpara>
+       Valores serializados maiores que esse número de bytes são
+       compactados (com LZ4 desde o Yac 2.4.0) antes de serem armazenados.
+       Valores acima do limite de entrada armazenada de <literal>1M</literal>
+       (<constant>YAC_MAX_RAW_COMPRESSED_LEN</constant>) são sempre
+       compactados, independentemente desta configuração, pois não podem
+       ser armazenados sem compactação. O padrão <literal>4K</literal>
+       habilita a compactação; <literal>-1</literal> a desabilita para
+       valores abaixo do limite de entrada armazenada, e outros valores
+       positivos são limitados ao intervalo de
+       <literal>1024</literal> a <literal>1M</literal>.
+       Compactar valores grandes economiza memória compartilhada, ao custo
+       de algum uso de CPU tanto ao armazenar quanto ao recuperar os dados.
+      </simpara>
      </listitem>
     </varlistentry>
     <varlistentry xml:id="ini.yac.debug">
@@ -85,9 +96,10 @@
       <type>int</type>
      </term>
      <listitem>
-      <para>
-
-      </para>
+      <simpara>
+       Reservado para depuração. A partir do Yac 2.4.0, esta diretiva é
+       registrada, mas não tem efeito.
+      </simpara>
      </listitem>
     </varlistentry>
     <varlistentry xml:id="ini.yac.enable">
@@ -96,9 +108,10 @@
       <type>int</type>
      </term>
      <listitem>
-      <para>
-
-      </para>
+      <simpara>
+       Se o Yac está habilitado. Se estiver desabilitado, criar uma
+       instância de <classname>Yac</classname> lança uma exceção.
+      </simpara>
      </listitem>
     </varlistentry>
     <varlistentry xml:id="ini.yac.enable-cli">
@@ -107,9 +120,12 @@
       <type>int</type>
      </term>
      <listitem>
-      <para>
-
-      </para>
+      <simpara>
+       Se o Yac está habilitado ao executar sob a SAPI
+       <literal>CLI</literal>. Por padrão, está desabilitado porque
+       scripts de linha de comando geralmente iniciam e terminam de imediato,
+       e o segmento de memória compartilhada seria criado sem necessidade.
+      </simpara>
      </listitem>
     </varlistentry>
     <varlistentry xml:id="ini.yac.keys-memory-size">
@@ -118,20 +134,15 @@
       <type>string</type>
      </term>
      <listitem>
-      <para>
-
-      </para>
-     </listitem>
-    </varlistentry>
-    <varlistentry xml:id="ini.yac.serializer">
-     <term>
-      <parameter>yac.serializer</parameter>
-      <type>string</type>
-     </term>
-     <listitem>
-      <para>
-
-      </para>
+      <simpara>
+       Quantidade de memória compartilhada para a tabela de chaves. Ela
+       limita o número de entradas que podem existir ao mesmo tempo — o
+       padrão de <literal>8M</literal> permite cerca de 65.536 entradas.
+       Aumente esse valor quando a taxa de acertos cair e os
+       <literal>kicks</literal> aumentarem; consulte
+       <xref linkend="yac.memory-management"/>        para saber como uma tabela cheia se comporta e quando isso realmente
+       importa.
+      </simpara>
      </listitem>
     </varlistentry>
     <varlistentry xml:id="ini.yac.values-memory-size">
@@ -140,9 +151,37 @@
       <type>string</type>
      </term>
      <listitem>
-      <para>
-
-      </para>
+      <simpara>
+       Quantidade de memória compartilhada para armazenar valores. Eles
+       são alocados por um alocador incremental em segmentos de 4M cada;
+       quando nenhum segmento tem espaço para um novo valor, o cursor do
+       alocador retorna ao início e os valores mais antigos são sobrescritos
+       silenciosamente ("reciclados"). As leituras desses valores passam a
+       resultar em falhas, detectadas por uma verificação de integridade.
+       Aumente este valor se os <literal>recycles</literal> crescerem enquanto
+       ainda houver espaço nos slots, ou habilite
+       <link linkend="ini.yac.compress-threshold">yac.compress_threshold</link>
+       para reduzir cargas grandes. Consulte
+       <xref linkend="yac.memory-management"/>.
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry xml:id="ini.yac.serializer">
+     <term>
+      <parameter>yac.serializer</parameter>
+      <type>string</type>
+     </term>
+     <listitem>
+      <simpara>
+       Serializador usado para transformar valores PHP arbitrários em bytes
+       antes de armazená-los. Os valores permitidos são <literal>php</literal>
+       (o padrão), <literal>json</literal>, <literal>igbinary</literal> e
+       <literal>msgpack</literal>. Os três últimos requerem que a extensão
+       seja compilada com o suporte correspondente. Serializadores binários,
+       como <literal>igbinary</literal> e <literal>msgpack</literal>, costumam
+       ser mais rápidos e produzir cargas menores que
+       <literal>php</literal>.
+      </simpara>
      </listitem>
     </varlistentry>
 
