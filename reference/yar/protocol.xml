@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EN-Revision: 60ce1c5c7cc6d340191828de21f1d6b48cd83807 Maintainer: leonardolara Status: ready -->
+
+<chapter xml:id="yar.protocol" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>O Protocolo Yar</title>
+ <simpara>
+  O Yar não depende de um esquema ou arquivo IDL: tudo é trocado na
+  rede como bytes simples. Qualquer linguagem que possa ler e escrever bytes
+  pode se comunicar com um serviço Yar, sem instalar qualquer framework —
+  construa um cabeçalho binário de tamanho fixo e um corpo de requisição
+  serializado, envie-os para o URI do serviço e analise a resposta.
+ </simpara>
+ <simpara>
+  Uma mensagem consiste em um cabeçalho de tamanho fixo de 82 bytes seguido por um
+  corpo. O cabeçalho é disposto exatamente como a seguinte estrutura C,
+  empacotada sem preenchimento, e é escrita na rede campo por campo
+  na ordem de declaração:
+ </simpara>
+ <programlisting role="c">
+<![CDATA[
+typedef struct _yar_header {
+    uint32_t       id;            /* ID da transação */
+    uint16_t       version;       /* versão do protocolo, atualmente sempre 0 */
+    uint32_t       magic_num;     /* deve ser 0x80DFEC60 */
+    uint32_t       reserved;      /* reservado */
+    unsigned char  provider[32];  /* requisição de quem (autenticação) */
+    unsigned char  token[32];     /* token da requisição (autenticação) */
+    uint32_t       body_len;      /* comprimento de todo o corpo, incluindo
+                                     o identificador do empacotador */
+} __attribute__ ((packed)) yar_header_t;
+]]>
+ </programlisting>
+ <simpara>
+  Os campos <literal>id</literal>, <literal>magic_num</literal>,
+  <literal>reserved</literal> e <literal>body_len</literal>
+  são armazenados na ordem de bytes da rede (big-endian); os campos restantes
+  são bytes brutos.
+ </simpara>
+ <simpara>
+  O corpo começa com um identificador de empacotador de 8 bytes —
+  <literal>PHP</literal>, <literal>JSON</literal> ou
+  <literal>MSGPACK</literal>, preenchido com zeros — informando ao receptor como
+  o restante foi codificado, seguido pelo próprio conteúdo serializado.
+ </simpara>
+ <itemizedlist>
+  <listitem>
+   <simpara>
+    O corpo da requisição é decodificado para um array com as chaves
+    <literal>i</literal> (o ID da transação), <literal>m</literal>
+    (o método sendo chamado) e <literal>p</literal> (a lista de
+    parâmetros).
+   </simpara>
+  </listitem>
+  <listitem>
+   <simpara>
+    O corpo da resposta é decodificado para um array com as chaves
+    <literal>i</literal> (o ID da transação), <literal>s</literal>
+    (o status, um dos códigos <literal>YAR_ERR_*</literal>),
+    <literal>r</literal> (o valor de retorno), <literal>o</literal> (qualquer
+    saída produzida pelo método do serviço) e <literal>e</literal> (o
+    erro ou exceção, quando a chamada falhou).
+   </simpara>
+  </listitem>
+ </itemizedlist>
+ <simpara>
+  Sobre HTTP, a mensagem é enviada como o corpo de uma requisição POST, com
+  a resposta chegando como o corpo da resposta; sobre TCP ou Unix
+  sockets, ela é escrita diretamente no fluxo.
+ </simpara>
+ <example>
+  <title>Chamando um serviço Yar sem a extensão</title>
+  <simpara>
+   O seguinte script autônomo constrói uma requisição Yar válida para
+   o empacotador <literal>php</literal> usando apenas sockets padrão,
+   envia-a para um URI de serviço e imprime a resposta decodificada.
+   Executando-o contra o serviço
+   <classname>Operator</classname> dos
+   <link linkend="yar.examples">exemplos</link> imprime
+   <literal>int(3)</literal>.
+  </simpara>
+  <programlisting role="php">
+<![CDATA[
+<?php
+
+$uri = "http://api.example.com/operator.php";
+
+/* 1. o corpo: identificador do empacotador + requisição serializada */
+$serialized = serialize(array("i" => 1, "m" => "add", "p" => array(1, 2)));
+$body = str_pad("PHP", 8, "\0") . $serialized;
+
+/* 2. o cabeçalho: 82 bytes, inteiros multi-byte em ordem de bytes de rede */
+$header = pack("N", 1)                    /* ID */
+        . pack("v", 0)                    /* versão */
+        . pack("N", 0x80DFEC60)           /* número mágico */
+        . pack("N", 0)                    /* reservado */
+        . str_pad("", 32, "\0")           /* provedor */
+        . str_pad("", 32, "\0")           /* token */
+        . pack("N", strlen($body));       /* comprimento do corpo */
+
+/* 3. envia como corpo da requisição POST */
+$stream = stream_context_create(array("http" => array(
+    "method"  => "POST",
+    "header"  => "Content-Type: application/octet-stream\r\n",
+    "content" => $header . $body,
+)));
+$reply = file_get_contents($uri, false, $stream);
+
+/* 4. analisa a resposta: cabeçalho de 82 bytes, e depois o corpo da resposta */
+$response = unserialize(substr($reply, 82 + 8));
+var_dump($response["r"]);
+?>
+]]>
+  </programlisting>
+ </example>
+ <simpara>
+  Uma implementação de cliente mais completa em PHP puro, que também
+  decodifica o cabeçalho de resposta e suporta chamadas concorrentes, reside no
+  diretório <literal>tools/</literal> do
+  <link xlink:href="&url.git.hub;laruence/yar">repositório fonte do
+  Yar</link>.
+ </simpara>
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
