@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: c083c88c8e7ed7eb0d14662c0471693dcac42daf Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: 75ed9b0163e3e0563e82fdb98ef1cc9008c794a9 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <!-- splitted from ./en/functions/pcre.xml, last change in rev 1.2 -->
 <chapter xml:id="reference.pcre.pattern.syntax" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>Sintaxe de Expressões</title>
@@ -28,12 +28,20 @@
  </section>
  <section xml:id="regexp.reference.delimiters">
   <title>Delimitadores</title>
-  <para>
+  <simpara>
    Ao usar as funções PCRE, é necessário que a expressão esteja entre
    <emphasis>delimitadores</emphasis>. Um delimitador pode ser qualquer caractere
-   não alfanumérico que não seja uma barra invertida e que não corresponda a um espaço em branco.
+   de um único byte que não seja alfanumérico, barra invertida, NUL ou espaço em branco.
    Espaços em branco antes de um delimitador válido são silenciosamente ignorados.
-  </para>
+  </simpara>
+  <note>
+   <simpara>
+    Caracteres multibyte (como caracteres codificados em UTF-8, por exemplo <literal>§</literal>)
+    não podem ser usados como delimitadores. O PHP lê exatamente um byte como delimitador;
+    usar um caractere multibyte faria com que os bytes restantes fossem
+    interpretados incorretamente como modificadores de expressão desconhecidos.
+   </simpara>
+  </note>
   <para>
    Delimitadores comumente usados são barras (<literal>/</literal>), cerquilhas
    (<literal>#</literal>) e til (<literal>~</literal>). Os exemplos
@@ -152,8 +160,15 @@
        <entry>)</entry><entry>fim de sub-expressão</entry>
       </row>
       <row>
-       <entry>?</entry><entry>estende o significado de (, também significa quantificador 0 ou 1, e também torna preguiçosos
-        os quantificadores gananciosos (consulte <link linkend="regexp.reference.repetition">repetição</link>)</entry>
+       <entry>?</entry>
+       <entry>
+        Introduz uma construção especial, como um grupo sem captura, uma
+        sub-expressão nomeada, uma afirmação ou uma configuração de opção, se usado como primeiro
+        caractere após <literal>(</literal>.
+        Se usado como quantificador, é o quantificador opcional (equivalente a <literal>{0,1}</literal>).
+        Também transforma quantificadores gananciosos em preguiçosos
+        (consulte <link linkend="regexp.reference.repetition">repetição</link>).
+       </entry>
       </row>
       <row>
        <entry>*</entry><entry>quantificador de 0 ou mais</entry>
@@ -305,7 +320,15 @@
     <varlistentry>
      <term><emphasis>\R</emphasis></term>
      <listitem>
-      <simpara>quebra de linha: corresponde a \n, \r e \r\n</simpara>
+      <simpara>
+       quebra de linha. Por padrão, <literal>\R</literal> corresponde a qualquer sequência
+       de nova linha Unicode: no modo de 8 bits não UTF-8, equivale a
+       <literal>(?&gt;\r\n|\n|\x0b|\f|\r|\x85)</literal>; no modo UTF-8, mais dois
+       caracteres, U+2028 e U+2029, são adicionados. Se a expressão
+       contiver a sequência especial <literal>(*BSR_ANYCRLF)</literal>,
+       <literal>\R</literal> corresponderá somente a <literal>\r\n</literal>,
+       <literal>\r</literal> e <literal>\n</literal>.
+      </simpara>
      </listitem>
     </varlistentry>
     <varlistentry>
@@ -319,6 +342,26 @@
      <listitem>
       <simpara>
        caractere com o código hexadecimal hh
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\x{hhhh}</emphasis></term>
+     <listitem>
+      <simpara>
+       no <emphasis>modo UTF-8</emphasis>, o caractere Unicode cujo ponto de
+       código é o número hexadecimal informado
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\N{U+hhhh}</emphasis></term>
+     <listitem>
+      <simpara>
+       no <emphasis>modo UTF-8</emphasis>, o caractere Unicode cujo ponto de
+       código é o número hexadecimal informado, equivalente nesse modo a
+       <literal>\x{hhhh}</literal>; diferentemente de <literal>\x{hhhh}</literal>, esta
+       sintaxe não é reconhecida fora do modo UTF-8
       </simpara>
      </listitem>
     </varlistentry>
@@ -594,6 +637,25 @@
    argumento <parameter>offset</parameter> da função
    <function>preg_match</function>. Ela difere de <literal>\A</literal>
    quando o valor de <parameter>offset</parameter> é não-zero.
+  </para>
+  <simpara>
+   A barra invertida também é usada nas seguintes sequências:
+  </simpara>
+  <para>
+   <variablelist>
+    <varlistentry>
+     <term><emphasis>\Q</emphasis></term>
+     <listitem><simpara>início de uma sequência entre aspas, metacaracteres até <literal>\E</literal> são tratados como literais</simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\E</emphasis></term>
+     <listitem><simpara>fim de uma sequência entre aspas iniciada por <literal>\Q</literal></simpara></listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><emphasis>\K</emphasis></term>
+     <listitem><simpara>redefine o início da correspondência reportada</simpara></listitem>
+    </varlistentry>
+   </variablelist>
   </para>
 
   <para>
@@ -1052,22 +1114,28 @@
    caractere composto, independente de quantos caracteres individuais são
    realmente usados para gerá-lo.
   </para>
-  <para>
+  <simpara>
    Em versões do PCRE mais antigas que 8.32 (que corresponde às versões do PHP
    antes da 5.4.14 que usavam a biblioteca PCRE interna), <literal>\X</literal>
    é equivalente a <literal>(?>\PM\pM*)</literal>. Isto é, corresponde a
    um caractere sem a propriedade de "marca", seguida por zero ou mais caracteres
-   com a propriedadede "marca", e trata a sequência como um grupo atômico (veja
-   abaixo). Caracteres com a propriedade de "marca" são tipicamente acentuações que
-   afetam o caractere precedente.
-  </para>
-  <para>
+   com a propriedade de "marca", e trata a sequência como um grupo atômico (consulte
+   <xref linkend="regexp.reference.onlyonce"/>). Caracteres com a propriedade de "marca"
+   são tipicamente acentuações que afetam o caractere precedente.
+  </simpara>
+  <simpara>
    A correspondência de caracteres por propriedade Unicode não é rápida porque o PCRE precisa
    pesquisar uma estrutura que contenha dados para mais que quinze mil
-   caracteres. É por isso que as sequências de escape tradicionais como
-   <literal>\d</literal> e <literal>\w</literal> não usam as propriedades Unicode
-   no PCRE.
-  </para>
+   caracteres. Desde o PHP 5.4.0, as sequências de escape de tipos genéricos de caracteres
+   <literal>\d</literal>, <literal>\s</literal> e <literal>\w</literal> (e
+   suas equivalentes em maiúsculas) usam propriedades Unicode quando o
+   modificador <link linkend="reference.pcre.pattern.modifiers">PCRE_UTF8</link>
+   (<literal>u</literal>) está definido, de modo que, por exemplo,
+   <literal>\d</literal> também corresponde a dígitos decimais não ASCII. Antes do PHP
+   5.4.0, estas sequências de escape não usavam propriedades Unicode por
+   razões de eficiência, a menos que <literal>(*UCP)</literal> fosse explicitamente
+   adicionado à expressão.
+  </simpara>
  </section>
 
  <section xml:id="regexp.reference.anchors">
@@ -1845,15 +1913,16 @@
 
  <section xml:id="regexp.reference.assertions">
   <title>Afirmações</title>
-  <para>
+  <simpara>
    Uma afirmação é um teste nos caracteres posteriores ou
    anteriores ao ponto atual de correspondência que efetivamente não
    consome nenhum caractere. As afirmações simples codificadas como \b,
    \B, \A, \Z, \z, ^ e $ estão descritas na seção sobre <link linkend="regexp.reference.escape">sequências de escape</link>. Afirmações mais
    complexas são codificadas como sub-expressões. Existem dois
-   tipos: aquelas que <emphasis>olham para frente</emphasis> da posição atual na
-   string de entrada e aquelas que <emphasis>olham para trás</emphasis> dela.
-  </para>
+   tipos: afirmações <emphasis>lookahead</emphasis>, que olham à frente da
+   posição atual na string de entrada, e
+   afirmações <emphasis>lookbehind</emphasis>, que olham atrás dela.
+  </simpara>
   <para>
    Uma sub-expressão de afirmação é correspondida da maneira usual, exceto
    que ela não faz com que a posição atual de correspondência seja
@@ -1987,6 +2056,9 @@
 
  <section xml:id="regexp.reference.onlyonce">
   <title>Sub-expressões de ocorrência única</title>
+  <simpara>
+   Sub-expressões de ocorrência única também são conhecidas como <emphasis>grupos atômicos</emphasis>.
+  </simpara>
   <para>
    Tanto com a maximização quanto com a minimização da repetição, a falha no
    que se segue normalmente faz com que o item repetido seja

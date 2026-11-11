@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: e290572f2599305beb62b13988024b5da187979d Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 30c3158d5da85f4910b27c2179d02a7cfb30b0c1 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="collator.setstrength" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>Collator::setStrength</refname>
@@ -195,6 +195,7 @@ $coll = collator_create( 'en_US' );
 // Ordena o array usando a força padrão.
 collator_sort( $coll, $arr );
 var_export( $arr );
+echo PHP_EOL;
 
 // Ordena o array usando a força primária.
 collator_set_strength( $coll, Collator::PRIMARY );
@@ -212,10 +213,71 @@ array (
   2 => 'aò',
 )
 array (
-  0 => 'aò',
+  0 => 'ao',
   1 => 'Ao',
-  2 => 'ao',
+  2 => 'aò',
 )
+]]>
+    </screen>
+   </example>
+   <example>
+    <title>Definição da força pela chave de extensão Unicode de localidade <literal>ks</literal></title>
+    <simpara>
+     A força de colação também pode ser definida ao construir o objeto
+     <classname>Collator</classname>, usando a chave de extensão Unicode de
+     localidade <literal>ks</literal> no identificador de localidade. O
+     mapeamento entre os valores de <literal>ks</literal> e as constantes de <classname>Collator</classname> é:
+    </simpara>
+    <informaltable>
+     <tgroup cols="2">
+      <thead>
+       <row>
+        <entry>Valor da chave de localidade</entry>
+        <entry>Constante de Collator</entry>
+       </row>
+      </thead>
+      <tbody>
+       <row><entry><literal>ks-level1</literal></entry><entry><constant>Collator::PRIMARY</constant></entry></row>
+       <row><entry><literal>ks-level2</literal></entry><entry><constant>Collator::SECONDARY</constant></entry></row>
+       <row><entry><literal>ks-level3</literal></entry><entry><constant>Collator::TERTIARY</constant></entry></row>
+       <row><entry><literal>ks-level4</literal></entry><entry><constant>Collator::QUATERNARY</constant></entry></row>
+       <row><entry><literal>ks-identic</literal></entry><entry><constant>Collator::IDENTICAL</constant></entry></row>
+      </tbody>
+     </tgroup>
+    </informaltable>
+    <simpara>
+     <constant>Collator::DEFAULT_STRENGTH</constant> não possui um equivalente
+     <literal>ks-*</literal> e precisa ser definida programaticamente por meio de <function>collator_set_strength</function>.
+    </simpara>
+    <programlisting role="php">
+<![CDATA[
+<?php
+
+$textStyle  = "\u{263A}\u{FE0E}"; // U+263A + U+FE0E (seletor de apresentação de texto)
+$emojiStyle = "\u{263A}\u{FE0F}"; // U+263A + U+FE0F (seletor de apresentação de emoji)
+
+// Collator padrão (força TERCIÁRIA): seletores de variação são ignorados.
+$collDefault = new Collator('en_US');
+var_dump($collDefault->compare($textStyle, $emojiStyle) === 0); // bool(true)
+
+// Força idêntica definida com setStrength().
+$coll1 = new Collator('en_US');
+$coll1->setStrength(Collator::IDENTICAL);
+var_dump($coll1->compare($textStyle, $emojiStyle) === 0); // bool(false)
+
+// Equivalente: força idêntica definida pela chave de extensão de localidade ks.
+$coll2 = new Collator('en_US-u-ks-identic');
+var_dump($coll2->compare($textStyle, $emojiStyle) === 0); // bool(false)
+
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+bool(true)
+bool(false)
+bool(false)
 ]]>
     </screen>
    </example>
@@ -228,6 +290,7 @@ array (
    <simplelist>
     <member><link linkend="intl.collator-constants">Constantes de Collator</link></member>
     <member><function>collator_get_strength</function></member>
+    <member><function>collator_create</function></member>
    </simplelist>
   </para>
  </refsect1>

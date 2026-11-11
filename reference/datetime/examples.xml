@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: cd8b964b8566801265f0d287db6eb651f93be950 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: 18c0977d5ec59f4207cb0b306c5473508bf640ed Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 
 <chapter xml:id="datetime.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  &reftitle.examples;
@@ -10,14 +10,13 @@
    Os exemplos a seguir mostram algumas armadilhas da aritmética de data/horário em
    relação a transições de horário de verão e meses que contêm números diferentes de dias.
   </para>
-  <para>
-   <example>
-    <title>DateTimeImmutable::add/sub adicionando intervalos que tempo decorrido</title>
-    <simpara>
-     Adicionar PT24H sobre uma transição de horário de verão irá aparentar uma adição de
-     23/25 horas (para a maioria dos fusos horários).
-    </simpara>
-    <programlisting role="php">
+  <example>
+   <title>DateTimeImmutable::add/sub adicionam intervalos que abrangem o tempo decorrido</title>
+   <simpara>
+    Adicionar PT24H sobre uma transição de horário de verão irá aparentar uma adição de
+    23/25 horas (para a maioria dos fusos horários).
+   </simpara>
+   <programlisting role="php">
 <![CDATA[
 <?php
 $dt = new DateTimeImmutable("2015-11-01 00:00:00", new DateTimeZone("America/New_York"));
@@ -25,25 +24,23 @@ echo "Início: ", $dt->format("Y-m-d H:i:s P"), PHP_EOL;
 $dt = $dt->add(new DateInterval("PT3H"));
 echo "Fim:    ", $dt->format("Y-m-d H:i:s P"), PHP_EOL;
 ]]>
-    </programlisting>
-    &example.outputs;
-    <screen>
+   </programlisting>
+   &example.outputs;
+   <screen>
 <![CDATA[
 Início: 2015-11-01 00:00:00 -04:00
 Fim:    2015-11-01 02:00:00 -05:00
 ]]>
-    </screen>
-   </example>
-  </para>
-  <para>
-   <example>
-    <title>DateTimeImmutable::modify e strtotime incrementando ou decrementando valores de componentes individuais</title>
-    <simpara>
-     Inserir "+24 hours" sobre uma transição de horário de verão irá adicionar exatamente 24 horas como visto na
-     string de data/horário (a menos que o horário de início ou fim esteja em um ponto
-     de transição).
-    </simpara>
-    <programlisting role="php">
+   </screen>
+  </example>
+  <example>
+   <title>DateTimeImmutable::modify e strtotime incrementam ou decrementam os valores dos componentes individuais</title>
+   <simpara>
+    Adicionar "+24 hours" sobre uma transição de horário de verão irá adicionar exatamente 24 horas como visto na
+    string de data/horário (a menos que o horário de início ou fim esteja em um ponto
+    de transição).
+   </simpara>
+   <programlisting role="php">
 <![CDATA[
 <?php
 $dt = new DateTimeImmutable("2015-11-01 00:00:00", new DateTimeZone("America/New_York"));
@@ -51,24 +48,52 @@ echo "Início: ", $dt->format("Y-m-d H:i:s P"), PHP_EOL;
 $dt = $dt->modify("+24 hours");
 echo "Fim:    ", $dt->format("Y-m-d H:i:s P"), PHP_EOL;
 ]]>
-    </programlisting>
-    &example.outputs;
-    <screen>
+   </programlisting>
+   &example.outputs;
+   <screen>
 <![CDATA[
 Início: 2015-11-01 00:00:00 -04:00
 Fim:    2015-11-02 00:00:00 -05:00
 ]]>
-    </screen>
-   </example>
-  </para>
-  <para>
-   <example>
-    <title>Adicionar ou substrair períodos pode causar transferência de datas</title>
-    <simpara>
-     Como em 31 de janeiro + 1 mês, irá resultar em 2 de março (em ano bissexto) ou
-     3 de março (em ano normal).
-    </simpara>
-    <programlisting role="php">
+   </screen>
+  </example>
+  <example>
+   <title>DateInterval::createFromDateString cria intervalos que incrementam ou decrementam valores de componentes</title>
+   <simpara>
+    <methodname>DateInterval::createFromDateString</methodname> usa o
+    analisador de data/horário, e a parte de horário do intervalo resultante incrementa
+    ou decrementa os valores dos componentes individuais. Para um intervalo criado
+    com <methodname>DateInterval::__construct</methodname>, a parte de horário
+    abrange o tempo decorrido; portanto, os dois não são intercambiáveis quando uma
+    transição de fuso horário ocorre dentro dessa parte de horário. A parte de data é aplicada
+    da mesma forma por ambos, de modo que <literal>P1D</literal> e
+    <literal>1 day</literal> sempre produzem o mesmo resultado.
+   </simpara>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$dt = new DateTimeImmutable("2015-11-01 00:00:00", new DateTimeZone("America/New_York"));
+echo "Início:   ", $dt->format("Y-m-d H:i:s P"), PHP_EOL;
+echo "PT24H:    ", $dt->add(new DateInterval("PT24H"))->format("Y-m-d H:i:s P"), PHP_EOL;
+echo "24 horas: ", $dt->add(DateInterval::createFromDateString("24 hours"))->format("Y-m-d H:i:s P"), PHP_EOL;
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+Início:   2015-11-01 00:00:00 -04:00
+PT24H:    2015-11-01 23:00:00 -05:00
+24 horas: 2015-11-02 00:00:00 -05:00
+]]>
+   </screen>
+  </example>
+  <example>
+   <title>Adicionar ou subtrair períodos pode causar transferência de datas</title>
+   <simpara>
+    Como em 31 de janeiro + 1 mês, irá resultar em 2 de março (em ano bissexto) ou
+    3 de março (em ano normal).
+   </simpara>
+   <programlisting role="php">
 <![CDATA[
 <?php
 echo "Ano normal:\n"; // fevereiro tem 28 dias
@@ -83,9 +108,9 @@ echo "Início: ", $dt->format("Y-m-d H:i:s P"), PHP_EOL;
 $dt = $dt->modify("+1 month");
 echo "Fim:    ", $dt->format("Y-m-d H:i:s P"), PHP_EOL;
 ]]>
-    </programlisting>
-    &example.outputs;
-    <screen>
+   </programlisting>
+   &example.outputs;
+   <screen>
 <![CDATA[
 Ano normal:
 Início: 2015-01-31 00:00:00 -05:00
@@ -94,12 +119,12 @@ Ano bissexto:
 Início: 2016-01-31 00:00:00 -05:00
 Fim:    2016-03-02 00:00:00 -05:00
 ]]>
-    </screen>
-    <simpara>
-     Para obter o último dia do mês seguinte (para evitar a transferência),
-     o formato <literal>last day of</literal> está disponível.
-    </simpara>
-    <programlisting role="php">
+   </screen>
+   <simpara>
+    Para obter o último dia do mês seguinte (para evitar a transferência),
+    o formato <literal>last day of</literal> está disponível.
+   </simpara>
+   <programlisting role="php">
 <![CDATA[
 <?php
 echo "Ano normal:\n"; // fevereiro tem 28 dias
@@ -114,9 +139,9 @@ echo "Início: ", $dt->format("Y-m-d H:i:s P"), PHP_EOL;
 $dt = $dt->modify("last day of next month");
 echo "Fim:    ", $dt->format("Y-m-d H:i:s P"), PHP_EOL;
 ]]>
-    </programlisting>
-    &example.outputs;
-    <screen>
+   </programlisting>
+   &example.outputs;
+   <screen>
 <![CDATA[
 Ano normal:
 Início: 2015-01-31 00:00:00 -05:00
@@ -125,9 +150,8 @@ Ano bissexto:
 Início: 2016-01-31 00:00:00 -05:00
 Fim:    2016-02-29 00:00:00 -05:00
 ]]>
-    </screen>
-   </example>
-  </para>
+   </screen>
+  </example>
  </section>
 
 </chapter>

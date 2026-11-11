@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: e7d502fecc2e84d4c57e6451b16f68bec1295ba8 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 0b916fb90f8862046a56a5e05057ef6cd78384c1 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.grapheme-strlen" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>grapheme_strlen</refname>
@@ -64,6 +64,38 @@ print grapheme_strlen( 'abc' . $char_a_ring_nfd . $char_o_diaeresis_nfd . $char_
 6
 ]]>
   </screen>
+  <example>
+   <title>Tratamento de entrada UTF-8 inválida</title>
+   <simpara>
+    <function>grapheme_strlen</function> retorna &null; ou &false; em caso de
+    falha, inclusive quando a entrada não é UTF-8 válida.
+    Use <function>intl_get_error_code</function> e
+    <function>intl_error_name</function> para obter os detalhes do erro do ICU.
+   </simpara>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$string = "\xFF"; // sequência de bytes UTF-8 inválida
+$length = grapheme_strlen($string);
+
+if (!is_int($length)) {
+    $code = intl_get_error_code();
+    printf("grapheme_strlen() failed: %s (%d)\n", intl_error_name($code), $code);
+} else {
+    echo $length, PHP_EOL;
+}
+
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+grapheme_strlen() failed: U_INVALID_CHAR_FOUND (10)
+]]>
+   </screen>
+  </example>
  </refsect1>
 
  <refsect1 role="seealso">
@@ -78,6 +110,8 @@ print grapheme_strlen( 'abc' . $char_a_ring_nfd . $char_o_diaeresis_nfd . $char_
     <member><function>iconv_strlen</function></member>
     <member><function>mb_strlen</function></member>
     <member><function>strlen</function></member>
+    <member><function>intl_get_error_code</function></member>
+    <member><function>intl_error_name</function></member>
    </simplelist>
   </para>
  </refsect1>

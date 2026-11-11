@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 627f933cfe6a033dccac32982cd68e7c1b86927f Maintainer: leonardolara Status: ready --><!-- CREDITS: felipe,leonardolara -->
+<!-- EN-Revision: 85264ba268a398c4b90c1948839d54ce688dd5cd Maintainer: leonardolara Status: ready --><!-- CREDITS: felipe,leonardolara -->
 <refentry xmlns="http://docbook.org/ns/docbook" xml:id="function.filter-var-array">
  <refnamediv>
   <refname>filter_var_array</refname>
@@ -48,7 +48,7 @@
      </simpara>
      <simpara>
       O array de opções é um array associativo onde a chave corresponde
-      a uma chave no <parameter>array</parameter> de dados e o valor
+      a uma chave no array de entrada e o valor
       associado é o filtro a ser aplicado a esta entrada
       ou um array associativo descrevendo como e qual filtro deve ser
       aplicado a esta entrada.
@@ -81,17 +81,39 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-   Um array contendo valores das variáveis requisitadas em caso de sucesso, ou &false;
-   em caso de falha. Um valor de array será &false; se o filtro falhar, ou &null; se
-   a variável não estiver definida.
-  </para>
+  <simpara>
+   Em caso de sucesso, um &array; contendo os valores das variáveis solicitadas.
+  </simpara>
+  <simpara>
+   Em caso de falha, retorna &false;.
+  </simpara>
+  <simpara>
+   Entradas ausentes do array de entrada são adicionadas ao &array; retornado como
+   &null; se <parameter>add_empty</parameter> for &true;,
+   e são omitidas inteiramente se for &false;.
+  </simpara>
+  <simpara>
+   Uma entrada do &array; retornado será &false; se o filtro falhar,
+   a menos que a opção <constant>FILTER_NULL_ON_FAILURE</constant> seja usada,
+   que neste caso será &null;.
+   Com a opção <constant>FILTER_FORCE_ARRAY</constant>,
+   esse valor de falha é envolvido em um &array; de um elemento,
+   assim como qualquer outro resultado.
+  </simpara>
  </refsect1>
 
  <refsect1 role="examples">
   &reftitle.examples;
   <example>
    <title>Um exemplo de <function>filter_var_array</function></title>
+   <simpara>
+    As entradas são filtradas como escalares, a menos que
+    <constant>FILTER_REQUIRE_ARRAY</constant> ou
+    <constant>FILTER_FORCE_ARRAY</constant> seja usada.
+    A opção <constant>FILTER_REQUIRE_SCALAR</constant> em
+    <literal>testscalar</literal> abaixo, portanto, apenas declara esse padrão
+    explicitamente.
+   </simpara>
    <programlisting role="php">
 <![CDATA[
 <?php
@@ -155,6 +177,78 @@ array(6) {
   }
   ["doesnotexist"]=>
   NULL
+}
+]]>
+   </screen>
+  </example>
+  <example>
+   <title>Aplicando um único filtro a todos os valores</title>
+   <simpara>
+    Quando <parameter>options</parameter> é um &integer;, o mesmo filtro
+    é aplicado a todas as entradas do array.
+   </simpara>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$data = [
+    'name'  => '<b>John</b>',
+    'email' => 'john@example<script>.com',
+    'bio'   => 'Developer & writer',
+];
+
+var_dump(filter_var_array($data, FILTER_SANITIZE_SPECIAL_CHARS));
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+array(3) {
+  ["name"]=>
+  string(27) "&#60;b&#62;John&#60;/b&#62;"
+  ["email"]=>
+  string(32) "john@example&#60;script&#62;.com"
+  ["bio"]=>
+  string(22) "Developer &#38; writer"
+}
+]]>
+   </screen>
+  </example>
+  <example>
+   <title>Usando <constant>FILTER_CALLBACK</constant></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$data = [
+    'name'  => '  John Doe  ',
+    'city'  => '  New York  ',
+];
+
+$options = [
+    'name' => [
+        'filter'  => FILTER_CALLBACK,
+        'options' => 'trim',
+    ],
+    'city' => [
+        'filter'  => FILTER_CALLBACK,
+        'options' => function ($value) {
+            return strtoupper(trim($value));
+        },
+    ],
+];
+
+var_dump(filter_var_array($data, $options));
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+array(2) {
+  ["name"]=>
+  string(8) "John Doe"
+  ["city"]=>
+  string(8) "NEW YORK"
 }
 ]]>
    </screen>

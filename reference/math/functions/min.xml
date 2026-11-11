@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 761d72245071f89a626903c9bcdc6aaff1252d54 Maintainer: leonardolara Status: ready --><!-- CREDITS: ae, leonardolara -->
+<!-- EN-Revision: 9b77252fe6d218efb8921e3cc4a1abc948fd7c39 Maintainer: leonardolara Status: ready --><!-- CREDITS: ae, leonardolara -->
 <refentry xml:id="function.min" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>min</refname>
@@ -23,13 +23,14 @@
    <function>min</function> retorna o menor deles.
   </para>
   <note>
-   <para>
-    Valores de tipos diferentes serão comparados utilizando <link linkend="language.operators.comparison">
-    as regras padrões de comparação</link>. Por exemplo, uma <type>string</type> não numérica será
-    comparada com um inteiro <type>int</type> como se fosse <literal>0</literal>, mas várias
-    <type>string</type>s não numéricos serão comparadas alfanumericamente. O valor real retornado terá o tipo
-    do original, sem nenhuma conversão aplicada.
-   </para>
+   <simpara>
+    Valores de diferentes tipos serão comparados utilizando as <link linkend="language.operators.comparison">
+    regras padrão de comparação</link>. Por exemplo, quando uma <type>string</type> não numérica é
+    comparada a um <type>int</type>, o <type>int</type> é convertido em <type>string</type> e os
+    valores são comparados como strings; antes do PHP 8.0.0, a <type>string</type> era convertida
+    em <type>int</type>. Vários valores <type>string</type> não numéricos também são comparados como
+    strings. O valor retornado terá o tipo original, sem nenhuma conversão aplicada.
+   </simpara>
   </note>
   <caution>
    <simpara>
@@ -73,11 +74,11 @@
  </refsect1>
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-   <function>min</function> retorna o valor considerado o "menor" de acordo com as comparações
-   padrão. Se valores de diferentes tipos forem avaliados como iguais (por exemplo <literal>0</literal>
-   e <literal>'abc'</literal>) então o primeiro valor fornecido à função será retornado.
-  </para>
+  <simpara>
+   <function>min</function> retorna o parâmetro considerado o "menor" de acordo com as comparações
+   padrão. Se vários valores de tipos diferentes forem considerados iguais (por exemplo, <literal>0</literal>
+   e &false;), então o primeiro fornecido à função será retornado.
+  </simpara>
  </refsect1>
 
  <refsect1 role="errors">
@@ -130,7 +131,8 @@
 echo min(2, 3, 1, 6, 7), PHP_EOL;  // 1
 echo min(array(2, 4, 5)), PHP_EOL; // 2
 
-// Aqui a comparação que ocorre é -1 < 0, e -1 é o menor valor
+// 'hello' é uma string não numérica, então -1 é convertido na string "-1" e os
+// valores são comparados como strings: "-1" é menor que "hello"
 echo min('hello', -1), PHP_EOL;    // -1
 
 // Quando comparando arrays de vários comprimentos, min retorna o mais curto
@@ -142,9 +144,11 @@ var_dump($val);
 $val = min(array(2, 4, 8), array(2, 5, 1)); // array(2, 4, 8)
 var_dump($val);
 
-// Se for fornecido um array e um primitivo, o array nunca é retornado
-// pois as comparações tratam os arrays como maiores que outros valores
-$val = min('string', array(2, 5, 7), 42);   // string
+// Se for fornecido um array e um valor que não seja array, o array nunca é retornado,
+// pois as comparações tratam os arrays como maiores que qualquer outro valor
+// Dos valores restantes, 42 é convertido na string "42" ao ser comparado com a
+// string não numérica 'string', e "42" é menor que "string"
+$val = min('string', array(2, 5, 7), 42);   // 42
 var_dump($val);
 
 // Se um argumento é null ou booleano, ele será comparado com outros valores

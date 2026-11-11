@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: a747e132c5506a0273c686cbe20e227c980d8ec7 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: ec891f50fa7c999195c1c792261bfd15e41daf73 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.pcntl-waitpid" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>pcntl_waitpid</refname>
@@ -130,6 +130,24 @@
       </para>
      </listitem>
     </varlistentry>
+    <varlistentry>
+     <term><parameter>resource_usage</parameter></term>
+     <listitem>
+      <simpara>
+       O parâmetro <parameter>resource_usage</parameter> é definido como um
+       <type>array</type> associativo contendo estatísticas de uso de recursos
+       do processo filho. Para informações sobre o conteúdo, consulte
+       <function>getrusage</function>.
+      </simpara>
+      <simpara>
+       Isto só é suportado se a chamada de sistema <literal>wait4(2)</literal> estiver
+       disponível no sistema; caso contrário, o parâmetro permanece inalterado.
+       Se nenhum processo filho tiver sido coletado, ou seja, se a função retornar
+       <literal>0</literal> ou <literal>-1</literal>, o parâmetro será definido como
+       um <type>array</type> vazio.
+      </simpara>
+     </listitem>
+    </varlistentry>
    </variablelist>
   </para>
  </refsect1>
@@ -143,12 +161,72 @@
   </para>
  </refsect1>
 
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <function>pcntl_waitpid</function></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+function checkChild(int $pid, bool $wait): void
+{
+    $flags = ($wait ? 0 : WNOHANG);
+    $deadPid = pcntl_waitpid($pid, $status, $flags, $rusage);
+    if ($deadPid === -1) {
+        $errNo = pcntl_get_last_error();
+        $errMsg = pcntl_strerror($errNo);
+        print "PAI pcntl_waitpid FALHOU ({$errNo}): {$errMsg}\n";
+    } elseif ($deadPid === 0) {
+        print "PAI pcntl_waitpid: Nenhum filho encerrado.\n";
+    } elseif (pcntl_wifexited($status)) {
+        print "PAI pcntl_waitpid: Filho de PID {$deadPid} encerrou com status: "
+            . pcntl_wexitstatus($status) . "\n";
+        var_dump($rusage);
+    } else {
+        print "PAI pcntl_waitpid: Filho de PID {$deadPid} foi terminado pelo sinal: "
+            . pcntl_wtermsig($status) . "\n";
+    }
+}
+
+$parentPid = getmypid();
+$forkedPid = pcntl_fork();
+if ($forkedPid == -1) {
+    die('Não foi possível bifurcar');
+} else if ($forkedPid) {
+    // Processo pai
+    print "PAI {$parentPid} bifurcou {$forkedPid}\n";
+
+    print "PAI está verificando filhos encerrados\n";
+    checkChild($forkedPid, false);
+
+    // Impede que filhos permaneçam como um "processo zumbi"
+    print "PAI está aguardando um filho encerrar\n";
+    checkChild($forkedPid, true);
+
+    print "PAI está verificando filhos encerrados\n";
+    checkChild($forkedPid, false);
+
+    print "PAI está encerrando\n";
+} else {
+    // Processo filho
+    $pid = getmypid();
+    print "FILHO {$pid} está dormindo\n";
+    sleep(10);
+    print "FILHO está encerrando\n";
+    exit(7);
+}
+]]>
+   </programlisting>
+  </example>
+ </refsect1>
+
  <refsect1 role="seealso">
   &reftitle.seealso;
   <para>
    <simplelist>
     <member><function>pcntl_fork</function></member>
     <member><function>pcntl_signal</function></member>
+    <member><function>pcntl_wait</function></member>
     <member><function>pcntl_wifexited</function></member>
     <member><function>pcntl_wifstopped</function></member>
     <member><function>pcntl_wifsignaled</function></member>

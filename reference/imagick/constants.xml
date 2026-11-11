@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 3bbb0751e2cbb98aa239dedea41d622cf9d654aa Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: 0aa15a23a0b1457ab2545d7f38eb292fd2f4b66e Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <appendix xmlns="http://docbook.org/ns/docbook" xml:id="imagick.constants">
  &reftitle.constants;
  &extension.constants;
@@ -1025,7 +1025,25 @@
 
  <variablelist xml:id="imagick.constants.imagetype">
   <title>Constantes <constant>IMGTYPE_<replaceable>*</replaceable></constant></title>
-  <para></para>
+  <simpara>
+   Um tipo de imagem combina um modelo de cor
+   com a presença ou ausência
+   de um canal alfa.
+   Passar uma dessas constantes para <methodname>Imagick::setImageType</methodname>
+   converte a imagem para o tipo correspondente.
+   <methodname>Imagick::getImageType</methodname> informa o tipo da imagem, mas
+   retorna somente tipos que descrevem os pixels reais, nunca
+   <constant>imagick::IMGTYPE_UNDEFINED</constant> ou
+   <constant>imagick::IMGTYPE_OPTIMIZE</constant>.
+  </simpara>
+  <simpara>
+   As constantes cujo nome termina em <literal>MATTE</literal> são as
+   variantes com canal alfa; as demais não têm esse canal. No ImageMagick 6,
+   o canal alfa era chamado de canal matte. Quando o Imagick é compilado com o
+   ImageMagick 7, cada uma dessas constantes também existe com um nome
+   <constant>IMGTYPE_<replaceable>*</replaceable>ALPHA</constant> e o mesmo
+   valor.
+  </simpara>
    <varlistentry xml:id="imagick.constants.imgtype-undefined">
     <term>
      <constant>imagick::IMGTYPE_UNDEFINED</constant>
@@ -1033,6 +1051,9 @@
     </term>
     <listitem>
      <simpara>
+      O tipo da imagem é desconhecido.
+      <methodname>Imagick::setImageType</methodname> não converte a imagem para
+      esse valor, mas ainda assim o registra nela.
      </simpara>
     </listitem>
    </varlistentry>
@@ -1043,6 +1064,10 @@
     </term>
     <listitem>
      <simpara>
+      Somente duas cores.
+      A imagem é convertida para escala de cinza, o contraste é ampliado e
+      cada pixel se torna preto ou branco, conforme seja mais claro ou mais
+      escuro que o cinza médio; qualquer canal alfa é descartado.
      </simpara>
     </listitem>
    </varlistentry>
@@ -1053,6 +1078,9 @@
     </term>
     <listitem>
      <simpara>
+      Tons de cinza.
+      A imagem é convertida para o espaço de cores em escala de cinza, e
+      qualquer canal alfa é descartado.
      </simpara>
     </listitem>
    </varlistentry>
@@ -1063,6 +1091,10 @@
     </term>
     <listitem>
      <simpara>
+      Tons de cinza com canal alfa.
+      É igual a <constant>imagick::IMGTYPE_GRAYSCALE</constant>, exceto por
+      manter o canal alfa e adicionar um canal opaco
+      se a imagem não tiver um.
      </simpara>
     </listitem>
    </varlistentry>
@@ -1073,6 +1105,10 @@
     </term>
     <listitem>
      <simpara>
+      Cores indexadas.
+      A imagem é convertida para sRGB e, se ainda não estiver indexada ou
+      tiver mais de 256 cores, é quantizada para 256 cores; qualquer canal alfa
+      é descartado.
      </simpara>
     </listitem>
    </varlistentry>
@@ -1083,6 +1119,12 @@
     </term>
     <listitem>
      <simpara>
+      Cores indexadas com canal alfa.
+      A imagem é convertida para sRGB, o canal alfa é mantido e, se a imagem
+      não tiver um, é adicionado um canal opaco.
+      Ao contrário de <constant>imagick::IMGTYPE_PALETTE</constant>, as cores
+      são quantizadas mesmo quando a imagem já está indexada, e o canal alfa é
+      incluído na quantização.
      </simpara>
     </listitem>
    </varlistentry>
@@ -1093,6 +1135,8 @@
     </term>
     <listitem>
      <simpara>
+      Cores diretas: um valor vermelho, verde e azul por pixel, sem paleta.
+      A imagem é convertida para sRGB, e qualquer canal alfa é descartado.
      </simpara>
     </listitem>
    </varlistentry>
@@ -1103,6 +1147,10 @@
     </term>
     <listitem>
      <simpara>
+      Cores diretas com canal alfa.
+      É igual a <constant>imagick::IMGTYPE_TRUECOLOR</constant>, exceto por
+      manter o canal alfa e adicionar um canal opaco
+      se a imagem não tiver um.
      </simpara>
     </listitem>
    </varlistentry>
@@ -1113,6 +1161,9 @@
     </term>
     <listitem>
      <simpara>
+      Um canal por tinta de impressão, sem paleta.
+      A imagem é convertida para o espaço de cores CMYK, e qualquer canal alfa
+      é descartado.
      </simpara>
     </listitem>
    </varlistentry>
@@ -1123,6 +1174,25 @@
     </term>
     <listitem>
      <simpara>
+      Um canal por tinta de impressão, sem paleta, mais um canal alfa.
+      É igual a <constant>imagick::IMGTYPE_COLORSEPARATION</constant>, exceto
+      por manter o canal alfa e adicionar um canal opaco se a imagem não tiver
+      um.
+     </simpara>
+    </listitem>
+   </varlistentry>
+   <varlistentry xml:id="imagick.constants.imgtype-palettebilevelmatte">
+    <term>
+     <constant>imagick::IMGTYPE_PALETTEBILEVELMATTE</constant>
+     (<type>int</type>)
+    </term>
+    <listitem>
+     <simpara>
+      Cores indexadas com canal alfa totalmente transparente ou totalmente
+      opaco. A imagem é convertida para sRGB, um canal alfa opaco é adicionado
+      se não houver um, somente esse canal é reduzido a dois valores e, em
+      seguida, as cores são quantizadas.
+      Este é o tipo de uma imagem PNG que usa transparência binária.
      </simpara>
     </listitem>
    </varlistentry>
@@ -1133,6 +1203,8 @@
     </term>
     <listitem>
      <simpara>
+      <methodname>Imagick::setImageType</methodname> não converte a imagem para
+      esse valor, mas ainda assim o registra nela.
      </simpara>
     </listitem>
    </varlistentry>

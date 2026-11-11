@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 4e69a9f2b14deefca0befec576335e33152448f3 Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandowobeto -->
+<!-- EN-Revision: 60bb5c739561b4f09e7274bce6f8504520519980 Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandowobeto -->
 <refentry xml:id="function.mb-decode-numericentity" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>mb_decode_numericentity</refname>
@@ -62,8 +62,10 @@
   &reftitle.errors;
   <simpara>
    Lança uma exceção <exceptionname>ValueError</exceptionname> se
-   <parameter>map</parameter> não for uma lista de &integer;s.
+   <parameter>map</parameter> contiver qualquer valor que não seja
+   &integer;, &float;, &boolean;, &null; ou uma <link linkend="language.types.numeric-strings">string numérica</link>.
   </simpara>
+  &mbstring.errors.encoding-invalid;
  </refsect1>
 
  <refsect1 role="changelog">
@@ -80,12 +82,13 @@
      <row>
       <entry>8.4.0</entry>
       <entry>
-       <function>mb_decode_numericentity</function> agora lança uma exceção
+       A função <function>mb_decode_numericentity</function> agora lança uma exceção
        <exceptionname>ValueError</exceptionname> se <parameter>map</parameter>
-       não for uma lista de &integer;s.
+       contiver qualquer valor que não possa ser convertido implicitamente em int.
       </entry>
      </row>
      &mbstring.changelog.encoding-nullable;
+     &mbstring.changelog.encoding-invalid;
     </tbody>
    </tgroup>
   </informaltable>
@@ -99,11 +102,13 @@
     <programlisting role="php">
 <![CDATA[
 <?php
-$convmap = array (
-   int start_code1, int end_code1, int offset1, int mask1,
-   int start_code2, int end_code2, int offset2, int mask2,
-   //  ........
-   int start_codeN, int end_codeN, int offsetN, int maskN );
+
+$convmap = array(
+    int start_code1, int end_code1, int offset1, int mask1,
+    int start_code2, int end_code2, int offset2, int mask2,
+    // ........
+    int start_codeN, int end_codeN, int offsetN, int maskN
+);
 // Especifique o valor Unicode para start_codeN e end_codeN
 // Adicione offsetN ao valor e faça 'AND' bit a bit com maskN,
 // em seguida, converta o valor para referência de string numérica.
@@ -119,64 +124,72 @@ $convmap = array (
     <programlisting role="php">
 <![CDATA[
 <?php
-function escape_javascript_string($str) {
-  $map = [
-          1,1,1,1,1,1,1,1,1,1,
-          1,1,1,1,1,1,1,1,1,1,
-          1,1,1,1,1,1,1,1,1,1,
-          1,1,1,1,1,1,1,1,1,1,
-          1,1,1,1,1,1,1,1,0,0, // 49
-          0,0,0,0,0,0,0,0,1,1,
-          1,1,1,1,1,0,0,0,0,0,
-          0,0,0,0,0,0,0,0,0,0,
-          0,0,0,0,0,0,0,0,0,0,
-          0,1,1,1,1,1,1,0,0,0, // 99
-          0,0,0,0,0,0,0,0,0,0,
-          0,0,0,0,0,0,0,0,0,0,
-          0,0,0,1,1,1,1,1,1,1,
-          1,1,1,1,1,1,1,1,1,1,
-          1,1,1,1,1,1,1,1,1,1, // 149
-          1,1,1,1,1,1,1,1,1,1,
-          1,1,1,1,1,1,1,1,1,1,
-          1,1,1,1,1,1,1,1,1,1,
-          1,1,1,1,1,1,1,1,1,1,
-          1,1,1,1,1,1,1,1,1,1, // 199
-          1,1,1,1,1,1,1,1,1,1,
-          1,1,1,1,1,1,1,1,1,1,
-          1,1,1,1,1,1,1,1,1,1,
-          1,1,1,1,1,1,1,1,1,1,
-          1,1,1,1,1,1,1,1,1,1, // 249
-          1,1,1,1,1,1,1, // 255
-          ];
-  // Codificação de caractere é UTF-8
-  $mblen = mb_strlen($str, 'UTF-8');
-  $utf32 = bin2hex(mb_convert_encoding($str, 'UTF-32', 'UTF-8'));
-  for ($i=0, $encoded=''; $i < $mblen; $i++) {
-      $u = substr($utf32, $i*8, 8);
-      $v = base_convert($u, 16, 10);
-      if ($v < 256 && $map[$v]) {
-        $encoded .= '\\x'.substr($u, 6,2);
-      } else if ($v == 2028) {
-        $encoded .= '\\u2028';
-      } else if ($v == 2029) {
-        $encoded .= '\\u2029';
-      } else {
-        $encoded .= mb_convert_encoding(hex2bin($u), 'UTF-8', 'UTF-32');
-      }
-   }
-   return $encoded;
+
+function escape_javascript_string($str)
+{
+    $map = [
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,0,0, // 49
+        0,0,0,0,0,0,0,0,1,1,
+        1,1,1,1,1,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,
+        0,1,1,1,1,1,1,0,0,0, // 99
+        0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,
+        0,0,0,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1, // 149
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1, // 199
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1, // 249
+        1,1,1,1,1,1,1, // 255
+    ];
+
+    // A codificação de caracteres é UTF-8
+    $mblen = mb_strlen($str, 'UTF-8');
+    $utf32 = bin2hex(mb_convert_encoding($str, 'UTF-32', 'UTF-8'));
+
+    for ($i=0, $encoded=''; $i < $mblen; $i++) {
+        $u = substr($utf32, $i * 8, 8);
+        $v = base_convert($u, 16, 10);
+
+        if ($v < 256 && $map[$v]) {
+            $encoded .= '\\x' . substr($u, 6,2);
+        } else if ($v == 2028) {
+            $encoded .= '\\u2028';
+        } else if ($v == 2029) {
+            $encoded .= '\\u2029';
+        } else {
+            $encoded .= mb_convert_encoding(hex2bin($u), 'UTF-8', 'UTF-32');
+        }
+    }
+
+    return $encoded;
 }
 
 // Dados de teste
 $convmap = [ 0x0, 0xffff, 0, 0xffff ];
 $msg = '';
+
 for ($i=0; $i < 1000; $i++) {
   // chr() não pode gerar dados UTF-8 corretos com valor maior que 128, use mb_decode_numericentity().
-  $msg .= mb_decode_numericentity('&#'.$i.';', $convmap, 'UTF-8');
+  $msg .= mb_decode_numericentity('&#' . $i . ';', $convmap, 'UTF-8');
 }
 
 // var_dump($msg);
 var_dump(escape_javascript_string($msg));
+?>
 ]]>
     </programlisting>
    </example>

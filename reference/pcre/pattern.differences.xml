@@ -1,137 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 96c9d88bad9a7d7d44bfb7f26c226df7ee9ddf26 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: b55141fe2d4f601e32555c33fb00e1f9225c4638 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <!-- splitted from ./en/functions/pcre.xml, last change in rev 1.2 -->
-<article xml:id="reference.pcre.pattern.differences" xmlns="http://docbook.org/ns/docbook">
+<article xml:id="reference.pcre.pattern.differences" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>Diferenças para o Perl</title>
  <titleabbrev>Diferenças para o Perl</titleabbrev>
- <para>
-  As diferenças descritas aqui referem-se ao Perl 5.005.
-  <orderedlist>
-   <listitem>
-    <simpara>
-     Por padrão, um caractere de espaço em branco é qualquer caractere que
-     a função isspace() da biblioteca C reconhece, embora seja
-     possível compilar PCRE com tabelas de tipos de caracteres
-     alternativas. Normalmente isspace() corresponde a espaço, alimentação de formulário,
-     nova linha, retorno de carro, tabulação horizontal e tabulação vertical. Perl 5 não
-     inclui mais a tabulação vertical em seu conjunto de caracteres de espaço em branco.
-     O escape \v que esteve na documentação do Perl por
-     muito tempo nunca foi de fato reconhecido. No entanto, o caractere
-     em si foi tratado como espaço em branco pelo menos até a versão 5.002.
-     Na 5.004 e na 5.005, ele não corresponde a \s.
-    </simpara>
-   </listitem>
-   <listitem>
-    <simpara>
-     O PCRE não permite quantificadores repetidos em afirmações
-     antecipadas. O Perl permite isso, mas eles não significam o que
-     se imagina. Por exemplo, (?!a){3} não afirma que os
-     próximos três caracteres não são "a". Apenas afirma que o
-     próximo caractere não é “a” três vezes.
-    </simpara>
-   </listitem>
-   <listitem>
-    <simpara>
-     A captura de sub-expressões que ocorrem dentro de afirmações
-     antecipadas negativas são contadas, mas suas entradas no
-     vetor de deslocamentos nunca são definidas. O Perl define suas variáveis ​​
-     numéricas a partir de quaisquer expressões que sejam correspondidas antes que a
-     afirmação falhe em corresponder a algo (deste modo tendo sucesso), mas
-     apenas se a afirmação antecipada negativa contiver apenas uma
-     ramificação.
-    </simpara>
-   </listitem>
-   <listitem>
-    <simpara>
-     Embora caracteres zero binários sejam suportados na string de entrada,
-     eles não são permitidos na string da expressão (antes do PHP 8.2) porque ela é passada como uma
-     string C normal, terminada por zero. A sequência de escape "\x00" pode
-     ser usada na expressão para representar um zero binário. A partir do PHP 8.2, caracteres NUL \0 são suportados na string da expressão regular.
-    </simpara>
-    </listitem>
-    <listitem>
-    <simpara>
-     As seguintes sequências de escape do Perl não são suportadas:
-     \l, \u, \L, \U. Na verdade, eles são implementados pelo
-     tratamento geral de strings do Perl e não fazem parte de seu
-     mecanismo de correspondência de expressões.
-    </simpara>
-    </listitem>
-    <listitem>
-    <simpara>
-     A asserção Perl \G não é suportada porque não é
-     relevante para correspondências de expressões únicas.
-    </simpara>
-    </listitem>
-    <listitem>
-    <simpara>
-     Obviamente, a PCRE não suporta a construção (?{code}) e (??{code}).
-     No entanto, há suporte para expressões recursivas.
-    </simpara>
-    </listitem>
-    <listitem>
-    <simpara>
-     No momento em que este artigo foi escrito, havia algumas curiosidades no Perl
-     5.005_02 relacionadas às configurações de strings capturadas
-     quando parte de uma expressão é repetida. Por exemplo, corresponder
-     "aba" com a expressão /^(a(b)?)+$/ define $2 como o valor
-     "b", mas corresponder "aabbaa" com /^(aa(bb)?)+$/ deixa $2
-     indefinido. No entanto, se a expressão for alterada para
-     /^(aa(b(b))?)+$/ então $2 (e $3) serão definidos.
-     No Perl 5.004, $2 é definido em ambos os casos, e isso também é &true;
-     na PCRE. Se no futuro o Perl mudar para um estado consistente
-     diferente, a PCRE poderá mudar para seguir o mesmo comportamento.
-    </simpara>
-    </listitem>
-    <listitem>
-    <simpara>
-     Outra discrepância ainda não resolvida é que no Perl
-     5.005_02 o padrão /^(a)?(?(1)a|b)+$/ corresponde à string
-     "a", enquanto que na PCRE isso não acontece. No entanto, tanto no Perl
-     quanto na PCRE, /^(a)?a/ correspondido com "a" deixa $1 indefinido.
-    </simpara>
-    </listitem>
-    <listitem>
-    <para>
-     PCRE fornece algumas extensões para os recursos de expressão
-     regular Perl:
-      <orderedlist>
-       <listitem>
-        <simpara>
-         Embora as afirmações retroativas devam corresponder a strings de comprimento
-         fixo, cada ramificação alternativa de uma afirmação retroativa
-         pode corresponder a um comprimento diferente de string. O Perl 5.005 exige
-         que todas tenham o mesmo comprimento.
-       </simpara>
-      </listitem>
-      <listitem>
-       <simpara>
-        Se <link linkend="reference.pcre.pattern.modifiers">PCRE_DOLLAR_ENDONLY</link>
-        estiver definida e <link linkend="reference.pcre.pattern.modifiers">PCRE_MULTILINE</link>
-        não estiver definida, o metacaractere $ corresponderá apenas ao final da
-        string.
-       </simpara>
-      </listitem>
-      <listitem>
-       <simpara>
-        Se <link linkend="reference.pcre.pattern.modifiers">PCRE_EXTRA</link>
-        estiver definida, uma barra invertida seguida por uma letra sem significado especial
-        será uma falha.
-       </simpara>
-      </listitem>
-      <listitem>
-       <simpara>
-        Se <link linkend="reference.pcre.pattern.modifiers">PCRE_UNGREEDY</link> estiver
-        definida, a ganância dos quantificadores de repetição é invertida,
-        ou seja, por padrão eles não serão gananciosos, mas se seguidos de um
-        ponto de interrogação eles serão.
-       </simpara>
-      </listitem>
-     </orderedlist>
-    </para>
-   </listitem>
-  </orderedlist>
- </para>
+ <simpara>
+  Tanto o Perl quanto o PCRE2 mudam continuamente, portanto o conjunto exato de diferenças
+  depende da versão da biblioteca PCRE2 em uso. Consulte a
+  <link xlink:href="&url.pcre2.perlcompat;">documentação do PCRE2 sobre as
+  diferenças entre PCRE2 e Perl</link> para uma lista atualizada.
+ </simpara>
 </article>
 
 <!-- Keep this comment at the end of the file

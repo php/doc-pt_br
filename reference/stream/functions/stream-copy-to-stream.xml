@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 6a5b227850bbad1ec81fd52b6a08e12e3f2c03ac Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: a88dc819007e9f520c8f912aab9c72aca6485d41 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.stream-copy-to-stream" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>stream_copy_to_stream</refname>
@@ -14,14 +14,14 @@
    <methodparam choice="opt"><type class="union"><type>int</type><type>null</type></type><parameter>length</parameter><initializer>&null;</initializer></methodparam>
    <methodparam choice="opt"><type>int</type><parameter>offset</parameter><initializer>0</initializer></methodparam>
   </methodsynopsis>
-  <para>
-   Faz uma cópia dos dados com um comprimento em bytes definido em <parameter>length</parameter>,
-   a partir da posição atual (ou a partir da posição
-   <parameter>offset</parameter>, se especificada) do fluxo
-   <parameter>from</parameter> para o fluxo <parameter>to</parameter>. Se
-   <parameter>length</parameter> for &null;, todo o conteúdo remanescente em
+  <simpara>
+   Faz uma cópia de até <parameter>length</parameter> bytes
+   de dados de <parameter>from</parameter> para <parameter>to</parameter>,
+   começando na posição atual de <parameter>from</parameter>, ou em
+   <parameter>offset</parameter> se for maior que <literal>0</literal>.
+   Se <parameter>length</parameter> for &null;, todo o conteúdo remanescente em
    <parameter>from</parameter> será copiado.
-  </para>
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -55,9 +55,16 @@
     <varlistentry>
      <term><parameter>offset</parameter></term>
      <listitem>
-      <para>
-       O deslocamento a partir do qual deve-se começar a copiar os dados
-      </para>
+      <simpara>
+       Se maior que <literal>0</literal>, a posição em
+       <parameter>from</parameter>, contada a partir do início do fluxo,
+       na qual começar a copiar: <parameter>from</parameter> é primeiro movido
+       para essa posição, como com <function>fseek</function> e
+       <constant>SEEK_SET</constant>.
+       Se <literal>0</literal> (o padrão) ou negativo, nenhum reposicionamento é
+       realizado e a cópia começa na posição atual em
+       <parameter>from</parameter>.
+      </simpara>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -113,6 +120,22 @@ echo stream_copy_to_stream($src, $dest2) . " bytes copiados para remainder.txt\n
     </programlisting>
    </example>
   </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <simpara>
+    Quando <parameter>from</parameter> é um fluxo de socket em modo de bloqueio,
+    a cópia para assim que nenhum dado é recebido dentro do tempo limite do fluxo,
+    mesmo que o fim do fluxo não tenha sido alcançado.
+    &false; pode então ser retornado, embora os dados lidos até esse momento
+    já tenham sido gravados em <parameter>to</parameter>.
+    Este tempo limite tem como padrão
+    <link linkend="ini.default-socket-timeout">default_socket_timeout</link>
+    e pode ser alterado com <function>stream_set_timeout</function>.
+   </simpara>
+  </note>
  </refsect1>
 
  <refsect1 role="seealso">

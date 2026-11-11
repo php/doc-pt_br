@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 603435cd84951fc720eded819c62ef2466d21b5c Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<!-- EN-Revision: a833060594749e44ff296fee01fd587d6395cff7 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
 <reference xml:id="class.splfixedarray" role="class" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
  <title>A classe SplFixedArray</title>
  <titleabbrev>SplFixedArray</titleabbrev>
@@ -85,6 +85,14 @@
       <row>
        <entry>8.1.0</entry>
        <entry>
+        Usar uma chave não inteira em um <classname>SplFixedArray</classname> agora lança
+        um <exceptionname>TypeError</exceptionname> em vez de uma
+        <exceptionname>RuntimeException</exceptionname>.
+       </entry>
+      </row>
+      <row>
+       <entry>8.1.0</entry>
+       <entry>
         <classname>SplFixedArray</classname> implementa
         <interfacename>JsonSerializable</interfacename> agora.
        </entry>
@@ -130,23 +138,25 @@ $array[9] = "asdf";
 // Reduz o array para um tamanho de 2
 $array->setSize(2);
 
-// As seguintes linhas lançam uma RuntimeException: Índice inválido ou fora do intervalo
-try {
-    var_dump($array["non-numeric"]);
-} catch(RuntimeException $re) {
-    echo "RuntimeException: ".$re->getMessage()."\n";
-}
-
+// Os dois blocos a seguir lançam uma RuntimeException: Índice inválido ou fora do intervalo
 try {
     var_dump($array[-1]);
-} catch(RuntimeException $re) {
-    echo "RuntimeException: ".$re->getMessage()."\n";
+} catch(RuntimeException $e) {
+    echo "RuntimeException: ".$e->getMessage()."\n";
 }
 
 try {
     var_dump($array[5]);
-} catch(RuntimeException $re) {
-    echo "RuntimeException: ".$re->getMessage()."\n";
+} catch(RuntimeException $e) {
+    echo "RuntimeException: ".$e->getMessage()."\n";
+}
+
+// A partir do PHP 8.1.0, usar uma chave não inteira lança um TypeError.
+// Antes do PHP 8.1.0, uma RuntimeException era lançada como alternativa.
+try {
+    var_dump($array["non-numeric"]);
+} catch(TypeError $e) {
+    echo "TypeError: ".$e->getMessage()."\n";
 }
 ?>
 ]]>
@@ -159,11 +169,18 @@ int(2)
 string(3) "foo"
 RuntimeException: Index invalid or out of range
 RuntimeException: Index invalid or out of range
-RuntimeException: Index invalid or out of range
+TypeError: Illegal offset type
 ]]>
      </screen>
     </example>
    </para>
+   <note>
+    <simpara>
+     Antes do PHP 8.1.0, acessar um <classname>SplFixedArray</classname> com uma
+     chave não inteira lançava uma <exceptionname>RuntimeException</exceptionname>
+     em vez de um <exceptionname>TypeError</exceptionname>.
+    </simpara>
+   </note>
   </section>
 <!-- }}} -->
 

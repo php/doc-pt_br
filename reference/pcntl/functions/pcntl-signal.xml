@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 5fe0f8494374d594762e56b2d769c2828b1e0ddb Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 3866fba43ed70c07afa89df7daf21529b09b4f3b Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.pcntl-signal" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>pcntl_signal</refname>
@@ -35,13 +35,13 @@
     <varlistentry>
      <term><parameter>handler</parameter></term>
      <listitem>
-      <para>
+      <simpara>
        O manipulador de sinal. Pode ser um <type>callable</type>, que
        será invocado para manipular o sinal, ou qualquer uma das duas constantes
        globais <constant>SIG_IGN</constant> ou <constant>SIG_DFL</constant>,
        que ignorarão o sinal ou restaurarão o manipulador de sinal padrão,
        respectivamente.
-      </para>
+      </simpara>
       <para>
        Se um <type>callable</type> for fornecido, ele deve implementar a seguinte
        assinatura:
@@ -54,7 +54,7 @@
        </methodsynopsis>
        <variablelist>
         <varlistentry>
-         <term><parameter>signal</parameter></term>
+         <term><parameter>signo</parameter></term>
          <listitem>
           <simpara>
            O sinal que está sendo manipulado.
@@ -72,11 +72,11 @@
        </variablelist>
       </para>
       <note>
-       <para>
-        Observe que, quando é definido um manipulador para um método de objeto, a contagem de referências desse objeto
-        é aumentada, o que o faz persistir até que seja
-        alterado o manipulador para outra coisa ou o script termine.
-       </para>
+       <simpara>
+        Quando um manipulador é definido para um método de objeto, a contagem de referências desse
+        objeto é aumentada, o que o faz persistir até que o manipulador seja
+        alterado para outra coisa ou o script termine.
+       </simpara>
       </note>
      </listitem>
     </varlistentry>
@@ -87,6 +87,16 @@
        Especifica se a reinicialização da chamada do sistema deve ser usada quando este
        sinal chegar.
       </para>
+      <note>
+       <simpara>
+        Embora este parâmetro tenha como padrão &true;, esse padrão não
+        se aplica a <constant>SIGALRM</constant>: quando
+        <parameter>restart_syscalls</parameter> não é passado e
+        <parameter>signal</parameter> é <constant>SIGALRM</constant>,
+        a reinicialização de chamadas do sistema é desabilitada. Passe &true; explicitamente para
+        habilitar a reinicialização de chamadas do sistema para <constant>SIGALRM</constant>.
+       </simpara>
+      </note>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -98,6 +108,22 @@
   <para>
    &return.success;
   </para>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <simpara>
+   Um <exceptionname>ValueError</exceptionname> é lançado se
+   <parameter>signal</parameter> for menor que <literal>1</literal> ou maior
+   ou igual a <constant>NSIG</constant>, ou se
+   <parameter>handler</parameter> for um <type>int</type> diferente de
+   <constant>SIG_DFL</constant> ou <constant>SIG_IGN</constant>.
+  </simpara>
+  <simpara>
+   Um <exceptionname>TypeError</exceptionname> é lançado se
+   <parameter>handler</parameter> não for um <type>callable</type> nem um
+   <type>int</type>.
+  </simpara>
  </refsect1>
 
  <refsect1 role="changelog">
@@ -112,6 +138,16 @@
       </row>
      </thead>
      <tbody>
+      <row>
+       <entry>7.4.0</entry>
+       <entry>
+        <parameter>restart_syscalls</parameter> agora é respeitado para
+        <constant>SIGALRM</constant>; anteriormente a reinicialização de chamadas do sistema era
+        sempre desabilitada para esse sinal. Quando o argumento não é passado,
+        a reinicialização de chamadas do sistema permanece desabilitada para
+        <constant>SIGALRM</constant>.
+       </entry>
+      </row>
       <row>
        <entry>7.1.0</entry>
        <entry>
@@ -185,9 +221,10 @@ echo "Feito\n";
 
  <refsect1 role="notes"><!-- {{{ -->
   &reftitle.notes;
-  <para>
-   <function>pcntl_signal</function> não empilha os manipuladores de sinal, mas os substitui.
-  </para>
+  <simpara>
+   <function>pcntl_signal</function> não empilha os manipuladores de sinal, mas
+   os substitui.
+  </simpara>
   <refsect2>
    <title>Métodos de Despacho</title>
    <para>
@@ -207,15 +244,13 @@ echo "Feito\n";
 
  <refsect1 role="seealso">
   &reftitle.seealso;
-  <para>
-   <simplelist>
-    <member><link xlink:href="https://en.wikipedia.org/wiki/Signal_(IPC)">Signal (IPC)</link> na Wikipedia</member>
-    <member><function>pcntl_async_signals</function></member>
-    <member><function>pcntl_fork</function></member>
-    <member><function>pcntl_signal_dispatch</function></member>
-    <member><function>pcntl_waitpid</function></member>
-   </simplelist>
-  </para>
+  <simplelist>
+   <member><link xlink:href="https://en.wikipedia.org/wiki/Signal_(IPC)">Signal (IPC)</link> na Wikipedia</member>
+   <member><function>pcntl_async_signals</function></member>
+   <member><function>pcntl_fork</function></member>
+   <member><function>pcntl_signal_dispatch</function></member>
+   <member><function>pcntl_waitpid</function></member>
+  </simplelist>
  </refsect1>
 
 </refentry>

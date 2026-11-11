@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 21ce7d7f4f9f6f241f3e09e7f0a5be5c504d90d2 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: cbfc5d5d55d682c185583561295462a6d5ca0ea1 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.set-error-handler" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>set_error_handler</refname>
@@ -13,10 +13,13 @@
    <methodparam><type class="union"><type>callable</type><type>null</type></type><parameter>callback</parameter></methodparam>
    <methodparam choice="opt"><type>int</type><parameter>error_levels</parameter><initializer><constant>E_ALL</constant></initializer></methodparam>
   </methodsynopsis>
-  <para>
-   Define uma função de usuário (<parameter>callback</parameter>) para lidar
-   com erros em um script.
-  </para>
+  <simpara>
+   Define uma função de usuário (<parameter>callback</parameter>) para lidar com erros em
+   um script.
+   O manipulador que estava ativo até então é salvo em uma pilha interna de
+   manipuladores de erros, da qual <function>restore_error_handler</function> o remove
+   para restaurá-lo.
+  </simpara>
   <para>
    Esta função pode ser usada para definir manipuladores de erros customizados em tempo de execução,
    por exemplo em aplicações que precisem limpar arquivos/dados quando um erro
@@ -62,10 +65,13 @@
     <varlistentry>
      <term><parameter>callback</parameter></term>
      <listitem>
-      <para>
-       Se &null; for passado, o manipulador será redefinido a seu estado padrão.
+      <simpara>
+       Se &null; for passado, nenhum manipulador definido pelo usuário permanecerá ativo e os erros
+       serão tratados pelo manipulador de erros interno.
+       O manipulador que estava ativo até então ainda é salvo na pilha e
+       pode ser restaurado com <function>restore_error_handler</function>.
        Caso contrário, o manipulador é uma função de retorno com a seguinte assinatura:
-      </para>
+      </simpara>
       <para>
        <methodsynopsis>
         <type>bool</type><methodname><replaceable>handler</replaceable></methodname>
@@ -333,20 +339,79 @@ Abortando...<br />
     </screen>
    </example>
   </para>
+  <para>
+   <example>
+    <title>Chamando o manipulador anterior a partir do novo</title>
+    <simpara>
+     O valor de retorno de <function>set_error_handler</function> é o manipulador
+     que estava ativo até então. Chamá-lo a partir do novo manipulador preserva o
+     comportamento existente enquanto o complementa. Isso só funciona se esse manipulador for
+     uma função definida pelo usuário; &null; é retornado quando o manipulador interno estava
+     ativo.
+    </simpara>
+    <programlisting role="php">
+<![CDATA[
+<?php
+function logging_handler(int $errno, string $errstr): bool
+{
+    echo "registrado: $errstr\n";
+    return true;
+}
+
+set_error_handler('logging_handler');
+
+$previous = set_error_handler(function (int $errno, string $errstr) use (&$previous): bool {
+    echo "contado: $errstr\n";
+    return $previous !== null ? $previous($errno, $errstr) : false;
+});
+
+trigger_error("algo aconteceu", E_USER_WARNING);
+
+restore_error_handler();
+trigger_error("agora apenas registrado", E_USER_WARNING);
+
+restore_error_handler();
+?>
+]]>
+    </programlisting>
+    &example.outputs;
+    <screen>
+<![CDATA[
+contado: algo aconteceu
+registrado: algo aconteceu
+registrado: agora apenas registrado
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <caution>
+   <simpara>
+    Não reverta ao manipulador anterior passando o valor de retorno de
+    <function>set_error_handler</function> de volta para ela.
+    Isso coloca mais uma entrada na pilha em vez de remover uma,
+    fazendo a pilha crescer sem limite em laços e processos de longa duração, e
+    <parameter>error_levels</parameter> é redefinido para <constant>E_ALL</constant>,
+    ampliando silenciosamente a faixa de erros que o manipulador restaurado recebe.
+    <function>restore_error_handler</function> é a forma indicada de reverter
+    ao manipulador anterior.
+   </simpara>
+  </caution>
  </refsect1>
 
  <refsect1 role="seealso">
   &reftitle.seealso;
-  <para>
-   <simplelist>
-    <member><classname>ErrorException</classname></member>
-    <member><function>error_reporting</function></member>
-    <member><function>restore_error_handler</function></member>
-    <member><function>get_error_handler</function></member>
-    <member><function>trigger_error</function></member>
-    <member><link linkend="errorfunc.constants">Constantes de nível de erro</link></member>
-   </simplelist>
-  </para>
+  <simplelist>
+   <member><exceptionname>ErrorException</exceptionname></member>
+   <member><function>error_reporting</function></member>
+   <member><function>restore_error_handler</function></member>
+   <member><function>get_error_handler</function></member>
+   <member><function>trigger_error</function></member>
+   <member><link linkend="errorfunc.constants">Constantes de nível de erro</link></member>
+  </simplelist>
  </refsect1>
 </refentry>
 <!-- Keep this comment at the end of the file

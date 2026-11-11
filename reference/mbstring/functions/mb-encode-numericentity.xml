@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: a60ef65239113c7871643be68ada91081376c936 Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandowobeto, leonardolara -->
+<!-- EN-Revision: 60bb5c739561b4f09e7274bce6f8504520519980 Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandowobeto, leonardolara -->
 <refentry xml:id="function.mb-encode-numericentity" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>mb_encode_numericentity</refname>
@@ -73,8 +73,10 @@
   &reftitle.errors;
   <simpara>
    Lança uma exceção <exceptionname>ValueError</exceptionname> se
-   <parameter>map</parameter> não for uma lista de &integer;s.
+   <parameter>map</parameter> contiver qualquer valor que não seja
+   &integer;, &float;, &boolean;, &null; ou uma <link linkend="language.types.numeric-strings">string numérica</link>.
   </simpara>
+  &mbstring.errors.encoding-invalid;
  </refsect1>
 
  <refsect1 role="changelog">
@@ -91,12 +93,13 @@
      <row>
       <entry>8.4.0</entry>
       <entry>
-       <function>mb_encode_numericentity</function> agora lança uma exceção
+       A função <function>mb_encode_numericentity</function> agora lança uma exceção
        <exceptionname>ValueError</exceptionname> se <parameter>map</parameter>
-       não for uma lista de &integer;s.
+       contiver qualquer valor que não possa ser convertido implicitamente em int.
       </entry>
      </row>
      &mbstring.changelog.encoding-nullable;
+     &mbstring.changelog.encoding-invalid;
     </tbody>
    </tgroup>
   </informaltable>
@@ -111,14 +114,15 @@
 <![CDATA[
 <?php
 
-$convmap = array (
- int start_code1, int end_code1, int offset1, int mask1,
- int start_code2, int end_code2, int offset2, int mask2,
- ........
- int start_codeN, int end_codeN, int offsetN, int maskN );
+$convmap = array(
+    int start_code1, int end_code1, int offset1, int mask1,
+    int start_code2, int end_code2, int offset2, int mask2,
+    // ........
+    int start_codeN, int end_codeN, int offsetN, int maskN
+);
 // Especifique o valor Unicode para start_codeN e end_codeN
-// Adicione offsetN ao valor e faça um 'AND' bit a bit com maskN, então
-// converta o valor para referência numérica de string.
+// Adicione offsetN ao valor e faça 'AND' bit a bit com maskN,
+// em seguida, converta o valor para referência de string numérica.
 ?>
 ]]>
     </programlisting>
@@ -131,6 +135,7 @@ $convmap = array (
     <programlisting role="php">
 <![CDATA[
 <?php
+
 $str = "aAæÆあア𩸽";
 
 /* Converte todos os caracteres UTF8 de até 4 bytes para referência numérica de caracteres HTML */
@@ -142,6 +147,7 @@ $convmap = [
     0x80, 0x7FF, 0, 0x10FFFF,
     0x10000, 0x1FFFFF, 0, 0x10FFFF,
 ];
+
 var_dump(mb_encode_numericentity($str, $convmap, "utf8"));
 ?>
 ]]>

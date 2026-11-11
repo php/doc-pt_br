@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 603435cd84951fc720eded819c62ef2466d21b5c Maintainer: leonardolara Status: ready --><!-- CREDITS: felipe,leonardolara -->
+<!-- EN-Revision: 85264ba268a398c4b90c1948839d54ce688dd5cd Maintainer: leonardolara Status: ready --><!-- CREDITS: felipe,leonardolara -->
 <refentry xml:id="function.filter-input-array" xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude">
  <refnamediv>
   <refname>filter_input_array</refname>
@@ -52,22 +52,134 @@
   </simpara>
   <simpara>
    Em caso de falha, retorna &false;.
-   Exceto se a falha é aquela na qual o array de entrada designado por
-   <parameter>type</parameter> não é populado onde &null; é retornado
-   se a opção <constant>FILTER_NULL_ON_FAILURE</constant> for utilizada.
+   Se o array de entrada designado por <parameter>type</parameter> não estiver
+   populado, &null; será retornado em vez disso.
   </simpara>
   <simpara>
-   Entradas faltantes do array de entrada serão populadas no
-   &array; retornado se <parameter>add_empty</parameter> for &true;.
-   Neste caso, entradas faltantes serão definidas para &null;,
-   a menos que a opção <constant>FILTER_NULL_ON_FAILURE</constant> seja usada,
-   que neste caso serão &false;.
+   Entradas ausentes do array de entrada são adicionadas ao &array; retornado como
+   &null; se <parameter>add_empty</parameter> for &true;,
+   e são omitidas inteiramente se for &false;.
+   Diferentemente de <function>filter_input</function>,
+   a opção <constant>FILTER_NULL_ON_FAILURE</constant> não altera isso:
+   uma entrada ausente é sempre &null;.
   </simpara>
   <simpara>
    Uma entrada do &array; retornado será &false; se o filtro falhar,
    a menos que a opção <constant>FILTER_NULL_ON_FAILURE</constant> seja usada,
    que neste caso será &null;.
+   Com a opção <constant>FILTER_FORCE_ARRAY</constant>,
+   esse valor de falha é envolvido em um &array; de um elemento,
+   assim como qualquer outro resultado.
   </simpara>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Um exemplo de <function>filter_input_array</function></title>
+   <simpara>
+    Este exemplo pressupõe uma requisição GET para
+    <literal>?email=user@example.com&amp;age=twenty&amp;url=https://example.com</literal>.
+    A entrada <literal>age</literal> falha porque <literal>twenty</literal> não é
+    um inteiro; um valor fora do
+    intervalo de <literal>1</literal> a <literal>120</literal> falharia da mesma forma.
+   </simpara>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$filters = [
+    'email' => FILTER_VALIDATE_EMAIL,
+    'age'   => [
+        'filter'  => FILTER_VALIDATE_INT,
+        'options' => ['min_range' => 1, 'max_range' => 120],
+    ],
+    'url'   => FILTER_VALIDATE_URL,
+];
+
+$result = filter_input_array(INPUT_GET, $filters);
+
+var_dump($result);
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+array(3) {
+  ["email"]=>
+  string(16) "user@example.com"
+  ["age"]=>
+  bool(false)
+  ["url"]=>
+  string(19) "https://example.com"
+}
+]]>
+   </screen>
+  </example>
+  <example>
+   <title>Filtrando dados POST com <function>filter_input_array</function></title>
+   <simpara>
+    Este exemplo pressupõe uma requisição POST com os campos
+    <literal>username=&lt;script&gt;alert&lt;/script&gt;</literal> e
+    <literal>comment=Hello World</literal>.
+    Nenhum campo <literal>missing</literal> é enviado: como
+    <parameter>add_empty</parameter> tem o padrão &true;, ele ainda está presente
+    no resultado, definido como &null;.
+   </simpara>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$filters = [
+    'username' => FILTER_SANITIZE_SPECIAL_CHARS,
+    'comment'  => FILTER_SANITIZE_SPECIAL_CHARS,
+    'missing'  => FILTER_VALIDATE_INT,
+];
+
+$result = filter_input_array(INPUT_POST, $filters);
+
+var_dump($result);
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+array(3) {
+  ["username"]=>
+  string(38) "&#60;script&#62;alert&#60;/script&#62;"
+  ["comment"]=>
+  string(11) "Hello World"
+  ["missing"]=>
+  NULL
+}
+]]>
+   </screen>
+  </example>
+  <example>
+   <title>Solicitando um tipo de entrada não populado</title>
+   <simpara>
+    Este exemplo pressupõe uma requisição GET.
+    Como a requisição não continha campos POST,
+    o array de entrada designado por <constant>INPUT_POST</constant> não está
+    populado e &null; é retornado em vez de um &array;.
+    Isso se aplica a todos os tipos de entrada:
+    uma requisição sem string de consulta também produz &null; para
+    <constant>INPUT_GET</constant>.
+   </simpara>
+   <programlisting role="php">
+<![CDATA[
+<?php
+var_dump(filter_input_array(INPUT_POST, ['a' => FILTER_VALIDATE_INT]));
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+NULL
+]]>
+   </screen>
+  </example>
  </refsect1>
 
  <refsect1 role="notes">
