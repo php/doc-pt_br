@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: c938838be5a7f6d2a0b0710476afb9fb2ccb6e52 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: 83dd6312885d60196054b02bbaa339cfd33c2d9c Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <refentry xml:id="function.filter-var" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>filter_var</refname>
@@ -187,6 +187,68 @@ var_dump(filter_var($str, FILTER_VALIDATE_BOOLEAN, ['flags' => FILTER_NULL_ON_FA
 <![CDATA[
 NULL
 NULL
+]]>
+   </screen>
+  </example>
+
+  <example>
+   <title>Verificando corretamente o resultado da validação</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$value = '0';
+
+// Errado: 0 é um inteiro válido, mas é avaliado como falso
+if (!filter_var($value, FILTER_VALIDATE_INT)) {
+    echo "Verificação errada: '$value' rejeitado\n";
+}
+
+// Correto: comparar estritamente com false
+if (filter_var($value, FILTER_VALIDATE_INT) === false) {
+    echo "'$value' não é um inteiro válido\n";
+} else {
+    echo "'$value' é um inteiro válido\n";
+}
+
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+Verificação errada: '0' rejeitado
+'0' é um inteiro válido
+]]>
+   </screen>
+  </example>
+
+  <example>
+   <title>Verificando o resultado da validação booleana</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+foreach (['yes', 'no', 'maybe'] as $value) {
+    $result = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+    // false é um resultado válido aqui, então verificar null em vez disso
+    if ($result === null) {
+        echo "'$value' não é um booleano válido\n";
+    } else {
+        echo "'$value' é ", var_export($result, true), "\n";
+    }
+}
+
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+'yes' é true
+'no' é false
+'maybe' não é um booleano válido
 ]]>
    </screen>
   </example>

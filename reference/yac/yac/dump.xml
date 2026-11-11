@@ -1,32 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 4de6272a1f15efc9e3df21d255965fd890da0d6f Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: c05fbe7250c43b75034ac776ed78f4e67163e4d3 Maintainer: leonardolara Status: ready -->
 
 <refentry xml:id="yac.dump" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>Yac::dump</refname>
-  <refpurpose>Despeja o cache</refpurpose>
+  <refpurpose>Despeja entradas do cache para inspeção</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <modifier>public</modifier> <type>mixed</type><methodname>Yac::dump</methodname>
-   <methodparam><type>int</type><parameter>num</parameter></methodparam>
+   <modifier>public</modifier> <type>array</type><methodname>Yac::dump</methodname>
+   <methodparam choice="opt"><type>int</type><parameter>limit</parameter><initializer>100</initializer></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>offset</parameter><initializer>0</initializer></methodparam>
   </methodsynopsis>
-  <para>
-   Despeja os valores armazenados em cache.
-  </para>
+  <simpara>
+   Despeja os metadados das entradas armazenadas atualmente no cache.
+   Os valores em si não são retornados.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
   &reftitle.parameters;
   <variablelist>
    <varlistentry>
-    <term><parameter>num</parameter></term>
+    <term><parameter>limit</parameter></term>
     <listitem>
-     <para>
-      O máximo número de itens que devem ser retornados.
-     </para>
+     <simpara>
+      Número máximo de entradas a retornar.
+     </simpara>
+     <simpara>
+      Passar <literal>-1</literal> como <parameter>limit</parameter> despeja
+      todas as entradas atualmente mantidas pelo cache. Observe que construir
+      a lista completa pode usar uma quantidade considerável de memória em um
+      cache grande; quando a memória for importante, percorra as entradas em
+      páginas usando <parameter>limit</parameter> e <parameter>offset</parameter>.
+     </simpara>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><parameter>offset</parameter></term>
+    <listitem>
+     <simpara>
+      Número de entradas a ignorar antes da coleta. Este parâmetro está
+      disponível desde o PECL yac 2.4.0; versões anteriores sempre
+      começam pela primeira entrada. Combinado com
+      <parameter>limit</parameter>, permite percorrer em páginas um
+      cache com mais entradas do que uma chamada pode retornar.
+     </simpara>
     </listitem>
    </varlistentry>
   </variablelist>
@@ -34,11 +55,224 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-   Retorna os valores despejados.
-  </para>
+  <simpara>
+   Um <type>array</type> com um elemento para cada entrada despejada.
+   Cada elemento também é um array que descreve a entrada:
+  </simpara>
+  <variablelist>
+   <varlistentry>
+    <term><literal>index</literal></term>
+    <listitem><simpara>
+     O índice do slot da entrada na tabela hash.
+    </simpara></listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><literal>hash</literal></term>
+    <listitem><simpara>
+     O hash de 64 bits da chave, usado para sondar slots.
+    </simpara></listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><literal>crc</literal></term>
+    <listitem><simpara>
+     A soma de verificação CRC32 do valor armazenado, usada para detectar
+     leituras incompletas. <literal>0</literal> para entradas embutidas,
+     que não têm bloco de valor.
+    </simpara></listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><literal>ttl</literal></term>
+    <listitem><simpara>
+     O timestamp de expiração (horário Unix). <literal>0</literal> significa
+     que a entrada nunca expira por tempo. Observe que
+     <methodname>Yac::delete</methodname> apenas marca uma entrada como
+     expirada, então entradas excluídas ainda podem aparecer no despejo; um
+     <literal>ttl</literal> diferente de zero no passado indica uma entrada
+     expirada ou excluída.
+    </simpara></listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><literal>k_len</literal></term>
+    <listitem><simpara>
+     O comprimento da chave, em bytes.
+    </simpara></listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><literal>v_len</literal></term>
+    <listitem><simpara>
+     O comprimento do valor, em bytes. Para entradas compactadas, este é o
+     comprimento do valor <emphasis>original</emphasis> antes da compactação
+     (desde o yac 2.4.0; versões anteriores informavam o comprimento
+     armazenado, já compactado).
+    </simpara></listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><literal>c_len</literal></term>
+    <listitem><simpara>
+     Presente apenas para entradas compactadas (desde o yac 2.4.0): o
+     comprimento, em bytes, da carga compactada efetivamente armazenada na
+     memória compartilhada. Comparar <literal>c_len</literal> com
+     <literal>v_len</literal> mostra quanto a compactação economiza por entrada.
+    </simpara></listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><literal>size</literal></term>
+    <listitem><simpara>
+     O tamanho alocado do bloco de valor na memória compartilhada, em bytes.
+     <literal>0</literal> para entradas embutidas.
+    </simpara></listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><literal>atime</literal></term>
+    <listitem><simpara>
+     O horário do último acesso (horário Unix), atualizado a cada
+     <methodname>Yac::get</methodname> bem-sucedido. Quando o cache está
+     cheio, a entrada com o <literal>atime</literal> mais antigo entre os
+     slots candidatos é removida primeiro (desde o yac 2.4.0).
+    </simpara></listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><literal>hits</literal></term>
+    <listitem><simpara>
+     Um contador de acertos por entrada, incrementado a cada
+     <methodname>Yac::get</methodname> bem-sucedido e zerado quando a
+     entrada é sobrescrita por um novo <methodname>Yac::set</methodname> ou
+     <methodname>Yac::add</methodname> (desde o yac 2.4.0).
+    </simpara></listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><literal>embedded</literal></term>
+    <listitem><simpara>
+     Se o valor é armazenado diretamente no slot, em vez de em um bloco
+     de valor separado (desde o yac 2.4.0). Valores pequenos —
+     <constant>NULL</constant>, booleanos, inteiros pequenos, strings de até
+     7 bytes e arrays vazios — são embutidos dessa forma e não alocam memória
+     para valores; para eles, <literal>crc</literal> e
+     <literal>size</literal> são informados como <literal>0</literal>.
+    </simpara></listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><literal>key</literal></term>
+    <listitem><simpara>
+     A chave do cache, sem qualquer prefixo de instância.
+    </simpara></listitem>
+   </varlistentry>
+  </variablelist>
  </refsect1>
 
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>Yac::dump</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$yac = new Yac();
+$yac->set("foo", "bar");
+$yac->set("baz", "qux");
+
+print_r($yac->dump());
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+Array
+(
+    [0] => Array
+        (
+            [index] => 12345
+            [hash] => 14463105906481965911
+            [crc] => 0
+            [ttl] => 0
+            [k_len] => 3
+            [v_len] => 3
+            [size] => 0
+            [atime] => 1725955200
+            [hits] => 0
+            [embedded] => 1
+            [key] => foo
+        )
+
+    [1] => Array
+        (
+            [index] => 12987
+            [hash] => 15132029420525657053
+            [crc] => 0
+            [ttl] => 0
+            [k_len] => 3
+            [v_len] => 3
+            [size] => 0
+            [atime] => 1725955200
+            [hits] => 0
+            [embedded] => 1
+            [key] => baz
+        )
+
+)
+]]>
+   </screen>
+   <simpara>
+    As entradas são listadas na ordem dos slots, não na ordem em que foram
+    armazenadas. Entradas embutidas (valores escalares curtos mantidos no
+    próprio slot) têm <literal>crc</literal> e <literal>size</literal> iguais
+    a zero; entradas armazenadas em um bloco de valor separado incluem a soma
+    de verificação e o tamanho do bloco, e entradas compactadas também incluem
+    <literal>c_len</literal>.
+   </simpara>
+  </example>
+  <example>
+   <title>Percorrendo um cache grande em páginas</title>
+   <simpara>
+    <parameter>limit</parameter> limita quantas entradas uma única chamada
+    retorna, e <parameter>offset</parameter> ignora essa quantidade de entradas
+    antes da coleta; assim, os dois parâmetros podem ser combinados para
+    percorrer em páginas um cache que contém mais entradas do que uma chamada
+    pode retornar.
+   </simpara>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$yac = new Yac();
+
+// preenche o cache com 250 entradas
+for ($i = 0; $i < 250; $i++) {
+    $yac->set("key$i", $i);
+}
+
+$page_size = 100;
+$page_num  = 2;
+
+// ignora as primeiras 100 entradas e retorna as próximas 100 (página 2)
+$page = $yac->dump($page_size, $page_size * ($page_num - 1));
+
+var_dump(count($page));
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+int(100)
+]]>
+   </screen>
+   <simpara>
+    Menos entradas que o solicitado são retornadas quando o cache contém
+    menos entradas que as abrangidas pela página solicitada; um array vazio
+    é retornado quando o deslocamento ultrapassa o último slot ocupado.
+   </simpara>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><methodname>Yac::info</methodname></member>
+   </simplelist>
+  </para>
+ </refsect1>
 
 </refentry>
 

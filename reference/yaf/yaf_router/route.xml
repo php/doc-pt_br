@@ -1,39 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 2d04efd3203278143d16de23df2df37758a49368 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: ddcf673c59d1708557680946fbffeee361d7fca6 Maintainer: leonardolara Status: ready -->
 
 <refentry xml:id="yaf-router.route" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
-  <refname>Yaf_Router::route</refname>
-  <refpurpose>Encaminha uma requisição</refpurpose>
+<refname>Yaf_Router::route</refname>
+<refpurpose>Roteia uma requisição</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <modifier>public</modifier> <type>bool</type><methodname>Yaf_Router::route</methodname>
+   <modifier>public</modifier> <type class="union"><type>bool</type><type>null</type></type><methodname>Yaf_Router::route</methodname>
    <methodparam><type>Yaf_Request_Abstract</type><parameter>request</parameter></methodparam>
   </methodsynopsis>
-  <para>
-
-  </para>
-
-  &warn.undocumented.func;
-
+  <simpara>Roteia a requisição com as rotas registradas.</simpara>
+  <simpara>As rotas são testadas na ordem inversa de registro. A primeira rota que assume a requisição vence; a requisição é então marcada como roteada (consulte <methodname>Yaf_Request_Abstract::setRouted</methodname>) e o nome da rota vencedora é registrado, podendo ser obtido por meio de <methodname>Yaf_Router::getCurrentRoute</methodname>.</simpara>
+  <simpara>A rota padrão, registrada como <literal>_default</literal>, é <classname>Yaf_Route_Static</classname>, a menos que uma rota padrão personalizada esteja configurada.</simpara>
  </refsect1>
 
  <refsect1 role="parameters">
   &reftitle.parameters;
-  &no.function.parameters;
+  <variablelist>
+   <varlistentry>
+    <term><parameter>request</parameter></term>
+    <listitem>
+<simpara>A instância de <classname>Yaf_Request_Abstract</classname> a rotear.</simpara>
+    </listitem>
+   </varlistentry>
+  </variablelist>
  </refsect1>
-
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-
-  </para>
+<simpara>Retorna &true; se a requisição tiver sido roteada, ou &false; se nenhuma rota corresponder (por exemplo, um URI malformado), fazendo o despachante parar.</simpara>
  </refsect1>
 
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>Yaf_Router::route</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class Bootstrap extends Yaf_Bootstrap_Abstract
+{
+    public function _initRoute(Yaf_Dispatcher $dispatcher)
+    {
+        $router = $dispatcher->getRouter();
 
+        $router->addRoute("rewrite", new Yaf_Route_Rewrite(
+            "/product/:id",
+            ["controller" => "product", "action" => "detail"]
+        ));
+
+        /* roteia uma requisição construída manualmente, por exemplo, em um teste unitário */
+        $request = new Yaf_Request_Simple("CLI", null, "index.php",
+            "/product/123", null);
+
+        if ($router->route($request)) {
+            var_dump($router->getCurrentRoute());
+            var_dump($request->getControllerName());
+            var_dump($request->getActionName());
+            var_dump($request->getParam("id"));
+        } else {
+            /* nenhuma rota correspondeu */
+        }
+    }
+}
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+string(7) "rewrite"
+string(7) "product"
+string(6) "detail"
+string(3) "123"
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><methodname>Yaf_Router::addRoute</methodname></member>
+   <member><methodname>Yaf_Router::getCurrentRoute</methodname></member>
+   <member><methodname>Yaf_Dispatcher::dispatch</methodname></member>
+  </simplelist>
+ </refsect1>
 </refentry>
 
 <!-- Keep this comment at the end of the file

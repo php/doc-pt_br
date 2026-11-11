@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 855bfee2f3db70d7dbb4c60c7c4a4efa567f1c60 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<!-- EN-Revision: b57e4540345a84d3f82ffd0e84dc40d3f9c35241 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
 <refentry xml:id="sqlite3.busytimeout" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>SQLite3::busyTimeout</refname>
@@ -15,6 +15,25 @@
   <para>
    Define um manipulador ocupado que irá dormir até que o banco de dados não esteja bloqueado ou o tempo limite seja atingido.
   </para>
+  <simpara>
+   O manipulador de conexão ocupada é integrado ao SQLite, portanto nenhuma função de retorno precisa ser fornecida.
+   Quando uma instrução encontra o banco de dados bloqueado por outra conexão, o SQLite
+   continua tentando por até <parameter>milliseconds</parameter>. Se o
+   banco de dados ainda estiver bloqueado após esse período, a instrução falha com um
+   erro <literal>database is locked</literal> (<literal>SQLITE_BUSY</literal>).
+  </simpara>
+  <simpara>
+   A forma como essa falha se manifesta depende de
+   <methodname>SQLite3::enableExceptions</methodname>. Com exceções habilitadas,
+   uma <exceptionname>SQLite3Exception</exceptionname> é lançada. Caso contrário, um
+   <constant>E_WARNING</constant> é gerado e o método que executou a
+   instrução, como <methodname>SQLite3::exec</methodname> ou
+   <methodname>SQLite3::query</methodname>, retorna &false;.
+  </simpara>
+  <simpara>
+   Por padrão, nenhum manipulador de conexão ocupada é definido, portanto uma instrução falha imediatamente se o
+   banco de dados estiver bloqueado.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -24,10 +43,11 @@
     <varlistentry>
      <term><parameter>milliseconds</parameter></term>
      <listitem>
-      <para>
-       Os milissegundos para dormir. Definir esse valor como um valor menor
-       ou igual a zero desligará um manipulador de tempo limite já definido.
-      </para>
+      <simpara>
+       O número máximo de milissegundos para aguardar um bloqueio. Definir esse
+       valor como menor ou igual a zero desabilitará um manipulador de
+       tempo limite já definido.
+      </simpara>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -36,9 +56,11 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-   Retorna &true; em caso de sucesso, &return.falseforfailure;.
-  </para>
+  <simpara>
+   Retorna &true; se o tempo limite foi definido, &return.falseforfailure;.
+   O valor de retorno informa apenas se o tempo limite foi definido. Não significa
+   que instruções posteriores conseguirão o bloqueio a tempo.
+  </simpara>
  </refsect1>
 
 </refentry>

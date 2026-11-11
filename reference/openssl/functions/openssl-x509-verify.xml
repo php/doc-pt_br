@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 497c40ac164d5873fd87f622dfdeb5206392b446 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 9e5f75b8c1d87da6ee825ae7d1b2a3da218b5c69 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.openssl-x509-verify" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>openssl_x509_verify</refname>
@@ -47,6 +47,15 @@ MIIBCgK...</literal>)
    Retorna 1 se a assinatura estiver correta, 0 se estiver incorreta e
    -1 em caso de erro.
   </para>
+  <warning>
+   <simpara>
+    Tanto o valor de sucesso quanto o valor de erro são
+    <link linkend="language.types.boolean.casting">avaliados como verdadeiros</link>, portanto um
+    teste booleano simples como <code>if (openssl_x509_verify(...))</code> trata um erro como uma
+    verificação bem-sucedida. O resultado deve ser comparado estritamente com
+    <literal>1</literal>.
+   </simpara>
+  </warning>
  </refsect1>
 
  <refsect1 role="changelog">
@@ -97,7 +106,7 @@ $ssloptions = array(
     "CN_match" => $hostname,
     "verify_peer" => true,
     "SNI_enabled" => true,
-    "SNI_server_name" => $hostname,
+    "peer_name" => $hostname,
 );
 
 $ctx = stream_context_create( array("ssl" => $ssloptions) );
@@ -111,7 +120,7 @@ foreach($cont["options"]["ssl"]["peer_certificate_chain"] as $chaincert)
     $chainparsed = openssl_x509_parse($chaincert);
     $chain_public_key = openssl_get_publickey($chaincert);
     $r = openssl_x509_verify($x509, $chain_public_key);
-    if ($r==1)
+    if ($r === 1)
     {
         echo $certparsed['subject']['CN'];
         echo " foi assinado digitalmente por ";

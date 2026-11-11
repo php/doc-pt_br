@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: e2f2172bf114599926878017ab2dce356956fa9e Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: ddcf673c59d1708557680946fbffeee361d7fca6 Maintainer: leonardolara Status: ready -->
 
 <section xml:id="yaf.configuration" xmlns="http://docbook.org/ns/docbook">
  &reftitle.runtime;
@@ -19,7 +19,25 @@
     <tbody>
      <row>
       <entry><link linkend="ini.yaf.library">yaf.library</link></entry>
-      <entry></entry>
+      <entry>""</entry>
+      <entry><constant>INI_ALL</constant></entry>
+      <entry><!-- leave empty, this will be filled by an automatic script --></entry>
+     </row>
+     <row>
+      <entry><link linkend="ini.yaf.environ">yaf.environ</link></entry>
+      <entry>"product"</entry>
+      <entry><constant>INI_SYSTEM</constant></entry>
+      <entry><!-- leave empty, this will be filled by an automatic script --></entry>
+     </row>
+     <row>
+      <entry><link linkend="ini.yaf.forward-limit">yaf.forward_limit</link></entry>
+      <entry>5</entry>
+      <entry><constant>INI_ALL</constant></entry>
+      <entry><!-- leave empty, this will be filled by an automatic script --></entry>
+     </row>
+     <row>
+      <entry><link linkend="ini.yaf.use-namespace">yaf.use_namespace</link></entry>
+      <entry>0</entry>
       <entry><constant>INI_ALL</constant></entry>
       <entry><!-- leave empty, this will be filled by an automatic script --></entry>
      </row>
@@ -42,12 +60,6 @@
       <entry><!-- leave empty, this will be filled by an automatic script --></entry>
      </row>
      <row>
-      <entry><link linkend="ini.yaf.forward-limit">yaf.forward_limit</link></entry>
-      <entry>5</entry>
-      <entry><constant>INI_ALL</constant></entry>
-      <entry><!-- leave empty, this will be filled by an automatic script --></entry>
-     </row>
-     <row>
       <entry><link linkend="ini.yaf.name-suffix">yaf.name_suffix</link></entry>
       <entry>1</entry>
       <entry><constant>INI_ALL</constant></entry>
@@ -55,26 +67,8 @@
      </row>
      <row>
       <entry><link linkend="ini.yaf.name-separator">yaf.name_separator</link></entry>
-      <entry></entry>
+      <entry>""</entry>
       <entry><constant>INI_ALL</constant></entry>
-      <entry><!-- leave empty, this will be filled by an automatic script --></entry>
-     </row>
-     <row>
-      <entry><link linkend="ini.yaf.cache-config">yaf.cache_config</link></entry>
-      <entry>0</entry>
-      <entry><constant>INI_SYSTEM</constant></entry>
-      <entry><!-- leave empty, this will be filled by an automatic script --></entry>
-     </row>
-     <row>
-      <entry><link linkend="ini.yaf.environ">yaf.environ</link></entry>
-      <entry>product</entry>
-      <entry><constant>INI_SYSTEM</constant></entry>
-      <entry><!-- leave empty, this will be filled by an automatic script --></entry>
-     </row>
-     <row>
-      <entry><link linkend="ini.yaf.use-namespace">yaf.use_namespace</link></entry>
-      <entry>0</entry>
-      <entry><constant>INI_SYSTEM</constant></entry>
       <entry><!-- leave empty, this will be filled by an automatic script --></entry>
      </row>
     </tbody>
@@ -85,6 +79,17 @@
  &ini.descriptions.title;
 
  <para>
+  <note>
+   <simpara>
+    A diretiva <literal>yaf.cache_config</literal> existia no Yaf 2.x, onde
+    armazenava em cache o resultado da análise do arquivo de configuração INI
+    dentro do processo PHP. Ela foi removida no Yaf 3.0.0 e não é mais
+    reconhecida.
+   </simpara>
+  </note>
+ </para>
+
+ <para>
   <variablelist>
    <varlistentry xml:id="ini.yaf.library">
     <term>
@@ -92,83 +97,150 @@
      <type>string</type>
     </term>
     <listitem>
-     <para>
-      O caminho da biblioteca global, Yaf_loader irá pesquisar a biblioteca global neste
-      diretório.
-     </para>
+      <simpara>
+       O diretório de biblioteca global. <classname>Yaf_Loader</classname> procura
+       neste diretório as classes que não podem ser encontradas na biblioteca local
+       da aplicação (consulte <link
+       linkend="configuration.yaf.library">application.library</link>).
+      </simpara>
+      <simpara>
+       Consulte também <methodname>Yaf_Loader::getLibraryPath</methodname> e
+       <methodname>Yaf_Loader::setLibraryPath</methodname>.
+      </simpara>
     </listitem>
    </varlistentry>
+    <varlistentry xml:id="ini.yaf.environ">
+    <term>
+      <parameter>yaf.environ</parameter>
+      <type>string</type>
+    </term>
+    <listitem>
+      <simpara>
+       O nome do ambiente, <literal>"product"</literal> por padrão. É usado por
+       <classname>Yaf_Application</classname> para escolher a seção do arquivo de
+       configuração INI (seu primeiro argumento do construtor) que se torna a
+       configuração da aplicação.
+      </simpara>
+      <simpara>
+       Por exemplo, se este valor for <literal>"product"</literal>, Yaf usará a
+       seção chamada <literal>[product]</literal> do arquivo de configuração INI
+       como a configuração final de <classname>Yaf_Application</classname>. O nome
+       do ambiente também pode ser sobrescrito por aplicação, passando o segundo
+       argumento do construtor para
+       <methodname>Yaf_Application::__construct</methodname>.
+      </simpara>
+    </listitem>
+   </varlistentry>
+    <varlistentry xml:id="ini.yaf.forward-limit">
+    <term>
+      <parameter>yaf.forward_limit</parameter>
+     <type>int</type>
+    </term>
+    <listitem>
+      <simpara>
+       O número máximo de vezes que
+       <methodname>Yaf_Controller_Abstract::forward</methodname> pode ser encadeado
+       em uma única requisição, <literal>5</literal> por padrão.
+      </simpara>
+      <simpara>
+       Esta é uma proteção contra laços recursivos de
+       <methodname>Yaf_Controller_Abstract::forward</methodname>; quando o limite é
+       excedido, uma <classname>Yaf_Exception_DispatchFailed</classname> é lançada.
+       Valores não positivos são ajustados para o padrão.
+      </simpara>
+    </listitem>
+   </varlistentry>
+    <varlistentry xml:id="ini.yaf.use-namespace">
+     <term>
+      <parameter>yaf.use_namespace</parameter>
+      <type>int</type>
+     </term>
+     <listitem>
+      <simpara>
+       Quando habilitado, todas as classes declaradas pelo Yaf são nomeadas no
+       estilo de namespace:
+      </simpara>
+      <screen>
+<![CDATA[
+Yaf_Route_Rewrite => \Yaf\Route\Rewrite
+Yaf_Request_Http  => \Yaf\Request\Http
+]]>
+      </screen>
+      <simpara>
+       Há uma exceção para classes cujo último componente é uma palavra-chave
+       reservada do PHP e, portanto, não pode ser usado como nome de classe; essas
+       classes mantêm o sublinhado no último componente:
+      </simpara>
+      <screen>
+<![CDATA[
+Yaf_Controller_Abstract => \Yaf\Controller_Abstract
+Yaf_Route_Static        => \Yaf\Route_Static
+]]>
+      </screen>
+      <note>
+       <simpara>
+        Apenas um dos dois estilos de nomenclatura é registrado quando a extensão é
+        iniciada, portanto esta diretiva deve ser definida antes do carregamento da
+        extensão; ela não pode ser alternada por requisição de maneira efetiva.
+       </simpara>
+      </note>
+     </listitem>
+    </varlistentry>
     <varlistentry xml:id="ini.yaf.action-prefer">
-    <term>
-     <parameter>yaf.action_prefer</parameter>
-     <type>int</type>
-    </term>
-    <listitem>
-     <para>
-      Se houver apenas uma parte em PATH_INFO, ela deve ser considerada como
-      controlador ou ação.
-     </para>
-     <para>
-      Se estiver configurado como On, será considerado como um nome de ação.
-     </para>
-    </listitem>
-   </varlistentry>
-   <varlistentry xml:id="ini.yaf.lowcase-path">
-    <term>
-     <parameter>yaf.lowcase_path</parameter>
-     <type>int</type>
-    </term>
-    <listitem>
-     <para>
-      Informa se todo o caminho deve ser convertido para minúsculas durante o carregamento automático da classe.
-     </para>
-    </listitem>
-   </varlistentry>
+     <term>
+      <parameter>yaf.action_prefer</parameter>
+      <type>int</type>
+     </term>
+     <listitem>
+      <simpara>
+       Quando há apenas uma parte em <literal>PATH_INFO</literal>, decide
+       se ela deve ser considerada um nome de controlador ou um nome de
+       ação.
+      </simpara>
+      <simpara>
+       Se esta configuração estiver ativada, o segmento único será considerado um
+       nome de ação e o nome do controlador será o controlador padrão; caso
+       contrário, ele será considerado um nome de controlador.
+      </simpara>
+     </listitem>
+    </varlistentry>
+    <varlistentry xml:id="ini.yaf.lowcase-path">
+     <term>
+      <parameter>yaf.lowcase_path</parameter>
+      <type>int</type>
+     </term>
+     <listitem>
+      <simpara>
+       Se todos os componentes do caminho devem ser convertidos para minúsculas durante o autocarregamento de classes.
+      </simpara>
+     </listitem>
+    </varlistentry>
     <varlistentry xml:id="ini.yaf.use-spl-autoload">
      <term>
       <parameter>yaf.use_spl_autoload</parameter>
       <type>int</type>
      </term>
      <listitem>
-      <para>
-       Quando este valor estiver On, se <classname>Yaf_Loader</classname> não conseguir
-       encontrar uma classe, ele retornará &false;, então dará chance para outra
-       função de carregamento automático ser chamada.
-      </para>
-      <para>
-       Quando este valor estiver On, se <classname>Yaf_Loader</classname> não conseguir
-       encontrar uma classe, ele retornará &true;, e fará com que o carregamento automático da classe
-       falhe imediatamente.
-      </para>
+      <simpara>
+       Quando este valor está ativado, se <classname>Yaf_Loader</classname> não
+       conseguir encontrar uma classe, retornará &false;, dando a outras funções de
+       autocarregamento a oportunidade de serem chamadas.
+      </simpara>
+      <simpara>
+       Quando este valor está desativado (o padrão), se
+       <classname>Yaf_Loader</classname> não conseguir encontrar uma classe,
+       retornará &true; e o autocarregamento da classe falhará imediatamente:
+       <methodname>Yaf_Loader::autoload</methodname> sempre retorna &true; nesse
+       modo.
+      </simpara>
       <note>
-       <para>
-        Yaf registrará seu carregador durante uma instanciação de
-        <classname>Yaf_Application</classname>, então quaisquer outros carregadores
-        automáticos registrados antes da instanciação serão chamados antes de
+       <simpara>
+        Yaf registra seu carregador durante a instanciação de uma
+        <classname>Yaf_Application</classname>, portanto quaisquer outros
+        autocarregadores registrados antes da instanciação serão chamados antes de
         <methodname>Yaf_Loader::autoload</methodname>.
-       </para>
+       </simpara>
       </note>
-      <para>
-       Quando este valor estiver Off (padrão),
-       <methodname>Yaf_Loader::autoload</methodname> sempre retornará
-       &true;.
-      </para>
-     </listitem>
-    </varlistentry>
-    <varlistentry xml:id="ini.yaf.forward-limit">
-     <term>
-      <parameter>yaf.forward_limit</parameter>
-      <type>int</type>
-     </term>
-     <listitem>
-      <para>
-       A contagem máxima de encaminhamento, o padrão é 5. isso significa que você pode ter um
-       valor máximo de 5 na pilha de encaminhamento.
-       </para>
-      <para>
-       Esta é uma proteção para evitar
-       <methodname>Yaf_Controller_Abstract::forward</methodname> recursivo.
-      </para>
      </listitem>
     </varlistentry>
     <varlistentry xml:id="ini.yaf.name-suffix">
@@ -177,13 +249,17 @@
       <type>int</type>
      </term>
      <listitem>
-      <para>
-       Quando ativado, Yaf_Loader identificará uma classe por seu sufixo para
-       decidir se é uma classe MVC.
-      </para>
-      <para>
-       Quando estiver desativado, Yaf_Loader examinará o prefixo do nome da classe.
-      </para>
+      <simpara>
+       Quando esta opção está ativada (o padrão), <classname>Yaf_Loader</classname>
+       identifica uma classe MVC por seu sufixo para decidir se é uma classe de
+       controlador ou de ação: <literal>IndexController</literal>,
+       <literal>IndexAction</literal>.
+      </simpara>
+      <simpara>
+       Quando esta opção está desativada, <classname>Yaf_Loader</classname> examina
+       o prefixo do nome da classe em vez disso:
+       <literal>Controller_Index</literal>, <literal>Action_Index</literal>.
+      </simpara>
      </listitem>
     </varlistentry>
     <varlistentry xml:id="ini.yaf.name-separator">
@@ -192,95 +268,21 @@
       <type>string</type>
      </term>
      <listitem>
-      <para>
-       Quando não estiver vazio, Yaf_Loader identificará o sufixo de classe
-       e o valor da string dela.
-      </para>
-      <para>
-       Por exemplo, quando este valor for "_", Yaf_Loader considerará Index_Controller como
-       uma classe de controlador, IndexController como uma classe normal.
-      </para>
+      <simpara>
+       Quando este valor não está vazio, <classname>Yaf_Loader</classname>
+       identifica classes MVC por este separador em vez do sublinhado que separa o
+       nome e o sufixo MVC.
+      </simpara>
+      <simpara>
+       Por exemplo, quando este valor é <literal>"_"</literal> e <link
+       linkend="ini.yaf.name-suffix">yaf.name_suffix</link> está ativado,
+       <classname>Yaf_Loader</classname> considera
+       <literal>Index_Controller</literal> uma classe de controlador, enquanto
+       <literal>IndexController</literal> é considerada uma classe normal. Quando
+       está vazio (o padrão), o sublinhado é usado.
+      </simpara>
      </listitem>
     </varlistentry>
-    <varlistentry xml:id="ini.yaf.cache-config">
-     <term>
-      <parameter>yaf.cache_config</parameter>
-      <type>int</type>
-     </term>
-     <listitem>
-      <para>
-       Se estiver ligado, e o arquivo de configuração INI estiver sendo usado como o
-       parâmetro de <methodname>Yaf_Application</methodname>, o
-       resultado da compilação do arquivo de configuração INI será armazenado em cache no processo
-       PHP.
-       <note>
-        <para>
-         Yaf examina o horário de modificação do arquivo INI. Se ele foi alterado desde a
-         última compilação, Yaf irá recarregá-lo.
-        </para>
-       </note>
-       <warning>
-        <para>
-         Yaf usa o caminho do arquivo INI como a chave de entrada para o cache, portanto é melhor usar
-         o caminho absoluto do arquivo INI, caso contrário podem haver
-         conflitos se duas aplicações usarem o mesmo caminho relativo do
-         arquivo INI.
-        </para>
-       </warning>
-      </para>
-     </listitem>
-    </varlistentry>
-    <varlistentry xml:id="ini.yaf.environ">
-     <term>
-      <parameter>yaf.environ</parameter>
-      <type>string</type>
-     </term>
-     <listitem>
-      <para>
-       Esta valore é igual a "product" por padrão, e é usado pelo Yaf para buscar a seção
-       de configuração de um arquivo INI.
-      </para>
-      <para>
-       Ou seja, se este valor for igual a "product", Yaf usará a seção de nome
-       "product" no arquivo de configuração INI (o primeiro parâmtro de
-       <classname>Yaf_Application</classname>) como a configuração final de
-       <classname>Yaf_Application</classname>.
-      </para>
-     </listitem>
-    </varlistentry>
-
-    <varlistentry xml:id="ini.yaf.use-namespace">
-     <term>
-      <parameter>yaf.use_namespace</parameter>
-      <type>int</type>
-     </term>
-     <listitem>
-      <para>
-       Se este valor for "On", todas as classes de Yaf serão
-       nomeadas no estilo de namespace.
-      </para>
-      <para>
-       For example:
-       <screen>
-<![CDATA[
-Yaf_Route_Rewrite => \Yaf\Route\Rewrite
-Yaf_Request_Http  => \Yaf\Request\Http
-]]>
-       </screen>
-       Existe uma exceção, que acontece com algumas classes como
-       <classname>Yaf_Controller_Abstract</classname>.
-       O último componente é uma palavra-chave do PHP e não pode ser usado como um nome
-       de classe. Portanto, para classes deste tipo:
-       <screen>
-<![CDATA[
-Yaf_Controller_Abstract => \Yaf\Controller_Abstract
-Yaf_Route_Static => \Yaf\Route_Static
-]]>
-       </screen>
-      </para>
-     </listitem>
-    </varlistentry>
-
   </variablelist>
  </para>
 </section>

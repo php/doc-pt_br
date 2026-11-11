@@ -1,25 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 83a6761c731fbda6003d4bed7608a4dbb7aa9f4e Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: ddcf673c59d1708557680946fbffeee361d7fca6 Maintainer: leonardolara Status: ready -->
 
 <refentry xml:id="yaf-view-interface.assign" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
-  <refname>Yaf_View_Interface::assign</refname>
-  <refpurpose>Atribui valor ao mecanismo de visualização</refpurpose>
+<refname>Yaf_View_Interface::assign</refname>
+<refpurpose>Atribui uma variável à visualização</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
    <modifier>abstract</modifier> <modifier>public</modifier> <type>bool</type><methodname>Yaf_View_Interface::assign</methodname>
-   <methodparam><type>string</type><parameter>name</parameter></methodparam>
-   <methodparam choice="opt"><type>string</type><parameter>value</parameter></methodparam>
+   <methodparam><type>mixed</type><parameter>name</parameter></methodparam>
+   <methodparam choice="opt"><type>mixed</type><parameter>value</parameter><initializer>NULL</initializer></methodparam>
   </methodsynopsis>
-  <para>
-   Atribui valores ao mecanismo de visualização, de forma que o valor possa ser acessado diretamente pelo nome no modelo.
-  </para>
-
-  &warn.undocumented.func;
-
+  <simpara>Atribui uma variável à visualização. As variáveis atribuídas ficam disponíveis para o modelo sob seus nomes.</simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -28,30 +23,97 @@
    <varlistentry>
     <term><parameter>name</parameter></term>
     <listitem>
-     <para>
-
-     </para>
+<simpara>O nome sob o qual a variável fica disponível para o modelo.</simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><parameter>value</parameter></term>
     <listitem>
-     <para>
-
-     </para>
+<simpara>O valor a atribuir.</simpara>
     </listitem>
    </varlistentry>
   </variablelist>
  </refsect1>
-
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-
-  </para>
+<simpara>O valor retornado é definido pela implementação concreta. <classname>Yaf_View_Simple</classname>, o mecanismo de visualização padrão, retorna a instância da visualização.</simpara>
  </refsect1>
 
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>Yaf_View_Interface::assign</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class MyView implements Yaf_View_Interface
+{
+    private $tpl_dir;
+    private $vars = array();
 
+    public function __construct($template_dir, $options = null)
+    {
+        $this->tpl_dir = $template_dir;
+    }
+
+    public function assign($name, $value = null)
+    {
+        $this->vars[$name] = $value;
+        return true;
+    }
+
+    public function display($tpl, $tpl_vars = null)
+    {
+        echo $this->render($tpl, $tpl_vars);
+        return true;
+    }
+
+    public function render($tpl, $tpl_vars = null)
+    {
+        extract($this->vars);
+        if ($tpl_vars !== null) {
+            extract($tpl_vars);
+        }
+        ob_start();
+        include $this->tpl_dir . "/" . $tpl;
+        return ob_get_clean();
+    }
+
+    public function setScriptPath($template_dir)
+    {
+        $this->tpl_dir = $template_dir;
+        return $this;
+    }
+
+    public function getScriptPath()
+    {
+        return $this->tpl_dir;
+    }
+}
+
+/* conecta o mecanismo de visualização personalizado ao despachante no bootstrap */
+class Bootstrap extends Yaf_Bootstrap_Abstract
+{
+    public function _initView(Yaf_Dispatcher $dispatcher)
+    {
+        $dispatcher->setView(new MyView(APPLICATION_PATH . "/views"));
+    }
+}
+?>
+]]>
+   </programlisting>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><methodname>Yaf_View_Interface::display</methodname></member>
+   <member><methodname>Yaf_View_Interface::render</methodname></member>
+   <member><methodname>Yaf_View_Interface::setScriptPath</methodname></member>
+   <member><methodname>Yaf_View_Interface::getScriptPath</methodname></member>
+  </simplelist>
+ </refsect1>
 </refentry>
 
 <!-- Keep this comment at the end of the file

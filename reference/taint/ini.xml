@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: d4d5216e7a965ca194f6b1c9dee84cecab2674e5 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: befe2b9fbe37b0925498f336632742651386b151 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 
 <section xml:id="taint.configuration" xmlns="http://docbook.org/ns/docbook">
  &reftitle.runtime;
@@ -25,7 +25,7 @@
      </row>
      <row>
       <entry><link linkend="ini.taint.error-level">taint.error_level</link></entry>
-      <entry>E_WARNING</entry>
+      <entry>512 (E_USER_WARNING)</entry>
       <entry><constant>INI_ALL</constant></entry>
       <entry><!-- leave empty, this will be filled by an automatic script --></entry>
      </row>
@@ -41,12 +41,26 @@
    <varlistentry xml:id="ini.taint.enable">
      <term>
       <parameter>taint.enable</parameter>
-      <type>int</type>
+      <type>bool</type>
      </term>
      <listitem>
-      <para>
-       Informa se o Taint deve ser habilitado.
-      </para>
+      <simpara>
+       Opção principal. Quando habilitada, taint intercepta o executor e
+       marca as strings de <varname>$_GET</varname>, <varname>$_POST</varname>
+       e <varname>$_COOKIE</varname> como contaminadas no início da requisição.
+      </simpara>
+      <simpara>
+       Esta diretiva só pode ser definida em &php.ini;: habilitá-la requer
+       reiniciar o processo, portanto ela não pode ser alternada por
+       requisição nem por diretório.
+      </simpara>
+      <note>
+       <simpara>
+        Não habilite esta diretiva em ambientes de produção: a instrumentação
+        torna todas as requisições mais lentas e é incompatível com o JIT do
+        OPcache.
+       </simpara>
+      </note>
      </listitem>
     </varlistentry>
     <varlistentry xml:id="ini.taint.error-level">
@@ -55,9 +69,23 @@
       <type>int</type>
      </term>
      <listitem>
+      <simpara>
+       O nível de erro usado quando taint relata uma string possivelmente
+       contaminada. O padrão é <constant>E_USER_WARNING</constant> (512).
+      </simpara>
+      <simpara>
+       Como esta diretiva é <constant>INI_ALL</constant>, ela pode ser alterada
+       em tempo de execução. Por exemplo, para silenciar os avisos de taint no
+       script atual:
+      </simpara>
       <para>
-       O tipo de erro que o Taint reportará quando encontrar uma string
-       contaminada.
+       <programlisting role="php">
+<![CDATA[
+<?php
+ini_set('taint.error_level', 0);
+?>
+]]>
+       </programlisting>
       </para>
      </listitem>
     </varlistentry>

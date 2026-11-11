@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 9af43469f46843451955b8926fe470a9f3d45034 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: f78a9528a2fe8e78380fb28cacbe6e152fa4bb6d Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <refentry xml:id="function.memory-get-usage" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>memory_get_usage</refname>
-  <refpurpose>Retorna a quantidade de memória alocada para o PHP</refpurpose>
+  <refpurpose>
+   Retorna a quantidade de memória alocada para o script PHP ou reservada pelo
+   gerenciador de memória do PHP no sistema
+  </refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
@@ -12,30 +15,43 @@
    <type>int</type><methodname>memory_get_usage</methodname>
    <methodparam choice="opt"><type>bool</type><parameter>real_usage</parameter><initializer>&false;</initializer></methodparam>
   </methodsynopsis>
-  <para>
-   Retorna a quantidade de memória, em bytes, que está sendo alocada
-   atualmente para o script PHP.
-  </para>
+  <simpara>
+   Retorna a quantidade de memória, em bytes, atualmente alocada para o script
+   PHP pelo gerenciador de memória do PHP. O valor informado é arredondado para
+   cima até a granularidade do alocador e, portanto, é maior que o número exato
+   de bytes solicitados.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
   &reftitle.parameters;
-  <para>
-   <variablelist>
-    <varlistentry>
-     <term><parameter>real_usage</parameter></term>
-     <listitem>
-      <para>
-       Defina isso como &true; para obter a memória total alocada do
-       sistema, incluindo páginas não utilizadas.
-       Se não estiver definido ou informado como &false;, apenas a memória usada é relatada.
-      </para>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-  </para>
+  <variablelist>
+   <varlistentry>
+    <term><parameter>real_usage</parameter></term>
+    <listitem>
+     <simpara>
+      Defina como &true; para obter a quantidade total de memória que o
+      gerenciador de memória do PHP reservou do sistema, inclusive páginas que
+      não estão sendo usadas. Esse é o valor ao qual
+      <link linkend="ini.memory-limit">memory_limit</link> se aplica. Ele não
+      corresponde à quantidade de memória concedida pelo sistema operacional
+      ao processo PHP, que costuma ser bem maior.
+     </simpara>
+     <simpara>
+      Se não for definido ou for &false;, somente a memória atualmente alocada
+      para o script PHP será informada.
+     </simpara>
+    </listitem>
+   </varlistentry>
+  </variablelist>
   <note>
-   <para>O PHP não rastreia memória que não é alocada por <literal>emalloc()</literal></para>
+   <simpara>
+    O PHP rastreia somente a memória alocada por meio do próprio gerenciador de
+    memória, isto é, pela função interna <literal>emalloc()</literal> e pelas
+    funções relacionadas. Memória alocada de forma persistente ou diretamente
+    com <literal>malloc()</literal> por uma extensão não é informada, mesmo
+    quando <parameter>real_usage</parameter> é &true;.
+   </simpara>
   </note>
  </refsect1>
 
@@ -54,18 +70,19 @@
     <programlisting role="php">
 <![CDATA[
 <?php
-// Este é apenas um exemplo, os número abaixo serão
-// diferentes dependendo do sistema
 
-echo memory_get_usage() . "\n"; // 36640
+// Este é apenas um exemplo, os número abaixo serão
+// diferentes dependendo do sistema específico
+
+echo memory_get_usage(), "\n"; // 36640
 
 $a = str_repeat("Hello", 4242);
 
-echo memory_get_usage() . "\n"; // 57960
+echo memory_get_usage(), "\n"; // 57960
 
 unset($a);
 
-echo memory_get_usage() . "\n"; // 36744
+echo memory_get_usage(), "\n"; // 36744
 
 ?>
 ]]>

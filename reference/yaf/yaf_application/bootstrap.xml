@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 4a211b7c8fb2b4410851d06c6f90f751d1f670d0 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: ddcf673c59d1708557680946fbffeee361d7fca6 Maintainer: leonardolara Status: ready -->
 
 <refentry xml:id="yaf-application.bootstrap" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
@@ -10,36 +10,49 @@
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <modifier>public</modifier> <type>void</type><methodname>Yaf_Application::bootstrap</methodname>
-   <methodparam choice="opt"><type>Yaf_Bootstrap_Abstract</type><parameter>bootstrap</parameter></methodparam>
+   <modifier>public</modifier> <type class="union"><type>Yaf_Application</type><type>false</type></type><methodname>Yaf_Application::bootstrap</methodname>
+   <void />
   </methodsynopsis>
-  <para>
-    Executa um Bootstrap, todos os métodos definidos no Bootstrap e nomeados com
-    o prefixo "_init" serão chamados na ordem de suas declarações. Se o parâmetro bootstrap não for informado, Yaf procurará
-    um Bootstrap no diretório especificado por application.directory.
-  </para>
-
+  <simpara>
+   Executa um Bootstrap. Todos os métodos públicos da classe Bootstrap cujo
+   nome começa com <literal>_init</literal> são chamados na ordem de
+   declaração, cada um recebendo a instância de
+   <classname>Yaf_Dispatcher</classname> como seu único argumento.
+  </simpara>
+  <simpara>
+   A classe Bootstrap deve ser chamada <literal>Bootstrap</literal> e
+   estender <classname>Yaf_Bootstrap_Abstract</classname>. Se ainda não
+   estiver definida, será carregada de
+   <filename>Bootstrap.php</filename> no diretório da aplicação; a
+   entrada de configuração <literal>application.bootstrap</literal>
+   sobrescreve sua localização.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
   &reftitle.parameters;
-  <variablelist>
-   <varlistentry>
-    <term><parameter>bootstrap</parameter></term>
-    <listitem>
-     <para>
-      Uma instância de <classname>Yaf_Bootstrap_Abstract</classname>.
-     </para>
-    </listitem>
-   </varlistentry>
-  </variablelist>
+  &no.function.parameters;
  </refsect1>
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-   Uma instância de <classname>Yaf_Application</classname>.
-  </para>
+  <simpara>
+   Retorna o próprio objeto <classname>Yaf_Application</classname> em caso de
+   sucesso, ou &false; em caso de falha (por exemplo, se a classe Bootstrap não
+   pôde ser carregada ou se uma exceção não capturada foi lançada por um dos
+   métodos <literal>_init*</literal>).
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <simpara>
+   Emite um erro <constant>YAF_ERR_TYPE_ERROR</constant> se a classe
+   encontrada não for uma subclasse de
+   <classname>Yaf_Bootstrap_Abstract</classname>, ou um
+   <constant>E_WARNING</constant> se o arquivo de inicialização ou a classe
+   <literal>Bootstrap</literal> não puder ser encontrado.
+  </simpara>
  </refsect1>
 
  <refsect1 role="examples">
@@ -50,16 +63,17 @@
 <![CDATA[
 <?php
 /**
- * Este arquivo deve estar no caminho APPLICATION_PATH . "/application/" (que foi definido na configuração passada para Yaf_Application)
- * e nomeado como Bootstrap.php, para que o Yaf_Application possa encontrá-lo.
+ * Este arquivo deve estar em APPLICATION_PATH . "/application/" (que foi
+ * definido na configuração passada para Yaf_Application) e se chamar
+ * Bootstrap.php, para que Yaf_Application possa encontrá-lo.
  */
 class Bootstrap extends Yaf_Bootstrap_Abstract {
-    function _initConfig(Yaf_Dispatcher $dispatcher) {
-        echo "primeira chamada\n";
+    public function _initConfig(Yaf_Dispatcher $dispatcher) {
+        echo "1st called\n";
     }
 
-    function _initPlugin($dispatcher) {
-        echo "segunda chamada\n";
+    public function _initPlugin(Yaf_Dispatcher $dispatcher) {
+        echo "2nd called\n";
     }
 }
 ?>
@@ -92,9 +106,12 @@ segunda chamada
 
  <refsect1 role="seealso">
   &reftitle.seealso;
-  <simplelist>
-   <member><classname>Yaf_Bootstrap_Abstract</classname></member>
-  </simplelist>
+  <para>
+   <simplelist>
+    <member><classname>Yaf_Bootstrap_Abstract</classname></member>
+    <member><methodname>Yaf_Application::run</methodname></member>
+   </simplelist>
+  </para>
  </refsect1>
 
 </refentry>

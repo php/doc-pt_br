@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 9e0f03ac354d797d1d16c0fcc1663e5e170f2727 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: befe2b9fbe37b0925498f336632742651386b151 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 
 <refentry xml:id="function.taint" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>taint</refname>
-  <refpurpose>Contamina uma string</refpurpose>
+  <refpurpose>Marca strings como contaminadas</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
@@ -12,11 +12,22 @@
   <methodsynopsis>
    <type>bool</type><methodname>taint</methodname>
    <methodparam><type>string</type><parameter role="reference">string</parameter></methodparam>
-   <methodparam rep="repeat"><type>string</type><parameter>strings</parameter></methodparam>
+   <methodparam rep="repeat"><type>string</type><parameter role="reference">strings</parameter></methodparam>
   </methodsynopsis>
-  <para>
-   Marca uma string como contaminada. Esta função é usada somente com propósito de testes.
-  </para>
+  <simpara>
+   Marca manualmente as strings fornecidas como contaminadas, como se tivessem
+   vindo de uma entrada do usuário. As variáveis são passadas por referência,
+   mas a marca é armazenada na própria string, não na variável: todas as
+   variáveis que compartilham a mesma string são contaminadas ao mesmo tempo.
+  </simpara>
+  <simpara>
+   Isso é útil principalmente para testes e para simular entradas de usuário
+   em scripts CLI, nos quais as superglobais
+   <link linkend="reserved.variables.get">$_GET</link>,
+   <link linkend="reserved.variables.post">$_POST</link> e
+   <link linkend="reserved.variables.cookies">$_COOKIE</link> não são
+   preenchidas.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -25,16 +36,17 @@
    <varlistentry>
     <term><parameter>string</parameter></term>
     <listitem>
-     <para>
-
-     </para>
+     <simpara>
+      Uma variável que contém a string a marcar.
+     </simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><parameter>strings</parameter></term>
     <listitem>
-     <para>
-     </para>
+     <simpara>
+      Outras variáveis a marcar.
+     </simpara>
     </listitem>
    </varlistentry>
   </variablelist>
@@ -42,12 +54,61 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-   Retorna TRUE se a transformação for concluída. Sempre retorna TRUE se a extensão Taint
-   não estiver habilitada.
-  </para>
+  <simpara>
+   Sempre retorna &true;. Quando
+   <link linkend="ini.taint.enable">taint.enable</link> está desativado, a
+   função não faz nada e ainda assim retorna &true;.
+  </simpara>
  </refsect1>
 
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <function>taint</function></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$name = "world";
+taint($name);
+var_dump(is_tainted($name));
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+bool(true)
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <simpara>
+    Somente strings não vazias são marcadas; variáveis que contêm outros
+    tipos ou strings vazias são ignoradas silenciosamente.
+   </simpara>
+  </note>
+  <note>
+   <simpara>
+    Strings internadas, persistentes e permanentes (literais de strings e
+    strings compartilhadas do opcache) não podem receber a marca e são
+    ignoradas silenciosamente.
+   </simpara>
+  </note>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>untaint</function></member>
+    <member><function>is_tainted</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
 
 </refentry>
 

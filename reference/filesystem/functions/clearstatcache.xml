@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: e82ff8a846af03b863c4a57fbedc0a93af0e68db Maintainer: leonardolara Status: ready --><!-- CREDITS: rarruda, ae, leonardolara -->
+<!-- EN-Revision: 124e1f57f5dc2cd667536dc8eb027816effcfead Maintainer: leonardolara Status: ready --><!-- CREDITS: rarruda, ae, leonardolara -->
 <refentry xml:id="function.clearstatcache" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>clearstatcache</refname>
@@ -25,13 +25,13 @@
    <function>clearstatcache</function> para limpar as informações que
    o PHP mantém em cache sobre um arquivo.
   </para>
-  <para>
+  <simpara>
    Deve-se notar também que o PHP não guarda informação em cache sobre arquivos
-   não existente. Assim, a função <function>file_exists</function> for chamada em um arquivo que
+   inexistentes. Assim, se a função <function>is_file</function> for chamada em um arquivo que
    não existe, ela retornará &false; até que o arquivo seja criado. Se o arquivo
    for criado, ela retornará &true; mesmo que o arquivo seja removido.
    Entretanto, a função <function>unlink</function> limpa o cache automaticamente.
-  </para>
+  </simpara>
   <note>
    <para>
      Esta função guarda informações em cache sobre nomes de arquivos específicos, de forma que somente
@@ -60,6 +60,12 @@
    <function>filetype</function>, e
    <function>fileperms</function>.
   </para>
+  <simpara>
+   <function>file_exists</function>, <function>is_writable</function>,
+   <function>is_readable</function> e <function>is_executable</function>
+   só usam o cache para caminhos que usam um empacotador diferente do sistema
+   de arquivos local. Arquivos locais são verificados diretamente a cada chamada.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -102,33 +108,36 @@
     <programlisting role="php">
 <![CDATA[
 <?php
-$file = 'output_log.txt';
 
-function get_owner($file)
-{
-    $stat = stat($file);
-    $user = posix_getpwuid($stat['uid']);
-    return $user['name'];
-}
+$file = tempnam(sys_get_temp_dir(), 'stat-demo-');
+file_put_contents($file, 'Hello');
 
-$format = "UID @ %s: %s\n";
+echo "Execute este comando em outro shell:\n";
+echo "\techo \" World!\" >> $file\n";
 
-printf($format, date('r'), get_owner($file));
+$before = filesize($file); // armazena os metadados em cache
 
-chown($file, 'ross');
-printf($format, date('r'), get_owner($file));
+sleep(20); // Execute o comando echo em outro shell
+
+$cached = filesize($file); // dados desatualizados são retornados
 
 clearstatcache();
-printf($format, date('r'), get_owner($file));
-?>
+
+$fresh = filesize($file);  // retorna os dados corretos
+
+printf("Antes: %d\nEm cache: %d\nAtual: %d\n", $before, $cached, $fresh);
+
+unlink($file);
 ]]>
     </programlisting>
     &example.outputs.similar;
     <screen>
 <![CDATA[
-UID @ Sun, 12 Oct 2008 20:48:28 +0100: root
-UID @ Sun, 12 Oct 2008 20:48:28 +0100: root
-UID @ Sun, 12 Oct 2008 20:48:28 +0100: ross
+Execute este comando em outro shell:
+    echo " World!" >> /tmp/stat-demo-6fjvs4vir9ll2haCl4W
+Antes: 5
+Em cache: 5
+Atual: 13
 ]]>
     </screen>
    </example>

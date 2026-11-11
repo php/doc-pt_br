@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: af4e920c7232115ba0fe800b280eefbbed078597 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 2ad26fb7916c8ffb5264c07b30610ef4553e4cbf Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.openssl-x509-parse" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>openssl_x509_parse</refname>
@@ -49,9 +49,215 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
+  <simpara>
+   Retorna um &array; de campos do certificado em caso de sucesso, ou &false; em caso de falha.
+  </simpara>
+  <simpara>
+   <literal>alias</literal> está presente somente quando o certificado tem um apelido.
+   Todas as outras chaves listadas abaixo estão sempre presentes.
+  </simpara>
   <para>
-   <emphasis>A estrutura dos dados retornados ainda não está documentada
-   (deliberadamente), pois ainda está sujeita a alterações.</emphasis>
+   <table>
+    <title>Array retornado por <function>openssl_x509_parse</function></title>
+    <tgroup cols="3">
+     <thead>
+      <row>
+       <entry>Chave</entry>
+       <entry>Tipo</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry><literal>name</literal></entry>
+       <entry><type>string</type></entry>
+       <entry>
+        Nome distinto do titular em uma única string, com componentes separados por barras.
+        Por exemplo, <literal>/C=US/O=Example/CN=example.com</literal>.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>subject</literal></entry>
+       <entry><type>array</type></entry>
+       <entry>
+        Nome distinto do titular. As chaves são nomes abreviados como
+        <literal>CN</literal> quando <parameter>short_names</parameter> é
+        &true;, e nomes longos como <literal>commonName</literal>
+        caso contrário. Cada valor é uma &string; UTF-8, ou um &array; de
+        &string;s UTF-8 quando o componente ocorre mais de uma vez.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>hash</literal></entry>
+       <entry><type>string</type></entry>
+       <entry>
+        Hash hexadecimal em minúsculas do nome do titular, usado para buscar
+        um certificado em um diretório de ACs do OpenSSL. É um valor de 8 dígitos.
+        Não é a impressão digital do certificado; consulte
+        <function>openssl_x509_fingerprint</function>.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>issuer</literal></entry>
+       <entry><type>array</type></entry>
+       <entry>
+        Nome distinto do emissor, no mesmo formato de
+        <literal>subject</literal>.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>version</literal></entry>
+       <entry><type>int</type></entry>
+       <entry>
+        Campo de versão bruto armazenado no certificado. Este valor é uma unidade menor
+        que a versão do certificado normalmente exibida: um certificado de versão 1
+        é <literal>0</literal>, um certificado de versão 2 é
+        <literal>1</literal>, e um certificado de versão 3 é
+        <literal>2</literal>.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>serialNumber</literal></entry>
+       <entry><type>string</type></entry>
+       <entry>
+        Representação decimal do número de série. Números de série grandes são
+        retornados como uma string hexadecimal prefixada com <literal>0x</literal>.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>serialNumberHex</literal></entry>
+       <entry><type>string</type></entry>
+       <entry>
+        Representação hexadecimal em maiúsculas do número de série.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>validFrom</literal></entry>
+       <entry><type>string</type></entry>
+       <entry>
+        Início da validade no formato ASN.1, seja UTCTime
+        (<literal>YYMMDDHHMMSSZ</literal>) ou GeneralizedTime
+        (<literal>YYYYMMDDHHMMSSZ</literal>).
+       </entry>
+      </row>
+      <row>
+       <entry><literal>validTo</literal></entry>
+       <entry><type>string</type></entry>
+       <entry>
+        Fim da validade, no mesmo formato de <literal>validFrom</literal>.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>validFrom_time_t</literal></entry>
+       <entry><type>int</type></entry>
+       <entry>
+        Início da validade como um timestamp Unix, ou <literal>-1</literal> se
+        não foi possível analisar o horário.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>validTo_time_t</literal></entry>
+       <entry><type>int</type></entry>
+       <entry>
+        Fim da validade como um timestamp Unix, ou <literal>-1</literal> se
+        não foi possível analisar o horário.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>alias</literal></entry>
+       <entry><type>string</type></entry>
+       <entry>
+        Apelido do certificado (nome amigável). Presente somente quando definido.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>signatureTypeSN</literal></entry>
+       <entry><type>string</type></entry>
+       <entry>
+        Nome abreviado do algoritmo de assinatura.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>signatureTypeLN</literal></entry>
+       <entry><type>string</type></entry>
+       <entry>
+        Nome longo do algoritmo de assinatura.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>signatureTypeNID</literal></entry>
+       <entry><type>int</type></entry>
+       <entry>
+        Identificador numérico do algoritmo de assinatura (NID do OpenSSL).
+       </entry>
+      </row>
+      <row>
+       <entry><literal>purposes</literal></entry>
+       <entry><type>array</type></entry>
+       <entry>
+        Verificações de finalidade, indexadas pelo identificador da finalidade. Os identificadores são as
+        constantes <link linkend="openssl.purpose-check"><constant>X509_PURPOSE_<replaceable>*</replaceable></constant></link>.
+        Cada valor é um &array; descrito abaixo.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>extensions</literal></entry>
+       <entry><type>array</type></entry>
+       <entry>
+        Extensões do certificado, indexadas pelo nome abreviado (por exemplo,
+        <literal>subjectAltName</literal>) ou pelo OID quando a extensão não tem
+        nome abreviado. Cada valor é um texto que descreve a extensão, ou os dados
+        brutos da extensão quando não podem ser impressos. As chaves presentes dependem do certificado.
+        Este array não segue <parameter>short_names</parameter>.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </table>
+  </para>
+  <simpara>
+   Cada elemento de <literal>purposes</literal> tem as seguintes chaves:
+  </simpara>
+  <para>
+   <table>
+    <title>Entrada de finalidade</title>
+    <tgroup cols="3">
+     <thead>
+      <row>
+       <entry>Chave</entry>
+       <entry>Tipo</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry><literal>0</literal></entry>
+       <entry><type>bool</type></entry>
+       <entry>
+        &true; se o certificado puder ser usado para esta finalidade como
+        um certificado de entidade final.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>1</literal></entry>
+       <entry><type>bool</type></entry>
+       <entry>
+        &true; se o certificado puder ser usado para esta finalidade como um
+        certificado de AC.
+       </entry>
+      </row>
+      <row>
+       <entry><literal>2</literal></entry>
+       <entry><type>string</type></entry>
+       <entry>
+        Nome da finalidade. Um nome abreviado como <literal>sslclient</literal>
+        quando <parameter>short_names</parameter> é &true;, e um nome longo
+        como <literal>SSL client</literal> caso contrário.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </table>
   </para>
  </refsect1>
 

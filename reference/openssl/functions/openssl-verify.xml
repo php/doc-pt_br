@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: ddcd63907372580151daf69458d6a8268232b703 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 839637661508bf6e52d49061b060579e6a12fe52 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.openssl-verify" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>openssl_verify</refname>
@@ -60,9 +60,11 @@ MIIBCgK...</literal>)
     <varlistentry>
      <term><parameter>algorithm</parameter></term>
      <listitem>
-      <para>
-       <type>int</type> - um destes <link linkend="openssl.signature-algos">Algoritmos de Assinatura</link>.
-      </para>
+      <simpara>
+       <type>int</type> - um destes <link linkend="openssl.signature-algos">Algoritmos de Resumo</link>,
+       ou <literal>0</literal> para algoritmos de assinatura que não aceitam um algoritmo de resumo como parâmetro.
+       Este valor <literal>0</literal> só está disponível quando o PHP é compilado com OpenSSL 3.0+.
+      </simpara>
       <para>
        <type>string</type> - uma string válida retornada por <function>openssl_get_md_methods</function>, por exemplo, "sha1WithRSAEncryption" ou "sha512".
       </para>
@@ -88,6 +90,15 @@ MIIBCgK...</literal>)
    Retorna 1 se a assinatura estiver correta, 0 se estiver incorreta e
    -1 ou &false; em caso de erro.
   </para>
+  <warning>
+   <simpara>
+    Tanto o valor de sucesso quanto o valor de erro são
+    <link linkend="language.types.boolean.casting">avaliados como verdadeiros</link>, portanto um
+    teste booleano simples como <code>if (openssl_verify(...))</code> trata um erro como uma
+    verificação bem-sucedida. O resultado deve ser comparado estritamente com
+    <literal>1</literal>.
+   </simpara>
+  </warning>
  </refsect1>
 
  <refsect1 role="changelog">
@@ -136,9 +147,9 @@ $pubkeyid = openssl_pkey_get_public("file://src/openssl-0.9.6/demos/sign/cert.pe
 
 // afirma se a assinatura está correta ou não
 $ok = openssl_verify($data, $signature, $pubkeyid);
-if ($ok == 1) {
+if ($ok === 1) {
     echo "boa";
-} elseif ($ok == 0) {
+} elseif ($ok === 0) {
     echo "ruim";
 } else {
     echo "erro ao verificar assinatura";
@@ -170,9 +181,9 @@ openssl_sign($data, $signature, $private_key_res, "sha256WithRSAEncryption");
 
 // verifica assinatura
 $ok = openssl_verify($data, $signature, $public_key_res, OPENSSL_ALGO_SHA256);
-if ($ok == 1) {
+if ($ok === 1) {
     echo "válida";
-} elseif ($ok == 0) {
+} elseif ($ok === 0) {
     echo "inválida";
 } else {
     echo "erro: ".openssl_error_string();

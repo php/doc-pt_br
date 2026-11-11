@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: d4d5216e7a965ca194f6b1c9dee84cecab2674e5 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 3b052562d228be18fa6dce221df7e375469fb7ad Maintainer: leonardolara Status: ready -->
 
 <section xml:id="yaconf.configuration" xmlns="http://docbook.org/ns/docbook">
  &reftitle.runtime;
@@ -18,14 +18,14 @@
     </thead>
     <tbody>
      <row>
-      <entry><link linkend="ini.yaconf.check-delay">yaconf.check_delay</link></entry>
-      <entry>300</entry>
+      <entry><link linkend="ini.yaconf.directory">yaconf.directory</link></entry>
+      <entry><literal>""</literal></entry>
       <entry><constant>INI_SYSTEM</constant></entry>
       <entry><!-- leave empty, this will be filled by an automatic script --></entry>
      </row>
      <row>
-      <entry><link linkend="ini.yaconf.directory">yaconf.directory</link></entry>
-      <entry>/tmp/conf/</entry>
+      <entry><link linkend="ini.yaconf.check-delay">yaconf.check_delay</link></entry>
+      <entry><literal>300</literal></entry>
       <entry><constant>INI_SYSTEM</constant></entry>
       <entry><!-- leave empty, this will be filled by an automatic script --></entry>
      </row>
@@ -38,30 +38,87 @@
 
  <para>
   <variablelist>
+   <varlistentry xml:id="ini.yaconf.directory">
+     <term>
+      <parameter>yaconf.directory</parameter>
+      <type>string</type>
+     </term>
+     <listitem>
+      <simpara>
+       O diretório onde todos os arquivos de configuração INI são colocados. Apenas
+       arquivos com a extensão <filename>.ini</filename> são carregados.
+       Os subdiretórios são carregados recursivamente (até 16 níveis de profundidade);
+       cada um atua como um nível de chave, de modo que um arquivo
+       <filename>database.ini</filename> localizado no
+       subdiretório <filename>users/</filename> é endereçado como
+       <literal>"users.database"</literal>. Disponível desde o Yaconf
+       1.2.0; antes disso, apenas os arquivos diretamente no diretório eram
+       carregados.
+      </simpara>
+      <simpara>
+       Os exemplos abaixo pressupõem o seguinte arquivo
+       <filename>database.ini</filename> localizado no diretório
+       configurado, junto a um <filename>features.ini</filename> que
+       contém configurações por funcionalidade.
+      </simpara>
+      <example>
+       <title>Sintaxe de arquivo INI</title>
+       <programlisting role="ini">
+<![CDATA[
+; database.ini
+name=production                        ; valor escalar
+version=PHP_VERSION                    ; constantes PHP são resolvidas
+connection_string=${DATABASE_URL}      ; variáveis de ambiente são resolvidas
+options.max_connections=50             ; chave de hash aninhada
+options.timeout=30
+
+; entradas de array, ambas as notações são equivalentes
+replicas.0=replica-1.example.com
+replicas[]=replica-2.example.com
+]]>
+       </programlisting>
+      </example>
+      <example>
+       <title>Exemplo de seções INI</title>
+       <programlisting role="ini">
+<![CDATA[
+; features.ini
+[default]
+cache_enabled=on
+rate_limit=100
+
+; a seção "premium" herda todas as chaves de "default" e
+; sobrescreve as que redefine
+[premium:default]
+rate_limit=1000
+]]>
+       </programlisting>
+      </example>
+     </listitem>
+   </varlistentry>
    <varlistentry xml:id="ini.yaconf.check-delay">
      <term>
       <parameter>yaconf.check_delay</parameter>
       <type>int</type>
      </term>
      <listitem>
-      <para>
-       Define o intervalo de tempo no qual o Yaconf irá detectar alterações no arquivo INI (pelo horário de modificação do diretório).
-       Se for definido para zero, o PHP deve ser reiniciado para recarregamento das configurações.
-      </para>
+      <simpara>
+       O intervalo, em segundos, no qual o Yaconf verifica se algum
+       arquivo INI carregado foi alterado e recarrega os alterados (a
+       alteração é detectada comparando os horários de modificação dos diretórios).
+       Definir esta diretiva como <literal>0</literal> faz o Yaconf verificar a cada
+       requisição.
+      </simpara>
+      <note>
+       <simpara>
+        Esta diretiva só é registrada em compilações sem ZTS. Em compilações ZTS
+        (seguras para threads), as configurações são carregadas na inicialização e
+        o recarregamento automático não está disponível; reinicie o PHP para incorporar
+        alterações.
+       </simpara>
+      </note>
      </listitem>
-    </varlistentry>
-    <varlistentry xml:id="ini.yaconf.directory">
-     <term>
-      <parameter>yaconf.directory</parameter>
-      <type>string</type>
-     </term>
-     <listitem>
-      <para>
-       Caminho para o diretório onde todos os arquivos de configuração INI estão localizados.
-      </para>
-     </listitem>
-    </varlistentry>
-
+   </varlistentry>
   </variablelist>
  </para>
 </section>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: cfe2c34143ab17e522b1594ae0902b7245f072d5 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: befe2b9fbe37b0925498f336632742651386b151 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 
 <book xml:id="book.taint" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <?phpdoc extension-membership="pecl" ?>
@@ -8,49 +8,57 @@
 
  <preface xml:id="intro.taint">
   &reftitle.intro;
-  <para>
-   Taint é uma extensão usada para detectar códigos XSS (strings
-   contaminadas).
-   E também pode ser usada para identificar vulnerabilidades de
-   injeção de SQL, injeção de shell, etc.
-  </para>
-  <para>
-   Quando o taint está habilitado, se for passada uma string contaminada (proveniente de <varname>$_GET</varname>,
-   <varname>$_POST</varname> ou <varname>$_COOKIE</varname>) para algumas funções, o taint irá avisar sobre isso.
-  </para>
+  <simpara>
+   Taint é uma extensão para detectar código XSS (strings contaminadas).
+   Ela também pode ser usada para identificar injeção de SQL, injeção de
+   comandos, injeção de caminhos de arquivos e vulnerabilidades semelhantes.
+  </simpara>
+  <simpara>
+   Quando o taint está habilitado, strings recebidas da entrada do usuário —
+   <varname>$_GET</varname>, <varname>$_POST</varname> e
+   <varname>$_COOKIE</varname> — são marcadas como contaminadas no início da
+   requisição, e a marca é propagada pelas operações com strings. Quando uma
+   string contaminada chega a um ponto perigoso (saída, consulta SQL, comando
+   de shell, caminho de arquivo, ...), taint emite um aviso apontando esse
+   ponto. Consulte <link linkend="taint.detail">Propagação e pontos de
+   verificação</link> para ver as listas completas.
+  </simpara>
+  <simpara>
+   Taint é uma ferramenta de desenvolvimento e auditoria, não uma defesa em
+   tempo de execução: apenas relata possíveis problemas e nunca bloqueia nem
+   altera dados. Ela é deliberadamente conservadora e pode emitir avisos em
+   excesso, portanto uma execução sem avisos significa apenas que "nada que
+   taint conseguiu detectar" ocorreu, não que o código seja comprovadamente
+   seguro. Não a habilite em ambientes de produção.
+  </simpara>
   <example>
-   <title>Exemplo de <function>Taint</function></title>
+   <title>Exemplo de Taint</title>
    <programlisting role="php">
 <![CDATA[
 <?php
 $a = trim($_GET['a']);
 
-$file_name = '/tmp' .  $a;
+$file_name = '/tmp/' . $a;
 $output    = "Welcome, {$a} !!!";
-$var       = "output";
-$sql       = "Select *  from " . $a;
-$sql      .= "ooxx";
+$sql       = "SELECT * FROM users WHERE name = " . $a;
 
 echo $output;
-
-print $$var;
-
+print $output;
 include $file_name;
-
-mysql_query($sql);
+mysqli_query($link, $sql);
 ?>
 ]]>
    </programlisting>
    &example.outputs.similar;
    <screen>
 <![CDATA[
-Warning: main() [function.echo]: Attempt to echo a string that might be tainted
+Warning: main() [echo]: Attempt to echo a string that might be tainted in /path/to/script.php on line 9
 
-Warning: main() [function.echo]: Attempt to print a string that might be tainted
+Warning: main() [print]: Attempt to print a string that might be tainted in /path/to/script.php on line 10
 
-Warning: include() [function.include]: File path contains data that might be tainted
+Warning: main() [include]: File path contains data that might be tainted in /path/to/script.php on line 11
 
-Warning: mysql_query() [function.mysql-query]: SQL statement contains data that might be tainted
+Warning: main() [mysqli_query]: SQL statement contains data that might be tainted in /path/to/script.php on line 12
 ]]>
    </screen>
   </example>

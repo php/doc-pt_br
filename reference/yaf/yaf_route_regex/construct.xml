@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: e2f2172bf114599926878017ab2dce356956fa9e Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 052c737e204db470a7ddd4f082a4069103b64203 Maintainer: leonardolara Status: ready -->
 
 <refentry xml:id="yaf-route-regex.construct" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
@@ -13,12 +13,14 @@
    <modifier>public</modifier> <methodname>Yaf_Route_Regex::__construct</methodname>
    <methodparam><type>string</type><parameter>match</parameter></methodparam>
    <methodparam><type>array</type><parameter>route</parameter></methodparam>
-   <methodparam choice="opt"><type>array</type><parameter>map</parameter></methodparam>
-   <methodparam choice="opt"><type>array</type><parameter>verify</parameter></methodparam>
-   <methodparam choice="opt"><type>string</type><parameter>reverse</parameter></methodparam>
+   <methodparam choice="opt"><type class="union"><type>array</type><type>null</type></type><parameter>map</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>array</type><type>null</type></type><parameter>verify</parameter><initializer>&null;</initializer></methodparam>
+   <methodparam choice="opt"><type class="union"><type>string</type><type>null</type></type><parameter>reverse</parameter><initializer>&null;</initializer></methodparam>
   </constructorsynopsis>
-  <para>
-  </para>
+  <simpara>
+   Constrói uma rota <classname>Yaf_Route_Regex</classname>, que roteia um URI de
+   requisição correspondente a uma expressão regular para um módulo, controlador e ação.
+  </simpara>
 
  </refsect1>
 
@@ -28,53 +30,61 @@
    <varlistentry>
     <term><parameter>match</parameter></term>
     <listitem>
-     <para>
-      Uma expressão regular completa. Será usada para corresponder a uma URI de requisição. Se
-      não corresponder, <classname>Yaf_Route_Regex</classname> retornará
-      &false;.
-     </para>
+     <simpara>
+      Um padrão de expressão regular completo, usado para corresponder ao URI da requisição.
+      Quando não há correspondência, <methodname>Yaf_Route_Regex::route</methodname> retorna
+      &false; e o roteador passa para a próxima rota.
+     </simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><parameter>route</parameter></term>
     <listitem>
-     <para>
-      Quando a expressão corresponder ao URI,
-      <classname>Yaf_Route_Regex</classname> usará este parâmetro para decidir que
-      valores m/c/a serão usados na rota.
-     </para>
-     <para>
-      Qualquer dos valores de m/c/a neste array é opcional. Se não for especificado um
-      valor, será usado o roteamento padrão.
-     </para>
+     <simpara>
+      Quando o padrão corresponde ao URI da requisição, este &array; determina o
+      módulo, o controlador e a ação para os quais rotear.
+     </simpara>
+     <simpara>
+      Cada uma das três entradas é opcional; quando uma não é fornecida, o
+      padrão é usado. Uma entrada cujo valor começa com <literal>:</literal> é
+      resolvida com base nos parâmetros produzidos por
+      <parameter>map</parameter>.
+     </simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><parameter>map</parameter></term>
     <listitem>
-     <para>
-      Um array para atribuir nomes aos grupos de captura no resultado da correspondência.
-     </para>
+     <simpara>
+      Um &array; que mapeia índices de grupos de captura para nomes de parâmetros.
+      Apenas as capturas listadas aqui se tornam parâmetros da requisição; uma
+      captura numérica não listada é descartada.
+     </simpara>
+     <simpara>
+      Grupos de captura nomeados são sempre adicionados com seu próprio nome e não
+      precisam ser listados.
+     </simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><parameter>verify</parameter></term>
     <listitem>
-     <para>
-
-     </para>
+     <simpara>
+      Aceito e armazenado na rota, mas não usado: a implementação atual nunca o
+      consulta durante o roteamento.
+     </simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><parameter>reverse</parameter></term>
     <listitem>
      <para>
-      Uma string usada para montar o URL, consulte
+      Uma &string; usada para montar o URL, consulte
       <methodname>Yaf_Route_Regex::assemble</methodname>.
       <note>
-       <para>
+       <simpara>
         Este parâmetro está disponível a partir do Yaf 2.3.0.
-       </para>
+       </simpara>
       </note>
      </para>
     </listitem>
@@ -84,108 +94,114 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-
-  </para>
+  <simpara>Nenhum valor é retornado.</simpara>
  </refsect1>
 
  <refsect1 role="examples">
   &reftitle.examples;
   <example>
-   <title>Exemplo de <classname>Yaf_Route_Regex</classname></title>
+   <title><classname>Yaf_Route_Regex</classname> via <methodname>Yaf_Router::addRoute</methodname></title>
    <programlisting role="php">
 <![CDATA[
 <?php
-   /**
-    * Adiciona uma rota "regex" à pilha de rotas Yaf_Router
-    */
-    Yaf_Dispatcher::getInstance()->getRouter()->addRoute("name",
-        new Yaf_Route_Regex(
-           "#^/product/([^/]+)/([^/])+#", // corresponde a um URI iniciando com "/product"
-           array(
-               'controller' => "product",  // rota para o controlador de "/product",
-           ),
-           array(
-              1 => "name",   // agora é possível chamar $request->getParam("name")
-              2 => "id",     // para obter o primeiro grupo de captura na expressão correspondida.
-           )
-        )
-    );
-?>
-]]>
-   </programlisting>
-  </example>
-  <example>
-   <title>Exemplo de <classname>Yaf_Route_Regex</classname> (a partir do Yaf 2.3.0)</title>
-   <programlisting role="php">
-<![CDATA[
-<?php
-   /**
-    * Usa o resultado da correspondência como nome MVC
-    */
-    Yaf_Dispatcher::getInstance()->getRouter()->addRoute("name",
-        new Yaf_Route_Regex(
-           "#^/product/([^/]+)/([^/])+#i", // corresponde ao URI iniciando com "/product"
-           array(
-              'controller' => ":name", // rota para :name, que é $1 no resultado da correspondência como o nome do controlador
-           ),
-           array(
-              1 => "name",   // agora é possível chamar $request->getParam("name")
-              2 => "id",     // para obter o primeiro grupo de captura na expressão correspondida.
-           )
-        )
-    );
-?>
-]]>
-   </programlisting>
-  </example>
-  <example>
-   <title>Exemplo de <classname>Yaf_Route_Regex</classname> e grupo de captura nomeado (a partir do Yaf 2.3.0)</title>
-   <programlisting role="php">
-<![CDATA[
-<?php
-   /**
-    * Usa o resultado da correspondência como nome MVC
-    */
-    Yaf_Dispatcher::getInstance()->getRouter()->addRoute("name",
-        new Yaf_Route_Regex(
-           "#^/product/(?<name>[^/]+)/([^/])+#i", // corresponde ao URI iniciando com "/product"
-           array(
-           'controller' => ":name", // rota para :name,
-                                    // que é o grupo de captura nomeado 'name' no resultado da correspondência como o nome do controlador
-           ),
-           array(
-              2 => "id",
-           )
-        )
-    );
-?>
-]]>
-   </programlisting>
-  </example>
-  <example>
-   <title>Exemplo de <classname>Yaf_Route_Regex</classname></title>
-   <programlisting role="php">
-<![CDATA[
-<?php
-   /**
-    * Adiciona uma rota "regex" à pilha de rotas Yaf_Router chamando addconfig
-    */
-    $config = array(
-        "name" => array(
-           "type"  => "regex",          // rota Yaf_Route_Regex
-           "match" => "#(.*)#",         // corresponde a um URI de requisição genérico
-           "route" => array(
-               'controller' => "product",  // rota para o controlador de "product",
-               'action'     => "dummy",    // rota para uma ação "dummy"
-           ),
-           "map" => array(
-              1 => "uri",   // agora pode-se chamar $request->getParam("uri")
-           ),
+
+/**
+ * Adiciona uma rota regex à pilha de rotas de Yaf_Router
+ */
+Yaf_Dispatcher::getInstance()->getRouter()->addRoute(
+    "name",
+    new Yaf_Route_Regex(
+        "#^/product/([^/]+)/([^/]+)#", // corresponde a um URI iniciado por "/product"
+        array(
+            'controller' => "product", // roteia para o controlador product
         ),
-    );
-    Yaf_Dispatcher::getInstance()->getRouter()->addConfig(
-        new Yaf_Config_Simple($config));
+        array(
+            1 => "name", // $request->getParam("name") contém a primeira captura
+            2 => "id",   // e $request->getParam("id") a segunda
+        )
+    )
+);
+?>
+]]>
+   </programlisting>
+  </example>
+  <example>
+   <title><classname>Yaf_Route_Regex</classname> usando uma captura como nome do controlador</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+/**
+ * Usa uma captura como nome do controlador
+ */
+Yaf_Dispatcher::getInstance()->getRouter()->addRoute(
+    "name",
+    new Yaf_Route_Regex(
+        "#^/product/([^/]+)/([^/]+)#i", // corresponde a um URI iniciado por "/product"
+        array(
+            'controller' => ":name", // a captura "name" (consulte map) torna-se o controlador
+        ),
+        array(
+            1 => "name", // $request->getParam("name") contém a primeira captura
+            2 => "id",   // e $request->getParam("id") a segunda
+        )
+    )
+);
+?>
+]]>
+   </programlisting>
+  </example>
+  <example>
+   <title><classname>Yaf_Route_Regex</classname> usando um grupo de captura nomeado</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+/**
+ * Usa um grupo de captura nomeado como nome do controlador
+ */
+Yaf_Dispatcher::getInstance()->getRouter()->addRoute(
+    "name",
+    new Yaf_Route_Regex(
+        "#^/product/(?<name>[^/]+)/([^/]+)#i", // corresponde a um URI iniciado por "/product"
+        array(
+            'controller' => ":name", // a captura "name" torna-se o controlador
+        ),
+        array(
+            2 => "id", // o grupo 1 é nomeado, apenas o grupo 2 precisa de uma entrada no mapa
+        )
+    )
+);
+?>
+]]>
+   </programlisting>
+  </example>
+  <example>
+   <title><classname>Yaf_Route_Regex</classname> via <methodname>Yaf_Router::addConfig</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+/**
+ * Adiciona uma rota regex à pilha de rotas de Yaf_Router por meio de um array de configuração
+ */
+$config = array(
+    "name" => array(
+        "type"  => "regex",          // uma rota Yaf_Route_Regex
+        "match" => "#(.*)#",         // corresponde a qualquer URI de requisição
+        "route" => array(
+            'controller' => "product", // roteia para o controlador product
+            'action'     => "dummy",   // e para a ação dummy
+        ),
+        "map" => array(
+            1 => "uri", // $request->getParam("uri") contém o URI correspondente
+        ),
+    ),
+);
+
+Yaf_Dispatcher::getInstance()->getRouter()->addConfig(
+    new Yaf_Config_Simple($config)
+);
 ?>
 ]]>
    </programlisting>
@@ -195,6 +211,8 @@
  <refsect1 role="seealso">
   &reftitle.seealso;
   <simplelist>
+   <member><methodname>Yaf_Route_Regex::route</methodname></member>
+   <member><methodname>Yaf_Route_Regex::assemble</methodname></member>
    <member><methodname>Yaf_Router::addRoute</methodname></member>
    <member><methodname>Yaf_Router::addConfig</methodname></member>
    <member><classname>Yaf_Route_Static</classname></member>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: ecaa2146429a7f88de40dfce14718afc896b74c5 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: ddcf673c59d1708557680946fbffeee361d7fca6 Maintainer: leonardolara Status: ready -->
 
 <refentry xml:id="yaf-controller-abstract.construct" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
@@ -10,15 +10,17 @@
  <refsect1 role="description">
   &reftitle.description;
   <constructorsynopsis>
-   <modifier>final</modifier> <modifier>private</modifier> <methodname>Yaf_Controller_Abstract::__construct</methodname>
+   <modifier>public</modifier> <methodname>Yaf_Controller_Abstract::__construct</methodname>
    <void />
   </constructorsynopsis>
-  <para>
-    <methodname>Yaf_Controller_Abstract::__construct</methodname> é final,
-    que significa que não pode ser substituído.
-    Consulte também
-    <methodname>Yaf_Controller_Abstract::init</methodname>.
-  </para>
+  <simpara>
+   <methodname>Yaf_Controller_Abstract::__construct</methodname> é chamado pelo
+   Yaf quando um objeto de controlador é criado durante o despacho. Não recebe
+   argumentos e não deve ser chamado diretamente pelo usuário. Como não se
+   destina a ser sobrescrito com lógica personalizada,
+   <methodname>Yaf_Controller_Abstract::init</methodname> é fornecido como
+   gancho de inicialização em código de usuário.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -28,16 +30,58 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
+  <simpara>
+   Nenhum valor é retornado.
+  </simpara>
+ </refsect1>
 
-  </para>
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>Yaf_Controller_Abstract::__construct</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    // __construct() é chamado por Yaf_Dispatcher quando o controlador
+    // é instanciado durante o despacho e não deve ser
+    // chamado manualmente nem sobrescrito. Defina init() em seu lugar:
+
+    public function init() {
+        // quando init() é executado, o despachante já conectou
+        // o controlador: a requisição, a resposta e o mecanismo de visualização
+        // estão todos disponíveis
+        var_dump($this->getRequest() instanceof Yaf_Request_Abstract);
+        var_dump($this->getResponse() instanceof Yaf_Response_Abstract);
+        var_dump($this->getView() instanceof Yaf_View_Interface);
+    }
+
+    public function indexAction() {
+        // ...
+    }
+}
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+bool(true)
+bool(true)
+bool(true)
+]]>
+   </screen>
+  </example>
  </refsect1>
 
  <refsect1 role="seealso">
   &reftitle.seealso;
-  <simplelist>
-   <member><methodname>Yaf_Controller_Abstract::init</methodname></member>
-  </simplelist>
+  <para>
+   <simplelist>
+    <member><methodname>Yaf_Controller_Abstract::init</methodname></member>
+   </simplelist>
+  </para>
  </refsect1>
 
 </refentry>

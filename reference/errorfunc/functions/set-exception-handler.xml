@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 4a6671fe697ead5b27603b56face01a2c4e7ebe5 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 7c915c0c28b8e2e4306333c64602ee4800c73754 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.set-exception-handler" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>set_exception_handler</refname>
@@ -19,6 +19,32 @@
    um bloco try/catch. A execução irá parar após a função definida no parâmetro
    <parameter>callback</parameter> for chamada.
   </para>
+
+  <note>
+   <simpara>
+    Enquanto um manipulador de exceções está em execução, nenhum manipulador de exceções está ativo: a partir do
+    PHP 8.3.0, o mecanismo o desativa antes de invocá-lo, para que uma exceção
+    lançada pelo manipulador não seja passada de volta a ele. Chamada de dentro de um manipulador,
+    <function>set_exception_handler</function>, portanto, informa que não havia manipulador
+    definido anteriormente.
+   </simpara>
+   <simpara>
+    A partir do PHP 8.3.5, o mecanismo também coloca o manipulador que está prestes a invocar
+    na pilha de manipuladores, de modo que <function>restore_exception_handler</function> chamado
+    de dentro de um manipulador reinstala o manipulador que está em execução
+    em vez daquele que estava ativo antes dele.
+   </simpara>
+   <simpara>
+    O manipulador em execução é reinstalado automaticamente quando retorna, mas apenas
+    se nenhum manipulador de exceções estiver ativo nesse momento. Assim que o manipulador chama
+    <function>set_exception_handler</function> ou
+    <function>restore_exception_handler</function>, essa restauração automática é
+    ignorada e o manipulador ativo é aquele que o próprio manipulador deixou definido.
+   </simpara>
+   <simpara>
+    Portanto, não é recomendado modificar o manipulador de exceções de dentro dele mesmo.
+   </simpara>
+  </note>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -59,6 +85,40 @@
   </para>
  </refsect1>
 
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <para>
+   <informaltable>
+    <tgroup cols="2">
+     <thead>
+      <row>
+       <entry>&Version;</entry>
+       <entry>&Description;</entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>8.3.5</entry>
+       <entry>
+        O manipulador de exceções invocado agora é colocado na pilha de manipuladores
+        e reinstalado quando retorna, a menos que o próprio manipulador tenha modificado a
+        pilha.
+       </entry>
+      </row>
+      <row>
+       <entry>8.3.0</entry>
+       <entry>
+        O manipulador de exceções ativo agora é desativado enquanto é executado, de modo que
+        <function>set_exception_handler</function> chamado de dentro de um manipulador
+        informa que não havia manipulador definido anteriormente.
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+  </para>
+ </refsect1>
+
  <refsect1 role="examples">
   &reftitle.examples;
   <para>
@@ -84,15 +144,13 @@ echo "Não Executado\n";
 
  <refsect1 role="seealso"><!-- {{{ -->
   &reftitle.seealso;
-  <para>
-   <simplelist>
-    <member><function>get_exception_handler</function></member>
-    <member><function>restore_exception_handler</function></member>
-    <member><function>restore_error_handler</function></member>
-    <member><function>error_reporting</function></member>
-    <member><link linkend="language.exceptions">Exceções</link></member>
-   </simplelist>
-  </para>
+  <simplelist>
+   <member><function>get_exception_handler</function></member>
+   <member><function>restore_exception_handler</function></member>
+   <member><function>restore_error_handler</function></member>
+   <member><function>error_reporting</function></member>
+   <member><link linkend="language.error-handling.throwable">Exceções</link></member>
+  </simplelist>
  </refsect1><!-- }}} -->
 
 </refentry>

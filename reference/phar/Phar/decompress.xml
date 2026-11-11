@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: f03806fcd8fe03a0501bd40b6e3939ff6589a1d2 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: 76e420706b6f54cdca08416d1ecdc4d1a7dd69e4 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <refentry xml:id="phar.decompress" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>Phar::decompress</refname>
@@ -14,9 +14,12 @@
   </methodsynopsis>
  &phar.write;
 
-  <para>
+  <simpara>
    Para arquivos phar baseados em tar e phar, esse método descompacta o arquivo inteiro.
-  </para>
+   O arquivo descompactado é gravado como um novo arquivo no mesmo diretório do
+   arquivo original e é retornado como um novo objeto <classname>Phar</classname>.
+   O arquivo original não é modificado.
+  </simpara>
   <para>
    Para arquivos phar baseados em Zip, este método falha com uma exceção.
    A extensão <link linkend="ref.zlib">zlib</link> deve ser habilitada para descompactar
@@ -27,13 +30,15 @@
    variável INI <link linkend="ini.phar.readonly">phar.readonly</link> deve estar desativada
    para ter sucesso.
   </para>
-  <para>
-   Além disso, este método altera automaticamente a extensão do arquivo,
+  <simpara>
+   Além disso, este método altera automaticamente a extensão do novo arquivo para
    <literal>.phar</literal>
    por padrão para arquivos phar, ou <literal>.phar.tar</literal> para arquivos phar baseados em tar.
-   Alternativamente, uma extensão de arquivo pode ser especificada com o segundo
-   parâmetro.
-  </para>
+   Por exemplo, descompactar <filename>/caminho/para/meu.phar.gz</filename> cria
+   <filename>/caminho/para/meu.phar</filename>.
+   Alternativamente, uma extensão de arquivo pode ser especificada com o
+   parâmetro <parameter>extension</parameter>.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -50,6 +55,12 @@
        de que todos os arquivos executáveis ​​phar devem conter <literal>.phar</literal>
        em seus nomes.
       </para>
+      <simpara>
+       A extensão substitui a extensão do próprio arquivo (como <literal>.phar.gz</literal>
+       ou <literal>.tar.gz</literal>), portanto, passar <literal>descompactado.phar</literal>
+       ao descompactar <filename>/caminho/para/meu.phar.gz</filename> cria
+       <filename>/caminho/para/meu.descompactado.phar</filename>.
+      </simpara>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -66,13 +77,13 @@
 
  <refsect1 role="errors">
   &reftitle.errors;
-  <para>
+  <simpara>
    Lança <classname>BadMethodCallException</classname> se
    a variável INI <link linkend="ini.phar.readonly">phar.readonly</link>
    estiver ativada, se a extensão <link linkend="ref.zlib">zlib</link>
-   não estiver disponível ou se a extensão <link linkend="ref.bzip2">bzip2</link>
-   não estiver habilitada.
-  </para>
+   não estiver disponível, se a extensão <link linkend="ref.bzip2">bzip2</link>
+   não estiver habilitada ou se um phar com o novo nome de arquivo já existir.
+  </simpara>
  </refsect1>
 
  <refsect1 role="changelog">
@@ -105,10 +116,11 @@
     <programlisting role="php">
 <![CDATA[
 <?php
-$p = new Phar('/caminho/para/meu.phar', 0, 'meu.phar.gz');
+$p = new Phar('/caminho/para/meu.phar', 0, 'meu.phar');
 $p['meuarquivo.txt'] = 'olá';
 $p['meuarquivo2.txt'] = 'olá';
-$p3 = $p2->decompress(); // cria /caminho/para/meu.phar
+$p2 = $p->compress(Phar::GZ); // cria /caminho/para/meu.phar.gz
+$p3 = $p2->decompress('descompactado.phar'); // cria /caminho/para/meu.descompactado.phar
 ?>
 ]]>
     </programlisting>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 9a8c593c09cf7d84085989e42f3b2b23536279db Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 0b916fb90f8862046a56a5e05057ef6cd78384c1 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.grapheme-strpos" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>grapheme_strpos</refname>
@@ -55,7 +55,21 @@
     <varlistentry>
      <term><parameter>locale</parameter></term>
      <listitem>
-      &intl.param.grapheme.locale;
+      <simpara>
+       Localidade a usar. Ela afeta a definição dos grupos de grafemas e a
+       comparação de strings. Uma string vazia ou &null; usa a localidade
+       padrão.
+      </simpara>
+      <simpara>
+       O identificador de localidade pode incluir chaves de extensão Unicode
+       para controlar o comportamento de colação. Em particular, a chave
+       <literal>ks</literal> controla a força de colação: por exemplo,
+       <literal>en_US-u-ks-identic</literal> ativa a comparação no nível
+       idêntico, que distingue seletores de variação Unicode (como a
+       apresentação de emoji e de texto), normalmente tratados como
+       equivalentes. Consulte <methodname>Collator::setStrength</methodname>
+       para ver o mapeamento completo dos valores <literal>ks</literal> para os níveis de força de colação.
+      </simpara>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -115,6 +129,42 @@ print grapheme_strpos( $char_a_ring_nfd . $char_a_ring_nfd . $char_o_diaeresis_n
 2
 ]]>
   </screen>
+  <example>
+   <title>Uso da chave de localidade <literal>ks-identic</literal> para distinguir seletores de variação</title>
+   <simpara>
+    Por padrão, os seletores de variação Unicode (U+FE0E para texto e U+FE0F
+    para emoji) são ignorados durante a comparação. O uso da chave de extensão
+    de localidade <literal>ks-identic</literal> ativa a colação no nível idêntico, que trata esses seletores como caracteres distintos.
+   </simpara>
+   <note>
+    <simpara>
+     O parâmetro <parameter>locale</parameter> está disponível desde o PHP 8.5.0.
+    </simpara>
+   </note>
+   <programlisting role="php">
+<![CDATA[
+<?php
+
+$textStyle  = "\u{263A}\u{FE0E}"; // U+263A + U+FE0E (seletor de apresentação de texto)
+$emojiStyle = "\u{263A}\u{FE0F}"; // U+263A + U+FE0F (seletor de apresentação de emoji)
+
+// Localidade padrão: os seletores de variação são ignorados; a posição encontrada é 0.
+var_dump(grapheme_strpos($textStyle, $emojiStyle));
+
+// Com ks-identic: os seletores de variação são significativos e não há correspondência.
+var_dump(grapheme_strpos($textStyle, $emojiStyle, 0, 'en_US-u-ks-identic'));
+
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+int(0)
+bool(false)
+]]>
+   </screen>
+  </example>
  </refsect1>
 
  <refsect1 role="seealso">
@@ -126,6 +176,7 @@ print grapheme_strpos( $char_a_ring_nfd . $char_a_ring_nfd . $char_o_diaeresis_n
     <member><function>grapheme_strripos</function></member>
     <member><function>grapheme_strrpos</function></member>
     <member><function>grapheme_strstr</function></member>
+    <member><methodname>Collator::setStrength</methodname></member>
     <member>
      <link xlink:href="&uri.unicode.graphemes;">
       Unicode Text Segmentation: Grapheme Cluster Boundaries

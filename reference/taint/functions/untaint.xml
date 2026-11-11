@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 9e0f03ac354d797d1d16c0fcc1663e5e170f2727 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: befe2b9fbe37b0925498f336632742651386b151 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 
 <refentry xml:id="function.untaint" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>untaint</refname>
-  <refpurpose>Descontamina strings</refpurpose>
+  <refpurpose>Remove a marca de contaminação das strings</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
@@ -12,11 +12,17 @@
   <methodsynopsis>
    <type>bool</type><methodname>untaint</methodname>
    <methodparam><type>string</type><parameter role="reference">string</parameter></methodparam>
-   <methodparam rep="repeat"><type>string</type><parameter>strings</parameter></methodparam>
+   <methodparam rep="repeat"><type>string</type><parameter role="reference">strings</parameter></methodparam>
   </methodsynopsis>
-  <para>
-    Descontamina strings.
-  </para>
+  <simpara>
+   Remove a marca de contaminação das strings fornecidas.
+  </simpara>
+  <simpara>
+   A marca é armazenada na própria string, não na variável, portanto ela é
+   removida de uma só vez para todas as variáveis que compartilham a mesma
+   string. Use esta função para permitir valores que você validou, por exemplo,
+   após uma verificação estrita por lista de permissões.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -25,17 +31,17 @@
    <varlistentry>
     <term><parameter>string</parameter></term>
     <listitem>
-     <para>
-
-     </para>
+     <simpara>
+      Uma variável que contém a string a limpar.
+     </simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><parameter>strings</parameter></term>
     <listitem>
-     <para>
-
-     </para>
+     <simpara>
+      Outras variáveis a limpar.
+     </simpara>
     </listitem>
    </varlistentry>
   </variablelist>
@@ -43,11 +49,58 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-
-  </para>
+  <simpara>
+   Sempre retorna &true;. Quando
+   <link linkend="ini.taint.enable">taint.enable</link> está desativado, a
+   função não faz nada e ainda assim retorna &true;.
+  </simpara>
  </refsect1>
 
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <function>untaint</function></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$id = "42";
+taint($id);
+if (preg_match('/^\d+$/', $id)) {
+    // strictly validated as digits: safe to trust
+    untaint($id);
+}
+var_dump(is_tainted($id));
+?>
+]]>
+   </programlisting>
+   &example.outputs.similar;
+   <screen>
+<![CDATA[
+bool(false)
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <note>
+   <simpara>
+    Somente valores do tipo string podem ter a marca; passar um valor de
+    outro tipo não tem efeito.
+   </simpara>
+  </note>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <para>
+   <simplelist>
+    <member><function>taint</function></member>
+    <member><function>is_tainted</function></member>
+   </simplelist>
+  </para>
+ </refsect1>
 
 </refentry>
 

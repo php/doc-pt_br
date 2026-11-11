@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 36d18e7d4a32ecfdacc1eb086276ffb1baf0393c Maintainer: leonardolara Status: ready --><!-- CREDITS: marcosmarcolin, leonardolara -->
+<!-- EN-Revision: 6fad47c6ec034be2050771ab0213af06936219dc Maintainer: leonardolara Status: ready --><!-- CREDITS: marcosmarcolin, leonardolara -->
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="opcache.configuration">
  &reftitle.runtime;
  &extension.runtime;
@@ -227,6 +227,12 @@
       <entry>Somente Windows.</entry>
      </row>
      <row>
+      <entry><link linkend="ini.opcache.file-cache-read-only">opcache.file_cache_read_only</link></entry>
+      <entry>0</entry>
+      <entry><constant>INI_SYSTEM</constant></entry>
+      <entry>Disponível a partir do PHP 8.5.0.</entry>
+     </row>
+     <row>
       <entry><link linkend="ini.opcache.validate-permission">opcache.validate_permission</link></entry>
       <entry>0</entry>
       <entry><constant>INI_SYSTEM</constant></entry>
@@ -408,6 +414,19 @@
      O tamanho do armazenamento de memória compartilhada usado pelo OPcache, em megabytes.
      O valor mínimo permitido é <literal>"8"</literal>,
      que é aplicado se um valor menor for definido.
+    </simpara>
+    <simpara>
+     Quando o JIT está habilitado, o segmento de memória compartilhada também contém o
+     buffer JIT, portanto seu tamanho total é este valor mais
+     <link linkend="ini.opcache.jit-buffer-size">opcache.jit_buffer_size</link>.
+     O OPcache primeiro tenta alocar o segmento usando PÁGINAS ENORMES e
+     recorre silenciosamente a páginas normais quando o sistema operacional não
+     reservou uma quantidade suficiente delas.
+    </simpara>
+    <simpara>
+     A partir do PHP 8.5.0, alterar esta diretiva após a configuração do OPcache falha e
+     registra um aviso, por exemplo ao usar <literal>php_admin_value</literal>
+     na configuração de um pool FPM. Anteriormente, a alteração era ignorada silenciosamente.
     </simpara>
    </listitem>
   </varlistentry>
@@ -977,6 +996,11 @@ function getA() { return A; }
     <simpara>
      Ativa ou desativa a cópia do código PHP (segmento de texto) em PÁGINAS ENORMES.
      Isso deve melhorar o desempenho, mas requer configuração de sistema operacional apropriada.
+     Somente o segmento de texto do binário do PHP é remapeado; o segmento de memória
+     compartilhada descrito em
+     <link linkend="ini.opcache.memory-consumption">opcache.memory_consumption</link>
+     não é afetado por esta diretiva. Quando o remapeamento falha, o OPcache emite
+     um <constant>E_WARNING</constant>.
      Disponível no Linux a partir do PHP 7.0.0 e no FreeBSD a partir do PHP 7.4.0.
     </simpara>
    </listitem>
@@ -1063,6 +1087,32 @@ function getA() { return A; }
       e, portanto, é desencorajado.
      </simpara>
     </caution>
+   </listitem>
+  </varlistentry>
+  <varlistentry xml:id="ini.opcache.file-cache-read-only">
+   <term>
+    <parameter>opcache.file_cache_read_only</parameter>
+    <type>bool</type>
+   </term>
+   <listitem>
+    <simpara>
+     Quando habilitada, permite usar um diretório
+     <link linkend="ini.opcache.file-cache">opcache.file_cache</link> somente leitura.
+     Destina-se ao uso com sistemas de arquivos somente leitura, como contêineres Docker
+     somente leitura. Recomenda-se usar em combinação com
+     <literal>opcache.validate_timestamps=0</literal>,
+     <literal>opcache.enable_file_override=1</literal> e
+     <literal>opcache.file_cache_consistency_checks=0</literal>.
+    </simpara>
+    <note>
+     <simpara>
+      Um cache gerado com outra compilação do PHP, outro caminho de arquivo
+      ou outras configurações (incluindo quais extensões são carregadas) pode ser ignorado.
+     </simpara>
+    </note>
+    <simpara>
+     Disponível a partir do PHP 8.5.0.
+    </simpara>
    </listitem>
   </varlistentry>
   <varlistentry xml:id="ini.opcache.validate-permission">
