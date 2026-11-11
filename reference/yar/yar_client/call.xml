@@ -1,22 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 914b97130aed191518791045b93b6f858ef5a139 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 60ce1c5c7cc6d340191828de21f1d6b48cd83807 Maintainer: leonardolara Status: ready -->
 
 <refentry xml:id="yar-client.call" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
-  <refname>Yar_Client::__call</refname>
-  <refpurpose>Chama o serviço</refpurpose>
+  <refname>Yar_Client::call</refname>
+  <refpurpose>Chama um serviço remoto</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
-  <methodsynopsis>
-   <modifier>public</modifier> <type>void</type><methodname>Yar_Client::__call</methodname>
+  <methodsynopsis role="Yar_Client">
+   <modifier>public</modifier> <type>mixed</type><methodname>Yar_Client::call</methodname>
    <methodparam><type>string</type><parameter>method</parameter></methodparam>
-   <methodparam><type>array</type><parameter>parameters</parameter></methodparam>
+   <methodparam><type>array</type><parameter>arguments</parameter></methodparam>
   </methodsynopsis>
-  <para>
-   Emite uma chamada para o método RPC remoto.
-  </para>
+  <simpara>
+   Realiza uma chamada RPC ao método remoto <literal>method</literal>.
+   É exatamente o que acontece quando um método
+   inexistente é invocado em um objeto <classname>Yar_Client</classname> (por
+   meio do método mágico <literal>__call</literal> do PHP);
+   <methodname>Yar_Client::call</methodname> só existe para que métodos remotos
+   chamados literalmente <literal>call</literal> ou <literal>__call</literal>
+   ainda possam ser acessados.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -25,17 +31,17 @@
    <varlistentry>
     <term><parameter>method</parameter></term>
     <listitem>
-     <para>
-      Nome do método RPC remoto.
-     </para>
+     <simpara>
+      O nome do método do serviço remoto.
+     </simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><parameter>parameters</parameter></term>
+    <term><parameter>arguments</parameter></term>
     <listitem>
-     <para>
-      Parâmetros.
-     </para>
+     <simpara>
+      A lista de argumentos passados para o método remoto.
+     </simpara>
     </listitem>
    </varlistentry>
   </variablelist>
@@ -43,34 +49,55 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
+  <simpara>
+   Retorna o valor de retorno do método do serviço remoto.
+  </simpara>
+ </refsect1>
 
-  </para>
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <simpara>
+   Quando o método remoto não existe no
+   servidor ou não é público, o cliente lança
+   uma <exceptionname>Yar_Client_Exception</exceptionname> com o código
+   <constant>YAR_ERR_REQUEST</constant>. Consulte <link linkend="class.yar-client-exception">Yar_Client_Exception</link> para
+   outras falhas do lado cliente e suas
+   classes de exceção.
+  </simpara>
  </refsect1>
 
  <refsect1 role="examples">
   &reftitle.examples;
   <example>
-   <title>Exemplo de <function>Yar_Client::__call</function></title>
+   <title>Exemplo de <methodname>Yar_Client::call</methodname></title>
    <programlisting role="php">
 <![CDATA[
 <?php
+$client = new Yar_Client("http://api.example.com/operator.php");
 
-$client = new Yar_Client("http://host/api/");
+/* A forma habitual: invoca o método remoto como se fosse local.
+ * Isso é convertido em call("add", array(1, 2)) internamente. */
+var_dump($client->add(1, 2));
 
-/* chama serviço remoto */
-$result = $client->some_method("parameter");
+/* Equivalente: chama o método explicitamente pelo nome */
+var_dump($client->call("add", array(1, 2)));
+
+/* Necessário apenas quando o serviço remoto expõe literalmente um método
+ * chamado call (ou __call), que o método mágico __call não consegue acessar */
+var_dump($client->call("call", array($some_argument)));
 ?>
 ]]>
    </programlisting>
    &example.outputs.similar;
    <screen>
 <![CDATA[
+int(3)
+int(3)
+...
 ]]>
    </screen>
   </example>
  </refsect1>
-
 
  <refsect1 role="seealso">
   &reftitle.seealso;

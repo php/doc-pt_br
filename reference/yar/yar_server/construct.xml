@@ -1,34 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 914b97130aed191518791045b93b6f858ef5a139 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 60ce1c5c7cc6d340191828de21f1d6b48cd83807 Maintainer: leonardolara Status: ready -->
 
 <refentry xml:id="yar-server.construct" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>Yar_Server::__construct</refname>
-  <refpurpose>Registra um servidor</refpurpose>
+  <refpurpose>Cria um servidor RPC</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
-  <methodsynopsis>
+  <constructorsynopsis role="Yar_Server">
    <modifier>final</modifier> <modifier>public</modifier> <methodname>Yar_Server::__construct</methodname>
-   <methodparam><type>Object</type><parameter>obj</parameter></methodparam>
-  </methodsynopsis>
-  <para>
-   Configura um servidor Yar HTTP RPC. Todos os métodos públicos de $obj serão
-   registrados como um serviço RPC.
-  </para>
+   <methodparam><type>object</type><parameter>executor</parameter></methodparam>
+  </constructorsynopsis>
+  <simpara>
+   Cria um servidor RPC HTTP do Yar. Todos os métodos públicos de
+   <parameter>executor</parameter> são registrados como serviços RPC.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
   &reftitle.parameters;
   <variablelist>
    <varlistentry>
-    <term><parameter>obj</parameter></term>
+    <term><parameter>executor</parameter></term>
     <listitem>
-     <para>
-      Um objeto, todos os seus métodos públicos serão registrados
-      como serviços RPC.
-     </para>
+     <simpara>
+      Qualquer objeto cujos métodos públicos devam ser expostos como serviços
+      RPC. Métodos protegidos e privados, assim como métodos cujo nome começa
+      com sublinhado, não são expostos.
+     </simpara>
+     <simpara>
+      O executor pode, opcionalmente, definir dois
+      métodos mágicos protegidos, reconhecidos por
+      <methodname>Yar_Server::handle</methodname> e nunca expostos como pontos de
+      extremidade RPC:
+     </simpara>
+     <itemizedlist>
+      <listitem>
+       <simpara>
+        <literal>protected function __info(string $markup):
+        string</literal> - a partir do Yar 2.3.0. Chamado quando a página
+        de informações do serviço é solicitada; recebe a marcação da
+        página que o Yar renderizaria e, se retornar uma &string;, essa
+        string será enviada ao cliente em seu lugar. Consulte
+        <methodname>Yar_Server::handle</methodname>.
+       </simpara>
+      </listitem>
+      <listitem>
+       <simpara>
+        <literal>protected function __auth(string $provider, string
+        $token): bool</literal> - a partir do Yar 2.3.0. Chamado no
+        início de cada requisição com os campos
+        <literal>provider</literal> e <literal>token</literal> do cabeçalho da
+        requisição, definidos pelo cliente com as opções
+        <constant>YAR_OPT_PROVIDER</constant> e <constant>YAR_OPT_TOKEN</constant>. Retornar exatamente
+        &false; rejeita a requisição; qualquer outro valor
+        de retorno permite que ela prossiga. Consulte
+        <methodname>Yar_Server::handle</methodname>.
+       </simpara>
+      </listitem>
+     </itemizedlist>
+     <simpara>
+      Ambos os métodos só têm efeito quando são <literal>protected</literal>;
+      um método público ou privado com o mesmo nome é
+      ignorado.
+     </simpara>
     </listitem>
    </varlistentry>
   </variablelist>
@@ -36,23 +73,23 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
+  <simpara>
    Uma instância de <classname>Yar_Server</classname>.
-  </para>
+  </simpara>
  </refsect1>
 
  <refsect1 role="examples">
   &reftitle.examples;
   <example>
-   <title>Exemplo de <function>Yar_Server::__construct</function></title>
+   <title>Exemplo de <methodname>Yar_Server::__construct</methodname></title>
    <programlisting role="php">
 <![CDATA[
 <?php
 class API {
     /**
-     * As informações do documento serão geradas automaticamente na página de informações do serviço.
-     * @params
-     * @return
+     * O bloco de documentação é exibido na página de informações do serviço.
+     * @param string $parameter
+     * @return string
      */
     public function some_method($parameter, $option = "foo") {
          return "some_method";
@@ -67,20 +104,16 @@ $service->handle();
 ?>
 ]]>
    </programlisting>
-   &example.outputs.similar;
-   <screen>
-<![CDATA[
-]]>
-   </screen>
   </example>
  </refsect1>
 
-
  <refsect1 role="seealso">
   &reftitle.seealso;
-  <simplelist>
-   <member><methodname>Yar_Server::handle</methodname></member>
-  </simplelist>
+  <para>
+   <simplelist>
+    <member><methodname>Yar_Server::handle</methodname></member>
+   </simplelist>
+  </para>
  </refsect1>
 
 </refentry>

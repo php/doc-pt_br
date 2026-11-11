@@ -1,20 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: df78bd1d232f2cd8df673accf5ba0e280695639b Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 60ce1c5c7cc6d340191828de21f1d6b48cd83807 Maintainer: leonardolara Status: ready -->
 
 <chapter xml:id="yar.examples" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  &reftitle.examples;
+ <simpara>
+  Os exemplos abaixo apresentam um serviço completo: um servidor que expõe
+  alguns métodos aritméticos, um cliente síncrono que os chama, um cliente
+  que distribui várias chamadas simultaneamente e um cliente que se
+  comunica com um servidor por TCP.
+ </simpara>
+
  <example>
   <title>Exemplo de servidor Yar</title>
+  <simpara>
+   Um serviço Yar é simplesmente uma classe PHP comum encapsulada por
+   <classname>Yar_Server</classname>. Cada método público do objeto se torna um ponto de
+   extremidade RPC; métodos protegidos e privados, assim como métodos cujos
+   nomes começam com sublinhado, permanecem ocultos dos clientes. Os
+   comentários de documentação dos métodos públicos são coletados e
+   exibidos na página de informações do serviço.
+  </simpara>
+  <simpara>
+   Requisições RPC chegam como requisições HTTP POST contendo uma carga
+   útil binária do protocolo Yar, portanto o script geralmente é mapeado
+   para um URI em um servidor web comum.
+  </simpara>
   <programlisting role="php">
 <![CDATA[
 <?php
 
-/* suponha que esta página pode ser acessada por http://example.com/operator.php */
+/* suponha que esta página possa ser acessada por http://api.example.com/operator.php */
 
 class Operator {
 
     /**
-     * Add two operands
+     * Soma dois operandos
      * @param integer
      * @return integer
      */
@@ -37,7 +57,7 @@ class Operator {
     }
 
     /**
-     * Protected methods will not be exposed
+     * Métodos protegidos não serão expostos
      * @param integer
      * @return integer
      */
@@ -54,7 +74,15 @@ $server->handle();
  </example>
 
  <example>
-  <title>Acesse o servidor no navegador (solicitação GET)</title>
+  <title>Acessando o servidor no navegador (requisição GET)</title>
+  <simpara>
+   Quando uma requisição GET é feita ao URI do serviço - por exemplo, ao
+   abri-lo em um navegador -, Yar não realiza uma chamada RPC, mas
+   renderiza uma página de informações listando cada método público do
+   objeto executor com seu comentário de documentação. Isso é controlado
+   pela diretiva <link linkend="ini.yar.expose-info">yar.expose_info</link>; quando ela está desativada, uma requisição
+   GET falha.
+  </simpara>
   &example.outputs.similar;
   <mediaobject>
    <alt>Informações do servidor Yar</alt>
@@ -66,49 +94,81 @@ $server->handle();
 
  <example>
   <title>Exemplo de cliente Yar</title>
+  <simpara>
+   Um <classname>Yar_Client</classname> é associado a um único endereço de serviço. Chamar
+   qualquer método indefinido nele é convertido de forma transparente
+   em uma chamada RPC síncrona, de modo que métodos remotos se
+   comportam como locais; <methodname>Yar_Client::call</methodname> faz a mesma coisa explicitamente
+   pelo nome.
+  </simpara>
+  <simpara>
+   Métodos protegidos não são expostos: chamar um deles
+   falha com uma <exceptionname>Yar_Client_Exception</exceptionname> cujo código é
+   <constant>YAR_ERR_REQUEST</constant>.
+  </simpara>
   <programlisting role="php">
 <![CDATA[
 <?php
-$client = new yar_client("http://example.com/operator.php");
+$client = new Yar_Client("http://api.example.com/operator.php");
 
 /* chama diretamente */
 var_dump($client->add(1, 2));
 
-/* ou através do método call */
+/* chama via call() */
 var_dump($client->call("add", array(3, 2)));
 
-
-/* _add não pode ser chamado */
+/* _add não pode ser chamado: não é público */
 var_dump($client->_add(1, 2));
 ?>
 ]]>
   </programlisting>
   &example.outputs.similar;
-   <screen>
+  <screen>
 <![CDATA[
 int(3)
 int(5)
-PHP Fatal error:  Uncaught exception 'Yar_Server_Exception' with message 'call to api Operator::_add() failed' in *
+PHP Fatal error:  Uncaught Yar_Client_Exception: call to undefined api Operator::_add() in *
 ]]>
-   </screen>
+  </screen>
  </example>
 
  <example>
-  <title>Yar Concurrent Client Example</title>
+  <title>Exemplo de cliente concorrente do Yar</title>
+  <simpara>
+   Em vez de chamar serviços um após o outro,
+   <classname>Yar_Concurrent_Client</classname> registra várias chamadas primeiro e
+   depois despacha todas de uma vez com <methodname>Yar_Concurrent_Client::loop</methodname>. As
+   respostas são passadas para a função de retorno na
+   ordem de chegada, não na ordem em que as chamadas
+   foram registradas.
+  </simpara>
+  <simpara>
+   Logo após todas as requisições serem enviadas, a função de retorno é
+   invocada uma vez com argumentos &null; para que o chamador saiba que não
+   há mais requisições pendentes; o exemplo abaixo verifica essa notificação.
+  </simpara>
   <programlisting role="php">
 <![CDATA[
 <?php
 function callback($ret, $callinfo) {
-    echo $callinfo['method'] , " result: ", $ret , "\n";
+    if ($callinfo == NULL) {
+        /* todas as requisições foram enviadas, aguardando as respostas */
+        return;
+    }
+    echo $callinfo['method'], " result: ", $ret, "\n";
 }
 
-/* registra chamadas assíncronas para serviços remotos */
-Yar_Concurrent_Client::call("http://example.com/operator.php", "add", array(1, 2), "callback");
-Yar_Concurrent_Client::call("http://example.com/operator.php", "sub", array(2, 1), "callback");
-Yar_Concurrent_Client::call("http://example.com/operator.php", "mul", array(2, 2), "callback");
+function error_callback($type, $error, $callinfo) {
+    error_log("[$type] $error");
+}
 
-/* envia todas as solicitações e aguarda resposta */
-Yar_Concurrent_Client::loop();
+/* registra chamadas assíncronas a serviços remotos */
+Yar_Concurrent_Client::call("http://api.example.com/operator.php", "add", array(1, 2), "callback");
+Yar_Concurrent_Client::call("http://api.example.com/operator.php", "sub", array(2, 1), "callback");
+Yar_Concurrent_Client::call("http://api.example.com/operator.php", "mul", array(2, 2), "callback");
+
+/* envia todas as requisições e aguarda as respostas */
+Yar_Concurrent_Client::loop("callback", "error_callback");
 ?>
 ]]>
   </programlisting>
@@ -120,6 +180,26 @@ sub result: 1
 add result: 3
 ]]>
    </screen>
+ </example>
+
+ <example>
+  <title>Exemplo de cliente TCP do Yar</title>
+  <simpara>
+   Além de HTTP, <classname>Yar_Client</classname> pode se comunicar com
+   servidores compatíveis com Yar por TCP ou sockets Unix,
+   por exemplo, um serviço implementado com o <link xlink:href="&url.git.hub;laruence/yar-c">framework Yar em C</link>,
+   que serve o mesmo protocolo binário Yar usado pelo
+   servidor PHP.
+  </simpara>
+  <programlisting role="php">
+<![CDATA[
+<?php
+$client = new Yar_Client("tcp://127.0.0.1:8600");
+
+var_dump($client->add(1, 2));
+?>
+]]>
+  </programlisting>
  </example>
 
 </chapter>

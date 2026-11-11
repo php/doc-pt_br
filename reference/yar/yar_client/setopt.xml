@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: fade73b9ec1424cbbfcd5d075a21d30445ce8a23 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 60ce1c5c7cc6d340191828de21f1d6b48cd83807 Maintainer: leonardolara Status: ready -->
 
 <refentry xml:id="yar-client.setopt" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>Yar_Client::setOpt</refname>
-  <refpurpose>Define contextos de chamada</refpurpose>
+  <refpurpose>Define opções do cliente</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
-  <methodsynopsis>
-   <modifier>public</modifier> <type class="union"><type>Yar_Client</type><type>false</type></type><methodname>Yar_Client::setOpt</methodname>
+  <methodsynopsis role="Yar_Client">
+   <modifier>public</modifier> <type class="union"><type>Yar_Client</type><type>bool</type></type><methodname>Yar_Client::setOpt</methodname>
    <methodparam><type>int</type><parameter>name</parameter></methodparam>
    <methodparam><type>mixed</type><parameter>value</parameter></methodparam>
   </methodsynopsis>
-  <para>
-
-  </para>
+  <simpara>
+   Define uma opção no cliente. As opções são avaliadas quando uma chamada
+   é feita, portanto podem ser alteradas entre chamadas.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -25,23 +26,29 @@
    <varlistentry>
     <term><parameter>name</parameter></term>
     <listitem>
-     <para>
-      Pode ser:
-      <constant>YAR_OPT_PACKAGER</constant>,
-      <constant>YAR_OPT_PERSISTENT</constant> (necessário suporte no servidor),
-      <constant>YAR_OPT_TIMEOUT</constant>,
-      <constant>YAR_OPT_CONNECT_TIMEOUT</constant>,
-      <constant>YAR_OPT_HEADER</constant> (a partir do 2.0.4),
-      <constant>YAR_OPT_PROXY</constant> (a partir do 2.2.0)
-     </para>
+     <simpara>
+      Uma das constantes <literal>YAR_OPT_*</literal>:
+     </simpara>
+     <simplelist>
+      <member><constant>YAR_OPT_PACKAGER</constant> - um nome de empacotador: <literal>php</literal>, <literal>json</literal> ou, quando compilado com suporte a msgpack, <literal>msgpack</literal></member>
+      <member><constant>YAR_OPT_PERSISTENT</constant> - uma opção booleana de conexão persistente (keep-alive HTTP)</member>
+      <member><constant>YAR_OPT_TIMEOUT</constant> - um tempo limite em milissegundos, sobrescrevendo <link linkend="ini.yar.timeout">yar.timeout</link></member>
+      <member><constant>YAR_OPT_CONNECT_TIMEOUT</constant> - um tempo limite de conexão em milissegundos, sobrescrevendo <link linkend="ini.yar.connect-timeout">yar.connect_timeout</link></member>
+      <member><constant>YAR_OPT_HEADER</constant> (a partir da versão 2.0.4) - um &array; de linhas adicionais de cabeçalhos HTTP</member>
+      <member><constant>YAR_OPT_RESOLVE</constant> (a partir da versão 2.1.0) - um &array; de entradas de resolução de nomes de host</member>
+      <member><constant>YAR_OPT_PROXY</constant> (a partir da versão 2.2.0) - um endereço de proxy HTTP</member>
+      <member><constant>YAR_OPT_PROVIDER</constant> (a partir da versão 2.3.0) - a identidade do provedor, com até 32 bytes</member>
+      <member><constant>YAR_OPT_TOKEN</constant> (a partir da versão 2.3.0) - o token de autenticação, com até 32 bytes</member>
+     </simplelist>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><parameter>value</parameter></term>
     <listitem>
-     <para>
-
-     </para>
+     <simpara>
+      O valor da opção. Um valor inválido gera um aviso e faz a chamada
+      retornar &false;.
+     </simpara>
     </listitem>
    </varlistentry>
   </variablelist>
@@ -49,51 +56,79 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-   Retorna <varname>$this</varname> em caso de sucesso&return.falseforfailure;.
-  </para>
+  <simpara>
+   Retorna o próprio objeto cliente, permitindo uma interface fluente, ou
+   &false; quando o nome da opção é desconhecido, o valor é inválido ou a
+   opção não se aplica ao protocolo com o qual o cliente foi criado.
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <simpara>
+   As condições que fazem a chamada retornar &false; também geram um aviso:
+  </simpara>
+  <itemizedlist>
+   <listitem>
+    <simpara>
+     <constant>YAR_OPT_HEADER</constant>, <constant>YAR_OPT_RESOLVE</constant> e
+     <constant>YAR_OPT_PROXY</constant> só funcionam com o
+     protocolo HTTP; usá-las com um cliente
+     <literal>tcp://</literal> ou <literal>unix://</literal> gera um
+     aviso.
+    </simpara>
+   </listitem>
+   <listitem>
+    <simpara>
+     <constant>YAR_OPT_RESOLVE</constant> também requer libcurl &gt;=
+     7.21.3.
+    </simpara>
+   </listitem>
+   <listitem>
+    <simpara>
+     Cada opção espera um tipo de valor específico (string,
+     booleano, inteiro ou array), descrito na página
+     <link linkend="yar.constants">constantes</link>.
+    </simpara>
+   </listitem>
+  </itemizedlist>
  </refsect1>
 
  <refsect1 role="examples">
   &reftitle.examples;
   <example>
-   <title>Exemplo de <function>Yar_Client::setOpt</function></title>
+   <title>Exemplo de <methodname>Yar_Client::setOpt</methodname></title>
    <programlisting role="php">
 <![CDATA[
 <?php
 
-$cient = new Yar_Client("http://host/api/");
+$client = new Yar_Client("http://api.example.com/operator.php");
 
-// Define tempo limite de 1s
-$client->SetOpt(YAR_OPT_CONNECT_TIMEOUT, 1000);
+/* Define o tempo limite como 1 s */
+$client->setOpt(YAR_OPT_TIMEOUT, 1000);
 
-// Define o empacotador como JSON
-$client->SetOpt(YAR_OPT_PACKAGER, "json");
+/* Define o empacotador como JSON */
+$client->setOpt(YAR_OPT_PACKAGER, "json");
 
-// Define cabeçalhos personalizados
-$client->SetOpt(YAR_OPT_HEADER, array("hr1: val1", "hd2: val2"));
+/* Define cabeçalhos personalizados */
+$client->setOpt(YAR_OPT_HEADER, ["X-Api-Key: value"]);
 
-// Define Proxy Http
-$client->SetOpt(YAR_OPT_PROXY, "127.0.0.1:8888");
+/* Roteia por meio de um proxy HTTP */
+$client->setOpt(YAR_OPT_PROXY, "127.0.0.1:8888");
 
-/* Chama serviço remoto */
+/* chama o serviço remoto */
 $result = $client->some_method("parameter");
 ?>
 ]]>
    </programlisting>
-   &example.outputs.similar;
-   <screen>
-<![CDATA[
-]]>
-   </screen>
   </example>
  </refsect1>
-
 
  <refsect1 role="seealso">
   &reftitle.seealso;
   <simplelist>
-   <member><methodname>Yar_Client::__call</methodname></member>
+   <member><methodname>Yar_Client::getOpt</methodname></member>
+   <member><methodname>Yar_Client::call</methodname></member>
   </simplelist>
  </refsect1>
 
