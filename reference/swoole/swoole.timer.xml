@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 322606e4f1742a6f959e952c63fb1f8bcd6d6ba0 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<!-- EN-Revision: 6e77169fdc9c087749f357bef877607ccc05f442 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
 
 <reference xml:id="class.swoole-timer" role="class" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
 
@@ -11,9 +11,68 @@
 <!-- {{{ Swoole\Timer intro -->
   <section xml:id="swoole-timer.intro">
    &reftitle.intro;
+   <simpara>
+    Temporizador com precisão de milissegundos. A implementação subjacente baseia-se em epoll_wait e
+    setitimer e usa uma estrutura de dados de heap mínimo, que permite adicionar muitos temporizadores.
+   </simpara>
+   <simpara>
+    Em processos de E/S síncrona, como os processos Manager e TaskWorker, a
+    implementação usa setitimer e sinais.
+   </simpara>
+   <simpara>
+    Em processos de E/S assíncrona, ela usa o tempo limite de
+    epoll_wait/kevent/poll/select.
+   </simpara>
    <para>
-
+    O sistema subjacente não oferece suporte a temporizadores com atraso
+    <literal>0</literal>; valores inferiores a <literal>1</literal>
+    milissegundo emitem um <constant>E_WARNING</constant> e a chamada falha.
+    Isso difere de linguagens como Node.js.
+    <methodname linkend="swoole-event.defer">Swoole\Event::defer</methodname>
+    pode ser usado para obter funcionalidade semelhante.
+    <programlisting role="php">
+<![CDATA[
+<?php
+Swoole\Event::defer(function () {
+  echo "hello\n";
+});
+?>
+]]>
+    </programlisting>
    </para>
+   <simpara>
+    Correção dos temporizadores: o tempo de execução da função de callback não afeta o horário da
+    próxima execução. Por exemplo, ao configurar um temporizador tick de 10 ms após 0,002 s, o
+    primeiro callback será executado em 0,012 s. Se levar 5 ms para ser executado, o próximo
+    temporizador ainda será acionado em 0,022 s, e não em 0,027 s.
+   </simpara>
+   <simpara>
+    No entanto, se a execução do callback for longa demais e ultrapassar o horário da próxima
+    execução, o sistema subjacente corrigirá o tempo, descartando o acionamento vencido e chamando
+    o callback no próximo horário disponível. Por exemplo, se o callback iniciado em 0,012 s levar
+    15 ms para ser executado e atrasar o temporizador de 0,022 s, ele será acionado novamente em
+    0,032 s.
+   </simpara>
+   <simpara>
+    Por padrão, quando um temporizador é acionado, uma coroutine é criada
+    automaticamente para executar a função de callback. Esse comportamento
+    pode ser desabilitado com <function>swoole_async_set</function>.
+   </simpara>
+   <warning>
+    <simpara>
+     O temporizador só funciona no espaço do processo atual.
+    </simpara>
+   </warning>
+   <warning>
+    <simpara>
+     O temporizador é totalmente assíncrono e incompatível com funções de E/S síncrona.
+    </simpara>
+   </warning>
+   <warning>
+    <simpara>
+     A execução dos temporizadores pode apresentar pequenos desvios de tempo.
+    </simpara>
+   </warning>
   </section>
 <!-- }}} -->
 

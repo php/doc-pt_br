@@ -1,51 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 86e6094e86b84a51d00ab217ac50ce8dde33d82a Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<!-- EN-Revision: 6e77169fdc9c087749f357bef877607ccc05f442 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
 
 <refentry xml:id="swoole-timer.tick" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>Swoole\Timer::tick</refname>
-  <refpurpose>Repete uma função fornecida em cada intervalo de tempo especificado.</refpurpose>
+  <refpurpose>Define um temporizador de intervalo recorrente</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
   &reftitle.description;
   <methodsynopsis>
-   <modifier>public</modifier> <modifier>static</modifier> <type>void</type><methodname>Swoole\Timer::tick</methodname>
-   <methodparam><type>int</type><parameter>interval_ms</parameter></methodparam>
+   <modifier>public</modifier> <modifier>static</modifier> <type class="union"><type>int</type><type>false</type></type><methodname>Swoole\Timer::tick</methodname>
+   <methodparam><type>int</type><parameter>ms</parameter></methodparam>
    <methodparam><type>callable</type><parameter>callback</parameter></methodparam>
-   <methodparam choice="opt"><type>string</type><parameter>param</parameter></methodparam>
+   <methodparam rep="repeat"><type>mixed</type><parameter>params</parameter></methodparam>
   </methodsynopsis>
-  <para>
-
-  </para>
-
+  <simpara>
+   Define um temporizador acionado a cada <parameter>ms</parameter>
+   milissegundos. Diferentemente de um temporizador criado com
+   <methodname>Swoole\Timer::after</methodname>, ele continua sendo acionado
+   até ser removido com <methodname>Swoole\Timer::clear</methodname>.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
   &reftitle.parameters;
   <variablelist>
    <varlistentry>
-    <term><parameter>interval_ms</parameter></term>
+    <term><parameter>ms</parameter></term>
     <listitem>
-     <para>
-
-     </para>
+     <simpara>
+      O intervalo em milissegundos. Deve ser maior ou igual a
+      <literal>1</literal>; um valor menor emite um
+      <constant>E_WARNING</constant> e a chamada falha.
+     </simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><parameter>callback</parameter></term>
     <listitem>
-     <para>
-
-     </para>
+     <simpara>
+      A função a ser executada a cada acionamento. Ela é chamada como
+      <literal>callback(int $timer_id, mixed ...$params)</literal>: o ID do
+      temporizador é passado como primeiro argumento, seguido pelos valores
+      informados em <parameter>params</parameter>.
+     </simpara>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><parameter>param</parameter></term>
+    <term><parameter>params</parameter></term>
     <listitem>
-     <para>
-
-     </para>
+     <simpara>
+      Valores adicionais passados para <parameter>callback</parameter> após o
+      ID do temporizador.
+     </simpara>
     </listitem>
    </varlistentry>
   </variablelist>
@@ -53,12 +61,41 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-
-  </para>
+  <simpara>
+   Retorna o ID do temporizador, que pode ser passado para
+   <methodname>Swoole\Timer::clear</methodname>. Retorna &false; se não for
+   possível criar o temporizador, em particular quando <parameter>ms</parameter>
+   for menor que <literal>1</literal>.
+  </simpara>
  </refsect1>
 
-
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <function>Swoole\Timer::tick</function></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$ticks = 0;
+Swoole\Timer::tick(1000, function (int $timer_id, string $label) use (&$ticks) {
+    echo "tick #", ++$ticks, " ($label)\n";
+    if ($ticks === 3) {
+        Swoole\Timer::clear($timer_id);
+    }
+}, "job");
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+tick #1 (job)
+tick #2 (job)
+tick #3 (job)
+]]>
+   </screen>
+  </example>
+ </refsect1>
 </refentry>
 
 <!-- Keep this comment at the end of the file
