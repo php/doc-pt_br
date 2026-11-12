@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: b890f28c0c6d2856eadcdc34b3faf83a846b3d79 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 3e4d4fa6a24d0f04db6fa1f42905653bdd853905 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="function.pcntl-async-signals" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>pcntl_async_signals</refname>
@@ -64,6 +64,67 @@
     </tbody>
    </tgroup>
   </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Chamando manipuladores de sinal durante uma transferência cURL</title>
+   <simpara>
+    Sem a função de retorno de progresso, o manipulador não seria chamado até que a
+    transferência fosse concluída. <constant>CURLOPT_XFERINFOFUNCTION</constant> está
+    disponível a partir do PHP 8.2.0; use <constant>CURLOPT_PROGRESSFUNCTION</constant>
+    em versões anteriores.
+   </simpara>
+   <programlisting role="php">
+<![CDATA[
+<?php
+pcntl_async_signals(true);
+
+pcntl_signal(SIGALRM, function () {
+    echo "Heartbeat\n";
+    pcntl_alarm(1);
+});
+pcntl_alarm(1);
+
+$ch = curl_init('https://example.com/slow-endpoint');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+// Calling back into PHP code during the transfer lets the handler run
+curl_setopt($ch, CURLOPT_NOPROGRESS, false);
+curl_setopt($ch, CURLOPT_XFERINFOFUNCTION, function () {
+    return 0;
+});
+
+$response = curl_exec($ch);
+?>
+]]>
+   </programlisting>
+  </example>
+ </refsect1>
+
+ <refsect1 role="notes">
+  &reftitle.notes;
+  <simpara>
+   Com o tratamento de sinais assíncronos habilitado, um manipulador instalado com
+   <function>pcntl_signal</function> não é chamado no momento em que o sinal
+   é recebido. O sinal é registrado, e o manipulador é chamado na próxima
+   vez que o mecanismo verifica sinais pendentes enquanto executa código PHP, por
+   exemplo, após o retorno de uma chamada de função, ou na próxima iteração de um laço.
+  </simpara>
+  <simpara>
+   Como consequência, uma chamada de longa duração a uma função interna, como
+   <function>curl_exec</function> ou uma consulta de banco de dados, não é interrompida para
+   chamar o manipulador: ele só será chamado quando a função retornar.
+   O manipulador só é chamado mais cedo se a função chamar de volta ao código PHP
+   enquanto é executado, por exemplo através de uma função de retorno
+   <constant>CURLOPT_XFERINFOFUNCTION</constant>.
+  </simpara>
+  <simpara>
+   Um sinal ainda pode interromper uma chamada de sistema onde a função está bloqueada.
+   Por exemplo, <function>sleep</function> que retorna cedo e o
+   manipulador é chamado quando ela tiver retornado.
+  </simpara>
  </refsect1>
 
  <refsect1 role="seealso"><!-- {{{ -->
