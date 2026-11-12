@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 6fad47c6ec034be2050771ab0213af06936219dc Maintainer: leonardolara Status: ready --><!-- CREDITS: marcosmarcolin, leonardolara -->
+<!-- EN-Revision: 8cdccd62091924e8fdec3424c748c3a34f279ceb Maintainer: leonardolara Status: ready --><!-- CREDITS: marcosmarcolin, leonardolara -->
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="opcache.configuration">
  &reftitle.runtime;
  &extension.runtime;
@@ -968,8 +968,35 @@ function getA() { return A; }
    <listitem>
     <simpara>
      Permite chamar funções da API do OPcache apenas de scripts PHP cujo caminho
-     é iniciado a partir da string especificada. O padrão <literal>""</literal>
+     começa com a string especificada. O padrão <literal>""</literal>
      significa nenhuma restrição.
+     Quando a restrição se aplica, <function>opcache_get_status</function>,
+     <function>opcache_get_configuration</function>,
+     <function>opcache_reset</function>, <function>opcache_invalidate</function>,
+     <function>opcache_is_script_cached</function> e
+     <function>opcache_is_script_cached_in_file_cache</function> (a partir do PHP 8.5.0)
+     geram um <constant>E_WARNING</constant> e retornam &false;.
+    </simpara>
+    <simpara>
+     O caminho que é verificado é o do script principal, ou seja, o
+     script solicitado pelo servidor web ou passado para o CLI, conforme relatado pelo
+     SAPI. O caminho do arquivo de onde a função é chamada não importa: arquivos incluídos
+     por um script permitido podem chamar a API, enquanto
+     arquivos no diretório permitido podem não ser se forem incluídos por um script
+     fora dele. O SAPI CLI resolve links simbólicos no caminho do
+     script antes de ser verificado.
+    </simpara>
+    <simpara>
+     A comparação é um prefixo simples, sensível a maiúsculas e minúsculas, sem qualquer
+     normalização dos caminhos. Como consequência, um valor de
+     <literal>/var/www/admin</literal> também permite scripts em
+     <literal>/var/www/administrator</literal>; termine o valor com um separador de diretório
+     para corresponder apenas a esse diretório e seus subdiretórios. O valor
+     também deve usar os mesmos separadores de diretório que o caminho relatado pelo SAPI: com o
+     SAPI apache2handler no Windows, esse caminho usa barras normais (por exemplo
+     <literal>C:/www/admin/status.php</literal>), então
+     <literal>C:/www/admin</literal> deve ser usado em vez de
+     <literal>C:\www\admin</literal>.
     </simpara>
    </listitem>
   </varlistentry>
