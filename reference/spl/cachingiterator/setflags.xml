@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: d51166ca16fda8e766849505b84f9306ef443f71 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<!-- EN-Revision: 311705fd828e1a14ea539394ec7230f3a78c8f39 Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandowobeto, leonardolara -->
 <refentry xml:id="cachingiterator.setflags" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>CachingIterator::setFlags</refname>
-  <refpurpose>O propósito da função setFlags</refpurpose>
+  <refpurpose>Define as opções para o objeto CachingIterator</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
@@ -12,36 +12,126 @@
    <modifier>public</modifier> <type>void</type><methodname>CachingIterator::setFlags</methodname>
    <methodparam><type>int</type><parameter>flags</parameter></methodparam>
   </methodsynopsis>
-
-  &warn.undocumented.func;
-
-  <para>
-   Define as opções para o objeto CachingIterator.
-  </para>
+  <simpara>
+   Substitui as opções do <classname>CachingIterator</classname> por
+   <parameter>flags</parameter>.
+  </simpara>
+  <simpara>
+   Ativar <constant>CachingIterator::FULL_CACHE</constant> esvazia o
+   cache; os elementos são adicionados a ele a partir do próximo movimento do iterador.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
   &reftitle.parameters;
-  <para>
-   <variablelist>
-    <varlistentry>
-     <term><parameter>flags</parameter></term>
-     <listitem>
-      <para>
-       Máscara de bits das opções a serem definidas.
-      </para>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-  </para>
-
+  <variablelist>
+   <varlistentry>
+    <term><parameter>flags</parameter></term>
+    <listitem>
+     <simpara>
+      Uma máscara de bits das
+      <link linkend="cachingiterator.constants">constantes do CachingIterator</link>.
+      No máximo uma das opções <constant>CachingIterator::CALL_TOSTRING</constant>,
+      <constant>CachingIterator::TOSTRING_USE_KEY</constant>,
+      <constant>CachingIterator::TOSTRING_USE_CURRENT</constant> e
+      <constant>CachingIterator::TOSTRING_USE_INNER</constant> pode ser fornecida.
+     </simpara>
+    </listitem>
+   </varlistentry>
+  </variablelist>
  </refsect1>
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
+  <simpara>
    &return.void;
-  </para>
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="errors">
+  &reftitle.errors;
+  <simpara>
+   Lança uma <exceptionname>ValueError</exceptionname> se
+   <parameter>flags</parameter> contiver mais de uma das opções de conversão de string:
+   <constant>CachingIterator::CALL_TOSTRING</constant>,
+   <constant>CachingIterator::TOSTRING_USE_KEY</constant>,
+   <constant>CachingIterator::TOSTRING_USE_CURRENT</constant> e
+   <constant>CachingIterator::TOSTRING_USE_INNER</constant>.
+  </simpara>
+  <simpara>
+   Lança uma <exceptionname>InvalidArgumentException</exceptionname> se
+   <constant>CachingIterator::CALL_TOSTRING</constant> ou
+   <constant>CachingIterator::TOSTRING_USE_INNER</constant> estiver atualmente definida
+   e <parameter>flags</parameter> não a contiver, pois essas opções
+   não podem ser desativadas.
+  </simpara>
+ </refsect1>
+
+ <refsect1 role="changelog">
+  &reftitle.changelog;
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       Agora lança uma <exceptionname>ValueError</exceptionname> se
+       <parameter>flags</parameter> contiver mais de uma das opções de
+       conversão de string; anteriormente, uma
+       <exceptionname>InvalidArgumentException</exceptionname> era lançada.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Ativando o cache completo</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$iterator = new CachingIterator(new ArrayIterator(['a', 'b', 'c']), 0);
+$iterator->setFlags(CachingIterator::FULL_CACHE);
+
+foreach ($iterator as $value) {
+    // ...
+}
+
+var_dump($iterator->getCache());
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+array(3) {
+  [0]=>
+  string(1) "a"
+  [1]=>
+  string(1) "b"
+  [2]=>
+  string(1) "c"
+}
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
+ <refsect1 role="seealso">
+  &reftitle.seealso;
+  <simplelist>
+   <member><methodname>CachingIterator::getFlags</methodname></member>
+   <member><methodname>CachingIterator::__construct</methodname></member>
+  </simplelist>
  </refsect1>
 
 </refentry>
