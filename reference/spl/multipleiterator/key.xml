@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: d51166ca16fda8e766849505b84f9306ef443f71 Maintainer: fernandowobeto Status: ready --><!-- CREDITS: fernandowobeto -->
+<!-- EN-Revision: 5f12cb58d98c9843cdcbee9f22b05f77038432db Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandowobeto, leonardolara -->
 <refentry xml:id="multipleiterator.key" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>MultipleIterator::key</refname>
-  <refpurpose>Obtém as instâncias do iterador registradas</refpurpose>
+  <refpurpose>Obtém as chaves dos iteradores anexados</refpurpose>
  </refnamediv>
 
  <refsect1 role="description">
@@ -12,12 +12,17 @@
    <modifier>public</modifier> <type>array</type><methodname>MultipleIterator::key</methodname>
    <void/>
   </methodsynopsis>
-  <para>
-   Obtém o resultado da função key() das instâncias do iterador registradas.
-  </para>
-
-  &warn.undocumented.func;
-
+  <simpara>
+   Obtém as chaves atuais de todos os iteradores anexados, chamando
+   <methodname>Iterator::key</methodname> em cada um válido.
+  </simpara>
+  <simpara>
+   Com <constant>MultipleIterator::MIT_KEYS_NUMERIC</constant>, as chaves são
+   listadas na ordem em que os iteradores foram anexados. Com
+   <constant>MultipleIterator::MIT_KEYS_ASSOC</constant>, elas são indexadas pela
+   informação associada a cada iterador por
+   <methodname>MultipleIterator::attachIterator</methodname>.
+  </simpara>
  </refsect1>
 
  <refsect1 role="parameters">
@@ -27,21 +32,25 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-   Um <type>array</type> de todas as instâncias do iterador registradas.
-  </para>
+  <simpara>
+   Um <type>array</type> contendo as chaves atuais de cada iterador anexado.
+   Com <constant>MultipleIterator::MIT_NEED_ANY</constant>, &null; é usado
+   para os iteradores que não são válidos.
+  </simpara>
  </refsect1>
 
  <refsect1 role="errors">
   &reftitle.errors;
-  <para>
-   Um <classname>RuntimeException</classname> é lançado se o iterador for inválido (a partir do PHP 8.1.0), ou
-   o modo <constant>MIT_NEED_ALL</constant> estiver definido e pelo menos um iterador anexado não for válido.
-  </para>
-  <para>
-   Chamando este método de <xref linkend="control-structures.foreach"/>
-   aciona o aviso "Illegal type returned".
-  </para>
+  <simpara>
+   Lança uma <exceptionname>RuntimeException</exceptionname> se nenhum iterador
+   estiver anexado, ou se <constant>MultipleIterator::MIT_NEED_ALL</constant>
+   estiver definido e pelo menos um iterador anexado não for válido.
+  </simpara>
+  <simpara>
+   Lança uma <exceptionname>InvalidArgumentException</exceptionname> se
+   <constant>MultipleIterator::MIT_KEYS_ASSOC</constant> estiver definido e um
+   iterador foi anexado sem informação associada.
+  </simpara>
  </refsect1>
 
  <refsect1 role="changelog">
@@ -58,9 +67,9 @@
      <row>
       <entry>8.1.0</entry>
       <entry>
-       Um <classname>RuntimeException</classname> agora é lançado se
-       <methodname>MultipleIterator::key</methodname> for chamado em um
-       iterador inválido. Anteriormente, retornava &false;.
+       Uma <exceptionname>RuntimeException</exceptionname> agora é lançada se
+       <methodname>MultipleIterator::key</methodname> for chamado quando nenhum
+       iterador estiver anexado. Anteriormente, &false; era retornado.
       </entry>
      </row>
     </tbody>
@@ -68,13 +77,51 @@
   </informaltable>
  </refsect1>
 
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <example>
+   <title>Exemplo de <methodname>MultipleIterator::key</methodname></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$iterator = new MultipleIterator(MultipleIterator::MIT_NEED_ANY | MultipleIterator::MIT_KEYS_ASSOC);
+$iterator->attachIterator(new ArrayIterator(['a' => 'apple', 'b' => 'banana']), 'fruit');
+$iterator->attachIterator(new ArrayIterator(['x' => 'red']), 'color');
+
+$iterator->rewind();
+while ($iterator->valid()) {
+    var_dump($iterator->key());
+    $iterator->next();
+}
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+array(2) {
+  ["fruit"]=>
+  string(1) "a"
+  ["color"]=>
+  string(1) "x"
+}
+array(2) {
+  ["fruit"]=>
+  string(1) "b"
+  ["color"]=>
+  NULL
+}
+]]>
+   </screen>
+  </example>
+ </refsect1>
+
  <refsect1 role="seealso">
   &reftitle.seealso;
-  <para>
-   <simplelist>
-    <member><methodname>MultipleIterator::current</methodname></member>
-   </simplelist>
-  </para>
+  <simplelist>
+   <member><methodname>MultipleIterator::current</methodname></member>
+   <member><methodname>MultipleIterator::valid</methodname></member>
+  </simplelist>
  </refsect1>
 
 </refentry>
