@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: dff848b17dafaabfb7662ffb5fecfcb04e3b771d Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: 3a0bf5e678f1023de7cd2148f2c5a70ffdff4a59 Maintainer: leonardolara Status: ready -->
 <sect1 xml:id="language.oop5.property-hooks" xmlns="http://docbook.org/ns/docbook">
  <title>Ganchos de Propriedade</title>
 
@@ -409,6 +409,153 @@ class Person {
    Substituir toda a propriedade do array é aceitável e se comporta da mesma forma que qualquer outra propriedade.
    Somente trabalhar com elementos do array é que requer cuidados especiais.
   </simpara>
+ </sect2>
+ <sect2 xml:id="language.oop5.property-hooks.isset-unset">
+  <title><function>isset</function>, <function>empty</function> e <function>unset</function></title>
+  <simpara>
+   Quando <function>isset</function> ou <function>empty</function> é usado em uma
+   propriedade que possui um gancho <literal>get</literal>, o gancho é chamado e
+   o valor que ele retorna é verificado em vez do valor de apoio da propriedade.
+   <function>isset</function> retorna &true; se esse valor não for &null;,
+   e <function>empty</function> retorna &true; se esse valor for igual a &false;.
+   Isso é intencional: um gancho <literal>get</literal> pode calcular ou inicializar
+   o valor quando ele é lido, então o código fora dos ganchos da propriedade não pode
+   observar diretamente o valor de apoio.
+  </simpara>
+  <simpara>
+   Como consequência, se o gancho <literal>get</literal> lê um valor de apoio
+   que não foi inicializado, usar <function>isset</function> ou
+   <function>empty</function> na propriedade lança um <exceptionname>Error</exceptionname>,
+   assim como ler a propriedade faz.
+   O mesmo se aplica ao
+   <link linkend="language.operators.comparison.coalesce">operador de coalescência nula</link>.
+  </simpara>
+  <example>
+   <title><function>isset</function> em uma propriedade com um gancho <literal>get</literal></title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class Article
+{
+    public ?string $title = null {
+        get => $this->title ?? 'Untitled';
+    }
+
+    public string $author {
+        get => ucfirst($this->author);
+        set => $this->author = $value;
+    }
+}
+
+$article = new Article();
+
+// O valor de apoio é nulo, mas o gancho get retorna 'Untitled'.
+var_dump(isset($article->title));
+
+// O gancho get lê um valor de apoio não inicializado.
+try {
+    var_dump(isset($article->author));
+} catch (Error $e) {
+    echo $e->getMessage(), "\n";
+}
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+bool(true)
+Typed property Article::$author must not be accessed before initialization
+]]>
+   </screen>
+  </example>
+  <simpara>
+   Se uma propriedade de apoio não tiver um gancho <literal>get</literal>,
+   <function>isset</function> e <function>empty</function> verificam o valor de apoio
+   diretamente, assim como fariam para uma propriedade sem ganchos.
+   Em uma propriedade virtual que não possui um gancho <literal>get</literal>,
+   eles lançam um <exceptionname>Error</exceptionname>, porque a propriedade não pode ser lida.
+  </simpara>
+  <simpara>
+   Dentro dos ganchos de uma propriedade, <code>$this->propName</code> se refere ao
+   valor de apoio dessa propriedade, então <code>isset($this->propName)</code> verifica
+   o valor de apoio diretamente.
+   Um gancho <literal>get</literal> pode usar isso para lidar com um valor de apoio não inicializado.
+   Frequentemente, é mais simples dar à propriedade um valor padrão, como &null;.
+  </simpara>
+  <example>
+   <title>Lidando com um valor de apoio não inicializado</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class Article
+{
+    // Inicializar o valor de apoio evita o erro.
+    public ?string $subtitle = null {
+        get => $this->subtitle !== null ? ucfirst($this->subtitle) : null;
+    }
+
+    // O gancho get verifica seu próprio valor de apoio.
+    public string $author {
+        get => isset($this->author) ? ucfirst($this->author) : 'Anonymous';
+        set => $this->author = $value;
+    }
+}
+
+$article = new Article();
+
+var_dump(isset($article->subtitle));
+var_dump(isset($article->author));
+var_dump($article->author);
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+bool(false)
+bool(true)
+string(9) "Anonymous"
+]]>
+   </screen>
+  </example>
+  <simpara>
+   Uma propriedade que possui ganchos não pode ter sua definição removida.
+   Usar <function>unset</function> nela lança um <exceptionname>Error</exceptionname>,
+   seja a propriedade de apoio ou virtual, e mesmo quando
+   <function>unset</function> é chamado de dentro da classe ou de um de seus ganchos.
+  </simpara>
+  <example>
+   <title><function>unset</function> em uma propriedade com ganchos</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+class Rectangle
+{
+    public int $area {
+        get => $this->h * $this->w;
+    }
+
+    public function __construct(public int $h, public int $w) {}
+}
+
+$r = new Rectangle(4, 5);
+
+try {
+    unset($r->area);
+} catch (Error $e) {
+    echo $e->getMessage(), "\n";
+}
+?>
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+Cannot unset hooked property Rectangle::$area
+]]>
+   </screen>
+  </example>
  </sect2>
  <sect2>
   <title>Herança</title>

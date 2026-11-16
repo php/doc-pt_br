@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 6af4cd5be387fcb28cabfca49f0d9109ebfc660f Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
+<!-- EN-Revision: 43127142d0d96b6a49d4bdcc6ca1a72d0e55b7a0 Maintainer: leonardolara Status: ready --><!-- CREDITS: leonardolara -->
 <sect1 xml:id="control-structures.finally" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <title>finally</title>
  <?phpdoc print-version-for="finally"?>
@@ -176,6 +176,56 @@ finally catch
 ]]>
    </screen>
   </example>
+  <simpara>
+   Uma instrução &return; em um bloco &finally; também descarta qualquer exceção que
+   esteja sendo propagada quando o bloco &finally; é executado:
+   uma exceção lançada no bloco &try; que não é capturada,
+   ou uma exceção lançada ou relançada no bloco &catch;.
+   Nenhum erro é reportado, e a função retorna o valor do
+   bloco &finally; como se nenhuma exceção tivesse sido lançada.
+  </simpara>
+  <example>
+   <title>Um &return; em um bloco &finally; descarta uma exceção relançada</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+function process() {
+    try {
+        throw new Exception('Exceção original');
+    } catch (Exception $e) {
+        echo 'Capturada: ', $e->getMessage(), "\n";
+        throw $e;
+    } finally {
+        echo 'Dentro do finally', "\n";
+        return 'finally';
+    }
+}
+
+try {
+    echo process(), "\n";
+} catch (Exception $e) {
+    echo 'Isso nunca é alcançado', "\n";
+}
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+Capturada: Exceção original
+Dentro do finally
+finally
+]]>
+   </screen>
+  </example>
+  <simpara>
+   Ao contrário de &return;, sair de um bloco &finally; com um
+   <link linkend="control-structures.break"><literal>break</literal></link>,
+   <link linkend="control-structures.continue"><literal>continue</literal></link>
+   ou <link linkend="control-structures.goto"><literal>goto</literal></link>
+   não é permitido, e resulta em um erro fatal em tempo de compilação.
+   Laços inteiramente contidos dentro do bloco &finally; ainda podem usar
+   <literal>break</literal> e <literal>continue</literal>.
+  </simpara>
  </sect2>
 
  <sect2>
