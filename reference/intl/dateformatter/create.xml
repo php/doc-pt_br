@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: c142be811735a5542c8a2e4c4ed2f81e8cc3acc6 Maintainer: leonardolara Status: ready -->
+<!-- EN-Revision: ece319a24140717b5602b45ceb31769d21c4a3e7 Maintainer: leonardolara Status: ready -->
 <refentry xml:id="intldateformatter.create" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
  <refnamediv>
   <refname>IntlDateFormatter::create</refname>
@@ -61,6 +61,14 @@
        Localidade a ser utilizada ao formatar ou interpretar, ou &null; para utilizar o valor
        especificado na configuração ini <link linkend="ini.intl.default-locale">intl.default_locale</link>.
       </para>
+      <simpara>
+       Tanto <literal>en_US</literal> quanto <literal>en-US</literal> são aceitos.
+       A localidade pode conter palavras-chave da ICU, como
+       <literal>fa_IR@calendar=persian</literal>, mas a
+       palavra-chave <literal>calendar</literal> só altera o calendário usado quando
+       <parameter>calendar</parameter> é
+       <constant>IntlDateFormatter::TRADITIONAL</constant>.
+      </simpara>
      </listitem>
     </varlistentry>
     <varlistentry>
@@ -117,15 +125,34 @@
        se &null; for fornecido para o parâmetro <parameter>timezone</parameter>,
        também definirá o fuso horário utilizado.
       </para>
+      <simpara>
+       <constant>IntlDateFormatter::GREGORIAN</constant> sempre usa o
+       calendário gregoriano, mesmo que a localidade tenha uma palavra-chave <literal>calendar</literal>.
+       <constant>IntlDateFormatter::TRADITIONAL</constant> usa o
+       calendário padrão da localidade: aquele definido pela palavra-chave
+       <literal>calendar</literal> se houver, caso contrário, aquele definido
+       pela ICU para a região da localidade (por exemplo persa para
+       <literal>fa_IR</literal> e budista para <literal>th_TH</literal>, mas
+       gregoriano para <literal>en_US</literal>). Este último depende da versão da ICU.
+       Os tipos de calendário disponíveis para uma localidade são listados por
+       <methodname>IntlCalendar::getKeywordValuesForLocale</methodname>.
+      </simpara>
      </listitem>
     </varlistentry>
     <varlistentry>
      <term><parameter>pattern</parameter></term>
      <listitem>
-      <para>
-       Modelo opcional a ser utilizado ao formatar ou interpretar.
+      <simpara>
+       Modelo opcional a ser utilizado ao formatar ou interpretar. Se fornecido, ele será usado
+       em vez do formato determinado por <parameter>dateType</parameter> e
+       <parameter>timeType</parameter>.
        Modelos possíveis estão documentados em <link xlink:href="&url.icu.datepattern;">&url.icu.datepattern;</link>.
-      </para>
+      </simpara>
+      <simpara>
+       Um modelo não contém fuso horário: o horário exibido e o nome mostrado pelas
+       letras <literal>z</literal> são aqueles do parâmetro
+       <parameter>timezone</parameter>.
+      </simpara>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -260,6 +287,45 @@ Primeira saída formatada com modelo é 12/31/1969
 Segunda saída formatada com modelo é 12/31/1969
 ]]>
   </screen>
+  <example>
+   <title>Calendário da localidade e fuso horário com um modelo</title>
+   <programlisting role="php">
+<![CDATA[
+<?php
+$timestamp = 1700000000;
+
+foreach ([IntlDateFormatter::GREGORIAN, IntlDateFormatter::TRADITIONAL] as $calendar) {
+    $formatter = new IntlDateFormatter(
+        'en_US@calendar=persian',
+        IntlDateFormatter::FULL,
+        IntlDateFormatter::FULL,
+        'UTC',
+        $calendar,
+        'yyyy-MM-dd'
+    );
+    echo $formatter->format($timestamp), "\n";
+}
+
+$formatter = new IntlDateFormatter(
+    'en_US',
+    IntlDateFormatter::FULL,
+    IntlDateFormatter::FULL,
+    'Asia/Singapore',
+    null,
+    'yyyy-MM-dd HH:mm zzzz'
+);
+echo $formatter->format(gmmktime(21, 0, 0, 6, 1, 2024)), "\n";
+]]>
+   </programlisting>
+   &example.outputs;
+   <screen>
+<![CDATA[
+2023-11-14
+1402-08-23
+2024-06-02 05:00 Singapore Standard Time
+]]>
+   </screen>
+  </example>
  </refsect1>
 
  <refsect1 role="seealso">
