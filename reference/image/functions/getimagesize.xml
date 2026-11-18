@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 22ca9442cb38626cc8fc522c62f74f32b3dc9709 Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandoc,marcosmarcolin,leonardolara -->
-<refentry xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://docbook.org/ns/docbook" xml:id="function.getimagesize">
+<!-- EN-Revision: 4cab6e04096c02da7accd5668f9e5aaae2ac681b Maintainer: leonardolara Status: ready --><!-- CREDITS: fernandoc,marcosmarcolin,leonardolara -->
+<refentry xml:id="function.getimagesize" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://docbook.org/ns/docbook">
  <refnamediv>
   <refname>getimagesize</refname>
   <refpurpose>Obtém o tamanho de uma imagem</refpurpose>
@@ -43,6 +43,15 @@
     arquivos JP2 podem conter <literal>multiple JPEG 2000 codestreams</literal>. Nesse caso,
     a função <function>getimagesize</function> retorna os valores do primeiro codestream
     que encontra na raiz do arquivo.
+   </simpara>
+  </note>
+  <note>
+   <simpara>
+    Imagens SVG só são reconhecidas se a <link linkend="book.libxml">extensão libxml</link>
+    estiver carregada. O elemento raiz <tag>svg</tag> deve ter os atributos
+    <literal>width</literal> e <literal>height</literal>, cada um sendo um
+    inteiro opcionalmente seguido por uma unidade, como <literal>5cm</literal>.
+    Caso contrário, &false; é retornado.
    </simpara>
   </note>
   <note>
@@ -102,10 +111,10 @@
 
  <refsect1 role="returnvalues">
   &reftitle.returnvalues;
-  <para>
-   Retorna um array com até 7 elementos. Nem todos os tipos de imagem incluirão
+  <simpara>
+   Retorna um array com até 9 elementos. Nem todos os tipos de imagem incluirão
    os elementos <literal>channels</literal> e <literal>bits</literal>.
-  </para>
+  </simpara>
   <para>
    O índice 0 e 1 contém, respectivamente, a largura e a altura da imagem.
   </para>
@@ -129,11 +138,12 @@
    O índice 2 é uma das constantes <constant>IMAGETYPE_<replaceable>*</replaceable></constant>, que
    indica o tipo da imagem.
   </para>
-  <para>
+  <simpara>
    O índice 3 é uma sequência de texto com a string correta
-   <literal>height="yyy" width="xxx"</literal>
-   que pode ser usada diretamente em uma tag <acronym>IMG</acronym>.
-  </para>
+   <literal>height="yyy" width="xxx"</literal> que pode ser usada
+   diretamente em uma etiqueta <acronym>IMG</acronym>. Ele é omitido se a largura ou
+   a altura não estiverem expressas em pixels.
+  </simpara>
   <para>
    <literal>mime</literal> é o tipo MIME correspondente da imagem.
    Essa informação pode ser usada para fornecer imagens com o cabeçalho
@@ -157,6 +167,12 @@ if ($size && $fp) {
     </programlisting>
    </example>
   </para>
+  <simpara>
+   <literal>width_unit</literal> e <literal>height_unit</literal> são as
+   unidades nas quais os índices 0 e 1 são expressos. Eles são <literal>"px"</literal>
+   a menos que a imagem indique o contrário, como pode ocorrer em imagens SVG, e podem diferir
+   entre si.
+  </simpara>
   <para>
    <literal>channels</literal>
    Será 3 para imagens RGB e 4 para imagens CMYK.
@@ -193,42 +209,59 @@ if ($size && $fp) {
 
  <refsect1 role="changelog">
   &reftitle.changelog;
-  <para>
-   <informaltable>
-    <tgroup cols="2">
-     <thead>
-      <row>
-       <entry>&Version;</entry>
-       <entry>&Description;</entry>
-      </row>
-     </thead>
-     <tbody>
-      <row>
-       <entry>8.2.0</entry>
-       <entry>
-        Agora, a função retorna as dimensões reais da imagem, bits e canais de imagens AVIF;
-        anteriormente, as dimensões eram relatadas como <literal>0x0</literal>,
-        e bits e channels não eram relatados de forma alguma.
-       </entry>
-      </row>
-      <row>
-       <entry>8.0.0</entry>
-       <entry>
-        Um <exceptionname>ValueError</exceptionname> agora é lançado se
-        <parameter>filename</parameter> estiver vazio; anteriormente, um
-        <constant>E_WARNING</constant> era emitido e a função retornava &false;.
-       </entry>
-      </row>
-      <row>
-       <entry>7.1.0</entry>
-       <entry>
-        Foi adicionado suporte para WebP.
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-  </para>
+  <informaltable>
+   <tgroup cols="2">
+    <thead>
+     <row>
+      <entry>&Version;</entry>
+      <entry>&Description;</entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>8.5.0</entry>
+      <entry>
+       Adicionado suporte para imagens HEIF/HEIC.
+      </entry>
+     </row>
+     <row>
+      <entry>8.5.0</entry>
+      <entry>
+       Adicionado suporte para imagens SVG, se a extensão libxml estiver carregada.
+      </entry>
+     </row>
+     <row>
+      <entry>8.5.0</entry>
+      <entry>
+       O array retornado agora contém os elementos <literal>width_unit</literal> e
+       <literal>height_unit</literal>.
+      </entry>
+     </row>
+     <row>
+      <entry>8.2.0</entry>
+      <entry>
+       Agora retorna as dimensões reais da imagem, bits e canais de imagens AVIF;
+       anteriormente, as dimensões eram relatadas como <literal>0x0</literal>,
+       e bits e canais não eram relatados de forma alguma.
+      </entry>
+     </row>
+     <row>
+      <entry>8.0.0</entry>
+      <entry>
+       Uma <exceptionname>ValueError</exceptionname> agora é lançada se
+       <parameter>filename</parameter> estiver vazio; anteriormente um
+       <constant>E_WARNING</constant> era gerado e a função retornava &false;.
+      </entry>
+     </row>
+     <row>
+      <entry>7.1.0</entry>
+      <entry>
+       Adicionado suporte para WebP.
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
  </refsect1>
 
  <refsect1 role="examples">

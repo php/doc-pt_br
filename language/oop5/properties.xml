@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- EN-Revision: 822b0828562580aac0327eb2d84e8e6e06e51a98 Maintainer: leonardolara Status: ready --><!-- CREDITS: fabioluciano, ae, vinelouzada, leonardolara -->
+<!-- EN-Revision: e4676cd5278b301e0f83938a4d5798ab29198868 Maintainer: leonardolara Status: ready --><!-- CREDITS: fabioluciano, ae, vinelouzada, leonardolara -->
  <sect1 xml:id="language.oop5.properties" xmlns="http://docbook.org/ns/docbook">
   <title>Propriedades</title>
 
@@ -286,28 +286,47 @@ new Test('abc 42');
      </informalexample>
     </para>
    </note>
-   <note>
-    <para>
-     Especificar um valor default para uma propriedade somente leitura não é permitido, porque uma propriedade com um valor default é essencialmente uma constante, e portanto não tem outro propósito.
-     <informalexample>
-      <programlisting role="php" annotations="non-interactive">
+   <para>
+    A partir do PHP 8.6.0, uma propriedade somente leitura pode declarar um valor padrão.
+    O valor padrão conta como a inicialização da propriedade,
+    portanto a propriedade não pode ser atribuída novamente, nem mesmo a partir do construtor.
+    Isso possibilita implementar uma
+    <link linkend="language.oop5.interfaces.properties">propriedade de interface somente leitura</link>
+    com um valor fixo, sem precisar atribuí-la no construtor.
+    Antes do PHP 8.6.0, declarar um valor padrão em uma propriedade somente leitura
+    resultava em um erro de compilação.
+    <informalexample>
+     <programlisting role="php" annotations="non-interactive">
 <![CDATA[
 <?php
 
 class Test {
-    // Fatal error: Readonly property Test::$prop cannot have default value
+    // O valor padrão inicializa a propriedade.
     public readonly int $prop = 42;
 }
-?>
+
+$test = new Test();
+var_dump($test->prop); // int(42)
+
+// A propriedade já foi inicializada pelo seu valor padrão.
+$test->prop = 43;
+// Error: Cannot modify readonly property Test::$prop
 ]]>
-      </programlisting>
-     </informalexample>
-    </para>
+     </programlisting>
+    </informalexample>
+   </para>
+   <note>
+    <simpara>
+     Um valor padrão em um
+     <link linkend="language.oop5.decon.constructor.promotion">parâmetro promovido do construtor</link>
+     é o valor padrão do parâmetro, não da propriedade.
+    </simpara>
    </note>
    <note>
-    <para>
+    <simpara>
      Propriedades somente leitura não podem ser <function>unset</function> depois de inicializadas. Entretanto é possível realizar essa operação antes da inicialização, dentro do escopo onde a variável foi declarada.
-    </para>
+     Uma propriedade somente leitura com um valor padrão é inicializada quando o objeto é criado, e portanto nunca pode ser desfeita.
+    </simpara>
    </note>
    <para>
     Nenhum tipo de modificação é permitido, e o seguintes casos resultarão em um <classname>Error</classname>:
